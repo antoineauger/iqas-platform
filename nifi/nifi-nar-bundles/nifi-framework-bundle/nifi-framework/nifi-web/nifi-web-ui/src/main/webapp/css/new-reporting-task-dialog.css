@@ -1,0 +1,89 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* 
+    New controller service dialog.
+*/
+
+#new-reporting-task-dialog {
+    min-height:620px;
+    height: 620px;
+    width: 760px;
+    min-width: 760px;
+}
+
+#new-reporting-task-dialog span.link{
+    cursor: pointer;
+    color: #004849;
+    font-weight: bold;
+    display: inline-block;
+    background-color: #E3E8EB;
+    border-radius: 2px;
+    padding: 1px 4px;
+}
+
+#reporting-task-types-container {
+    padding: 0px;
+}
+
+#reporting-task-description-container {
+    padding: 0px;
+}
+
+#reporting-task-type-name {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 2px;
+    min-height: 15px;
+    padding: 0px 0px 5px 0px;
+}
+
+#reporting-task-type-name-title {
+    font-family: Roboto Slab;
+    padding: 20px 0px 10px 0px;
+}
+
+#reporting-task-type-description {
+    height: 62px;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+#reporting-task-types-table {
+    min-height: 150px;
+    overflow: hidden;
+    height: 70%;
+    width: 100%;
+}
+
+#reporting-task-types-table-container th {
+    vertical-align: middle;
+}
+
+/*
+    Processor type table filter
+*/
+
+#reporting-task-type-filter-controls {
+    min-height: 32px;
+    padding: 0px;
+    margin: 0px;
+}
+
+#reporting-task-type-filter {
+    width: 200px;
+}

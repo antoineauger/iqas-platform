@@ -1,0 +1,284 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
+    Specific dialog settings.
+*/
+
+#new-remote-process-group-transport-protocol-combo {
+    width: 160px;
+}
+
+#fill-color-dialog {
+    display: none;
+    width: 215px;
+    height: 470px;
+}
+
+#fill-color-value {
+    width: 100%;
+}
+
+#fill-color-processor-preview {
+    width: 173px;
+    height: 56px;
+    font-weight: bold;
+    border-width: 1px;
+    border-style: solid;
+}
+
+#fill-color-processor-preview-name {
+    margin-left: 5px;
+    margin-top: 5px;
+    float: left;
+}
+
+#fill-color-processor-preview-icon {
+    margin-top: 5px;
+    margin-right: 5px;
+    float: right;
+    background-image: url(../images/iconSmallProcessor.png);
+    width: 14px;
+    height: 14px;
+}
+
+#fill-color-processor-preview-stats {
+    margin-top: 1px;
+    margin-left: 5px;
+    float: left;
+    border: 1px solid #6f97ac;
+    background-color: #ffffff;
+    height: 30px;
+    width: 161px;
+}
+
+#fill-color-processor-preview-stats-label {
+    float: left;
+    background: linear-gradient(to bottom, #30505c, #6f97ac);
+    filter: progid:DXImageTransform.Microsoft.gradient(gradientType=0, startColorstr=#30505c, endColorstr=#6f97ac);
+    height: 30px;
+    width: 30px;
+}
+
+#fill-color-label-preview {
+    width: 173px;
+    height: 56px;
+    font-weight: bold;
+    border-width: 1px;
+    border-style: solid;
+}
+
+#fill-color-label-preview-value {
+    margin-left: 5px;
+    margin-top: 5px;
+    float: left;
+}
+
+div.connections-component-name {
+    float: left;
+    width: 390px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#connections-source {
+    float: left;
+}
+
+#connections-destination {
+    float: left;
+    margin-left: 370px;
+}
+
+#connections-container {
+    width: 612px;
+    height: 190px;
+    border: 1px solid #aaa;
+    padding: 5px;
+    overflow-y: auto;
+}
+
+div.source-destination-connection {
+    margin-bottom: 10px;
+}
+
+div.connection-entry {
+    float: left;
+    width: 190px;
+    margin-left: 10px;
+}
+
+div.connection-entry-name {
+    float: left;
+    width: 170px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+div.destination-component {
+    float: left;
+    width: 190px;
+    margin-left: 10px;
+}
+
+div.destination-component-name {
+    float: left;
+    width: 170px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+div.destination-input-port {
+    margin-left: 20px;
+}
+
+div.destination-input-port-name {
+    float: left;
+    width: 150px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+div.source-component {
+    float: left;
+    width: 190px;
+}
+
+div.source-component-name {
+    float: left;
+    width: 170px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+div.source-output-port {
+    margin-left: 20px;
+}
+
+div.source-output-port-name {
+    float: left;
+    width: 150px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+div.go-to-link {
+    color: #264c58;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#drop-request-percent-complete {
+    margin-top: 10px;
+    width: 378px;
+    border-radius: 0;
+}
+
+#drop-request-percent-complete .ui-progressbar-value {
+    border-radius: 0;
+}
+
+#listing-request-percent-complete {
+    margin-top: 10px;
+    width: 100%;
+    border-radius: 0;
+}
+
+#listing-request-percent-complete .ui-progressbar-value {
+    border-radius: 0;
+}
+
+div.progress-label {
+    color: #000000;
+    display: block;
+    font-weight: bold;
+    text-align: center;
+    /*width: 378px;*/
+    margin-top: 4px;
+}
+
+/*
+    General dialog styles.
+*/
+
+ul.result {
+    list-style-type: disc;
+    margin-left: 15px;
+}
+
+ul.result li {
+    padding: 3px 0px;
+}
+
+.setting {
+    margin-bottom: 15px;
+}
+
+.setting-name {
+    font-size: 12px;
+    font-weight: 500;
+    font-family: Roboto Slab;
+    padding-bottom: 4px;
+    color: #262626;
+}
+
+.setting-name .fa {
+    color: #004849;
+    margin-left: 5px;
+}
+
+.setting-field .fa {
+    color: #004849;
+    margin-left: 5px;
+}
+
+.setting-field {
+    line-height: normal;
+    width: 100%;
+    color: #775351;
+    font-size: 13px;
+}
+
+.setting-header{
+    color: #728e9b;
+    font-size: 12pt;
+    font-family: 'Roboto Slab';
+    font-style: normal;
+    font-weight: bold;
+    line-height: 56px;
+    text-overflow: ellipsis;
+}
+
+.dialog-content div.settings-left {
+    float: left;
+    width: 49%;
+}
+
+.dialog-content div.settings-right {
+    float: left;
+    width: 49%;
+}
+
+.dialog-content div.spacer {
+    float: left;
+    width: 2%;
+}

@@ -1,0 +1,520 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
+    Status Styles
+*/
+
+#provenance {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 20px;
+    right: 20px;
+    overflow: auto;
+    height: 100%;
+}
+
+#provenance-header-and-filter{
+    height: 111px;
+}
+
+#provenance-header-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: #728E9B;
+    font-family: Roboto Slab;
+    margin-bottom: 15px;
+    height: 118px;
+}
+
+#provenance-refresh-container {
+    position: absolute;
+    bottom: 0px;
+}
+
+#provenance-loading-container {
+    float: left;
+    width: 16px;
+    height: 16px;
+    background-color: transparent;
+    margin-top: 4px;
+    margin-left: 3px;
+}
+
+#provenance-last-refreshed {
+    font-weight: bold;
+}
+
+#provenance-header {
+    padding-top: 10px;
+}
+
+div.provenance-panel {
+    bottom: 0px;
+    left: 0px;
+    overflow: hidden;
+    position: absolute;
+    right: 0px;
+    top: 40px;
+}
+
+/* filter controls */
+
+#provenance-filter-controls {
+    float: right;
+}
+
+#provenance-filter-container {
+    height: 24px;
+    width: 326px;
+}
+
+#provenance-filter {
+    width: 173px;
+    margin-right: 3px;
+    float: left;
+}
+
+input.provenance-filter-list {
+    color: #888;
+}
+
+#provenance-filter-type {
+    width: 128px;
+    float: left;
+}
+
+#oldest-event-message {
+    font-family: Roboto;
+    font-size: 13px;
+    font-weight: normal;
+    margin-bottom: 5px;
+}
+
+/* provenance search controls */
+
+#provenance-search-container {
+    float: right;
+    position: relative;
+    top: -38px;
+}
+
+#provenance-search-button {
+    float: right;
+}
+
+#provenance-search-overview {
+    font-family: Roboto;
+    font-size: 13px;
+    font-weight: normal;
+    margin-bottom: 5px;
+}
+
+#clear-provenance-search {
+    display: none;
+}
+
+/* provenance search dialog */
+
+#searchable-fields-container {
+    width: 100%;
+    min-height: 185px;
+    padding: 5px;
+    overflow: auto;
+}
+
+div.searchable-field {
+    margin-bottom: 5px;
+}
+
+div.searchable-field-name {
+    width: 25%;
+    float: left;
+    line-height: 26px;
+}
+
+div.searchable-field-value {
+    float: left;
+    width: 75%;
+}
+
+.start-date-setting, .start-time-setting, .end-date-setting, .end-time-setting {
+    float: left;
+    width: 49%;
+}
+
+.start-date-setting, .end-date-setting {
+    margin-right: 2%;
+    width: 49%;
+}
+
+.provenance-small-input {
+    width: 183px;
+}
+
+.provenance-time-input {
+    width: 215px;
+}
+
+#provenance-search-location-container {
+    display: none;
+}
+
+#provenance-search-location {
+    height: 18px;
+    line-height: 18px;
+    width: 424px;
+}
+
+/* event details dialog */
+
+div.flowfile-container {
+    width: 282px;
+    height: 120px;
+    overflow: auto;
+    padding: 5px;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+#child-flowfiles {
+    margin-top: 10px;
+}
+
+div.event-header {
+    color: #728e9b;
+    font-size: 12pt;
+    font-family: 'Roboto Slab';
+    font-style: normal;
+    font-weight: bold;
+    line-height: 56px;
+    text-overflow: ellipsis;
+}
+
+#attributes-container {
+    height: 290px;
+    overflow: auto;
+    padding: 5px;
+}
+
+div.detail-name {
+    width: 100%;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: Roboto Slab;
+    padding-bottom: 4px;
+    color: #262626;
+}
+
+div.detail-value {
+    line-height: normal;
+    width: 100%;
+    color: #775351;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+div.attribute-detail {
+    margin-bottom: 15px;
+}
+
+div.attribute-name {
+    width: 100%;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: Roboto Slab;
+    padding-bottom: 4px;
+    color: #262626;
+}
+
+div.attribute-value {
+    line-height: normal;
+    width: 100%;
+    color: #775351;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+#attributes-header {
+    float: left;
+}
+
+#modified-attribute-toggle-container {
+    float: right;
+}
+
+#modified-attribute-toggle-label {
+    float: left;
+}
+
+#modified-attribute-toggle {
+    float: left;
+    margin-left: 5px;
+    margin-right: 0;
+}
+
+div.modified-attribute-label {
+    float: left;
+    margin-left: 10px;
+    width: 50px;
+    font-style: italic;
+    font-weight: normal;
+    color: #666;
+}
+
+div.modified-attribute-value {
+    float: left;
+    width: 490px;
+    margin-left: 175px;
+    overflow: hidden;
+    white-space: nowrap;
+    line-height: normal;
+}
+
+div.event-detail {
+    margin-bottom: 15px;
+}
+
+#input-content-download, #output-content-download, #replay-content {
+    float: left;
+    margin: 0;
+}
+
+#input-content-view, #output-content-view {
+    float: left;
+    margin-left: 5px;
+}
+
+div.content-detail-name {
+    width: 100%;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: Roboto Slab;
+    padding-bottom: 4px;
+    color: #262626;
+}
+
+div.content-detail-value {
+    line-height: normal;
+    width: 100%;
+    color: #775351;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+#replay-details {
+    margin-top: 20px;
+}
+
+/* provenance/lineage query dialog */
+
+#provenance-percent-complete, #lineage-percent-complete {
+    border-radius: 0;
+}
+
+#provenance-percent-complete .ui-progressbar-value, #lineage-percent-complete .ui-progressbar-value {
+    border-radius: 0;
+}
+
+/* provenance table */
+
+#provenance-table {
+    position: absolute;
+    top: 78px;
+    left: 0px;
+    bottom: 48px;
+    right: 0px;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+/* provenance lineage */
+
+#provenance-lineage {
+    border: 1px solid #aaa;
+}
+
+#provenance-lineage-loading-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+#provenance-lineage-loading {
+    background-color: transparent;
+    height: 16px;
+    width: 16px;
+}
+
+#provenance-lineage-close-container {
+    position: absolute;
+    right: 1px;
+    top: 2px;
+}
+
+#provenance-lineage-downloader {
+    float: left;
+    height: 16px;
+    width: 16px;
+    background: url("../images/iconExportLineage.png") no-repeat scroll left center transparent;
+    cursor: pointer;
+    margin-right: 2px;
+}
+
+#provenance-lineage-closer {
+    float: left;
+    height: 16px;
+    width: 16px;
+    background: url("../images/iconClose.png") no-repeat scroll left center transparent;
+    cursor: pointer;
+}
+
+#provenance-lineage-slider-container {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 350px;
+    height: 35px;
+}
+
+#provenance-lineage-slider-container {
+    margin-left: 10px;
+}
+
+#provenance-lineage-slider {
+    border-radius: 0;
+}
+
+#provenance-lineage-slider .ui-slider-handle {
+    border-radius: 0;
+    border: 1px solid #999;
+    outline: none;
+}
+
+#event-timeline {
+    margin-top: 8px;
+    color: #9F6000;
+    font-weight: bold;
+    line-height: normal;
+}
+
+#event-time {
+    float: left;
+}
+
+#event-timezone {
+    float: left;
+}
+
+#provenance-lineage-context-menu {
+    display: none;
+    border: 1px solid #000;
+    width: 140px;
+    position: absolute;
+    background-color: #fff;
+    padding: 3px 0;
+}
+
+div.lineage-view-event {
+    background: url("../images/iconDetails.png") no-repeat scroll center center transparent;
+}
+
+div.lineage-view-parents {
+    background: url("../images/iconExpandParents.png") no-repeat scroll center center transparent;
+}
+
+div.lineage-collapse-parents {
+    background: url("../images/iconCollapseParents.png") no-repeat scroll center center transparent;
+}
+
+div.lineage-view-children {
+    background: url("../images/iconExpandChildren.png") no-repeat scroll center center transparent;
+}
+
+div.lineage-collapse-children {
+    background: url("../images/iconCollapseChildren.png") no-repeat scroll center center transparent;
+}
+
+div.provenance-lineage-menu-item {
+    padding: 3px 6px;
+    cursor: pointer;
+}
+
+div.provenance-lineage-menu-item.hover {
+    color: #027fd2;
+}
+
+div.provenance-lineage-menu-item-img {
+    float: left;
+    width: 16px;
+    height: 16px;
+}
+
+div.provenance-lineage-menu-item-text {
+    width: 106px;
+    margin-left: 6px;
+    line-height: 16px;
+    float: left;
+    font-family: Verdana;
+    font-size: 8pt;
+}
+
+path.link.selected {
+    stroke: #FFCC00;
+}
+
+g.event circle.selected {
+    fill: #FFCC00;
+}
+
+text.event-type {
+    cursor: pointer;
+}
+
+text.event-type.expand-parents, text.event-type.expand-children {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+g.flowfile circle.context, g.event circle.context {
+    stroke: #b70303;
+    stroke-width: 1.5px;
+}
+
+path.flowfile-icon-base {
+    pointer-events: none;
+}
+
+path.flowfile-icon-base-outline {
+    pointer-events: none;
+}
+
+path.flowfile-icon-mid {
+    pointer-events: none;
+}
+
+path.flowfile-icon-mid-outline {
+    pointer-events: none;
+}
+
+path.flowfile-icon-arc {
+    pointer-events: none;
+}
+
+path.flowfile-icon-top {
+    pointer-events: none;
+}

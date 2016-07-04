@@ -1,0 +1,111 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
+    Cluster Styles
+*/
+
+#cluster {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    height: 90%;
+    overflow: auto;
+}
+
+#cluster-header-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: #728E9B;
+    font-family: Roboto Slab;
+    margin-bottom: 30px;
+}
+
+#cluster-refresh-container {
+    position: absolute;
+    width: 100%;
+    bottom: 0px;
+}
+
+#cluster-loading-container {
+    float: left;
+    width: 16px;
+    height: 16px;
+    background-color: transparent;
+    margin-top: 4px;
+    margin-left: 3px;
+}
+
+#cluster-last-refreshed {
+    font-weight: bold;
+}
+
+#cluster-header {
+    padding-top: 10px;
+}
+
+#refresh-button {
+    height: 24px;
+    width: 26px;
+    float: left;
+}
+
+/* filter controls */
+
+#cluster-filter-controls {
+    float: right;
+}
+
+#cluster-filter-container {
+    height: 32px;
+    width: 318px;
+}
+
+#cluster-filter {
+    width: 173px;
+    margin-right: 3px;
+    float: left;
+}
+
+input.cluster-filter-list {
+    color: #888;
+}
+
+#cluster-filter-type {
+    width: 120px;
+    float: left;
+}
+
+/* counters table */
+
+#cluster-table {
+    overflow: hidden;
+    height: 80%;
+    width: 100%;
+}
+
+span.sorted {
+    text-decoration: underline;
+}
+
+/* user details dialog */
+
+#node-events {
+    max-height: 200px;
+    overflow-y: auto;
+}
