@@ -17,7 +17,11 @@
 package org.apache.nifi.processors.qoi;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;
+import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryDecoder;
@@ -39,7 +43,7 @@ import java.util.*;
 
 @EventDriven
 @Tags({"qoi", "annotation", "avro"})
-@CapabilityDescription("Allows the user to select QoI attributes of interest to annotate an Avro FlowFile. " +
+@CapabilityDescription("Allows the user to select QoI attributes of interest to annotate an Avro flowfile. " +
         "QoI attributes are computed according to their definition as dynamic properties. " +
         "Then, QoI attributes are added to each Avro record under the property 'qoi'. " +
         "The outgoing Avro schema is modified consequently to take into account that change.")
@@ -47,6 +51,7 @@ import java.util.*;
 @DynamicProperty(name = "Own-defined QoI attributes", value = "Attribute Expression Language", supportsExpressionLanguage = true, description = "QoI attributes of interest for the user")
 @WritesAttributes({
         @WritesAttribute(attribute = "avail_qoi_attr_metadata", description = "TODO"),
+        @WritesAttribute(attribute = "qoi", description = "TODO"),
         @WritesAttribute(attribute = "avail_qoi_attr_content", description = "TODO")
 })
 /*@ReadsAttributes({@ReadsAttribute(attribute="", description="")})*/
@@ -84,6 +89,11 @@ public class AvroQoIAnnotator extends AbstractProcessor {
     /**
      * Properties
      */
+
+    public static final String DESTINATION_ATTRIBUTE = "attribute";
+    public static final String DESTINATION_CONTENT = "content";
+    public static final String DESTINATION_BOTH = "content and attribute";
+
     private static final PropertyDescriptor QOI_CHECKPOINT_NAME = new PropertyDescriptor.Builder()
             .name("QoI checkpoint name")
             .description("The string key to group all QoI attributes for this processor.")
@@ -95,7 +105,7 @@ public class AvroQoIAnnotator extends AbstractProcessor {
 
     private static final PropertyDescriptor QOI_ATTR_TO_ANNOTATE = new PropertyDescriptor.Builder()
             .name("QoI attributes")
-            .description("Comma-separated QoI attributes to add to the Avro FlowFile.")
+            .description("Comma-separated QoI attributes to add to the Avro flowfile.")
             .addValidator(QOI_ATTRIBUTES_DEFINITION_VALIDATOR)
             .expressionLanguageSupported(false)
             .dynamic(false)
@@ -110,6 +120,18 @@ public class AvroQoIAnnotator extends AbstractProcessor {
             .expressionLanguageSupported(false)
             .dynamic(false)
             .required(false)
+            .build();
+
+    private static final PropertyDescriptor DESTINATION = new PropertyDescriptor.Builder()
+            .name("Destination")
+            .description("Control if QoI attributes are written as a new flowfile attribute " +
+                    ", written in the flowfile content or both. Writing to flowfile content will overwrite any " +
+                    "existing flowfile content.")
+            .allowableValues(DESTINATION_ATTRIBUTE, DESTINATION_CONTENT, DESTINATION_BOTH)
+            .defaultValue(DESTINATION_ATTRIBUTE)
+            .expressionLanguageSupported(false)
+            .dynamic(false)
+            .required(true)
             .build();
 
     private static final PropertyDescriptor SCHEMA = new PropertyDescriptor.Builder()
@@ -127,15 +149,15 @@ public class AvroQoIAnnotator extends AbstractProcessor {
      */
     private static final Relationship REL_SUCCESS = new Relationship.Builder()
             .name("success")
-            .description("The specified QoI attributes of interest are correctly added to an Avro FlowFile")
+            .description("The specified QoI attributes of interest are correctly added to an Avro flowfile")
             .build();
     private static final Relationship REL_COMPUT_FAILURE = new Relationship.Builder()
             .name("computation failure")
-            .description("A FlowFile is routed to this relationship if the computation of one or several QoI attributes fails")
+            .description("A flowfile is routed to this relationship if the computation of one or several QoI attributes fails")
             .build();
     private static final Relationship REL_FAILURE = new Relationship.Builder()
             .name("failure")
-            .description("A FlowFile is routed to this relationship if it cannot be parsed as Avro")
+            .description("A flowfile is routed to this relationship if it cannot be parsed as Avro")
             .build();
 
     private List<PropertyDescriptor> properties;
@@ -144,7 +166,7 @@ public class AvroQoIAnnotator extends AbstractProcessor {
     private volatile Map<String, PropertyValue> qoiAttrToAnnotate = new HashMap<>();
     private volatile ArrayList<String> avroAttrListToImport = new ArrayList<>();
     private volatile Map<String,String> knownProperties = new HashMap<>();
-    private volatile Map<String,String> qoiAttrToWriteToFlow = new HashMap<>();
+    private volatile Map<String,String> qoiAttrToAppendAttr = new HashMap<>();
 
     @Override
     protected void init(ProcessorInitializationContext context) {
@@ -154,6 +176,7 @@ public class AvroQoIAnnotator extends AbstractProcessor {
         properties.add(QOI_CHECKPOINT_NAME);
         properties.add(QOI_ATTR_TO_ANNOTATE);
         properties.add(AVRO_ATTR_TO_IMPORT);
+        properties.add(DESTINATION);
         properties.add(SCHEMA);
         this.properties = Collections.unmodifiableList(properties);
 
@@ -189,7 +212,7 @@ public class AvroQoIAnnotator extends AbstractProcessor {
     public void onPropertyModified(final PropertyDescriptor descriptor, final String oldValue, final String newValue) {
         if (descriptor.isDynamic() && newValue == null) {
             this.qoiAttrToAnnotate.remove(descriptor.getName());
-            this.qoiAttrToWriteToFlow.remove(descriptor.getName());
+            this.qoiAttrToAppendAttr.remove(descriptor.getName());
             this.knownProperties.remove(descriptor.getName());
         }
     }
@@ -225,67 +248,94 @@ public class AvroQoIAnnotator extends AbstractProcessor {
 
         final String stringSchema = context.getProperty(SCHEMA).getValue();
         final boolean schemaLess = stringSchema != null;
+        Set<String> missingAvroFields = new HashSet<>();
 
         try {
-            FlowFile finalOriginal = original;
             original = session.write(original, new StreamCallback() {
                 @Override
                 public void process(InputStream rawIn, OutputStream rawOut) throws IOException {
-                    String tempValue = "";
-                    GenericRecord record = null;
+                    try (final InputStream in = new BufferedInputStream(rawIn);
+                         final OutputStream out = new BufferedOutputStream(rawOut)) {
+                        String tempValue = "";
+                        GenericRecord record = null;
 
-                    if (schemaLess) {
-                        if (schema == null) {
-                            schema = new Schema.Parser().parse(stringSchema);
-                        }
-                        try (final InputStream in = new BufferedInputStream(rawIn);
-                             final OutputStream out = new BufferedOutputStream(rawOut)) {
-
-                            DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>(schema);
+                        if (schemaLess) {
+                            if (schema == null) {
+                                schema = new Schema.Parser().parse(stringSchema);
+                            }
+                            DatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
                             BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(in, null);
                             record = reader.read(null, decoder);
-
-                            //TODO process record
-                            //out.write(stringSchema.getBytes(StandardCharsets.UTF_8));
-
-
-                        }
-                    }
-                    else {
-
-                        try (final InputStream in = new BufferedInputStream(rawIn);
-                             final OutputStream out = new BufferedOutputStream(rawOut)) {
-
-                            try (final DataFileStream<GenericRecord> reader = new DataFileStream<>(in, new GenericDatumReader<GenericRecord>())) {
-                                if (reader.hasNext()) {
-                                    record = reader.next();
-                                }
-
-                                //TODO process record
-                                for (String s : avroAttrListToImport) {
-                                    if (record.get(s) != null) {
-                                        knownProperties.put(s, record.get(s).toString());
-                                    }
-                                    else {
-                                        throw new NoSuchAvroFieldException(s);
-                                    }
-
-                                }
-
-                                for (String s : qoiAttrToAnnotate.keySet()) {
-                                    tempValue = context.getProperty(s).evaluateAttributeExpressions(copyForAttributes, knownProperties).getValue();
-                                    qoiAttrToWriteToFlow.put(s, tempValue);
-                                }
-
-                                //TODO write in header / avro schema / both
-                            } catch (NoSuchAvroFieldException e) {
-                                throw new ProcessException(e);
+                        } else {
+                            DataFileStream<GenericRecord> reader = new DataFileStream<>(in, new GenericDatumReader<GenericRecord>());
+                            if (reader.hasNext()) {
+                                record = reader.next();
                             }
+                            schema = record.getSchema();
+                        }
 
+                        final DataFileWriter<GenericData.Record> writer = new DataFileWriter<>(AvroUtil.newDatumWriter(schema, GenericData.Record.class));
+                        writer.setCodec(CodecFactory.snappyCodec());
+
+                        // Avro fields import
+                        for (String s : avroAttrListToImport) {
+                            if (record.get(s) != null) {
+                                knownProperties.put(s, record.get(s).toString());
+                            } else {
+                                missingAvroFields.add(s);
+                            }
+                        }
+
+                        //TODO to move to AvroUtil
+                        //TODO preserve content?
+                        // Definition of the new Avro schema
+                        String stringBaseNewSchema = "{\"type\":\"record\",\"name\":\"Observation\",\"fields\":[";
+                        String stringFieldsNewSchema = "";
+                        for (String s : qoiAttrToAnnotate.keySet()) {
+                            tempValue = context.getProperty(s).evaluateAttributeExpressions(copyForAttributes, knownProperties).getValue();
+                            qoiAttrToAppendAttr.put(s, tempValue);
+                            stringFieldsNewSchema += "{\"name\":\""+ s +"\",\"type\":\"string\"},";
+                        }
+                        stringFieldsNewSchema = stringFieldsNewSchema.substring(0, stringFieldsNewSchema.length() - 1);
+                        stringFieldsNewSchema += "]}";
+
+                        // Definition of the new Avro record
+                        Schema newSchema = new Schema.Parser().parse(stringBaseNewSchema + stringFieldsNewSchema);
+                        GenericRecord newRecord = new GenericData.Record(newSchema);
+                        for (String s : qoiAttrToAnnotate.keySet()) {
+                            tempValue = context.getProperty(s).evaluateAttributeExpressions(copyForAttributes, knownProperties).getValue();
+                            newRecord.put(s, tempValue);
+                        }
+
+                        // Destination for QoI attributes
+                        switch (context.getProperty(DESTINATION).getValue()) {
+                            case DESTINATION_ATTRIBUTE:
+                                // Attribute destination already done
+                                break;
+                            case DESTINATION_CONTENT:
+                                // No attribute destination
+                                qoiAttrToAppendAttr.clear();
+                                // Content destination
+                                try (DataFileWriter<GenericData.Record> w = writer.create(newSchema, out)) {
+                                    w.append((GenericData.Record) newRecord);
+                                    w.flush();
+                                } catch (Exception e) {
+                                    getLogger().error(e.toString());
+                                }
+                                break;
+                            case DESTINATION_BOTH:
+                                // Attribute destination already done
+                                // Content destination
+                                try (DataFileWriter<GenericData.Record> w = writer.create(newSchema, out)) {
+                                    w.append((GenericData.Record) newRecord);
+                                    w.flush();
+                                } catch (Exception e) {
+                                    getLogger().error(e.toString());
+                                }
+                                break;
                         }
 
                     }
-
                 }
 
             });
@@ -296,9 +346,17 @@ public class AvroQoIAnnotator extends AbstractProcessor {
             return;
         }
 
-        original = session.putAllAttributes(original, qoiAttrToWriteToFlow);
-        session.transfer(original, REL_SUCCESS);
-        session.remove(copyForAttributes);
+        if (missingAvroFields.size() == 0) {
+            original = session.putAllAttributes(original, qoiAttrToAppendAttr);
+            session.transfer(original, REL_SUCCESS);
+            session.remove(copyForAttributes);
+        }
+        else {
+            getLogger().error("Unable to compute some QoI attributes using Avro fields. Missing Avro fields: " + missingAvroFields.toString());
+            original = session.putAllAttributes(original, qoiAttrToAppendAttr);
+            session.transfer(original, REL_COMPUT_FAILURE);
+            session.remove(copyForAttributes);
+        }
     }
 
 }
