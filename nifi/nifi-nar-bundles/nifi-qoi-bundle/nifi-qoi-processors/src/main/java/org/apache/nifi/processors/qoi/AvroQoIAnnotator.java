@@ -17,15 +17,15 @@
 package org.apache.nifi.processors.qoi;
 
 import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.nifi.annotation.behavior.*;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
@@ -163,6 +163,7 @@ public class AvroQoIAnnotator extends AbstractProcessor {
     private List<PropertyDescriptor> properties;
     private Set<Relationship> relationships;
     private volatile Schema schema = null;
+    private volatile String checkpointName = "";
     private volatile Map<String, PropertyValue> qoiAttrToAnnotate = new HashMap<>();
     private volatile ArrayList<String> avroAttrListToImport = new ArrayList<>();
     private volatile Map<String,String> knownProperties = new HashMap<>();
@@ -219,6 +220,7 @@ public class AvroQoIAnnotator extends AbstractProcessor {
 
     @OnScheduled
     public void onScheduled(final ProcessContext context) {
+        this.checkpointName = context.getProperty(QOI_CHECKPOINT_NAME).getValue();
         this.qoiAttrToAnnotate.clear();
         this.knownProperties.clear();
         final Map<String, PropertyValue> newQoiAttrToAnnotate = new HashMap<>();
@@ -256,7 +258,6 @@ public class AvroQoIAnnotator extends AbstractProcessor {
                 public void process(InputStream rawIn, OutputStream rawOut) throws IOException {
                     try (final InputStream in = new BufferedInputStream(rawIn);
                          final OutputStream out = new BufferedOutputStream(rawOut)) {
-                        String tempValue = "";
                         GenericRecord record = null;
 
                         if (schemaLess) {
@@ -274,9 +275,6 @@ public class AvroQoIAnnotator extends AbstractProcessor {
                             schema = record.getSchema();
                         }
 
-                        final DataFileWriter<GenericData.Record> writer = new DataFileWriter<>(AvroUtil.newDatumWriter(schema, GenericData.Record.class));
-                        writer.setCodec(CodecFactory.snappyCodec());
-
                         // Avro fields import
                         for (String s : avroAttrListToImport) {
                             if (record.get(s) != null) {
@@ -286,26 +284,24 @@ public class AvroQoIAnnotator extends AbstractProcessor {
                             }
                         }
 
-                        //TODO to move to AvroUtil
-                        //TODO preserve content?
-                        // Definition of the new Avro schema
-                        String stringBaseNewSchema = "{\"type\":\"record\",\"name\":\"Observation\",\"fields\":[";
-                        String stringFieldsNewSchema = "";
-                        for (String s : qoiAttrToAnnotate.keySet()) {
-                            tempValue = context.getProperty(s).evaluateAttributeExpressions(copyForAttributes, knownProperties).getValue();
-                            qoiAttrToAppendAttr.put(s, tempValue);
-                            stringFieldsNewSchema += "{\"name\":\""+ s +"\",\"type\":\"string\"},";
-                        }
-                        stringFieldsNewSchema = stringFieldsNewSchema.substring(0, stringFieldsNewSchema.length() - 1);
-                        stringFieldsNewSchema += "]}";
-
                         // Definition of the new Avro record
-                        Schema newSchema = new Schema.Parser().parse(stringBaseNewSchema + stringFieldsNewSchema);
-                        GenericRecord newRecord = new GenericData.Record(newSchema);
+                        Schema newSchema = AvroUtil.buildGlobalSchema(record.getSchema().getType().toString().toLowerCase(),
+                                record.getSchema().getName(),
+                                record.getSchema().getNamespace(),
+                                record.getSchema().getFields());
+
+                        // Preserve the given fields from the old Avro record
+                        GenericRecord newRecord = AvroUtil.copyFields(record,record.getSchema().getFields(),newSchema);
+
+                        // QoI annotation
                         for (String s : qoiAttrToAnnotate.keySet()) {
-                            tempValue = context.getProperty(s).evaluateAttributeExpressions(copyForAttributes, knownProperties).getValue();
-                            newRecord.put(s, tempValue);
+                            qoiAttrToAppendAttr.put(s,context.getProperty(s).evaluateAttributeExpressions(copyForAttributes, knownProperties).getValue());
                         }
+                        newRecord = AvroUtil.annotateRecordWithQoIAttr(newRecord,checkpointName,qoiAttrToAppendAttr);
+
+                        // Set the writer for Avro records
+                        DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(newSchema);
+                        DataFileWriter<GenericRecord> writer = new DataFileWriter<>(datumWriter);
 
                         // Destination for QoI attributes
                         switch (context.getProperty(DESTINATION).getValue()) {
@@ -316,9 +312,9 @@ public class AvroQoIAnnotator extends AbstractProcessor {
                                 // No attribute destination
                                 qoiAttrToAppendAttr.clear();
                                 // Content destination
-                                try (DataFileWriter<GenericData.Record> w = writer.create(newSchema, out)) {
-                                    w.append((GenericData.Record) newRecord);
-                                    w.flush();
+                                try (DataFileWriter<GenericRecord> w = writer.create(newRecord.getSchema(), out)) {
+                                    w.append(newRecord);
+                                    w.close();
                                 } catch (Exception e) {
                                     getLogger().error(e.toString());
                                 }
@@ -326,9 +322,9 @@ public class AvroQoIAnnotator extends AbstractProcessor {
                             case DESTINATION_BOTH:
                                 // Attribute destination already done
                                 // Content destination
-                                try (DataFileWriter<GenericData.Record> w = writer.create(newSchema, out)) {
-                                    w.append((GenericData.Record) newRecord);
-                                    w.flush();
+                                try (DataFileWriter<GenericRecord> w = writer.create(newRecord.getSchema(), out)) {
+                                    w.append(newRecord);
+                                    w.close();
                                 } catch (Exception e) {
                                     getLogger().error(e.toString());
                                 }
