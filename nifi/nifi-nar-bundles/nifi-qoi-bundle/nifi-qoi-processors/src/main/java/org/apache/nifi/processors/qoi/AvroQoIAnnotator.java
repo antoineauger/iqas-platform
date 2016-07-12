@@ -17,7 +17,6 @@
 package org.apache.nifi.processors.qoi;
 
 import org.apache.avro.Schema;
-import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
@@ -297,7 +296,7 @@ public class AvroQoIAnnotator extends AbstractProcessor {
                         for (String s : qoiAttrToAnnotate.keySet()) {
                             qoiAttrToAppendAttr.put(s,context.getProperty(s).evaluateAttributeExpressions(copyForAttributes, knownProperties).getValue());
                         }
-                        newRecord = AvroUtil.annotateRecordWithQoIAttr(newRecord,checkpointName,qoiAttrToAppendAttr);
+                        newRecord = AvroUtil.annotateRecordWithQoIAttr(getLogger(), newRecord,checkpointName,qoiAttrToAppendAttr);
 
                         // Set the writer for Avro records
                         DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(newSchema);
@@ -349,7 +348,7 @@ public class AvroQoIAnnotator extends AbstractProcessor {
         }
         else {
             getLogger().error("Unable to compute some QoI attributes using Avro fields. Missing Avro fields: " + missingAvroFields.toString());
-            original = session.putAllAttributes(original, qoiAttrToAppendAttr);
+            //original = session.putAllAttributes(original, qoiAttrToAppendAttr);
             session.transfer(original, REL_COMPUT_FAILURE);
             session.remove(copyForAttributes);
         }

@@ -19,11 +19,8 @@
 package org.apache.nifi.processors.qoi;
 
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
 import org.apache.nifi.logging.ComponentLog;
 
 import java.util.ArrayList;
@@ -31,17 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class AvroUtil {
-
-    @SuppressWarnings("unchecked")
-    public static <D> DatumWriter<D> newDatumWriter(Schema schema, Class<D> dClass) {
-        return (DatumWriter<D>) GenericData.get().createDatumWriter(schema);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <D> DatumReader<D> newDatumReader(Schema schema, Class<D> dClass) {
-        return (DatumReader<D>) GenericData.get().createDatumReader(schema);
-    }
+public class AvroUtil {
 
     /**
      *
@@ -52,11 +39,15 @@ class AvroUtil {
      * @return
      */
     public static Schema buildGlobalSchema(String avroTYpe, String avroName, String avroNamespace, List<Schema.Field> fieldsToPreserve) {
-        Schema schemaToReturn ;
+        Schema schemaToReturn;
 
-        String stringNewSchema = "{\"type\":\""+ avroTYpe +"\",\"name\":\""+ avroName +"\",\"fields\":[";
+        String stringNewSchema = "{\"type\":\""+ avroTYpe +"\",";
+        if (avroNamespace != null) {
+            stringNewSchema += "\"namespace\":\""+ avroNamespace +"\",";
+        }
+        stringNewSchema += "\"name\":\""+ avroName +"\",\"fields\":[";
         for (Schema.Field f : fieldsToPreserve) {
-            if (!f.name().equals("qoi")) {
+            if (!f.name().equals("qoi") && f.schema() != null) {
                 stringNewSchema += "{\"name\":\"" + f.name() + "\",\"type\":\"" + f.schema().getType().toString().toLowerCase() + "\"},";
             }
         }
@@ -70,15 +61,19 @@ class AvroUtil {
      *
      * @return
      */
-    public static Schema buildQoISchema(boolean underArrayFormat) {
-        String stringNewSchema = "";
+    public static Schema buildQoISchema(ComponentLog log, boolean underArrayFormat) {
         Schema schemaToReturn;
+        String stringNewSchema;
+
         if (underArrayFormat) {
+            // For a proper schema, see qoi_array.avsc file
             stringNewSchema = "{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"qoi_record\",\"fields\":[{\"name\":\"checkpointName\",\"type\":\"string\"},{\"name\":\"qoi_attr\",\"type\":{\"type\":\"map\",\"values\":\"string\"}}]}}";
         }
         else {
+            // For a proper schema, see qoi_record.avsc file
             stringNewSchema = "{\"type\":\"record\",\"name\":\"qoi_record\",\"fields\":[{\"name\":\"checkpointName\",\"type\":\"string\"},{\"name\":\"qoi_attr\",\"type\":{\"type\":\"map\",\"values\":\"string\"}}]}";
         }
+
         schemaToReturn = new Schema.Parser().parse(stringNewSchema);
         return schemaToReturn;
     }
@@ -92,9 +87,11 @@ class AvroUtil {
      */
     public static GenericRecord copyFields(GenericRecord oldRecord, List<Schema.Field> fieldsToPreserve, Schema schemaForNewRecord) {
         GenericRecord recordToReturn = new GenericData.Record(schemaForNewRecord);
+
         for (Schema.Field f : fieldsToPreserve) {
             recordToReturn.put(f.name(), oldRecord.get(f.name()));
         }
+
         return recordToReturn;
     }
 
@@ -105,13 +102,13 @@ class AvroUtil {
      * @param qoiAttributes
      * @return
      */
-    public static GenericRecord annotateRecordWithQoIAttr(GenericRecord record, String checkpointName, Map<String, String> qoiAttributes) {
+    public static GenericRecord annotateRecordWithQoIAttr(ComponentLog log, GenericRecord record, String checkpointName, Map<String, String> qoiAttributes) {
         GenericRecord recordToReturn = record;
         List<GenericRecord> list = new ArrayList<>();
         Map<String, String> map = new HashMap<>(qoiAttributes);
 
         // Writing of the QoI attributes
-        GenericRecord qoiRecord = new GenericData.Record(AvroUtil.buildQoISchema(false));
+        GenericRecord qoiRecord = new GenericData.Record(AvroUtil.buildQoISchema(log, false));
         qoiRecord.put("checkpointName",checkpointName);
         qoiRecord.put("qoi_attr",map);
 
