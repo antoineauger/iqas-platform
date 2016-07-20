@@ -30,33 +30,27 @@ import org.apache.nifi.authorization.AuthorizationResult;
 import org.apache.nifi.authorization.AuthorizationResult.Result;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.RequestAction;
+import org.apache.nifi.authorization.UserContextKeys;
 import org.apache.nifi.authorization.resource.ResourceFactory;
 import org.apache.nifi.authorization.user.NiFiUser;
 import org.apache.nifi.authorization.user.NiFiUserUtils;
-import org.apache.nifi.cluster.coordination.node.NodeConnectionState;
 import org.apache.nifi.controller.FlowController;
 import org.apache.nifi.web.IllegalClusterResourceRequestException;
 import org.apache.nifi.web.NiFiServiceFacade;
 import org.apache.nifi.web.Revision;
 import org.apache.nifi.web.api.dto.ClusterDTO;
 import org.apache.nifi.web.api.dto.NodeDTO;
-import org.apache.nifi.web.api.dto.RevisionDTO;
-import org.apache.nifi.web.api.dto.search.NodeSearchResultDTO;
 import org.apache.nifi.web.api.entity.ClusterEntity;
-import org.apache.nifi.web.api.entity.ClusterSearchResultsEntity;
 import org.apache.nifi.web.api.entity.ControllerConfigurationEntity;
 import org.apache.nifi.web.api.entity.ControllerServiceEntity;
 import org.apache.nifi.web.api.entity.HistoryEntity;
 import org.apache.nifi.web.api.entity.NodeEntity;
-import org.apache.nifi.web.api.entity.ProcessGroupEntity;
 import org.apache.nifi.web.api.entity.ReportingTaskEntity;
-import org.apache.nifi.web.api.request.ClientIdParameter;
 import org.apache.nifi.web.api.request.DateTimeParameter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.POST;
@@ -69,8 +63,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * RESTful endpoint for managing a Flow Controller.
@@ -97,12 +91,21 @@ public class ControllerResource extends ApplicationResource {
     private void authorizeController(final RequestAction action) {
         final NiFiUser user = NiFiUserUtils.getNiFiUser();
 
+        final Map<String,String> userContext;
+        if (!StringUtils.isBlank(user.getClientAddress())) {
+            userContext = new HashMap<>();
+            userContext.put(UserContextKeys.CLIENT_ADDRESS.name(), user.getClientAddress());
+        } else {
+            userContext = null;
+        }
+
         final AuthorizationRequest request = new AuthorizationRequest.Builder()
                 .resource(ResourceFactory.getControllerResource())
                 .identity(user.getIdentity())
                 .anonymous(user.isAnonymous())
                 .accessAttempt(true)
                 .action(action)
+                .userContext(userContext)
                 .build();
 
         final AuthorizationResult result = authorizer.authorize(request);
@@ -110,65 +113,6 @@ public class ControllerResource extends ApplicationResource {
             final String message = StringUtils.isNotBlank(result.getExplanation()) ? result.getExplanation() : "Access is denied";
             throw new AccessDeniedException(message);
         }
-    }
-
-    /**
-     * Creates a new archive of this flow controller. Note, this is a POST operation that returns a URI that is not representative of the thing that was actually created. The archive that is created
-     * cannot be referenced at a later time, therefore there is no corresponding URI. Instead the request URI is returned.
-     *
-     * Alternatively, we could have performed a PUT request. However, PUT requests are supposed to be idempotent and this endpoint is certainly not.
-     *
-     * @param httpServletRequest request
-     * @return A processGroupEntity.
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("archive")
-    // TODO - @PreAuthorize("hasRole('ROLE_DFM')")
-    @ApiOperation(
-            value = "Creates a new archive of this NiFi flow configuration",
-            notes = "This POST operation returns a URI that is not representative of the thing "
-            + "that was actually created. The archive that is created cannot be referenced "
-            + "at a later time, therefore there is no corresponding URI. Instead the "
-            + "request URI is returned.",
-            response = ProcessGroupEntity.class,
-            authorizations = {
-                @Authorization(value = "Data Flow Manager", type = "ROLE_DFM")
-            }
-    )
-    @ApiResponses(
-            value = {
-                @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
-                @ApiResponse(code = 401, message = "Client could not be authenticated."),
-                @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
-                @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
-            }
-    )
-    public Response createArchive(@Context final HttpServletRequest httpServletRequest) {
-
-        if (isReplicateRequest()) {
-            return replicate(HttpMethod.POST);
-        }
-
-        // handle expects request (usually from the cluster manager)
-        final boolean validationPhase = isValidationPhase(httpServletRequest);
-        if (validationPhase || !isTwoPhaseRequest(httpServletRequest)) {
-            // authorize access
-            serviceFacade.authorizeAccess(lookup -> {
-                authorizeController(RequestAction.WRITE);
-            });
-        }
-        if (validationPhase) {
-            return generateContinueResponse().build();
-        }
-
-        // create the archive
-        final ProcessGroupEntity entity = serviceFacade.createArchive();
-
-        // generate the response
-        final URI uri = URI.create(generateResourceUri("controller", "archive"));
-        return clusterContext(generateCreatedResponse(uri, entity)).build();
     }
 
     /**
@@ -351,7 +295,7 @@ public class ControllerResource extends ApplicationResource {
         reportingTaskResource.populateRemainingReportingTaskEntityContent(entity);
 
         // build the response
-        return clusterContext(generateCreatedResponse(URI.create(entity.getComponent().getUri()), entity)).build();
+        return clusterContext(generateCreatedResponse(URI.create(entity.getUri()), entity)).build();
     }
 
     // -------------------
@@ -409,7 +353,7 @@ public class ControllerResource extends ApplicationResource {
         }
 
         if (isReplicateRequest()) {
-            return replicate(HttpMethod.GET);
+            return replicate(HttpMethod.POST, controllerServiceEntity);
         }
 
         // handle expects request (usually from the cluster manager)
@@ -430,10 +374,10 @@ public class ControllerResource extends ApplicationResource {
         // create the controller service and generate the json
         final Revision revision = getRevision(controllerServiceEntity, controllerServiceEntity.getComponent().getId());
         final ControllerServiceEntity entity = serviceFacade.createControllerService(revision, null, controllerServiceEntity.getComponent());
-        controllerServiceResource.populateRemainingControllerServiceContent(entity.getComponent());
+        controllerServiceResource.populateRemainingControllerServiceEntityContent(entity);
 
         // build the response
-        return clusterContext(generateCreatedResponse(URI.create(entity.getComponent().getUri()), entity)).build();
+        return clusterContext(generateCreatedResponse(URI.create(entity.getUri()), entity)).build();
     }
 
     // -------
@@ -485,81 +429,6 @@ public class ControllerResource extends ApplicationResource {
 
         // generate the response
         return generateOkResponse(entity).build();
-    }
-
-    /**
-     * Searches the cluster for a node with a given address.
-     *
-     * @param value Search value that will be matched against a node's address
-     * @return Nodes that match the specified criteria
-     */
-    @GET
-    @Consumes(MediaType.WILDCARD)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("cluster/search-results")
-    // TODO - @PreAuthorize("hasAnyRole('ROLE_MONITOR', 'ROLE_DFM', 'ROLE_ADMIN')")
-    @ApiOperation(
-            value = "Searches the cluster for a node with the specified address",
-            response = ClusterSearchResultsEntity.class,
-            authorizations = {
-                    @Authorization(value = "Read Only", type = "ROLE_MONITOR"),
-                    @Authorization(value = "DFM", type = "ROLE_DFM"),
-                    @Authorization(value = "Admin", type = "ROLE_ADMIN")
-            }
-    )
-    @ApiResponses(
-            value = {
-                    @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
-                    @ApiResponse(code = 401, message = "Client could not be authenticated."),
-                    @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
-                    @ApiResponse(code = 404, message = "The specified resource could not be found."),
-                    @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
-            }
-    )
-    public Response searchCluster(
-            @ApiParam(
-                    value = "Node address to search for.",
-                    required = true
-            )
-            @QueryParam("q") @DefaultValue(StringUtils.EMPTY) String value) {
-
-        authorizeController(RequestAction.READ);
-
-        // ensure connected to the cluster
-        if (!isConnectedToCluster()) {
-            throw new IllegalClusterResourceRequestException("Only a node connected to a cluster can process the request.");
-        }
-
-        final List<NodeSearchResultDTO> nodeMatches = new ArrayList<>();
-
-        // get the nodes in the cluster
-        final ClusterDTO cluster = serviceFacade.getCluster();
-
-        // check each to see if it matches the search term
-        for (NodeDTO node : cluster.getNodes()) {
-            // ensure the node is connected
-            if (!NodeConnectionState.CONNECTED.name().equals(node.getStatus())) {
-                continue;
-            }
-
-            // determine the current nodes address
-            final String address = node.getAddress() + ":" + node.getApiPort();
-
-            // count the node if there is no search or it matches the address
-            if (StringUtils.isBlank(value) || StringUtils.containsIgnoreCase(address, value)) {
-                final NodeSearchResultDTO nodeMatch = new NodeSearchResultDTO();
-                nodeMatch.setId(node.getNodeId());
-                nodeMatch.setAddress(address);
-                nodeMatches.add(nodeMatch);
-            }
-        }
-
-        // build the response
-        ClusterSearchResultsEntity results = new ClusterSearchResultsEntity();
-        results.setNodeResults(nodeMatches);
-
-        // generate an 200 - OK response
-        return noCache(Response.ok(results)).build();
     }
 
     /**
@@ -741,9 +610,6 @@ public class ControllerResource extends ApplicationResource {
     /**
      * Deletes flow history from the specified end date.
      *
-     * @param clientId Optional client id. If the client id is not specified, a
-     * new one will be generated. This value (whether specified or generated) is
-     * included in the response.
      * @param endDate The end date for the purge action.
      * @return A historyEntity
      */
@@ -770,11 +636,6 @@ public class ControllerResource extends ApplicationResource {
     public Response deleteHistory(
             @Context final HttpServletRequest httpServletRequest,
             @ApiParam(
-                    value = "If the client id is not specified, new one will be generated. This value (whether specified or generated) is included in the response.",
-                    required = false
-            )
-            @QueryParam(CLIENT_ID) @DefaultValue(StringUtils.EMPTY) ClientIdParameter clientId,
-            @ApiParam(
                     value = "Purge actions before this date/time.",
                     required = true
             )
@@ -785,9 +646,7 @@ public class ControllerResource extends ApplicationResource {
             throw new IllegalArgumentException("The end date must be specified.");
         }
 
-        if (isReplicateRequest()) {
-            return replicate(HttpMethod.DELETE);
-        }
+        // Note: History requests are not replicated throughout the cluster and are instead handled by the nodes independently
 
         // handle expects request (usually from the cluster manager)
         final boolean validationPhase = isValidationPhase(httpServletRequest);
@@ -803,10 +662,6 @@ public class ControllerResource extends ApplicationResource {
 
         // purge the actions
         serviceFacade.deleteActions(endDate.getDateTime());
-
-        // create the revision
-        final RevisionDTO revision = new RevisionDTO();
-        revision.setClientId(clientId.getClientId());
 
         // create the response entity
         final HistoryEntity entity = new HistoryEntity();

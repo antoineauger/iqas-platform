@@ -51,7 +51,7 @@ nf.Summary = (function () {
         urls: {
             banners: '../nifi-api/flow/banners',
             about: '../nifi-api/flow/about',
-            cluster: '../nifi-api/controller/cluster'
+            clusterSummary: '../nifi-api/flow/cluster/summary'
         }
     };
 
@@ -61,26 +61,15 @@ nf.Summary = (function () {
     var initializeSummaryTable = function () {
         return $.Deferred(function (deferred) {
             $.ajax({
-                type: 'HEAD',
-                url: config.urls.cluster
-            }).done(function () {
-                nf.SummaryTable.init(true).done(function () {
+                type: 'GET',
+                url: config.urls.clusterSummary
+            }).done(function (response) {
+                nf.SummaryTable.init(response.clusterSummary.connectedToCluster).done(function () {
                     deferred.resolve();
                 }).fail(function () {
                     deferred.reject();
                 });
-            }).fail(function (xhr, status, error) {
-                if (xhr.status === 404) {
-                    nf.SummaryTable.init(false).done(function () {
-                        deferred.resolve();
-                    }).fail(function () {
-                        deferred.reject();
-                    });
-                } else {
-                    nf.Common.handleAjaxError(xhr, status, error);
-                    deferred.reject();
-                }
-            });
+            }).fail(nf.Common.handleAjaxError);
         }).promise();
     };
 
@@ -194,8 +183,40 @@ nf.Summary = (function () {
                             setBodySize();
                         }).fail(nf.Common.handleAjaxError);
 
-                        // listen for browser resize events to reset the body size
-                        $(window).resize(setBodySize);
+                        $(window).on('resize', function (e) {
+                            setBodySize();
+                            // resize dialogs when appropriate
+                            var dialogs = $('.dialog');
+                            for (var i = 0, len = dialogs.length; i < len; i++) {
+                                if ($(dialogs[i]).is(':visible')){
+                                    setTimeout(function(dialog){
+                                        dialog.modal('resize');
+                                    }, 50, $(dialogs[i]));
+                                }
+                            }
+
+                            // resize grids when appropriate
+                            var gridElements = $('*[class*="slickgrid_"]');
+                            for (var j = 0, len = gridElements.length; j < len; j++) {
+                                if ($(gridElements[j]).is(':visible')){
+                                    setTimeout(function(gridElement){
+                                        gridElement.data('gridInstance').resizeCanvas();
+                                    }, 50, $(gridElements[j]));
+                                }
+                            }
+
+                            // toggle tabs .scrollable when appropriate
+                            var tabsContainers = $('.tab-container');
+                            var tabsContents = [];
+                            for (var k = 0, len = tabsContainers.length; k < len; k++) {
+                                if ($(tabsContainers[k]).is(':visible')){
+                                    tabsContents.push($('#' + $(tabsContainers[k]).attr('id') + '-content'));
+                                }
+                            }
+                            $.each(tabsContents, function (index, tabsContent) {
+                                nf.Common.toggleScrollable(tabsContent.get(0));
+                            });
+                        });
                     });
                 });
             });

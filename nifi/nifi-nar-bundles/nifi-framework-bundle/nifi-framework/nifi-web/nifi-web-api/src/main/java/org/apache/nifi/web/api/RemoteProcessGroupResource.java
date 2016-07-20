@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.RequestAction;
 import org.apache.nifi.authorization.resource.Authorizable;
+import org.apache.nifi.authorization.user.NiFiUserUtils;
 import org.apache.nifi.web.NiFiServiceFacade;
 import org.apache.nifi.web.Revision;
 import org.apache.nifi.web.api.dto.RemoteProcessGroupDTO;
@@ -88,36 +89,8 @@ public class RemoteProcessGroupResource extends ApplicationResource {
      * @return dtos
      */
     public RemoteProcessGroupEntity populateRemainingRemoteProcessGroupEntityContent(RemoteProcessGroupEntity remoteProcessGroupEntity) {
-        if (remoteProcessGroupEntity.getComponent() != null) {
-            populateRemainingRemoteProcessGroupContent(remoteProcessGroupEntity.getComponent());
-        }
+        remoteProcessGroupEntity.setUri(generateResourceUri("remote-process-groups", remoteProcessGroupEntity.getId()));
         return remoteProcessGroupEntity;
-    }
-
-    /**
-     * Populates the remaining content for each remote process group. The uri must be generated and the remote process groups name must be retrieved.
-     *
-     * @param remoteProcessGroups groups
-     * @return dtos
-     */
-    public Set<RemoteProcessGroupDTO> populateRemainingRemoteProcessGroupsContent(Set<RemoteProcessGroupDTO> remoteProcessGroups) {
-        for (RemoteProcessGroupDTO remoteProcessGroup : remoteProcessGroups) {
-            populateRemainingRemoteProcessGroupContent(remoteProcessGroup);
-        }
-        return remoteProcessGroups;
-    }
-
-    /**
-     * Populates the remaining content for the specified remote process group. The uri must be generated and the remote process groups name must be retrieved.
-     *
-     * @param remoteProcessGroup group
-     * @return dto
-     */
-    public RemoteProcessGroupDTO populateRemainingRemoteProcessGroupContent(RemoteProcessGroupDTO remoteProcessGroup) {
-        // populate the remaining content
-        remoteProcessGroup.setUri(generateResourceUri("remote-process-groups", remoteProcessGroup.getId()));
-
-        return remoteProcessGroup;
     }
 
     /**
@@ -169,7 +142,7 @@ public class RemoteProcessGroupResource extends ApplicationResource {
         // authorize access
         serviceFacade.authorizeAccess(lookup -> {
             final Authorizable remoteProcessGroup = lookup.getRemoteProcessGroup(id);
-            remoteProcessGroup.authorize(authorizer, RequestAction.READ);
+            remoteProcessGroup.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
         });
 
         // get the remote process group
@@ -245,7 +218,7 @@ public class RemoteProcessGroupResource extends ApplicationResource {
             revision,
             lookup -> {
                 final Authorizable remoteProcessGroup = lookup.getRemoteProcessGroup(id);
-                remoteProcessGroup.authorize(authorizer, RequestAction.WRITE);
+                remoteProcessGroup.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             () -> serviceFacade.verifyDeleteRemoteProcessGroup(id),
             () -> {
@@ -323,7 +296,7 @@ public class RemoteProcessGroupResource extends ApplicationResource {
             revision,
             lookup -> {
                 final Authorizable remoteProcessGroupInputPort = lookup.getRemoteProcessGroupInputPort(id, portId);
-                remoteProcessGroupInputPort.authorize(authorizer, RequestAction.WRITE);
+                remoteProcessGroupInputPort.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             () -> serviceFacade.verifyUpdateRemoteProcessGroupInputPort(id, requestRemoteProcessGroupPort),
             () -> {
@@ -412,7 +385,7 @@ public class RemoteProcessGroupResource extends ApplicationResource {
             revision,
             lookup -> {
                 final Authorizable remoteProcessGroupOutputPort = lookup.getRemoteProcessGroupOutputPort(id, portId);
-                remoteProcessGroupOutputPort.authorize(authorizer, RequestAction.WRITE);
+                remoteProcessGroupOutputPort.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             () -> serviceFacade.verifyUpdateRemoteProcessGroupOutputPort(id, requestRemoteProcessGroupPort),
             () -> {
@@ -492,7 +465,7 @@ public class RemoteProcessGroupResource extends ApplicationResource {
             revision,
             lookup -> {
                 Authorizable authorizable = lookup.getRemoteProcessGroup(id);
-                authorizable.authorize(authorizer, RequestAction.WRITE);
+                authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             () -> serviceFacade.verifyUpdateRemoteProcessGroup(requestRemoteProcessGroup),
             () -> {

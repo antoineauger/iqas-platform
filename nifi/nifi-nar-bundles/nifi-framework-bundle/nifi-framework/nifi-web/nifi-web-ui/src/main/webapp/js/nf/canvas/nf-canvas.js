@@ -114,9 +114,10 @@ nf.Canvas = (function () {
     var polling = false;
     var groupId = 'root';
     var groupName = null;
-    var accessPolicy = null;
+    var permissions = null;
     var parentGroupId = null;
     var clustered = false;
+    var connectedToCluster = false;
     var svg = null;
     var canvas = null;
 
@@ -126,16 +127,17 @@ nf.Canvas = (function () {
     var config = {
         urls: {
             api: '../nifi-api',
-            identity: '../nifi-api/flow/identity',
-            authorities: '../nifi-api/flow/authorities',
+            currentUser: '../nifi-api/flow/current-user',
+            controllerBulletins: '../nifi-api/flow/controller/bulletins',
             kerberos: '../nifi-api/access/kerberos',
             revision: '../nifi-api/flow/revision',
             banners: '../nifi-api/flow/banners',
             flowConfig: '../nifi-api/flow/config',
+            clusterSummary: '../nifi-api/flow/cluster/summary',
             cluster: '../nifi-api/controller/cluster'
         }
     };
-    
+
     /**
      * Starts polling.
      *
@@ -148,7 +150,7 @@ nf.Canvas = (function () {
     };
 
     /**
-     * Register the pooler.
+     * Register the poller.
      *
      * @argument {int} autoRefreshInterval      The auto refresh interval
      */
@@ -166,54 +168,6 @@ nf.Canvas = (function () {
             });
         }
     };
-
-    /**
-     * Checks the current revision against this version of the flow.
-     */
-    // var checkRevision = function () {
-    //     // get the revision
-    //     return $.ajax({
-    //         type: 'GET',
-    //         url: config.urls.revision,
-    //         dataType: 'json'
-    //     }).done(function (response) {
-    //         if (nf.Common.isDefinedAndNotNull(response.revision)) {
-    //             var revision = response.revision;
-    //             var currentRevision = nf.Client.getRevision();
-    //
-    //             // if there is a newer revision, there are outstanding
-    //             // changes that need to be updated
-    //             if (revision.version > currentRevision.version && revision.clientId !== currentRevision.clientId) {
-    //                 var refreshContainer = $('#refresh-required-container');
-    //                 var settingsRefreshIcon = $('#settings-refresh-required-icon');
-    //
-    //                 // insert the refresh needed text in the canvas - if necessary
-    //                 if (!refreshContainer.is(':visible')) {
-    //                     $('#stats-last-refreshed').addClass('alert');
-    //                     var refreshMessage = "This flow has been modified by '" + revision.lastModifier + "'. Please refresh.";
-    //
-    //                     // update the tooltip
-    //                     var refreshRequiredIcon = $('#refresh-required-icon');
-    //                     if (refreshRequiredIcon.data('qtip')) {
-    //                         refreshRequiredIcon.qtip('option', 'content.text', refreshMessage);
-    //                     } else {
-    //                         refreshRequiredIcon.qtip($.extend({
-    //                             content: refreshMessage
-    //                         }, nf.CanvasUtils.config.systemTooltipConfig));
-    //                     }
-    //
-    //                     refreshContainer.show();
-    //                 }
-    //
-    //                 // insert the refresh needed text in the settings - if necessary
-    //                 if (!settingsRefreshIcon.is(':visible')) {
-    //                     $('#settings-last-refreshed').addClass('alert');
-    //                     settingsRefreshIcon.show();
-    //                 }
-    //             }
-    //         }
-    //     }).fail(nf.Common.handleAjaxError);
-    // };
 
     /**
      * Initializes the canvas.
@@ -348,42 +302,42 @@ nf.Canvas = (function () {
 
         // handle canvas events
         svg.on('mousedown.selection', function () {
-                canvasClicked = true;
+            canvasClicked = true;
 
-                if (d3.event.button !== 0) {
-                    // prevent further propagation (to parents and others handlers
-                    // on the same element to prevent zoom behavior)
-                    d3.event.stopImmediatePropagation();
-                    return;
-                }
+            if (d3.event.button !== 0) {
+                // prevent further propagation (to parents and others handlers
+                // on the same element to prevent zoom behavior)
+                d3.event.stopImmediatePropagation();
+                return;
+            }
 
-                // show selection box if shift is held down
-                if (d3.event.shiftKey) {
-                    var position = d3.mouse(canvas.node());
-                    canvas.append('rect')
-                        .attr('rx', 6)
-                        .attr('ry', 6)
-                        .attr('x', position[0])
-                        .attr('y', position[1])
-                        .attr('class', 'selection')
-                        .attr('width', 0)
-                        .attr('height', 0)
-                        .attr('stroke-width', function () {
-                            return 1 / nf.Canvas.View.scale();
-                        })
-                        .attr('stroke-dasharray', function () {
-                            return 4 / nf.Canvas.View.scale();
-                        })
-                        .datum(position);
+            // show selection box if shift is held down
+            if (d3.event.shiftKey) {
+                var position = d3.mouse(canvas.node());
+                canvas.append('rect')
+                    .attr('rx', 6)
+                    .attr('ry', 6)
+                    .attr('x', position[0])
+                    .attr('y', position[1])
+                    .attr('class', 'selection')
+                    .attr('width', 0)
+                    .attr('height', 0)
+                    .attr('stroke-width', function () {
+                        return 1 / nf.Canvas.View.scale();
+                    })
+                    .attr('stroke-dasharray', function () {
+                        return 4 / nf.Canvas.View.scale();
+                    })
+                    .datum(position);
 
-                    // prevent further propagation (to parents and others handlers
-                    // on the same element to prevent zoom behavior)
-                    d3.event.stopImmediatePropagation();
+                // prevent further propagation (to parents and others handlers
+                // on the same element to prevent zoom behavior)
+                d3.event.stopImmediatePropagation();
 
-                    // prevents the browser from changing to a text selection cursor
-                    d3.event.preventDefault();
-                }
-            })
+                // prevents the browser from changing to a text selection cursor
+                d3.event.preventDefault();
+            }
+        })
             .on('mousemove.selection', function () {
                 // update selection box if shift is held down
                 if (d3.event.shiftKey) {
@@ -500,7 +454,7 @@ nf.Canvas = (function () {
             });
             svg.attr({
                 'height': canvasContainer.height(),
-                'width': canvasContainer.width()
+                'width': $(window).width()
             });
 
             //breadcrumbs
@@ -527,15 +481,48 @@ nf.Canvas = (function () {
                 updateGraphSize();
                 updateFlowStatusContainerSize();
 
-                // resize grids when appropriate
-                var gridElements = $('*[class*="slickgrid_"]');
-                for (var i = 0, len = gridElements.length; i < len; i++) {
-                    if ($(gridElements[i]).is(':visible')){
-                        setTimeout(function(gridElement){
-                            gridElement.data('gridInstance').resizeCanvas();
-                        }, 50, $(gridElements[i]));
+                // resize shell when appropriate
+                var shell = $('#shell-dialog');
+                if (shell.is(':visible')){
+                    setTimeout(function(shell){
+                        nf.Shell.resizeContent(shell);
+                        if(shell.find('#shell-iframe').is(':visible')) {
+                            nf.Shell.resizeIframe(shell);
+                        }
+                    }, 50, shell);
+                }
+
+                // resize dialogs when appropriate
+                var dialogs = $('.dialog');
+                for (var i = 0, len = dialogs.length; i < len; i++) {
+                    if ($(dialogs[i]).is(':visible')){
+                        setTimeout(function(dialog){
+                            dialog.modal('resize');
+                        }, 50, $(dialogs[i]));
                     }
                 }
+
+                // resize grids when appropriate
+                var gridElements = $('*[class*="slickgrid_"]');
+                for (var j = 0, len = gridElements.length; j < len; j++) {
+                    if ($(gridElements[j]).is(':visible')){
+                        setTimeout(function(gridElement){
+                            gridElement.data('gridInstance').resizeCanvas();
+                        }, 50, $(gridElements[j]));
+                    }
+                }
+
+                // toggle tabs .scrollable when appropriate
+                var tabsContainers = $('.tab-container');
+                var tabsContents = [];
+                for (var k = 0, len = tabsContainers.length; k < len; k++) {
+                    if ($(tabsContainers[k]).is(':visible')){
+                        tabsContents.push($('#' + $(tabsContainers[k]).attr('id') + '-content'));
+                    }
+                }
+                $.each(tabsContents, function (index, tabsContent) {
+                    nf.Common.toggleScrollable(tabsContent.get(0));
+                });
             }
         }).on('keydown', function (evt) {
             // if a dialog is open, disable canvas shortcuts
@@ -563,7 +550,7 @@ nf.Canvas = (function () {
                     evt.preventDefault();
                 } else if (evt.keyCode === 67) {
                     // ctrl-c
-                    if (nf.Common.isDFM() && nf.CanvasUtils.isCopyable(selection)) {
+                    if (nf.Canvas.canWrite() && nf.CanvasUtils.isCopyable(selection)) {
                         nf.Actions.copy(selection);
 
                         // only want to prevent default if the action was performed, otherwise default copy would be overridden
@@ -571,7 +558,7 @@ nf.Canvas = (function () {
                     }
                 } else if (evt.keyCode === 86) {
                     // ctrl-v
-                    if (nf.Common.isDFM() && nf.CanvasUtils.isPastable()) {
+                    if (nf.Canvas.canWrite() && nf.CanvasUtils.isPastable()) {
                         nf.Actions.paste(selection);
 
                         // only want to prevent default if the action was performed, otherwise default paste would be overridden
@@ -581,7 +568,7 @@ nf.Canvas = (function () {
             } else {
                 if (evt.keyCode === 8 || evt.keyCode === 46) {
                     // backspace or delete
-                    if (nf.Common.isDFM() && nf.CanvasUtils.areDeletable(selection)) {
+                    if (nf.Canvas.canWrite() && nf.CanvasUtils.areDeletable(selection)) {
                         nf.Actions['delete'](selection);
                     }
 
@@ -647,14 +634,14 @@ nf.Canvas = (function () {
 
             // get the current group name from the breadcrumb
             var breadcrumb = processGroupFlow.breadcrumb;
-            if (breadcrumb.accessPolicy.canRead) {
+            if (breadcrumb.permissions.canRead) {
                 nf.Canvas.setGroupName(breadcrumb.breadcrumb.name);
             } else {
                 nf.Canvas.setGroupName(breadcrumb.id);
             }
 
             // update the access policies
-            accessPolicy = flowResponse.accessPolicy;
+            permissions = flowResponse.permissions;
             
             // update the breadcrumbs
             nf.ng.Bridge.injector.get('breadcrumbsCtrl').resetBreadcrumbs();
@@ -681,10 +668,37 @@ nf.Canvas = (function () {
 
             // update the birdseye
             nf.Birdseye.refresh();
-
-            // inform Angular app values have changed
-            nf.ng.Bridge.digest();
         }).fail(nf.Common.handleAjaxError);
+    };
+
+    /**
+     * Loads the current user and updates the current user locally.
+     *
+     * @returns xhr
+     */
+    var loadCurrentUser = function () {
+        // get the current user
+        return $.ajax({
+            type: 'GET',
+            url: config.urls.currentUser,
+            dataType: 'json'
+        }).done(function (currentUser) {
+            // set the current user
+            nf.Common.setCurrentUser(currentUser);
+        });
+    };
+
+    /**
+     * Loads the flow configuration and updated the cluster state.
+     *
+     * @returns xhr
+     */
+    var loadClusterSummary = function () {
+        return $.ajax({
+            type: 'GET',
+            url: config.urls.clusterSummary,
+            dataType: 'json'
+        });
     };
 
     return {
@@ -719,15 +733,62 @@ nf.Canvas = (function () {
                 // hide the context menu
                 nf.ContextMenu.hide();
 
-                // get the process group to refresh everything
+                // issue the requests
                 var processGroupXhr = reloadProcessGroup(nf.Canvas.getGroupId(), options);
                 var statusXhr = nf.ng.Bridge.injector.get('flowStatusCtrl').reloadFlowStatus();
-                $.when(processGroupXhr, statusXhr).done(function (processGroupResult) {
+                var currentUserXhr = loadCurrentUser();
+                var controllerBulletins = $.ajax({
+                    type: 'GET',
+                    url: config.urls.controllerBulletins,
+                    dataType: 'json'
+                }).done(function (response) {
+                    nf.ng.Bridge.injector.get('flowStatusCtrl').updateBulletins(response);
+                    deferred.resolve();
+                }).fail(function (xhr, status, error) {
+                    deferred.reject(xhr, status, error);
+                });
+                var clusterSummary = loadClusterSummary().done(function (response) {
+                    var clusterSummary = response.clusterSummary;
+
+                    // update the cluster summary
+                    nf.ng.Bridge.injector.get('flowStatusCtrl').updateClusterSummary(clusterSummary);
+
+                    // update the clustered flag
+                    clustered = clusterSummary.clustered;
+                    connectedToCluster = clusterSummary.connectedToCluster;
+                });
+
+                // wait for all requests to complete
+                $.when(processGroupXhr, statusXhr, currentUserXhr, controllerBulletins, clusterSummary).done(function (processGroupResult) {
+                    // inform Angular app values have changed
+                    nf.ng.Bridge.digest();
+
+                    // resolve the deferred
                     deferred.resolve(processGroupResult);
-                }).fail(function () {
-                    deferred.reject();
+                }).fail(function (xhr, status, error) {
+                    deferred.reject(xhr, status, error);
                 });
             }).promise();
+        },
+
+        /**
+         * Shows a message when disconnected from the cluster.
+         */
+        showDisconnectedFromClusterMessage: function () {
+            nf.Dialog.showOkDialog({
+                headerText: 'Cluster Connection',
+                dialogContent: 'This node is currently not connected to the cluster. Any modifications to the data flow made here will not replicate across the cluster.'
+            });
+        },
+
+        /**
+         * Shows a message when connected to the cluster.
+         */
+        showConnectedToClusterMessage: function () {
+            nf.Dialog.showOkDialog({
+                headerText: 'Cluster Connection',
+                dialogContent: 'This node just joined the cluster. Any modifications to the data flow made here will replicate across the cluster.'
+            });
         },
 
         /**
@@ -755,36 +816,14 @@ nf.Canvas = (function () {
                 }
             }).promise();
 
-            // load the identity and authorities for the current user
+            // load the current user
             var userXhr = $.Deferred(function (deferred) {
                 ticketExchange.always(function () {
-                    // get the current user's identity
-                    var identityXhr = $.ajax({
-                        type: 'GET',
-                        url: config.urls.identity,
-                        dataType: 'json'
-                    });
-
-                    // get the current user's authorities
-                    var authoritiesXhr = $.ajax({
-                        type: 'GET',
-                        url: config.urls.authorities,
-                        dataType: 'json'
-                    });
-
-                    $.when(authoritiesXhr, identityXhr).done(function (authoritiesResult, identityResult) {
-                        var authoritiesResponse = authoritiesResult[0];
-                        var identityResponse = identityResult[0];
-
-                        // set the user's authorities
-                        nf.Common.setAuthorities(authoritiesResponse.authorities);
-
-                        // at this point the user may be themselves or anonymous
-
+                    loadCurrentUser().done(function (currentUser) {
                         // if the user is logged, we want to determine if they were logged in using a certificate
-                        if (identityResponse.anonymous === false) {
-                            // rendner the users name
-                            $('#current-user').text(identityResponse.identity).show();
+                        if (currentUser.anonymous === false) {
+                            // render the users name
+                            $('#current-user').text(currentUser.identity).show();
 
                             // render the logout button if there is a token locally
                             if (nf.Storage.getItem('jwt') !== null) {
@@ -805,10 +844,11 @@ nf.Canvas = (function () {
                     });
                 });
             }).promise();
+            
             userXhr.done(function () {
                 // load the client id
                 var clientXhr = nf.Client.init();
-                
+
                 // get the controller config to register the status poller
                 var configXhr = $.ajax({
                     type: 'GET',
@@ -816,9 +856,13 @@ nf.Canvas = (function () {
                     dataType: 'json'
                 });
 
+                // get the initial cluster summary
+                var clusterSummary = loadClusterSummary();
+
                 // ensure the config requests are loaded
-                $.when(configXhr, userXhr, clientXhr).done(function (configResult, loginResult, aboutResult) {
+                $.when(configXhr, clusterSummary, userXhr, clientXhr).done(function (configResult, clusterSummaryResult) {
                     var configResponse = configResult[0];
+                    var clusterSummaryResponse = clusterSummaryResult[0];
 
                     // calculate the canvas offset
                     var canvasContainer = $('#canvas-container');
@@ -826,9 +870,19 @@ nf.Canvas = (function () {
 
                     // get the config details
                     var configDetails = configResponse.flowConfiguration;
+                    var clusterSummary = clusterSummaryResponse.clusterSummary;
 
-                    // update the clustered flag
-                    clustered = configDetails.clustered;
+                    // show disconnected message on load if necessary
+                    if (clusterSummary.clustered && !clusterSummary.connectedToCluster) {
+                        nf.Canvas.showDisconnectedFromClusterMessage();
+                    }
+
+                    // establish the initial cluster state
+                    clustered = clusterSummary.clustered;
+                    connectedToCluster = clusterSummary.connectedToCluster;
+
+                    // update the cluster summary
+                    nf.ng.Bridge.injector.get('flowStatusCtrl').updateClusterSummary(clusterSummary);
 
                     // get the auto refresh interval
                     var autoRefreshIntervalSeconds = parseInt(configDetails.autoRefreshIntervalSeconds, 10);
@@ -861,6 +915,7 @@ nf.Canvas = (function () {
                     nf.ConnectionConfiguration.init();
                     nf.ControllerService.init();
                     nf.ReportingTask.init();
+                    nf.PolicyManagement.init();
                     nf.ProcessorConfiguration.init();
                     nf.ProcessGroupConfiguration.init();
                     nf.RemoteProcessGroupConfiguration.init();
@@ -868,7 +923,6 @@ nf.Canvas = (function () {
                     nf.PortConfiguration.init();
                     nf.LabelConfiguration.init();
                     nf.ProcessorDetails.init();
-                    nf.ProcessGroupDetails.init();
                     nf.PortDetails.init();
                     nf.ConnectionDetails.init();
                     nf.RemoteProcessGroupDetails.init();
@@ -898,6 +952,15 @@ nf.Canvas = (function () {
          */
         isClustered: function () {
             return clustered === true;
+        },
+
+        /**
+         * Return whether this instance is connected to a cluster.
+         *
+         * @returns {boolean}
+         */
+        isConnectedToCluster: function () {
+            return connectedToCluster === true;
         },
 
         /**
@@ -954,23 +1017,23 @@ nf.Canvas = (function () {
          * @returns {boolean}   can write
          */
         canRead: function () {
-            if (accessPolicy === null) {
+            if (permissions === null) {
                 return false;
             } else {
-                return accessPolicy.canRead === true;
+                return permissions.canRead === true;
             }
         },
-        
+
         /**
          * Whether the current user can write in this group.
-         * 
+         *
          * @returns {boolean}   can write
          */
         canWrite: function () {
-            if (accessPolicy === null) {
+            if (permissions === null) {
                 return false;
             } else {
-                return accessPolicy.canWrite === true;
+                return permissions.canWrite === true;
             }
         },
 

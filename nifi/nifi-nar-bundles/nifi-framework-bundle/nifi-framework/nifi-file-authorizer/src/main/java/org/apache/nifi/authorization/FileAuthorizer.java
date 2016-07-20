@@ -66,10 +66,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 /**
- * Provides identity checks and grants authorities.
+ * Provides authorizes requests to resources using policies persisted in a file.
  */
 public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
 
@@ -103,6 +105,7 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
     static final String PROP_AUTHORIZATIONS_FILE = "Authorizations File";
     static final String PROP_INITIAL_ADMIN_IDENTITY = "Initial Admin Identity";
     static final String PROP_LEGACY_AUTHORIZED_USERS_FILE = "Legacy Authorized Users File";
+    static final Pattern NODE_IDENTITY_PATTERN = Pattern.compile("Node Identity \\S+");
 
     private Schema flowSchema;
     private Schema usersSchema;
@@ -114,6 +117,7 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
     private String rootGroupId;
     private String initialAdminIdentity;
     private String legacyAuthorizedUsersFile;
+    private Set<String> nodeIdentities;
 
     private final AtomicReference<AuthorizationsHolder> authorizationsHolder = new AtomicReference<>();
 
@@ -130,7 +134,7 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
     }
 
     @Override
-    public void onConfigured(final AuthorizerConfigurationContext configurationContext) throws AuthorizerCreationException {
+    public void doOnConfigured(final AuthorizerConfigurationContext configurationContext) throws AuthorizerCreationException {
         try {
             final PropertyValue authorizationsPath = configurationContext.getProperty(PROP_AUTHORIZATIONS_FILE);
             if (StringUtils.isBlank(authorizationsPath.getValue())) {
@@ -169,11 +173,22 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
                 }
             }
 
+            // get the value of the initial admin identity
             final PropertyValue initialAdminIdentityProp = configurationContext.getProperty(PROP_INITIAL_ADMIN_IDENTITY);
             initialAdminIdentity = initialAdminIdentityProp == null ? null : initialAdminIdentityProp.getValue();
 
+            // get the value of the legacy authorized users file
             final PropertyValue legacyAuthorizedUsersProp = configurationContext.getProperty(PROP_LEGACY_AUTHORIZED_USERS_FILE);
             legacyAuthorizedUsersFile = legacyAuthorizedUsersProp == null ? null : legacyAuthorizedUsersProp.getValue();
+
+            // extract any node identities
+            nodeIdentities = new HashSet<>();
+            for (Map.Entry<String,String> entry : configurationContext.getProperties().entrySet()) {
+                Matcher matcher = NODE_IDENTITY_PATTERN.matcher(entry.getKey());
+                if (matcher.matches() && !StringUtils.isBlank(entry.getValue())) {
+                    nodeIdentities.add(entry.getValue());
+                }
+            }
 
             // load the authorizations
             load();
@@ -234,6 +249,8 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
                 logger.info("Converting " + legacyAuthorizedUsersFile + " to new authorizations model");
                 convertLegacyAuthorizedUsers(authorizations);
             }
+
+            populateNodes(authorizations);
 
             // save any changes that were made and repopulate the holder
             saveAndRefreshHolder(authorizations);
@@ -324,14 +341,49 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
 
         // grant the user read access to the root process group resource
         if (rootGroupId != null) {
+            addAccessPolicy(authorizations, ResourceType.ProcessGroup.getValue() + "/" + rootGroupId, adminUser.getIdentifier(), READ_CODE);
             addAccessPolicy(authorizations, ResourceType.ProcessGroup.getValue() + "/" + rootGroupId, adminUser.getIdentifier(), WRITE_CODE);
         }
 
         // grant the user read/write access to the /tenants resource
+        addAccessPolicy(authorizations, ResourceType.Tenant.getValue(), adminUser.getIdentifier(), READ_CODE);
         addAccessPolicy(authorizations, ResourceType.Tenant.getValue(), adminUser.getIdentifier(), WRITE_CODE);
 
         // grant the user read/write access to the /policies resource
+        addAccessPolicy(authorizations, ResourceType.Policy.getValue(), adminUser.getIdentifier(), READ_CODE);
         addAccessPolicy(authorizations, ResourceType.Policy.getValue(), adminUser.getIdentifier(), WRITE_CODE);
+    }
+
+    /**
+     * Creates a user for each node and gives the nodes write permission to /proxy.
+     *
+     * @param authorizations the overall authorizations
+     */
+    private void populateNodes(Authorizations authorizations) {
+        for (String nodeIdentity : nodeIdentities) {
+            // see if we have an existing user for the given node identity
+            org.apache.nifi.authorization.file.generated.User jaxbNodeUser = null;
+            for (org.apache.nifi.authorization.file.generated.User user : authorizations.getUsers().getUser()) {
+                if (user.getIdentity().equals(nodeIdentity)) {
+                    jaxbNodeUser = user;
+                    break;
+                }
+            }
+
+            // if we didn't find an existing user then create a new one
+            if (jaxbNodeUser == null) {
+                // generate an identifier and add a User with the given identifier and identity
+                final UUID nodeIdentifier = UUID.nameUUIDFromBytes(nodeIdentity.getBytes(StandardCharsets.UTF_8));
+                final User nodeUser = new User.Builder().identifier(nodeIdentifier.toString()).identity(nodeIdentity).build();
+
+                jaxbNodeUser = createJAXBUser(nodeUser);
+                authorizations.getUsers().getUser().add(jaxbNodeUser);
+            }
+
+            // grant access to the proxy resource
+            addAccessPolicy(authorizations, ResourceType.Proxy.getValue(), jaxbNodeUser.getIdentifier(), READ_CODE);
+            addAccessPolicy(authorizations, ResourceType.Proxy.getValue(), jaxbNodeUser.getIdentifier(), WRITE_CODE);
+        }
     }
 
     /**
@@ -372,8 +424,7 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
         // create mapping from Role to access policies
         final Map<Role,Set<RoleAccessPolicy>> roleAccessPolicies = RoleAccessPolicy.getMappings(rootGroupId);
 
-        final List<Policy> readPolicies = new ArrayList<>();
-        final List<Policy> readWritePolicies = new ArrayList<>();
+        final List<Policy> allPolicies = new ArrayList<>();
 
         for (org.apache.nifi.user.generated.User legacyUser : users.getUser()) {
             // create the identifier of the new user based on the DN
@@ -389,9 +440,9 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
             // if there was a group name find or create the group and add the user to it
             org.apache.nifi.authorization.file.generated.Group group = getOrCreateGroup(authorizations, legacyUser.getGroup());
             if (group != null) {
-                org.apache.nifi.authorization.file.generated.User.Group userGroup = new org.apache.nifi.authorization.file.generated.User.Group();
-                userGroup.setIdentifier(group.getIdentifier());
-                user.getGroup().add(userGroup);
+                org.apache.nifi.authorization.file.generated.Group.User groupUser = new org.apache.nifi.authorization.file.generated.Group.User();
+                groupUser.setIdentifier(userIdentifier);
+                group.getUser().add(groupUser);
             }
 
             // create policies based on the given role
@@ -400,16 +451,13 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
                 Set<RoleAccessPolicy> policies = roleAccessPolicies.get(role);
 
                 for (RoleAccessPolicy roleAccessPolicy : policies) {
-                    // determine if we should use the read policies or read-write policies
-                    List<Policy> searchPolicies = roleAccessPolicy.getActions().equals(RoleAccessPolicy.READ_ACTION)
-                            ? readPolicies : readWritePolicies;
 
                     // get the matching policy, or create a new one
                     Policy policy = getOrCreatePolicy(
-                            searchPolicies,
+                            allPolicies,
                             seedIdentity,
                             roleAccessPolicy.getResource(),
-                            roleAccessPolicy.getActions());
+                            roleAccessPolicy.getAction());
 
                     // determine if the user already exists in the policy
                     boolean userExists = false;
@@ -431,77 +479,7 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
 
         }
 
-        // merge the policies and add the result to the overall authorizations instance
-        final List<Policy> mergedPolicies = merge(readPolicies, readWritePolicies);
-        authorizations.getPolicies().getPolicy().addAll(mergedPolicies);
-    }
-
-    /**
-     * Merges the provided read and read-write policies. Any users that are in a read policy and also in a read-write
-     * policy for the same resource will be removed from the read policy. If users are still left in the read policy
-     * after checking each user, then the read policy will still be included in the merged list.
-     *
-     * @param readPolicies the read policies
-     * @param readWritePolicies the read-write policies
-     * @return the merged list of policies
-     */
-    private List<Policy> merge(List<Policy> readPolicies, List<Policy> readWritePolicies) {
-        final List<Policy> mergedPolicies = new ArrayList<>(readWritePolicies);
-
-        logger.debug("Merging {} read policies and {} read-write policies",
-                new Object[] {readPolicies.size(), readWritePolicies.size()});
-
-        for (Policy readPolicy : readPolicies) {
-            logger.debug("Processing read policy {} for resource {} with actions {}",
-                    new Object[] {readPolicy.getIdentifier(), readPolicy.getResource(), readPolicy.getAction()});
-
-            // try to find a matching read-write policy for the same resource
-            Policy foundReadWritePolicy = null;
-            for (Policy readWritePolicy : readWritePolicies) {
-                if (readWritePolicy.getResource().equals(readPolicy.getResource())) {
-                    foundReadWritePolicy = readWritePolicy;
-                    break;
-                }
-            }
-
-            // if we didn't find a match then we just add the current read policy to the merged list
-            if (foundReadWritePolicy == null) {
-                logger.debug("no matching write policy found, adding read policy {} to merged policies",
-                        new Object[] {readPolicy.getIdentifier()});
-                mergedPolicies.add(readPolicy);
-            } else {
-                // check each user from the read policy
-                Iterator<Policy.User> userIter = readPolicy.getUser().iterator();
-                while (userIter.hasNext()) {
-                    Policy.User readUser = userIter.next();
-
-                    // determine if the user from the read policy exists in the read-write policy
-                    boolean userInReadWrite = false;
-                    for (Policy.User readWriteUser : foundReadWritePolicy.getUser()) {
-                        if (readWriteUser.getIdentifier().equals(readUser.getIdentifier())) {
-                            userInReadWrite = true;
-                            break;
-                        }
-                    }
-
-                    // if the user was in the read-write policy, remove them from read policy
-                    if (userInReadWrite) {
-                        logger.debug("Removing user {} from read policy {}", new Object[] {readUser.getIdentifier(), readPolicy.getIdentifier()});
-                        userIter.remove();
-                    }
-                }
-
-                // after checking all users, see if any are still left in the read policy
-                // if there are still some users, then add the read policy to the merged list
-                if (readPolicy.getUser().size() > 0) {
-                    logger.debug("Read policy still has {} users, adding read policy {} to merged list",
-                            new Object[] {readPolicy.getUser().size(), readPolicy.getIdentifier()});
-                    mergedPolicies.add(readPolicy);
-                }
-            }
-        }
-
-        return mergedPolicies;
+        authorizations.getPolicies().getPolicy().addAll(allPolicies);
     }
 
     /**
@@ -580,25 +558,42 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
      * @param action the action for the policy
      */
     private void addAccessPolicy(final Authorizations authorizations, final String resource, final String identity, final String action) {
-        final String uuidSeed = resource + identity;
-        final UUID policyIdentifier = UUID.nameUUIDFromBytes(uuidSeed.getBytes(StandardCharsets.UTF_8));
-
-        final AccessPolicy.Builder builder = new AccessPolicy.Builder()
-                .identifier(policyIdentifier.toString())
-                .resource(resource)
-                .addUser(identity);
-
-        if (action.equals(READ_CODE)) {
-            builder.action(RequestAction.READ);
-        } else if (action.equals(WRITE_CODE)) {
-            builder.action(RequestAction.WRITE);
-        } else {
-            throw new IllegalStateException("Unknown Policy Action: " + action);
+        // first try to find an existing policy for the given resource and action
+        Policy foundPolicy = null;
+        for (Policy policy : authorizations.getPolicies().getPolicy()) {
+            if (policy.getResource().equals(resource) && policy.getAction().equals(action)) {
+                foundPolicy = policy;
+                break;
+            }
         }
 
-        final AccessPolicy accessPolicy = builder.build();
-        final Policy jaxbPolicy = createJAXBPolicy(accessPolicy);
-        authorizations.getPolicies().getPolicy().add(jaxbPolicy);
+        if (foundPolicy == null) {
+            // if we didn't find an existing policy create a new one
+            final String uuidSeed = resource + identity + action;
+            final UUID policyIdentifier = UUID.nameUUIDFromBytes(uuidSeed.getBytes(StandardCharsets.UTF_8));
+
+            final AccessPolicy.Builder builder = new AccessPolicy.Builder()
+                    .identifier(policyIdentifier.toString())
+                    .resource(resource)
+                    .addUser(identity);
+
+            if (action.equals(READ_CODE)) {
+                builder.action(RequestAction.READ);
+            } else if (action.equals(WRITE_CODE)) {
+                builder.action(RequestAction.WRITE);
+            } else {
+                throw new IllegalStateException("Unknown Policy Action: " + action);
+            }
+
+            final AccessPolicy accessPolicy = builder.build();
+            final Policy jaxbPolicy = createJAXBPolicy(accessPolicy);
+            authorizations.getPolicies().getPolicy().add(jaxbPolicy);
+        } else {
+            // otherwise add the user to the existing policy
+            Policy.User policyUser = new Policy.User();
+            policyUser.setIdentifier(identity);
+            foundPolicy.getUser().add(policyUser);
+        }
     }
 
     /**
@@ -652,16 +647,11 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
         jaxbGroup.setIdentifier(group.getIdentifier());
         jaxbGroup.setName(group.getName());
 
-        // find each user and add the group to that user
+        // add each user to the group
         for (String groupUser : group.getUsers()) {
-            for (org.apache.nifi.authorization.file.generated.User jaxbUser : jaxbUsers) {
-                if (jaxbUser.getIdentifier().equals(groupUser)) {
-                    final org.apache.nifi.authorization.file.generated.User.Group jaxbUserGroup = new org.apache.nifi.authorization.file.generated.User.Group();
-                    jaxbUserGroup.setIdentifier(group.getIdentifier());
-                    jaxbUser.getGroup().add(jaxbUserGroup);
-                    break;
-                }
-            }
+            org.apache.nifi.authorization.file.generated.Group.User jaxbGroupUser = new org.apache.nifi.authorization.file.generated.Group.User();
+            jaxbGroupUser.setIdentifier(groupUser);
+            jaxbGroup.getUser().add(jaxbGroupUser);
         }
 
         authorizations.getGroups().getGroup().add(jaxbGroup);
@@ -687,9 +677,6 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
 
         final Authorizations authorizations = this.authorizationsHolder.get().getAuthorizations();
 
-        // determine that all users in the group exist before doing anything, throw an exception if they don't
-        final Set<org.apache.nifi.authorization.file.generated.User> jaxbUsers = checkGroupUsers(group, authorizations.getUsers().getUser());
-
         // find the group that needs to be update
         org.apache.nifi.authorization.file.generated.Group updateGroup = null;
         for (org.apache.nifi.authorization.file.generated.Group jaxbGroup : authorizations.getGroups().getGroup()) {
@@ -704,41 +691,12 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
             return null;
         }
 
-        // now we know group and all users exist so perform the updates
-
-        // first find each user and add the group to that user
+        // reset the list of users and add each user to the group
+        updateGroup.getUser().clear();
         for (String groupUser : group.getUsers()) {
-            for (org.apache.nifi.authorization.file.generated.User jaxbUser : jaxbUsers) {
-                if (jaxbUser.getIdentifier().equals(groupUser)) {
-                    final org.apache.nifi.authorization.file.generated.User.Group jaxbUserGroup = new org.apache.nifi.authorization.file.generated.User.Group();
-                    jaxbUserGroup.setIdentifier(group.getIdentifier());
-                    jaxbUser.getGroup().add(jaxbUserGroup);
-                    break;
-                }
-            }
-        }
-
-        // now go through every user, check each group in the user to see if it still
-        for (org.apache.nifi.authorization.file.generated.User jaxbUser : authorizations.getUsers().getUser()) {
-            Iterator<org.apache.nifi.authorization.file.generated.User.Group> userGroupIter = jaxbUser.getGroup().iterator();
-            while (userGroupIter.hasNext()) {
-                final org.apache.nifi.authorization.file.generated.User.Group userGroup = userGroupIter.next();
-
-                // we only care about finding the group that is currently being updated
-                if (userGroup.getIdentifier().equals(group.getIdentifier())) {
-                    boolean stillInGroup = false;
-                    for (String groupUser : group.getUsers()) {
-                        if (groupUser.equals(jaxbUser.getIdentifier())) {
-                            stillInGroup = true;
-                            break;
-                        }
-                    }
-
-                    if (!stillInGroup) {
-                        userGroupIter.remove();
-                    }
-                }
-            }
+            org.apache.nifi.authorization.file.generated.Group.User jaxbGroupUser = new org.apache.nifi.authorization.file.generated.Group.User();
+            jaxbGroupUser.setIdentifier(groupUser);
+            updateGroup.getUser().add(jaxbGroupUser);
         }
 
         updateGroup.setName(group.getName());
@@ -752,18 +710,6 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
     public synchronized Group deleteGroup(Group group) throws AuthorizationAccessException {
         final Authorizations authorizations = this.authorizationsHolder.get().getAuthorizations();
         final List<org.apache.nifi.authorization.file.generated.Group> groups = authorizations.getGroups().getGroup();
-
-        // for each user iterate over the group references and remove the group reference if it matches the group being deleted
-        for (org.apache.nifi.authorization.file.generated.User user : authorizations.getUsers().getUser()) {
-            Iterator<org.apache.nifi.authorization.file.generated.User.Group> userGroupIter = user.getGroup().iterator();
-            while (userGroupIter.hasNext()) {
-                org.apache.nifi.authorization.file.generated.User.Group userGroup = userGroupIter.next();
-                if (userGroup.getIdentifier().equals(group.getIdentifier())) {
-                    userGroupIter.remove();
-                    break;
-                }
-            }
-        }
 
         // for each policy iterate over the group reference and remove the group reference if it matches the group being deleted
         for (Policy policy : authorizations.getPolicies().getPolicy()) {
@@ -844,12 +790,6 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
         final org.apache.nifi.authorization.file.generated.User jaxbUser = new org.apache.nifi.authorization.file.generated.User();
         jaxbUser.setIdentifier(user.getIdentifier());
         jaxbUser.setIdentity(user.getIdentity());
-
-        for (String groupIdentifier : user.getGroups()) {
-            org.apache.nifi.authorization.file.generated.User.Group group = new org.apache.nifi.authorization.file.generated.User.Group();
-            group.setIdentifier(groupIdentifier);
-            jaxbUser.getGroup().add(group);
-        }
         return jaxbUser;
     }
 
@@ -896,14 +836,6 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
             return null;
         } else {
             updateUser.setIdentity(user.getIdentity());
-
-            updateUser.getGroup().clear();
-            for (String groupIdentifier : user.getGroups()) {
-                org.apache.nifi.authorization.file.generated.User.Group group = new org.apache.nifi.authorization.file.generated.User.Group();
-                group.setIdentifier(groupIdentifier);
-                updateUser.getGroup().add(group);
-            }
-
             saveAndRefreshHolder(authorizations);
 
             final AuthorizationsHolder holder = authorizationsHolder.get();
@@ -919,6 +851,18 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
 
         final Authorizations authorizations = this.authorizationsHolder.get().getAuthorizations();
         final List<org.apache.nifi.authorization.file.generated.User> users = authorizations.getUsers().getUser();
+
+        // for each group iterate over the user references and remove the user reference if it matches the user being deleted
+        for (org.apache.nifi.authorization.file.generated.Group group : authorizations.getGroups().getGroup()) {
+            Iterator<org.apache.nifi.authorization.file.generated.Group.User> groupUserIter = group.getUser().iterator();
+            while (groupUserIter.hasNext()) {
+                org.apache.nifi.authorization.file.generated.Group.User groupUser = groupUserIter.next();
+                if (groupUser.getIdentifier().equals(user.getIdentifier())) {
+                    groupUserIter.remove();
+                    break;
+                }
+            }
+        }
 
         // remove any references to the user being deleted from policies
         for (Policy policy : authorizations.getPolicies().getPolicy()) {
@@ -960,7 +904,7 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
     // ------------------ AccessPolicies ------------------
 
     @Override
-    public synchronized AccessPolicy addAccessPolicy(final AccessPolicy accessPolicy) throws AuthorizationAccessException {
+    public synchronized AccessPolicy doAddAccessPolicy(final AccessPolicy accessPolicy) throws AuthorizationAccessException {
         if (accessPolicy == null) {
             throw new IllegalArgumentException("AccessPolicy cannot be null");
         }
@@ -981,7 +925,20 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
     private Policy createJAXBPolicy(final AccessPolicy accessPolicy) {
         final Policy policy = new Policy();
         policy.setIdentifier(accessPolicy.getIdentifier());
-        transferState(accessPolicy, policy);
+        policy.setResource(accessPolicy.getResource());
+
+        switch (accessPolicy.getAction()) {
+            case READ:
+                policy.setAction(READ_CODE);
+                break;
+            case WRITE:
+                policy.setAction(WRITE_CODE);
+                break;
+            default:
+                break;
+        }
+
+        transferUsersAndGroups(accessPolicy, policy);
         return policy;
     }
 
@@ -1018,7 +975,7 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
         }
 
         // update the Policy, save, reload, and return
-        transferState(accessPolicy, updatePolicy);
+        transferUsersAndGroups(accessPolicy, updatePolicy);
         saveAndRefreshHolder(authorizations);
 
         final AuthorizationsHolder holder = authorizationsHolder.get();
@@ -1073,9 +1030,7 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
      * @param accessPolicy the AccessPolicy to transfer state from
      * @param policy the Policy to transfer state to
      */
-    private void transferState(AccessPolicy accessPolicy, Policy policy) {
-        policy.setResource(accessPolicy.getResource());
-
+    private void transferUsersAndGroups(AccessPolicy accessPolicy, Policy policy) {
         // add users to the policy
         policy.getUser().clear();
         for (String userIdentifier : accessPolicy.getUsers()) {
@@ -1090,13 +1045,6 @@ public class FileAuthorizer extends AbstractPolicyBasedAuthorizer {
             Policy.Group policyGroup = new Policy.Group();
             policyGroup.setIdentifier(groupIdentifier);
             policy.getGroup().add(policyGroup);
-        }
-
-        // add the action to the access policy
-        if (accessPolicy.getAction() == RequestAction.READ) {
-            policy.setAction(READ_CODE);
-        } else {
-            policy.setAction(WRITE_CODE);
         }
     }
 

@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.RequestAction;
 import org.apache.nifi.authorization.resource.Authorizable;
+import org.apache.nifi.authorization.user.NiFiUserUtils;
 import org.apache.nifi.web.NiFiServiceFacade;
 import org.apache.nifi.web.Revision;
 import org.apache.nifi.web.api.dto.LabelDTO;
@@ -82,32 +83,8 @@ public class LabelResource extends ApplicationResource {
      * @return entities
      */
     public LabelEntity populateRemainingLabelEntityContent(LabelEntity labelEntity) {
-        if (labelEntity.getComponent() != null) {
-            populateRemainingLabelContent(labelEntity.getComponent());
-        }
+        labelEntity.setUri(generateResourceUri("labels", labelEntity.getId()));
         return labelEntity;
-    }
-
-    /**
-     * Populates the uri for the specified labels.
-     *
-     * @param labels labels
-     * @return dtos
-     */
-    public Set<LabelDTO> populateRemainingLabelsContent(Set<LabelDTO> labels) {
-        for (LabelDTO label : labels) {
-            populateRemainingLabelContent(label);
-        }
-        return labels;
-    }
-
-    /**
-     * Populates the uri for the specified label.
-     */
-    public LabelDTO populateRemainingLabelContent(LabelDTO label) {
-        // populate the label href
-        label.setUri(generateResourceUri("labels", label.getId()));
-        return label;
     }
 
     /**
@@ -153,7 +130,7 @@ public class LabelResource extends ApplicationResource {
         // authorize access
         serviceFacade.authorizeAccess(lookup -> {
             final Authorizable label = lookup.getLabel(id);
-            label.authorize(authorizer, RequestAction.READ);
+            label.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
         });
 
         // get the label
@@ -230,7 +207,7 @@ public class LabelResource extends ApplicationResource {
             revision,
             lookup -> {
                 Authorizable authorizable  = lookup.getLabel(id);
-                authorizable.authorize(authorizer, RequestAction.WRITE);
+                authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             null,
             () -> {
@@ -302,7 +279,7 @@ public class LabelResource extends ApplicationResource {
             revision,
             lookup -> {
                 final Authorizable label = lookup.getLabel(id);
-                label.authorize(authorizer, RequestAction.WRITE);
+                label.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             null,
             () -> {

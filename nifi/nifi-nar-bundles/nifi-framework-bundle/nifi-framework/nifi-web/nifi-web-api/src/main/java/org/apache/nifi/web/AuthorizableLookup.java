@@ -16,7 +16,6 @@
  */
 package org.apache.nifi.web;
 
-import org.apache.nifi.authorization.AccessPolicy;
 import org.apache.nifi.authorization.resource.Authorizable;
 import org.apache.nifi.controller.Snippet;
 
@@ -36,6 +35,20 @@ public interface AuthorizableLookup {
      * @return authorizable
      */
     Authorizable getProcessor(String id);
+
+    /**
+     * Get the authorizable for querying Provenance.
+     *
+     * @return authorizable
+     */
+    Authorizable getProvenance();
+
+    /**
+     * Get the authorizable for viewing/reseting Counters.
+     *
+     * @return authorizable
+     */
+    Authorizable getCounters();
 
     /**
      * Get the authorizable InputPort.
@@ -164,18 +177,36 @@ public interface AuthorizableLookup {
      * Get the {@link Authorizable} that represents the resource of users and user groups.
      * @return authorizable
      */
-    Authorizable getTenantAuthorizable();
+    Authorizable getTenant();
 
     /**
-     * Get the {@link Authorizable} the represents the parent resource of {@link AccessPolicy} resources.
+     * Get the authorizable for access all policies.
+     *
      * @return authorizable
      */
-    Authorizable getAccessPoliciesAuthorizable();
+    Authorizable getPolicies();
 
     /**
-     * Get the {@link Authorizable} the represents the {@link AccessPolicy} with the given ID.
-     * @param id access policy ID
+     * Get the authorizable for the policy of the policy id.
+     *
+     * @param id id
      * @return authorizable
      */
-    Authorizable getAccessPolicyAuthorizable(String id);
+    Authorizable getAccessPolicyById(String id);
+
+    /**
+     * Get the authorizable for the policy of the specified resource.
+     *
+     * @param resource resource
+     * @return authorizable
+     */
+    Authorizable getAccessPolicyByResource(String resource);
+
+    /**
+     * Get the authorizable of the specified resource.
+     *
+     * @param resource resource
+     * @return authorizable
+     */
+    Authorizable getAuthorizableFromResource(final String resource);
 }

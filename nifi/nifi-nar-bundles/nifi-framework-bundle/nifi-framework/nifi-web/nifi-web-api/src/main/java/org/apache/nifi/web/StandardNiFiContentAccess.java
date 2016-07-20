@@ -16,7 +16,22 @@
  */
 package org.apache.nifi.web;
 
-import java.io.Serializable;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.ClientResponse.Status;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.nifi.authorization.AccessDeniedException;
+import org.apache.nifi.cluster.coordination.ClusterCoordinator;
+import org.apache.nifi.cluster.coordination.http.replication.RequestReplicator;
+import org.apache.nifi.cluster.manager.NodeResponse;
+import org.apache.nifi.cluster.manager.exception.IllegalClusterStateException;
+import org.apache.nifi.cluster.manager.exception.NoClusterCoordinatorException;
+import org.apache.nifi.cluster.protocol.NodeIdentifier;
+import org.apache.nifi.controller.repository.claim.ContentDirection;
+import org.apache.nifi.util.NiFiProperties;
+
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.MultivaluedMap;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -25,27 +40,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.nifi.authorization.AccessDeniedException;
-import org.apache.nifi.authorization.user.NiFiUserDetails;
-import org.apache.nifi.cluster.coordination.ClusterCoordinator;
-import org.apache.nifi.cluster.coordination.http.replication.RequestReplicator;
-import org.apache.nifi.cluster.manager.NodeResponse;
-import org.apache.nifi.cluster.manager.exception.IllegalClusterStateException;
-import org.apache.nifi.cluster.protocol.NodeIdentifier;
-import org.apache.nifi.controller.repository.claim.ContentDirection;
-import org.apache.nifi.util.NiFiProperties;
-import org.apache.nifi.web.util.WebUtils;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  *
@@ -58,7 +52,7 @@ public class StandardNiFiContentAccess implements ContentAccess {
         .compile("/flowfile-queues/([a-f0-9\\-]{36})/flowfiles/([a-f0-9\\-]{36})/content.*");
 
     private static final Pattern PROVENANCE_CONTENT_URI_PATTERN = Pattern
-        .compile("/provenance/events/([0-9]+)/content/((?:input)|(?:output)).*");
+        .compile("/provenance-events/([0-9]+)/content/((?:input)|(?:output)).*");
 
     private NiFiProperties properties;
     private NiFiServiceFacade serviceFacade;
@@ -87,19 +81,6 @@ public class StandardNiFiContentAccess implements ContentAccess {
                 headers.put("X-ProxiedEntitiesChain", request.getProxiedEntitiesChain());
             }
 
-            // add the user's authorities (if any) to the headers
-            final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null) {
-                final Object userDetailsObj = authentication.getPrincipal();
-                if (userDetailsObj instanceof NiFiUserDetails) {
-                    // serialize user details object
-                    final String hexEncodedUserDetails = WebUtils.serializeObjectToHex((Serializable) userDetailsObj);
-
-                    // put serialized user details in header
-                    headers.put("X-ProxiedEntityUserDetails", hexEncodedUserDetails);
-                }
-            }
-
             // ensure we were able to detect the cluster node id
             if (request.getClusterNodeId() == null) {
                 throw new IllegalArgumentException("Unable to determine the which node has the content.");
@@ -107,12 +88,17 @@ public class StandardNiFiContentAccess implements ContentAccess {
 
             // get the target node and ensure it exists
             final NodeIdentifier nodeId = clusterCoordinator.getNodeIdentifier(request.getClusterNodeId());
-            final Set<NodeIdentifier> targetNodes = Collections.singleton(nodeId);
 
-            // replicate the request to the specific node
+            // replicate the request to the cluster coordinator, indicating the target node
             NodeResponse nodeResponse;
             try {
-                nodeResponse = requestReplicator.replicate(targetNodes, HttpMethod.GET, dataUri, parameters, headers).awaitMergedResponse();
+                headers.put(RequestReplicator.REPLICATION_TARGET_NODE_UUID_HEADER, nodeId.getId());
+                final NodeIdentifier coordinatorNode = clusterCoordinator.getElectedActiveCoordinatorNode();
+                if (coordinatorNode == null) {
+                    throw new NoClusterCoordinatorException();
+                }
+                final Set<NodeIdentifier> coordinatorNodes = Collections.singleton(coordinatorNode);
+                nodeResponse = requestReplicator.replicate(coordinatorNodes, HttpMethod.GET, dataUri, parameters, headers, false).awaitMergedResponse();
             } catch (InterruptedException e) {
                 throw new IllegalClusterStateException("Interrupted while waiting for a response from node");
             }

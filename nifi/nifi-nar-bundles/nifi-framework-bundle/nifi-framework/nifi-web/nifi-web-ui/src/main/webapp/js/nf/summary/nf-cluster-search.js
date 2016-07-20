@@ -21,7 +21,7 @@ nf.ClusterSearch = (function () {
     var config = {
         search: 'Search nodes',
         urls: {
-            clusterSearch: '../nifi-api/controller/cluster/search-results'
+            clusterSearch: '../nifi-api/flow/cluster/search-results'
         }
     };
 
@@ -32,6 +32,7 @@ nf.ClusterSearch = (function () {
         init: function () {
             // configure the view single node dialog
             $('#view-single-node-dialog').modal({
+                scrollableContentStyle: 'scrollable',
                 headerText: 'Select node',
                 buttons: [{
                     buttonText: 'Ok',

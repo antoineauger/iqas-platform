@@ -16,6 +16,7 @@
  */
 package org.apache.nifi.web.api;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,6 +35,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.RequestAction;
 import org.apache.nifi.authorization.resource.Authorizable;
+import org.apache.nifi.authorization.user.NiFiUserUtils;
+import org.apache.nifi.persistence.TemplateSerializer;
 import org.apache.nifi.web.NiFiServiceFacade;
 import org.apache.nifi.web.api.dto.TemplateDTO;
 import org.apache.nifi.web.api.entity.TemplateEntity;
@@ -57,6 +60,34 @@ public class TemplateResource extends ApplicationResource {
 
     private NiFiServiceFacade serviceFacade;
     private Authorizer authorizer;
+
+    /**
+     * Populate the uri's for the specified templates.
+     *
+     * @param templateEntities templates
+     * @return templates
+     */
+    public Set<TemplateEntity> populateRemainingTemplateEntitiesContent(Set<TemplateEntity> templateEntities) {
+        for (TemplateEntity templateEntity : templateEntities) {
+            if (templateEntity.getTemplate() != null) {
+                populateRemainingTemplateContent(templateEntity.getTemplate());
+            }
+        }
+        return templateEntities;
+    }
+
+    /**
+     * Populate the uri's for the specified templates.
+     *
+     * @param templateEntity templates
+     * @return templates
+     */
+    public TemplateEntity populateRemainingTemplateEntityContent(TemplateEntity templateEntity) {
+        if (templateEntity.getTemplate() != null) {
+            populateRemainingTemplateContent(templateEntity.getTemplate());
+        }
+        return templateEntity;
+    }
 
     /**
      * Populates the uri for the specified templates.
@@ -123,7 +154,7 @@ public class TemplateResource extends ApplicationResource {
         // authorize access
         serviceFacade.authorizeAccess(lookup -> {
             final Authorizable template = lookup.getTemplate(id);
-            template.authorize(authorizer, RequestAction.READ);
+            template.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
         });
 
         // get the template
@@ -141,7 +172,13 @@ public class TemplateResource extends ApplicationResource {
         }
 
         // generate the response
-        return generateOkResponse(template).header("Content-Disposition", String.format("attachment; filename=\"%s.xml\"", attachmentName)).build();
+        /*
+         * Here instead of relying on default JAXB marshalling we are simply
+         * serializing template to String (formatted, indented etc) and sending
+         * it as part of the response.
+         */
+        String serializedTemplate = new String(TemplateSerializer.serialize(template), StandardCharsets.UTF_8);
+        return generateOkResponse(serializedTemplate).header("Content-Disposition", String.format("attachment; filename=\"%s.xml\"", attachmentName)).build();
     }
 
     /**
@@ -190,7 +227,7 @@ public class TemplateResource extends ApplicationResource {
             // authorize access
             serviceFacade.authorizeAccess(lookup -> {
                 final Authorizable template = lookup.getTemplate(id);
-                template.authorize(authorizer, RequestAction.WRITE);
+                template.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             });
             return generateContinueResponse().build();
         }

@@ -62,7 +62,9 @@ nf.ng.Canvas.GlobalMenuCtrl = function (serviceProvider) {
                  * Launch the counters shell.
                  */
                 launch: function () {
-                    nf.Shell.showPage('counters');
+                    if (nf.Common.canAccessCounters()) {
+                        nf.Shell.showPage('counters');
+                    }
                 }
             }
         };
@@ -92,15 +94,6 @@ nf.ng.Canvas.GlobalMenuCtrl = function (serviceProvider) {
         this.dataProvenance = {
 
             /**
-             * Determines if the data provenance menu item is enabled.
-             *
-             * @returns {*|boolean}
-             */
-            enabled: function () {
-                return nf.Common.canAccessProvenance();
-            },
-
-            /**
              * The data provenance menu item's shell controller.
              */
             shell: {
@@ -109,7 +102,9 @@ nf.ng.Canvas.GlobalMenuCtrl = function (serviceProvider) {
                  * Launch the data provenance shell.
                  */
                 launch: function () {
-                    nf.Shell.showPage('provenance');
+                    if (nf.Common.canAccessProvenance()) {
+                        nf.Shell.showPage('provenance');
+                    }
                 }
             }
         };
@@ -128,14 +123,9 @@ nf.ng.Canvas.GlobalMenuCtrl = function (serviceProvider) {
                  * Launch the settings shell.
                  */
                 launch: function () {
-                    nf.Settings.showSettings().done(function() {
-                        $('#settings-refresh-container').width($('#shell').width());
-                        
-                        // add a shell:resize listener
-                        $('#shell').on('shell:resize', function () {
-                            $('#settings-refresh-container').width($('#shell').width());
-                        });
-                    });
+                    if (nf.Common.canAccessController()) {
+                        nf.Settings.showSettings();
+                    }
                 }
             }
         };
@@ -150,8 +140,8 @@ nf.ng.Canvas.GlobalMenuCtrl = function (serviceProvider) {
              *
              * @returns {*|boolean}
              */
-            enabled: function () {
-                return nf.Canvas.isClustered();
+            visible: function () {
+                return nf.Canvas.isConnectedToCluster();
             },
 
             /**
@@ -163,7 +153,9 @@ nf.ng.Canvas.GlobalMenuCtrl = function (serviceProvider) {
                  * Launch the cluster shell.
                  */
                 launch: function () {
-                    nf.Shell.showPage('cluster');
+                    if (nf.Common.canAccessController()) {
+                        nf.Shell.showPage('cluster');
+                    }
                 }
             }
         };
@@ -193,15 +185,6 @@ nf.ng.Canvas.GlobalMenuCtrl = function (serviceProvider) {
         this.users = {
 
             /**
-             * Determines if the users menu item is enabled.
-             *
-             * @returns {*|boolean}
-             */
-            enabled: function () {
-                return nf.Common.isAdmin();
-            },
-
-            /**
              * The users menu item's shell controller.
              */
             shell: {
@@ -210,7 +193,30 @@ nf.ng.Canvas.GlobalMenuCtrl = function (serviceProvider) {
                  * Launch the users shell.
                  */
                 launch: function () {
-                    nf.Shell.showPage('users');
+                    if (nf.Common.canModifyTenants()) {
+                        nf.Shell.showPage('users');
+                    }
+                }
+            }
+        };
+
+        /**
+         * The policies menu item controller.
+         */
+        this.policies = {
+
+            /**
+             * The policies menu item's shell controller.
+             */
+            shell: {
+
+                /**
+                 * Launch the policies shell.
+                 */
+                launch: function () {
+                    if (nf.Common.canModifyPolicies() && nf.Common.canAccessTenants()) {
+                        nf.PolicyManagement.showGlobalPolicies();
+                    }
                 }
             }
         };
@@ -278,6 +284,7 @@ nf.ng.Canvas.GlobalMenuCtrl = function (serviceProvider) {
                     // store the content viewer url if available
                     if (!nf.Common.isBlank(aboutDetails.contentViewerUrl)) {
                         $('#nifi-content-viewer-url').text(aboutDetails.contentViewerUrl);
+                        nf.QueueListing.initFlowFileDetailsDialog();
                     }
                 }).fail(nf.Common.handleAjaxError);
 
@@ -304,8 +311,18 @@ nf.ng.Canvas.GlobalMenuCtrl = function (serviceProvider) {
                 init: function () {
                     var self = this;
 
+                    var resizeAbout = function(){
+                        var dialog = $(this);
+                        var top = $('#nf-about-pic-container').height() + $('.dialog-header').height() + 10; //10 for padding-top
+                        dialog.find('.dialog-content').css('top', top);
+                    };
+
                     this.getElement().modal({
+                        scrollableContentStyle: 'scrollable',
                         headerText: 'About Apache NiFi',
+                        handler: {
+                          resize: resizeAbout
+                        },
                         buttons: [{
                             buttonText: 'Ok',
                             color: {

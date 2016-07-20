@@ -33,9 +33,10 @@ nf.ProvenanceTable = (function () {
         },
         urls: {
             searchOptions: '../nifi-api/provenance/search-options',
-            replays: '../nifi-api/provenance/replays',
+            replays: '../nifi-api/provenance-events/replays',
             provenance: '../nifi-api/provenance',
-            cluster: '../nifi-api/controller/cluster',
+            provenanceEvents: '../nifi-api/provenance-events',
+            clusterSearch: '../nifi-api/flow/cluster/search-results',
             d3Script: 'js/d3/d3.min.js',
             lineageScript: 'js/nf/provenance/nf-provenance-lineage.js',
             uiExtensionToken: '../nifi-api/access/ui-extension-token',
@@ -57,7 +58,7 @@ nf.ProvenanceTable = (function () {
         var eventId = $('#provenance-event-id').text();
 
         // build the url
-        var dataUri = config.urls.provenance + '/events/' + encodeURIComponent(eventId) + '/content/' + encodeURIComponent(direction);
+        var dataUri = config.urls.provenanceEvents + '/' + encodeURIComponent(eventId) + '/content/' + encodeURIComponent(direction);
 
         // perform the request once we've received a token
         nf.Common.getAccessToken(config.urls.downloadToken).done(function (downloadToken) {
@@ -98,7 +99,7 @@ nf.ProvenanceTable = (function () {
         var eventId = $('#provenance-event-id').text();
 
         // build the uri to the data
-        var dataUri = controllerUri + 'provenance/events/' + encodeURIComponent(eventId) + '/content/' + encodeURIComponent(direction);
+        var dataUri = controllerUri + 'provenance-events/' + encodeURIComponent(eventId) + '/content/' + encodeURIComponent(direction);
 
         // generate tokens as necessary
         var getAccessTokens = $.Deferred(function (deferred) {
@@ -184,6 +185,7 @@ nf.ProvenanceTable = (function () {
         $('#event-details-tabs').tabbs({
             tabStyle: 'tab',
             selectedTabStyle: 'selected-tab',
+            scrollableTabContentStyle: 'scrollable',
             tabs: [{
                 name: 'Details',
                 tabContentId: 'event-details-tab-content'
@@ -197,6 +199,7 @@ nf.ProvenanceTable = (function () {
         });
 
         $('#event-details-dialog').modal({
+            scrollableContentStyle: 'scrollable',
             headerText: 'Provenance Event',
             buttons: [{
                 buttonText: 'Ok',
@@ -220,6 +223,9 @@ nf.ProvenanceTable = (function () {
                     $('#child-flowfiles-container').empty();
                     $('#provenance-event-cluster-node-id').text('');
                     $('#modified-attribute-toggle').removeClass('checkbox-checked').addClass('checkbox-unchecked');
+                },
+                open: function () {
+                    nf.Common.toggleScrollable($('#' + this.find('.tab-container').attr('id') + '-content').get(0));
                 }
             }
         });
@@ -258,38 +264,35 @@ nf.ProvenanceTable = (function () {
         }
 
         // handle the replay and downloading
-        if (nf.Common.isDFM()) {
-            // replay
-            $('#replay-content').on('click', function () {
-                var replayEntity = {
-                    'eventId': $('#provenance-event-id').text()
-                };
+        $('#replay-content').on('click', function () {
+            var replayEntity = {
+                'eventId': $('#provenance-event-id').text()
+            };
 
-                // conditionally include the cluster node id
-                var clusterNodeId = $('#provenance-event-cluster-node-id').text();
-                if (!nf.Common.isBlank(clusterNodeId)) {
-                    replayEntity['clusterNodeId'] = clusterNodeId;
-                }
+            // conditionally include the cluster node id
+            var clusterNodeId = $('#provenance-event-cluster-node-id').text();
+            if (!nf.Common.isBlank(clusterNodeId)) {
+                replayEntity['clusterNodeId'] = clusterNodeId;
+            }
 
-                $.ajax({
-                    type: 'POST',
-                    url: config.urls.replays,
-                    data: JSON.stringify(replayEntity),
-                    dataType: 'json',
-                    contentType: 'application/json'
-                }).done(function (response) {
-                    nf.Dialog.showOkDialog({
-                        headerText: 'Provenance',
-                        dialogContent: 'Successfully submitted replay request.'
-                    });
-                }).fail(nf.Common.handleAjaxError);
+            $.ajax({
+                type: 'POST',
+                url: config.urls.replays,
+                data: JSON.stringify(replayEntity),
+                dataType: 'json',
+                contentType: 'application/json'
+            }).done(function (response) {
+                nf.Dialog.showOkDialog({
+                    headerText: 'Provenance',
+                    dialogContent: 'Successfully submitted replay request.'
+                });
+            }).fail(nf.Common.handleAjaxError);
 
-                $('#event-details-dialog').modal('hide');
-            });
+            $('#event-details-dialog').modal('hide');
+        });
 
-            // show the replay panel
-            $('#replay-details').show();
-        }
+        // show the replay panel
+        $('#replay-details').show();
     };
 
     /**
@@ -323,11 +326,10 @@ nf.ProvenanceTable = (function () {
             // get the nodes in the cluster
             $.ajax({
                 type: 'GET',
-                url: config.urls.cluster,
+                url: config.urls.clusterSearch,
                 dataType: 'json'
             }).done(function (response) {
-                var cluster = response.cluster;
-                var nodes = cluster.nodes;
+                var nodeResults = response.nodeResults;
 
                 // create the searchable options
                 var searchableOptions = [{
@@ -336,17 +338,17 @@ nf.ProvenanceTable = (function () {
                 }];
 
                 // sort the nodes
-                nodes.sort(function (a, b) {
-                    var compA = (a.address + ':' + a.apiPort).toUpperCase();
-                    var compB = (b.address + ':' + b.apiPort).toUpperCase();
+                nodeResults.sort(function (a, b) {
+                    var compA = a.address.toUpperCase();
+                    var compB = b.address.toUpperCase();
                     return (compA < compB) ? -1 : (compA > compB) ? 1 : 0;
                 });
 
                 // add each node
-                $.each(nodes, function (_, node) {
+                $.each(nodeResults, function (_, nodeResult) {
                     searchableOptions.push({
-                        text: node.address + ':' + node.apiPort,
-                        value: node.nodeId
+                        text: nodeResult.address,
+                        value: nodeResult.id
                     });
                 });
 
@@ -362,6 +364,7 @@ nf.ProvenanceTable = (function () {
 
         // configure the search dialog
         $('#provenance-search-dialog').modal({
+            scrollableContentStyle: 'scrollable',
             headerText: 'Search Events',
             buttons: [{
                 buttonText: 'Search',
@@ -384,7 +387,7 @@ nf.ProvenanceTable = (function () {
                                 startTime = config.defaultStartTime;
                                 $('#provenance-search-start-time').val(startTime);
                             }
-                            search['startDate'] = startDate + ' ' + startTime;
+                            search['startDate'] = startDate + ' ' + startTime + ' ' + $('.timezone:first').text();
                         }
 
                         // extract the end date time
@@ -395,7 +398,7 @@ nf.ProvenanceTable = (function () {
                                 endTime = config.defaultEndTime;
                                 $('#provenance-search-end-time').val(endTime);
                             }
-                            search['endDate'] = endDate + ' ' + endTime;
+                            search['endDate'] = endDate + ' ' + endTime + ' ' + $('.timezone:first').text();
                         }
 
                         // extract the min/max file size
@@ -458,23 +461,10 @@ nf.ProvenanceTable = (function () {
      * Initializes the provenance query dialog.
      */
     var initProvenanceQueryDialog = function () {
-        // initialize the progress bar
-        $('#provenance-percent-complete').progressbar();
-
         // initialize the dialog
         $('#provenance-query-dialog').modal({
-            headerText: 'Searching provenance events...',
-            handler: {
-                close: function () {
-                    // reset the progress bar
-                    var provenanceProgressBar = $('#provenance-percent-complete');
-                    provenanceProgressBar.find('div.progress-label').remove();
-
-                    // update the progress bar
-                    var label = $('<div class="progress-label"></div>').text('0%');
-                    provenanceProgressBar.progressbar('value', 0).append(label);
-                }
-            }
+            scrollableContentStyle: 'scrollable',
+            headerText: 'Searching provenance events...'
         });
     };
 
@@ -910,9 +900,9 @@ nf.ProvenanceTable = (function () {
      */
     var getProvenance = function (provenance) {
         var url = provenance.uri;
-        if (nf.Common.isDefinedAndNotNull(provenance.clusterNodeId)) {
+        if (nf.Common.isDefinedAndNotNull(provenance.request.clusterNodeId)) {
             url += '?' + $.param({
-                    clusterNodeId: provenance.clusterNodeId
+                    clusterNodeId: provenance.request.clusterNodeId
                 });
         }
 
@@ -931,9 +921,9 @@ nf.ProvenanceTable = (function () {
      */
     var cancelProvenance = function (provenance) {
         var url = provenance.uri;
-        if (nf.Common.isDefinedAndNotNull(provenance.clusterNodeId)) {
+        if (nf.Common.isDefinedAndNotNull(provenance.request.clusterNodeId)) {
             url += '?' + $.param({
-                    clusterNodeId: provenance.clusterNodeId
+                    clusterNodeId: provenance.request.clusterNodeId
                 });
         }
 
@@ -1084,13 +1074,12 @@ nf.ProvenanceTable = (function () {
         updateProgress: function (progressBar, value) {
             // remove existing labels
             progressBar.find('div.progress-label').remove();
+            progressBar.find('md-progress-linear').remove();
 
             // update the progress bar
             var label = $('<div class="progress-label"></div>').text(value + '%');
-            if (value > 0) {
-                label.css('margin-top', '-19px');
-            }
-            progressBar.progressbar('value', value).append(label);
+            (nf.ng.Bridge.injector.get('$compile')($('<md-progress-linear ng-cloak ng-value="' + value + '" class="md-hue-2" md-mode="determinate" aria-label="Progress"></md-progress-linear>'))(nf.ng.Bridge.rootScope)).appendTo(progressBar);
+            progressBar.append(label);
         },
 
         /**
@@ -1430,15 +1419,13 @@ nf.ProvenanceTable = (function () {
                 $('#output-content-view').hide();
             }
 
-            if (nf.Common.isDFM()) {
-                if (event.replayAvailable === true) {
-                    $('#replay-content, #replay-content-connection').show();
-                    formatContentValue($('#replay-connection-id'), event.sourceConnectionIdentifier);
-                    $('#replay-content-message').hide();
-                } else {
-                    $('#replay-content, #replay-content-connection').hide();
-                    $('#replay-content-message').text(event.replayExplanation).show();
-                }
+            if (event.replayAvailable === true) {
+                $('#replay-content, #replay-content-connection').show();
+                formatContentValue($('#replay-connection-id'), event.sourceConnectionIdentifier);
+                $('#replay-content-message').hide();
+            } else {
+                $('#replay-content, #replay-content-connection').hide();
+                $('#replay-content-message').text(event.replayExplanation).show();
             }
 
             // show the dialog

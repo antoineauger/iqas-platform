@@ -56,6 +56,10 @@ nf.ng.TemplateComponent = function (serviceProvider) {
 
     function TemplateComponent() {
 
+        this.icon = 'icon icon-template';
+
+        this.hoverIcon = 'icon icon-template-add';
+
         /**
          * The template component's modal.
          */
@@ -76,6 +80,7 @@ nf.ng.TemplateComponent = function (serviceProvider) {
             init: function () {
                 // configure the instantiate template dialog
                 this.getElement().modal({
+                    scrollableContentStyle: 'scrollable',
                     headerText: 'Add Template',
                     overlayBackgroud: false
                 });
@@ -161,18 +166,20 @@ nf.ng.TemplateComponent = function (serviceProvider) {
             var self = this;
             $.ajax({
                 type: 'GET',
-                url: serviceProvider.headerCtrl.toolboxCtrl.config.urls.api + '/process-groups/' + encodeURIComponent(nf.Canvas.getGroupId()) + '/templates',
+                url: serviceProvider.headerCtrl.toolboxCtrl.config.urls.api + '/flow/templates',
                 dataType: 'json'
             }).done(function (response) {
                 var templates = response.templates;
                 if (nf.Common.isDefinedAndNotNull(templates) && templates.length > 0) {
                     var options = [];
-                    $.each(templates, function (_, template) {
-                        options.push({
-                            text: template.name,
-                            value: template.id,
-                            description: nf.Common.escapeHtml(template.description)
-                        });
+                    $.each(templates, function (_, templateEntity) {
+                        if (templateEntity.permissions.canRead === true) {
+                            options.push({
+                                text: templateEntity.template.name,
+                                value: templateEntity.id,
+                                description: nf.Common.escapeHtml(templateEntity.template.description)
+                            });
+                        }
                     });
 
                     // configure the templates combo

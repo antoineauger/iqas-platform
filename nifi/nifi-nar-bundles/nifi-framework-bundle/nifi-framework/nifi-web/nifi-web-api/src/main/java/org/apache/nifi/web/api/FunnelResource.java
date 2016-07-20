@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.RequestAction;
 import org.apache.nifi.authorization.resource.Authorizable;
+import org.apache.nifi.authorization.user.NiFiUserUtils;
 import org.apache.nifi.web.NiFiServiceFacade;
 import org.apache.nifi.web.Revision;
 import org.apache.nifi.web.api.dto.FunnelDTO;
@@ -82,32 +83,8 @@ public class FunnelResource extends ApplicationResource {
      * @return funnel
      */
     public FunnelEntity populateRemainingFunnelEntityContent(FunnelEntity funnelEntity) {
-        if (funnelEntity.getComponent() != null) {
-            populateRemainingFunnelContent(funnelEntity.getComponent());
-        }
+        funnelEntity.setUri(generateResourceUri("funnels", funnelEntity.getId()));
         return funnelEntity;
-    }
-
-    /**
-     * Populates the uri for the specified funnels.
-     *
-     * @param funnels funnels
-     * @return funnels
-     */
-    public Set<FunnelDTO> populateRemainingFunnelsContent(Set<FunnelDTO> funnels) {
-        for (FunnelDTO funnel : funnels) {
-            populateRemainingFunnelContent(funnel);
-        }
-        return funnels;
-    }
-
-    /**
-     * Populates the uri for the specified funnel.
-     */
-    public FunnelDTO populateRemainingFunnelContent(FunnelDTO funnel) {
-        // populate the funnel href
-        funnel.setUri(generateResourceUri("funnels", funnel.getId()));
-        return funnel;
     }
 
     /**
@@ -153,7 +130,7 @@ public class FunnelResource extends ApplicationResource {
         // authorize access
         serviceFacade.authorizeAccess(lookup -> {
             final Authorizable funnel = lookup.getFunnel(id);
-            funnel.authorize(authorizer, RequestAction.READ);
+            funnel.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
         });
 
         // get the funnel
@@ -230,7 +207,7 @@ public class FunnelResource extends ApplicationResource {
             revision,
             lookup -> {
                 Authorizable authorizable = lookup.getFunnel(id);
-                authorizable.authorize(authorizer, RequestAction.WRITE);
+                authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             null,
             () -> {
@@ -305,7 +282,7 @@ public class FunnelResource extends ApplicationResource {
             revision,
             lookup -> {
                 final Authorizable funnel = lookup.getFunnel(id);
-                funnel.authorize(authorizer, RequestAction.WRITE);
+                funnel.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             () -> serviceFacade.verifyDeleteFunnel(id),
             () -> {

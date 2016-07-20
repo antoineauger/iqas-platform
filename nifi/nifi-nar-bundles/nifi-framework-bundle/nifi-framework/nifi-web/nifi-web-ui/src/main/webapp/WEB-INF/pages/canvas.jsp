@@ -49,6 +49,7 @@
         <script type="text/javascript" src="js/jquery/jquery.ellipsis.js"></script>
         <script type="text/javascript" src="js/jquery/jquery.each.js"></script>
         <script type="text/javascript" src="js/jquery/jquery.tab.js"></script>
+        <script type="text/javascript" src="js/jquery/jquery.form.min.js"></script>
         <script type="text/javascript" src="js/jquery/tabbs/jquery.tabbs.js?${project.version}"></script>
         <script type="text/javascript" src="js/jquery/combo/jquery.combo.js?${project.version}"></script>
         <script type="text/javascript" src="js/jquery/propertytable/jquery.propertytable.js?${project.version}"></script>
@@ -84,7 +85,9 @@
     </head>
     <body ng-controller="ngCanvasAppCtrl" id="canvas-body">
         <div id="splash">
-            <img id="splash-img" src="images/loadAnimation.gif" alt="Loading..."/>
+            <div id="splash-img" layout="row" layout-align="center center">
+                <md-progress-circular md-mode="indeterminate" class="md-warn" md-diameter="150"></md-progress-circular>
+            </div>
         </div>
         <jsp:include page="/WEB-INF/partials/message-pane.jsp"/>
         <jsp:include page="/WEB-INF/partials/banners-main.jsp"/>
@@ -94,6 +97,7 @@
         <jsp:include page="/WEB-INF/partials/ok-dialog.jsp"/>
         <jsp:include page="/WEB-INF/partials/yes-no-dialog.jsp"/>
         <jsp:include page="/WEB-INF/partials/status-history-dialog.jsp"/>
+        <jsp:include page="/WEB-INF/partials/canvas/search-users-dialog.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/disable-controller-service-dialog.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/enable-controller-service-dialog.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/new-controller-service-dialog.jsp"/>
@@ -103,6 +107,7 @@
         <jsp:include page="/WEB-INF/partials/canvas/new-process-group-dialog.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/new-remote-process-group-dialog.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/new-template-dialog.jsp"/>
+        <jsp:include page="/WEB-INF/partials/canvas/upload-template-dialog.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/instantiate-template-dialog.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/fill-color-dialog.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/connections-dialog.jsp"/>
@@ -121,6 +126,7 @@
         <jsp:include page="/WEB-INF/partials/canvas/processor-configuration.jsp"/>
         <jsp:include page="/WEB-INF/partials/processor-details.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/process-group-configuration.jsp"/>
+        <jsp:include page="/WEB-INF/partials/canvas/policy-management.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/process-group-details.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/remote-process-group-configuration.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/remote-process-group-details.jsp"/>
