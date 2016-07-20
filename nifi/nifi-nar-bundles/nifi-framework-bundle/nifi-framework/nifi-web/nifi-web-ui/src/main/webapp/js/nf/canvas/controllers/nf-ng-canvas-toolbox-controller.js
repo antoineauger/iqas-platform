@@ -76,26 +76,13 @@ nf.ng.Canvas.ToolboxCtrl = function (processorComponent,
          * Initialize the toolbox controller.
          */
         init: function() {
-            // ensure the user can create graph components
-            if (nf.Common.isDFM()) {
-                // initialize modal dialogs
-                processorComponent.modal.init();
-                inputPortComponent.modal.init();
-                outputPortComponent.modal.init();
-                groupComponent.modal.init();
-                remoteGroupComponent.modal.init();
-                templateComponent.modal.init();
-            } else {
-                // disable components
-                processorComponent.disabled();
-                inputPortComponent.disabled();
-                outputPortComponent.disabled();
-                groupComponent.disabled();
-                remoteGroupComponent.disabled();
-                funnelComponent.disabled();
-                templateComponent.disabled();
-                labelComponent.disabled();
-            }
+            // initialize modal dialogs
+            processorComponent.modal.init();
+            inputPortComponent.modal.init();
+            outputPortComponent.modal.init();
+            groupComponent.modal.init();
+            remoteGroupComponent.modal.init();
+            templateComponent.modal.init();
         },
 
         /**
@@ -107,12 +94,21 @@ nf.ng.Canvas.ToolboxCtrl = function (processorComponent,
          * NOTE: The `component` must implement a dropHandler.
          */
         draggableComponentConfig: function(component) {
+
+            //add hover effect
+            component.getElement().hover(function () {
+                component.getElement().removeClass(component.icon).addClass(component.hoverIcon);
+            }, function () {
+                component.getElement().removeClass(component.hoverIcon).addClass(component.icon);
+            })
+
             return {
                 zIndex: 1011,
                 revert: true,
                 revertDuration: 0,
                 cancel: false,
                 containment: 'body',
+                cursor: '-webkit-grabbing',
                 start: function (e, ui) {
                     // hide the context menu if necessary
                     nf.ContextMenu.hide();

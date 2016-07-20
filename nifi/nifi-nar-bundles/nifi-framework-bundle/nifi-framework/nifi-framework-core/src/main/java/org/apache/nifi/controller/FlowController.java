@@ -16,7 +16,39 @@
  */
 package org.apache.nifi.controller;
 
-import com.sun.jersey.api.client.ClientHandlerException;
+import static java.util.Objects.requireNonNull;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.net.ssl.SSLContext;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.action.Action;
 import org.apache.nifi.admin.service.AuditService;
@@ -29,8 +61,11 @@ import org.apache.nifi.annotation.notification.PrimaryNodeState;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.Resource;
 import org.apache.nifi.authorization.resource.Authorizable;
+import org.apache.nifi.authorization.resource.ProvenanceEventAuthorizable;
 import org.apache.nifi.authorization.resource.ResourceFactory;
+import org.apache.nifi.authorization.user.NiFiUser;
 import org.apache.nifi.cluster.HeartbeatPayload;
+import org.apache.nifi.cluster.coordination.ClusterCoordinator;
 import org.apache.nifi.cluster.coordination.heartbeat.HeartbeatMonitor;
 import org.apache.nifi.cluster.coordination.node.ClusterRoles;
 import org.apache.nifi.cluster.coordination.node.DisconnectionCode;
@@ -148,9 +183,10 @@ import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.SimpleProcessLogger;
 import org.apache.nifi.processor.StandardProcessorInitializationContext;
 import org.apache.nifi.processor.StandardValidationContextFactory;
+import org.apache.nifi.provenance.ProvenanceRepository;
 import org.apache.nifi.provenance.ProvenanceEventRecord;
-import org.apache.nifi.provenance.ProvenanceEventRepository;
 import org.apache.nifi.provenance.ProvenanceEventType;
+import org.apache.nifi.provenance.ProvenanceAuthorizableFactory;
 import org.apache.nifi.provenance.StandardProvenanceEventRecord;
 import org.apache.nifi.remote.HttpRemoteSiteListener;
 import org.apache.nifi.remote.RemoteGroupPort;
@@ -162,6 +198,7 @@ import org.apache.nifi.remote.StandardRemoteProcessGroup;
 import org.apache.nifi.remote.StandardRemoteProcessGroupPortDescriptor;
 import org.apache.nifi.remote.StandardRootGroupPort;
 import org.apache.nifi.remote.TransferDirection;
+import org.apache.nifi.remote.cluster.NodeInformant;
 import org.apache.nifi.remote.protocol.SiteToSiteTransportProtocol;
 import org.apache.nifi.remote.protocol.socket.SocketFlowFileServerProtocol;
 import org.apache.nifi.reporting.Bulletin;
@@ -178,6 +215,7 @@ import org.apache.nifi.stream.io.StreamUtils;
 import org.apache.nifi.util.FormatUtils;
 import org.apache.nifi.util.NiFiProperties;
 import org.apache.nifi.util.ReflectionUtils;
+import org.apache.nifi.web.ResourceNotFoundException;
 import org.apache.nifi.web.api.dto.ConnectableDTO;
 import org.apache.nifi.web.api.dto.ConnectionDTO;
 import org.apache.nifi.web.api.dto.ControllerServiceDTO;
@@ -198,39 +236,9 @@ import org.apache.zookeeper.server.quorum.QuorumPeerConfig.ConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.LockSupport;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import com.sun.jersey.api.client.ClientHandlerException;
 
-import static java.util.Objects.requireNonNull;
-
-public class FlowController implements EventAccess, ControllerServiceProvider, ReportingTaskProvider, QueueProvider, Authorizable {
+public class FlowController implements EventAccess, ControllerServiceProvider, ReportingTaskProvider, QueueProvider, Authorizable, ProvenanceAuthorizableFactory, NodeTypeProvider {
 
     // default repository implementations
     public static final String DEFAULT_FLOWFILE_REPO_IMPLEMENTATION = "org.apache.nifi.controller.repository.WriteAheadFlowFileRepository";
@@ -259,7 +267,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
     private final ContentRepository contentRepository;
     private final FlowFileRepository flowFileRepository;
     private final FlowFileEventRepository flowFileEventRepository;
-    private final ProvenanceEventRepository provenanceEventRepository;
+    private final ProvenanceRepository provenanceRepository;
     private final BulletinRepository bulletinRepository;
     private final StandardProcessScheduler processScheduler;
     private final SnippetManager snippetManager;
@@ -291,14 +299,12 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
     private final Integer remoteInputSocketPort;
     private final Integer remoteInputHttpPort;
     private final Boolean isSiteToSiteSecure;
-    private Integer clusterManagerRemoteSitePort = null;
-    private Integer clusterManagerRemoteSiteHttpPort = null;
-    private Boolean clusterManagerRemoteSiteCommsSecure = null;
 
     private ProcessGroup rootGroup;
     private final List<Connectable> startConnectablesAfterInitialization;
     private final List<RemoteGroupPort> startRemoteGroupPortsAfterInitialization;
     private final LeaderElectionManager leaderElectionManager;
+    private final ClusterCoordinator clusterCoordinator;
 
     /**
      * true if controller is configured to operate in a clustered environment
@@ -377,6 +383,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
             /* configuredForClustering */ false,
             /* NodeProtocolSender */ null,
             bulletinRepo,
+            /* cluster coordinator */ null,
             /* heartbeat monitor */ null);
     }
 
@@ -388,6 +395,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         final StringEncryptor encryptor,
         final NodeProtocolSender protocolSender,
         final BulletinRepository bulletinRepo,
+        final ClusterCoordinator clusterCoordinator,
         final HeartbeatMonitor heartbeatMonitor) {
         final FlowController flowController = new FlowController(
             flowFileEventRepo,
@@ -398,9 +406,8 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
             /* configuredForClustering */ true,
             protocolSender,
             bulletinRepo,
+            clusterCoordinator,
             heartbeatMonitor);
-
-        flowController.setClusterManagerRemoteSiteInfo(properties.getRemoteInputPort(), properties.getRemoteInputHttpPort(), properties.isSiteToSiteSecure());
 
         return flowController;
     }
@@ -414,6 +421,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         final boolean configuredForClustering,
         final NodeProtocolSender protocolSender,
         final BulletinRepository bulletinRepo,
+        final ClusterCoordinator clusterCoordinator,
         final HeartbeatMonitor heartbeatMonitor) {
 
         maxTimerDrivenThreads = new AtomicInteger(10);
@@ -424,6 +432,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         this.heartbeatMonitor = heartbeatMonitor;
         sslContext = SslContextFactory.createSslContext(properties, false);
         extensionManager = new ExtensionManager();
+        this.clusterCoordinator = clusterCoordinator;
 
         timerDrivenEngineRef = new AtomicReference<>(new FlowEngine(maxTimerDrivenThreads.get(), "Timer-Driven Process"));
         eventDrivenEngineRef = new AtomicReference<>(new FlowEngine(maxEventDrivenThreads.get(), "Event-Driven Process"));
@@ -436,8 +445,8 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         bulletinRepository = bulletinRepo;
 
         try {
-            this.provenanceEventRepository = createProvenanceRepository(properties);
-            this.provenanceEventRepository.initialize(createEventReporter(bulletinRepository));
+            this.provenanceRepository = createProvenanceRepository(properties);
+            this.provenanceRepository.initialize(createEventReporter(bulletinRepository), authorizer, this);
         } catch (final Exception e) {
             throw new RuntimeException("Unable to create Provenance Repository", e);
         }
@@ -457,7 +466,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         processScheduler = new StandardProcessScheduler(this, encryptor, stateManagerProvider);
         eventDrivenWorkerQueue = new EventDrivenWorkerQueue(false, false, processScheduler);
 
-        final ProcessContextFactory contextFactory = new ProcessContextFactory(contentRepository, flowFileRepository, flowFileEventRepository, counterRepositoryRef.get(), provenanceEventRepository);
+        final ProcessContextFactory contextFactory = new ProcessContextFactory(contentRepository, flowFileRepository, flowFileEventRepository, counterRepositoryRef.get(), provenanceRepository);
         processScheduler.setSchedulingAgent(SchedulingStrategy.EVENT_DRIVEN, new EventDrivenSchedulingAgent(
             eventDrivenEngineRef.get(), this, stateManagerProvider, eventDrivenWorkerQueue, contextFactory, maxEventDrivenThreads.get(), encryptor));
 
@@ -508,20 +517,22 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
             LOG.info("Not enabling RAW Socket Site-to-Site functionality because nifi.remote.input.socket.port is not set");
         } else if (isSiteToSiteSecure && sslContext == null) {
             LOG.error("Unable to create Secure Site-to-Site Listener because not all required Keystore/Truststore "
-                + "Properties are set. Site-to-Site functionality will be disabled until this problem is has been fixed.");
+                    + "Properties are set. Site-to-Site functionality will be disabled until this problem is has been fixed.");
         } else {
             // Register the SocketFlowFileServerProtocol as the appropriate resource for site-to-site Server Protocol
             RemoteResourceManager.setServerProtocolImplementation(SocketFlowFileServerProtocol.RESOURCE_NAME, SocketFlowFileServerProtocol.class);
-            externalSiteListeners.add(new SocketRemoteSiteListener(remoteInputSocketPort, isSiteToSiteSecure ? sslContext : null));
+
+            final NodeInformant nodeInformant = configuredForClustering ? new ClusterCoordinatorNodeInformant(clusterCoordinator) : null;
+            externalSiteListeners.add(new SocketRemoteSiteListener(remoteInputSocketPort, isSiteToSiteSecure ? sslContext : null, nodeInformant));
         }
 
         if (remoteInputHttpPort == null) {
-            LOG.info("Not enabling HTTP(S) Site-to-Site functionality because nifi.remote.input.html.enabled is not true");
+            LOG.info("Not enabling HTTP(S) Site-to-Site functionality because the '" + NiFiProperties.SITE_TO_SITE_HTTP_ENABLED + "' property is not true");
         } else {
             externalSiteListeners.add(HttpRemoteSiteListener.getInstance());
         }
 
-        for(final RemoteSiteListener listener : externalSiteListeners) {
+        for (final RemoteSiteListener listener : externalSiteListeners) {
             listener.setRootGroup(rootGroup);
         }
 
@@ -659,7 +670,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
             // ContentRepository to purge superfluous files
             contentRepository.cleanup();
 
-            for(final RemoteSiteListener listener : externalSiteListeners) {
+            for (final RemoteSiteListener listener : externalSiteListeners) {
                 listener.start();
             }
 
@@ -794,7 +805,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         }
     }
 
-    private ProvenanceEventRepository createProvenanceRepository(final NiFiProperties properties) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+    private ProvenanceRepository createProvenanceRepository(final NiFiProperties properties) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         final String implementationClassName = properties.getProperty(NiFiProperties.PROVENANCE_REPO_IMPLEMENTATION_CLASS, DEFAULT_PROVENANCE_REPO_IMPLEMENTATION);
         if (implementationClassName == null) {
             throw new RuntimeException("Cannot create Provenance Repository because the NiFi Properties is missing the following property: "
@@ -802,7 +813,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         }
 
         try {
-            return NarThreadContextClassLoader.createInstance(implementationClassName, ProvenanceEventRepository.class);
+            return NarThreadContextClassLoader.createInstance(implementationClassName, ProvenanceRepository.class);
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
@@ -869,16 +880,16 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         }
 
         return builder.id(requireNonNull(id).intern())
-            .name(name == null ? null : name.intern())
-            .relationships(relationships)
-            .source(requireNonNull(source))
-            .destination(destination)
-            .swapManager(swapManager)
-            .eventReporter(eventReporter)
-            .resourceClaimManager(resourceClaimManager)
-            .flowFileRepository(flowFileRepository)
-            .provenanceRepository(provenanceEventRepository)
-            .build();
+                .name(name == null ? null : name.intern())
+                .relationships(relationships)
+                .source(requireNonNull(source))
+                .destination(destination)
+                .swapManager(swapManager)
+                .eventReporter(eventReporter)
+                .resourceClaimManager(resourceClaimManager)
+                .flowFileRepository(flowFileRepository)
+                .provenanceRepository(provenanceRepository)
+                .build();
     }
 
     /**
@@ -973,7 +984,6 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
      * @throws NullPointerException if either arg is null
      * @throws ProcessorInstantiationException if the processor cannot be instantiated for any reason
      */
-    @SuppressWarnings("deprecation")
     public ProcessorNode createProcessor(final String type, String id, final boolean firstTimeAdded) throws ProcessorInstantiationException {
         id = id.intern();
 
@@ -1006,7 +1016,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
 
         if (firstTimeAdded) {
             try (final NarCloseable x = NarCloseable.withNarLoader()) {
-                ReflectionUtils.invokeMethodsWithAnnotations(OnAdded.class, org.apache.nifi.processor.annotation.OnAdded.class, processor);
+                ReflectionUtils.invokeMethodsWithAnnotation(OnAdded.class, processor);
             } catch (final Exception e) {
                 logRepository.removeObserver(StandardProcessorNode.BULLETIN_OBSERVER_ID);
                 throw new ComponentLifeCycleException("Failed to invoke @OnAdded methods of " + procNode.getProcessor(), e);
@@ -1041,7 +1051,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
             final Class<? extends Processor> processorClass = rawClass.asSubclass(Processor.class);
             processor = processorClass.newInstance();
             final ComponentLog componentLogger = new SimpleProcessLogger(identifier, processor);
-            final ProcessorInitializationContext ctx = new StandardProcessorInitializationContext(identifier, componentLogger, this);
+            final ProcessorInitializationContext ctx = new StandardProcessorInitializationContext(identifier, componentLogger, this, this);
             processor.initialize(ctx);
 
             LogRepositoryFactory.getRepository(identifier).setLogger(componentLogger);
@@ -1301,7 +1311,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
                     + "will take an indeterminate amount of time to stop.  Might need to kill the program manually.");
             }
 
-            for(final RemoteSiteListener listener : externalSiteListeners) {
+            for (final RemoteSiteListener listener : externalSiteListeners) {
                 listener.stop();
             }
 
@@ -1313,9 +1323,9 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
                 contentRepository.shutdown();
             }
 
-            if (provenanceEventRepository != null) {
+            if (provenanceRepository != null) {
                 try {
-                    provenanceEventRepository.close();
+                    provenanceRepository.close();
                 } catch (final IOException ioe) {
                     LOG.warn("There was a problem shutting down the Provenance Repository: " + ioe.toString());
                     if (LOG.isDebugEnabled()) {
@@ -1402,9 +1412,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
     /**
      * Updates the number of threads that can be simultaneously used for executing processors.
      *
-     * @param maxThreadCount
-     *
-     *            This method must be called while holding the write lock!
+     * @param maxThreadCount This method must be called while holding the write lock!
      */
     private void setMaxThreadCount(final int maxThreadCount, final FlowEngine engine, final AtomicInteger maxThreads) {
         if (maxThreadCount < 1) {
@@ -1446,7 +1454,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         try {
             rootGroup = group;
 
-            for(final RemoteSiteListener listener : externalSiteListeners) {
+            for (final RemoteSiteListener listener : externalSiteListeners) {
                 listener.setRootGroup(rootGroup);
             }
 
@@ -3036,7 +3044,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
      * @throws IllegalStateException if not configured for clustering
      */
     public void startHeartbeating() throws IllegalStateException {
-        if (!configuredForClustering) {
+        if (!isConfiguredForClustering()) {
             throw new IllegalStateException("Unable to start heartbeating because heartbeating is not configured.");
         }
 
@@ -3074,7 +3082,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
      * @throws IllegalStateException if not clustered
      */
     public void stopHeartbeating() throws IllegalStateException {
-        if (!configuredForClustering) {
+        if (!isConfiguredForClustering()) {
             throw new IllegalStateException("Unable to stop heartbeating because heartbeating is not configured.");
         }
 
@@ -3138,6 +3146,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
     /**
      * @return true if this instance is clustered; false otherwise. Clustered means that a node is either connected or trying to connect to the cluster.
      */
+    @Override
     public boolean isClustered() {
         readLock.lock();
         try {
@@ -3145,6 +3154,10 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         } finally {
             readLock.unlock();
         }
+    }
+
+    public boolean isConfiguredForClustering() {
+        return configuredForClustering;
     }
 
     /**
@@ -3175,11 +3188,19 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
             @Override
             public void onLeaderRelinquish() {
                 heartbeatMonitor.stop();
+
+                if (clusterCoordinator != null) {
+                    clusterCoordinator.removeRole(ClusterRoles.CLUSTER_COORDINATOR);
+                }
             }
 
             @Override
             public void onLeaderElection() {
                 heartbeatMonitor.start();
+
+                if (clusterCoordinator != null) {
+                    clusterCoordinator.addRole(ClusterRoles.CLUSTER_COORDINATOR);
+                }
             }
         });
     }
@@ -3305,8 +3326,9 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
     /**
      * @return true if this instance is the primary node in the cluster; false otherwise
      */
+    @Override
     public boolean isPrimary() {
-        return leaderElectionManager != null && leaderElectionManager.isLeader(ClusterRoles.PRIMARY_NODE);
+        return isClustered() && leaderElectionManager != null && leaderElectionManager.isLeader(ClusterRoles.PRIMARY_NODE);
     }
 
     public void setPrimary(final boolean primary) {
@@ -3476,7 +3498,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
             .setDetails("Download of " + (direction == ContentDirection.INPUT ? "Input" : "Output") + " Content requested by " + requestor + " for Provenance Event " + provEvent.getEventId())
             .build();
 
-        provenanceEventRepository.registerEvent(sendEvent);
+        provenanceRepository.registerEvent(sendEvent);
 
         return new LimitedInputStream(rawStream, size);
     }
@@ -3522,7 +3544,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         }
 
         final ProvenanceEventRecord sendEvent = sendEventBuilder.build();
-        provenanceEventRepository.registerEvent(sendEvent);
+        provenanceRepository.registerEvent(sendEvent);
         return stream;
     }
 
@@ -3575,17 +3597,16 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
         return null;
     }
 
-    public ProvenanceEventRecord replayFlowFile(final long provenanceEventRecordId, final String requestor) throws IOException {
-        final ProvenanceEventRecord record = provenanceEventRepository.getEvent(provenanceEventRecordId);
+    public ProvenanceEventRecord replayFlowFile(final long provenanceEventRecordId, final NiFiUser user) throws IOException {
+        final ProvenanceEventRecord record = provenanceRepository.getEvent(provenanceEventRecordId, user);
         if (record == null) {
             throw new IllegalStateException("Cannot find Provenance Event with ID " + provenanceEventRecordId);
         }
 
-        return replayFlowFile(record, requestor);
+        return replayFlowFile(record, user);
     }
 
-    @SuppressWarnings("deprecation")
-    public ProvenanceEventRecord replayFlowFile(final ProvenanceEventRecord event, final String requestor) throws IOException {
+    public ProvenanceEventRecord replayFlowFile(final ProvenanceEventRecord event, final NiFiUser user) throws IOException {
         if (event == null) {
             throw new NullPointerException();
         }
@@ -3641,11 +3662,6 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
 
         final String parentUUID = event.getFlowFileUuid();
 
-        // Create the FlowFile Record
-        final Set<String> lineageIdentifiers = new HashSet<>();
-        lineageIdentifiers.addAll(event.getLineageIdentifiers());
-        lineageIdentifiers.add(parentUUID);
-
         final String newFlowFileUUID = UUID.randomUUID().toString();
 
         // We need to create a new FlowFile by populating it with information from the
@@ -3664,8 +3680,7 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
             .contentClaimOffset(0L) // use 0 because we used the content claim offset in the Content Claim itself
             .entryDate(System.currentTimeMillis())
             .id(flowFileRepository.getNextFlowFileSequence())
-            .lineageIdentifiers(lineageIdentifiers)
-            .lineageStartDate(event.getLineageStartDate())
+            .lineageStart(event.getLineageStartDate(), 0L)
             .size(contentSize.longValue())
             // Create a new UUID and add attributes indicating that this is a replay
             .addAttribute("flowfile.replay", "true")
@@ -3678,20 +3693,20 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
 
         // Register a Provenance Event to indicate that we replayed the data.
         final ProvenanceEventRecord replayEvent = new StandardProvenanceEventRecord.Builder()
-            .setEventType(ProvenanceEventType.REPLAY)
-            .addChildUuid(newFlowFileUUID)
-            .addParentUuid(parentUUID)
-            .setFlowFileUUID(parentUUID)
-            .setAttributes(Collections.<String, String> emptyMap(), flowFileRecord.getAttributes())
-            .setCurrentContentClaim(event.getContentClaimContainer(), event.getContentClaimSection(), event.getContentClaimIdentifier(), event.getContentClaimOffset(), event.getFileSize())
-            .setDetails("Replay requested by " + requestor)
-            .setEventTime(System.currentTimeMillis())
-            .setFlowFileEntryDate(System.currentTimeMillis())
-            .setLineageStartDate(event.getLineageStartDate())
-            .setComponentType(event.getComponentType())
-            .setComponentId(event.getComponentId())
-            .build();
-        provenanceEventRepository.registerEvent(replayEvent);
+                .setEventType(ProvenanceEventType.REPLAY)
+                .addChildUuid(newFlowFileUUID)
+                .addParentUuid(parentUUID)
+                .setFlowFileUUID(parentUUID)
+                .setAttributes(Collections.<String, String>emptyMap(), flowFileRecord.getAttributes())
+                .setCurrentContentClaim(event.getContentClaimContainer(), event.getContentClaimSection(), event.getContentClaimIdentifier(), event.getContentClaimOffset(), event.getFileSize())
+                .setDetails("Replay requested by " + user.getIdentity())
+                .setEventTime(System.currentTimeMillis())
+                .setFlowFileEntryDate(System.currentTimeMillis())
+                .setLineageStartDate(event.getLineageStartDate())
+                .setComponentType(event.getComponentType())
+                .setComponentId(event.getComponentId())
+                .build();
+        provenanceRepository.registerEvent(replayEvent);
 
         // Update the FlowFile Repository to indicate that we have added the FlowFile to the flow
         final StandardRepositoryRecord record = new StandardRepositoryRecord(queue, flowFileRecord);
@@ -3813,7 +3828,14 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
                 return null;
             }
 
-            final Set<String> roles = bean.isPrimary() ? Collections.singleton(ClusterRoles.PRIMARY_NODE) : Collections.emptySet();
+            final Set<String> roles = new HashSet<>();
+            if (bean.isPrimary()) {
+                roles.add(ClusterRoles.PRIMARY_NODE);
+            }
+            if (clusterCoordinator.isActiveClusterCoordinator()) {
+                roles.add(ClusterRoles.CLUSTER_COORDINATOR);
+            }
+
             final Heartbeat heartbeat = new Heartbeat(nodeId, roles, bean.getConnectionStatus(), hbPayload.marshal());
             final HeartbeatMessage message = new HeartbeatMessage();
             message.setHeartbeat(heartbeat);
@@ -3843,52 +3865,36 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
 
     @Override
     public List<ProvenanceEventRecord> getProvenanceEvents(final long firstEventId, final int maxRecords) throws IOException {
-        return new ArrayList<>(provenanceEventRepository.getEvents(firstEventId, maxRecords));
+        return new ArrayList<>(provenanceRepository.getEvents(firstEventId, maxRecords));
+    }
+
+    @Override
+    public Authorizable createProvenanceAuthorizable(final String componentId) {
+        final String rootGroupId = getRootGroupId();
+
+        // Provenance Events are generated only by connectable components, with the exception of DOWNLOAD events,
+        // which have the root process group's identifier assigned as the component ID. So, we check if the component ID
+        // is set to the root group and otherwise assume that the ID is that of a component.
+        final ProvenanceEventAuthorizable authorizable;
+        if (rootGroupId.equals(componentId)) {
+            authorizable = new ProvenanceEventAuthorizable(rootGroup);
+        } else {
+            final Connectable connectable = rootGroup.findConnectable(componentId);
+
+            if (connectable == null) {
+                throw new ResourceNotFoundException("The component that generated this event is no longer part of the data flow.");
+            }
+
+            authorizable = new ProvenanceEventAuthorizable(connectable);
+        }
+
+        return authorizable;
     }
 
     @Override
     public List<Action> getFlowChanges(final int firstActionId, final int maxActions) {
         final History history = auditService.getActions(firstActionId, maxActions);
         return new ArrayList<>(history.getActions());
-    }
-
-    public void setClusterManagerRemoteSiteInfo(final Integer managerListeningPort, final Integer managerListeningHttpPort, final Boolean commsSecure) {
-        writeLock.lock();
-        try {
-            clusterManagerRemoteSitePort = managerListeningPort;
-            clusterManagerRemoteSiteHttpPort = managerListeningHttpPort;
-            clusterManagerRemoteSiteCommsSecure = commsSecure;
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-    public Integer getClusterManagerRemoteSiteListeningPort() {
-        readLock.lock();
-        try {
-            return clusterManagerRemoteSitePort;
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-
-    public Integer getClusterManagerRemoteSiteListeningHttpPort() {
-        readLock.lock();
-        try {
-            return clusterManagerRemoteSiteHttpPort;
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    public Boolean isClusterManagerRemoteSiteCommsSecure() {
-        readLock.lock();
-        try {
-            return clusterManagerRemoteSiteCommsSecure;
-        } finally {
-            readLock.unlock();
-        }
     }
 
     public Integer getRemoteSiteListeningPort() {
@@ -3913,8 +3919,8 @@ public class FlowController implements EventAccess, ControllerServiceProvider, R
     }
 
     @Override
-    public ProvenanceEventRepository getProvenanceRepository() {
-        return provenanceEventRepository;
+    public ProvenanceRepository getProvenanceRepository() {
+        return provenanceRepository;
     }
 
     public StatusHistoryDTO getConnectionStatusHistory(final String connectionId) {

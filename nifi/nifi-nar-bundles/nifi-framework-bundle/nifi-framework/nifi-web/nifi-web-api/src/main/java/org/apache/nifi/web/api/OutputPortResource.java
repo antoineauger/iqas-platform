@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.RequestAction;
 import org.apache.nifi.authorization.resource.Authorizable;
+import org.apache.nifi.authorization.user.NiFiUserUtils;
 import org.apache.nifi.web.NiFiServiceFacade;
 import org.apache.nifi.web.Revision;
 import org.apache.nifi.web.api.dto.PortDTO;
@@ -82,32 +83,8 @@ public class OutputPortResource extends ApplicationResource {
      * @return dtos
      */
     public PortEntity populateRemainingOutputPortEntityContent(PortEntity outputPortEntity) {
-        if (outputPortEntity.getComponent() != null) {
-            populateRemainingOutputPortContent(outputPortEntity.getComponent());
-        }
+        outputPortEntity.setUri(generateResourceUri("output-ports", outputPortEntity.getId()));
         return outputPortEntity;
-    }
-
-    /**
-     * Populates the uri for the specified output ports.
-     *
-     * @param outputPorts ports
-     * @return dtos
-     */
-    public Set<PortDTO> populateRemainingOutputPortsContent(Set<PortDTO> outputPorts) {
-        for (PortDTO outputPort : outputPorts) {
-            populateRemainingOutputPortContent(outputPort);
-        }
-        return outputPorts;
-    }
-
-    /**
-     * Populates the uri for the specified output ports.
-     */
-    public PortDTO populateRemainingOutputPortContent(PortDTO outputPort) {
-        // populate the output port uri
-        outputPort.setUri(generateResourceUri("output-ports", outputPort.getId()));
-        return outputPort;
     }
 
     /**
@@ -153,7 +130,7 @@ public class OutputPortResource extends ApplicationResource {
         // authorize access
         serviceFacade.authorizeAccess(lookup -> {
             final Authorizable outputPort = lookup.getOutputPort(id);
-            outputPort.authorize(authorizer, RequestAction.READ);
+            outputPort.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
         });
 
         // get the port
@@ -230,7 +207,7 @@ public class OutputPortResource extends ApplicationResource {
             revision,
             lookup -> {
                 Authorizable authorizable = lookup.getOutputPort(id);
-                authorizable.authorize(authorizer, RequestAction.WRITE);
+                authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             () -> serviceFacade.verifyUpdateOutputPort(requestPortDTO),
             () -> {
@@ -302,7 +279,7 @@ public class OutputPortResource extends ApplicationResource {
             revision,
             lookup -> {
                 final Authorizable outputPort = lookup.getOutputPort(id);
-                outputPort.authorize(authorizer, RequestAction.WRITE);
+                outputPort.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             () -> serviceFacade.verifyDeleteOutputPort(id),
             () -> {

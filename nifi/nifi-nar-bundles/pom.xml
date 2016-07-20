@@ -66,6 +66,7 @@
         <module>nifi-evtx-bundle</module>
         <module>nifi-slack-bundle</module>
         <module>nifi-snmp-bundle</module>
+        <module>nifi-windows-event-log-bundle</module>
         <module>nifi-qoi-bundle</module>
     </modules>
 
@@ -130,6 +131,12 @@
             <dependency>
                 <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-api</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.nifi</groupId>
+                <artifactId>nifi-framework-api</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
                 <scope>provided</scope>
             </dependency>

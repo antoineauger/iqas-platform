@@ -25,6 +25,7 @@ nf.RemoteProcessGroupPorts = (function () {
     var initRemotePortConfigurationDialog = function () {
         $('#remote-port-configuration').modal({
             headerText: 'Configure Remote Port',
+            scrollableContentStyle: 'scrollable',
             buttons: [{
                 buttonText: 'Apply',
                 color: {
@@ -63,7 +64,7 @@ nf.RemoteProcessGroupPorts = (function () {
                             $.ajax({
                                 type: 'PUT',
                                 data: JSON.stringify(remoteProcessGroupPortEntity),
-                                url: remoteProcessGroupData.component.uri + portContextPath + encodeURIComponent(remotePortId),
+                                url: remoteProcessGroupData.uri + portContextPath + encodeURIComponent(remotePortId),
                                 dataType: 'json',
                                 contentType: 'application/json'
                             }).done(function (response) {
@@ -146,6 +147,7 @@ nf.RemoteProcessGroupPorts = (function () {
      */
     var initRemoteProcessGroupConfigurationDialog = function () {
         $('#remote-process-group-ports').modal({
+            scrollableContentStyle: 'scrollable',
             headerText: 'Remote Process Group Ports',
             buttons: [{
                 buttonText: 'Close',
@@ -156,12 +158,13 @@ nf.RemoteProcessGroupPorts = (function () {
                 },
                 handler: {
                     click: function () {
-                        // if this is a DFM, the over status of this node may have changed
-                        if (nf.Common.isDFM()) {
-                            // get the component in question
-                            var remoteProcessGroupId = $('#remote-process-group-ports-id').text();
-                            var remoteProcessGroupData = d3.select('#id-' + remoteProcessGroupId).datum();
+                        // get the component in question
+                        var remoteProcessGroupId = $('#remote-process-group-ports-id').text();
+                        var remoteProcessGroup = d3.select('#id-' + remoteProcessGroupId);
+                        var remoteProcessGroupData = remoteProcessGroup.datum();
 
+                        // if can modify, the over status of this node may have changed
+                        if (nf.CanvasUtils.canModify(remoteProcessGroup)) {
                             // reload the remote process group
                             nf.RemoteProcessGroup.reload(remoteProcessGroupData.component);
                         }
@@ -204,8 +207,12 @@ nf.RemoteProcessGroupPorts = (function () {
         var portContainerEditContainer = $('<div class="remote-port-edit-container"></div>').appendTo(portContainer);
         var portContainerDetailsContainer = $('<div class="remote-port-details-container"></div>').appendTo(portContainer);
 
-        // only DFMs can update the remote group port
-        if (nf.Common.isDFM()) {
+        // get the component in question
+        var remoteProcessGroupId = $('#remote-process-group-ports-id').text();
+        var remoteProcessGroup = d3.select('#id-' + remoteProcessGroupId);
+
+        // if can modify, support updating the remote group port
+        if (nf.CanvasUtils.canModify(remoteProcessGroup)) {
             // show the enabled transmission switch
             var transmissionSwitch;
             if (port.connected === true) {
@@ -246,9 +253,11 @@ nf.RemoteProcessGroupPorts = (function () {
                     editRemotePort.show();
                 }
             } else if (port.exists === false) {
-                $('<div class="remote-port-removed"/>').appendTo(portContainerEditContainer).qtip($.extend({
-                    content: 'This port has been removed.'
-                }, nf.Common.config.tooltipConfig));
+                $('<div class="remote-port-removed"/>').appendTo(portContainerEditContainer).qtip($.extend({},
+                    nf.Common.config.tooltipConfig,
+                    {
+                        content: 'This port has been removed.'
+                    }));
             }
 
             // only allow modifications to transmission when the swtich is defined
@@ -285,7 +294,7 @@ nf.RemoteProcessGroupPorts = (function () {
                     $.ajax({
                         type: 'PUT',
                         data: JSON.stringify(remoteProcessGroupPortEntity),
-                        url: remoteProcessGroupData.component.uri + portContextPath + encodeURIComponent(port.id),
+                        url: remoteProcessGroupData.uri + portContextPath + encodeURIComponent(port.id),
                         dataType: 'json',
                         contentType: 'application/json'
                     }).done(function (response) {
@@ -382,9 +391,11 @@ nf.RemoteProcessGroupPorts = (function () {
             'Concurrent tasks' +
             '<div class="processor-setting concurrent-tasks-info fa fa-question-circle"></div>' +
             '</div>' +
-            '</div>').append(concurrentTasks).appendTo(concurrentTasksContainer).find('div.concurrent-tasks-info').qtip($.extend({
-            content: 'The number of tasks that should be concurrently scheduled for this port.'
-        }, nf.Common.config.tooltipConfig));
+            '</div>').append(concurrentTasks).appendTo(concurrentTasksContainer).find('div.concurrent-tasks-info').qtip($.extend({},
+            nf.Common.config.tooltipConfig,
+            {
+                content: 'The number of tasks that should be concurrently scheduled for this port.'
+            }));
 
         var compressionContainer = $('<div class="compression-container"></div>').appendTo(portContainerDetailsContainer);
 
@@ -459,7 +470,7 @@ nf.RemoteProcessGroupPorts = (function () {
                 // load the properties for the specified component
                 $.ajax({
                     type: 'GET',
-                    url: selectionData.component.uri,
+                    url: selectionData.uri,
                     data: {
                         verbose: true
                     },

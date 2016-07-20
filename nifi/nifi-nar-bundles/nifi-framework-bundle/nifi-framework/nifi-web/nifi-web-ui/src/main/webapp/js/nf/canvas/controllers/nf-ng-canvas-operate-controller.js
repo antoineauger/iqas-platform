@@ -58,7 +58,145 @@ nf.ng.Canvas.OperateCtrl = function () {
                 init: function () {
                     // configure the create template dialog
                     this.getElement().modal({
+                        scrollableContentStyle: 'scrollable',
                         headerText: 'Create Template'
+                    });
+                },
+
+                /**
+                 * Updates the modal config.
+                 *
+                 * @param {string} name             The name of the property to update.
+                 * @param {object|array} config     The config for the `name`.
+                 */
+                update: function (name, config) {
+                    this.getElement().modal(name, config);
+                },
+
+                /**
+                 * Show the modal.
+                 */
+                show: function () {
+                    this.getElement().modal('show');
+                },
+
+                /**
+                 * Hide the modal.
+                 */
+                hide: function () {
+                    this.getElement().modal('hide');
+                }
+            }
+        };
+
+        /**
+         * The canvas operator's create template component.
+         */
+        this.templateUpload = {
+
+            /**
+             * The canvas operator's create template component's modal.
+             */
+            modal: {
+
+                /**
+                 * Gets the modal element.
+                 *
+                 * @returns {*|jQuery|HTMLElement}
+                 */
+                getElement: function () {
+                    return $('#upload-template-dialog');
+                },
+
+                /**
+                 * Initialize the modal.
+                 */
+                init: function () {
+                    // initialize the form
+                    var templateForm = $('#template-upload-form').ajaxForm({
+                        url: '../nifi-api/process-groups/' + encodeURIComponent(nf.Canvas.getGroupId()) + '/templates/upload',
+                        dataType: 'xml',
+                        success: function (response, statusText, xhr, form) {
+                            // see if the import was successful
+                            if (response.documentElement.tagName === 'templateEntity') {
+                                // close the dialog
+                                $('#upload-template-dialog').modal('hide');
+
+                                // close the settings dialog
+                                nf.Dialog.showOkDialog({
+                                    headerText: 'Success',
+                                    dialogContent: 'Template successfully imported.'
+                                });
+                            } else {
+                                // import failed
+                                var status = 'Unable to import template. Please check the log for errors.';
+                                if (response.documentElement.tagName === 'errorResponse') {
+                                    // if a more specific error was given, use it
+                                    var errorMessage = response.documentElement.getAttribute('statusText');
+                                    if (!nf.Common.isBlank(errorMessage)) {
+                                        status = errorMessage;
+                                    }
+                                }
+                                $('#upload-template-status').text(status);
+                            }
+                        },
+                        error: function (xhr, statusText, error) {
+                            $('#upload-template-status').text(error);
+                        }
+                    });
+                    
+                    // configure the upload template dialog
+                    this.getElement().modal({
+                        headerText: 'Upload Template',
+                        buttons: [{
+                            buttonText: 'Upload',
+                            color: {
+                                base: '#728E9B',
+                                hover: '#004849',
+                                text: '#ffffff'
+                            },
+                            handler: {
+                                click: function () {
+                                    // submit the template
+                                    templateForm.submit();
+                                }
+                            }
+                        }, {
+                            buttonText: 'Cancel',
+                            color: {
+                                base: '#E3E8EB',
+                                hover: '#C7D2D7',
+                                text: '#004849'
+                            },
+                            handler: {
+                                click: function () {
+                                    // hide the dialog
+                                    $('#upload-template-dialog').modal('hide');
+
+                                    // reset the form to ensure that the change fire will fire
+                                    templateForm.resetForm();
+                                }
+                            }
+                        }],
+                        handler: {
+                            close: function () {
+                                // set the filename
+                                $('#selected-template-name').text('');
+                                $('#upload-template-status').text('');
+                            }
+                        }
+                    });
+
+                    // add a handler for the change file input chain event
+                    $('#template-file-field').on('change', function (e) {
+                        var filename = $(this).val();
+                        if (!nf.Common.isBlank(filename)) {
+                            filename = filename.replace(/^.*[\\\/]/, '');
+                        }
+
+                        // set the filename and clear any status
+                        $('#selected-template-name').text(filename);
+                        $('#upload-template-status').text('');
                     });
                 },
 
@@ -113,6 +251,7 @@ nf.ng.Canvas.OperateCtrl = function () {
                 init: function () {
                     // configure the create fillcolor dialog
                     this.getElement().modal({
+                        scrollableContentStyle: 'scrollable',
                         headerText: 'Change Color',
                         buttons: [{
                             buttonText: 'Apply',
@@ -149,7 +288,7 @@ nf.ng.Canvas.OperateCtrl = function () {
                                             // update the style for the specified component
                                             $.ajax({
                                                 type: 'PUT',
-                                                url: selectedData.component.uri,
+                                                url: selectedData.uri,
                                                 data: JSON.stringify(entity),
                                                 dataType: 'json',
                                                 contentType: 'application/json'
@@ -159,7 +298,7 @@ nf.ng.Canvas.OperateCtrl = function () {
                                             }).fail(function (xhr, status, error) {
                                                 if (xhr.status === 400 || xhr.status === 404 || xhr.status === 409) {
                                                     nf.Dialog.showOkDialog({
-                                                        headerText: 'Malformed Request',
+                                                        headerText: 'Error',
                                                         dialogContent: nf.Common.escapeHtml(xhr.responseText)
                                                     });
                                                 }
@@ -246,7 +385,8 @@ nf.ng.Canvas.OperateCtrl = function () {
                                 $('#fill-color-value').val(hex);
 
                                 // always update the preview
-                                $('#fill-color-processor-preview, #fill-color-label-preview').css({
+                                $('#fill-color-processor-preview').css('color', hex);
+                                $('#fill-color-label-preview').css({
                                     'border-color': hex,
                                     'background': 'linear-gradient(to bottom, #ffffff, ' + hex + ')',
                                     'filter': 'progid:DXImageTransform.Microsoft.gradient(gradientType=0, startColorstr=#ffffff, endColorstr=' + hex + ')'
@@ -275,6 +415,7 @@ nf.ng.Canvas.OperateCtrl = function () {
          */
         init: function () {
             this.template.modal.init();
+            this.templateUpload.modal.init();
             this.fillcolor.modal.init();
             this.fillcolor.modal.minicolors.init();
         }

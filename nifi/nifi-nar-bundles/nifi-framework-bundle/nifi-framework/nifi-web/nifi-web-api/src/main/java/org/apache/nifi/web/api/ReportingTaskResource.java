@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.RequestAction;
 import org.apache.nifi.authorization.resource.Authorizable;
+import org.apache.nifi.authorization.user.NiFiUserUtils;
 import org.apache.nifi.ui.extension.UiExtension;
 import org.apache.nifi.ui.extension.UiExtensionMapping;
 import org.apache.nifi.web.NiFiServiceFacade;
@@ -97,6 +98,9 @@ public class ReportingTaskResource extends ApplicationResource {
      * @return dtos
      */
     public ReportingTaskEntity populateRemainingReportingTaskEntityContent(final ReportingTaskEntity reportingTaskEntity) {
+        reportingTaskEntity.setUri(generateResourceUri("reporting-tasks", reportingTaskEntity.getId()));
+
+        // populate the remaining content
         if (reportingTaskEntity.getComponent() != null) {
             populateRemainingReportingTaskContent(reportingTaskEntity.getComponent());
         }
@@ -105,24 +109,8 @@ public class ReportingTaskResource extends ApplicationResource {
 
     /**
      * Populates the uri for the specified reporting task.
-     *
-     * @param reportingTasks tasks
-     * @return tasks
-     */
-    public Set<ReportingTaskDTO> populateRemainingReportingTasksContent(final Set<ReportingTaskDTO> reportingTasks) {
-        for (ReportingTaskDTO reportingTask : reportingTasks) {
-            populateRemainingReportingTaskContent(reportingTask);
-        }
-        return reportingTasks;
-    }
-
-    /**
-     * Populates the uri for the specified reporting task.
      */
     public ReportingTaskDTO populateRemainingReportingTaskContent(final ReportingTaskDTO reportingTask) {
-        // populate the reporting task href
-        reportingTask.setUri(generateResourceUri("reporting-tasks", reportingTask.getId()));
-
         // see if this processor has any ui extensions
         final UiExtensionMapping uiExtensionMapping = (UiExtensionMapping) servletContext.getAttribute("nifi-ui-extensions");
         if (uiExtensionMapping.hasUiExtension(reportingTask.getType())) {
@@ -180,7 +168,7 @@ public class ReportingTaskResource extends ApplicationResource {
         // authorize access
         serviceFacade.authorizeAccess(lookup -> {
             final Authorizable reportingTask = lookup.getReportingTask(id);
-            reportingTask.authorize(authorizer, RequestAction.READ);
+            reportingTask.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
         });
 
         // get the reporting task
@@ -244,7 +232,7 @@ public class ReportingTaskResource extends ApplicationResource {
         // authorize access
         serviceFacade.authorizeAccess(lookup -> {
             final Authorizable reportingTask = lookup.getReportingTask(id);
-            reportingTask.authorize(authorizer, RequestAction.READ);
+            reportingTask.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
         });
 
         // get the property descriptor
@@ -299,7 +287,7 @@ public class ReportingTaskResource extends ApplicationResource {
         // authorize access
         serviceFacade.authorizeAccess(lookup -> {
             final Authorizable reportingTask = lookup.getReportingTask(id);
-            reportingTask.authorize(authorizer, RequestAction.WRITE);
+            reportingTask.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
         });
 
         // get the component state
@@ -358,7 +346,7 @@ public class ReportingTaskResource extends ApplicationResource {
             // authorize access
             serviceFacade.authorizeAccess(lookup -> {
                 final Authorizable processor = lookup.getReportingTask(id);
-                processor.authorize(authorizer, RequestAction.WRITE);
+                processor.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             });
         }
         if (isValidationPhase) {
@@ -443,7 +431,7 @@ public class ReportingTaskResource extends ApplicationResource {
             revision,
             lookup -> {
                 Authorizable authorizable = lookup.getReportingTask(id);
-                authorizable.authorize(authorizer, RequestAction.WRITE);
+                authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             () -> serviceFacade.verifyUpdateReportingTask(requestReportingTaskDTO),
             () -> {
@@ -518,7 +506,7 @@ public class ReportingTaskResource extends ApplicationResource {
             revision,
             lookup -> {
                 final Authorizable reportingTask = lookup.getReportingTask(id);
-                reportingTask.authorize(authorizer, RequestAction.WRITE);
+                reportingTask.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
             },
             () -> serviceFacade.verifyDeleteReportingTask(id),
             () -> {

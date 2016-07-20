@@ -24,6 +24,7 @@ language governing permissions and limitations under the License. --><project xm
     <modules>
         <module>nifi-commons</module>
         <module>nifi-api</module>
+        <module>nifi-framework-api</module>
         <module>nifi-bootstrap</module>
         <module>nifi-mock</module>
         <module>nifi-nar-bundles</module>
@@ -792,6 +793,11 @@ language governing permissions and limitations under the License. --><project xm
             </dependency>
             <dependency>
                 <groupId>org.apache.nifi</groupId>
+                <artifactId>nifi-framework-api</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-utils</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
             </dependency>
@@ -1160,6 +1166,12 @@ language governing permissions and limitations under the License. --><project xm
                 <version>1.0.0-SNAPSHOT</version>
                 <type>nar</type>
             </dependency>
+	    <dependency>
+                <groupId>org.apache.nifi</groupId>
+                <artifactId>nifi-windows-event-log-nar</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+                <type>nar</type>
+            </dependency>
             <dependency>
                 <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-qoi-nar</artifactId>
@@ -1235,7 +1247,7 @@ language governing permissions and limitations under the License. --><project xm
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk</artifactId>
-                <version>1.10.32</version>
+                <version>1.11.8</version>
             </dependency>
             <!-- Groovy support is primarily as a test dependency -->
             <dependency>

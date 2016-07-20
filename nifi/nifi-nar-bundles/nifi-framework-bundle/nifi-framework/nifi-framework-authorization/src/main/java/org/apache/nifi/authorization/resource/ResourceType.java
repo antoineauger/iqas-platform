@@ -30,15 +30,16 @@ public enum ResourceType {
     Processor("/processors"),
     ProcessGroup("/process-groups"),
     Provenance("/provenance"),
+    ProvenanceEvent("/provenance-events"),
     Proxy("/proxy"),
     RemoteProcessGroup("/remote-process-groups"),
     ReportingTask("/reporting-tasks"),
     Resource("/resources"),
     SiteToSite("/site-to-site"),
+    DataTransfer("/data-transfer"),
     System("/system"),
     Template("/templates"),
-    Tenant("/tenants"),
-    Token("/token");
+    Tenant("/tenants");
 
     final String value;
 
@@ -48,5 +49,22 @@ public enum ResourceType {
 
     public String getValue() {
         return value;
+    }
+
+    public static ResourceType valueOfValue(final String rawValue) {
+        ResourceType type = null;
+
+        for (final ResourceType rt : values()) {
+            if (rt.getValue().equals(rawValue)) {
+                type = rt;
+                break;
+            }
+        }
+
+        if (type == null) {
+            throw new IllegalArgumentException("Unknown resource type value " + rawValue);
+        }
+
+        return type;
     }
 }

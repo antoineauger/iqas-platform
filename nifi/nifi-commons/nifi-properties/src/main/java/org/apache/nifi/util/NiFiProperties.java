@@ -43,7 +43,10 @@ public class NiFiProperties extends Properties {
     // core properties
     public static final String PROPERTIES_FILE_PATH = "nifi.properties.file.path";
     public static final String FLOW_CONFIGURATION_FILE = "nifi.flow.configuration.file";
-    public static final String FLOW_CONFIGURATION_ARCHIVE_FILE = "nifi.flow.configuration.archive.file";
+    public static final String FLOW_CONFIGURATION_ARCHIVE_ENABLED = "nifi.flow.configuration.archive.enabled";
+    public static final String FLOW_CONFIGURATION_ARCHIVE_DIR = "nifi.flow.configuration.archive.dir";
+    public static final String FLOW_CONFIGURATION_ARCHIVE_MAX_TIME = "nifi.flow.configuration.archive.max.time";
+    public static final String FLOW_CONFIGURATION_ARCHIVE_MAX_STORAGE = "nifi.flow.configuration.archive.max.storage";
     public static final String AUTHORIZER_CONFIGURATION_FILE = "nifi.authorizer.configuration.file";
     public static final String LOGIN_IDENTITY_PROVIDER_CONFIGURATION_FILE = "nifi.login.identity.provider.configuration.file";
     public static final String REPOSITORY_DATABASE_DIRECTORY = "nifi.database.directory";
@@ -135,6 +138,8 @@ public class NiFiProperties extends Properties {
     public static final String SECURITY_CLUSTER_AUTHORITY_PROVIDER_THREADS = "nifi.security.cluster.authority.provider.threads";
     public static final String SECURITY_OCSP_RESPONDER_URL = "nifi.security.ocsp.responder.url";
     public static final String SECURITY_OCSP_RESPONDER_CERTIFICATE = "nifi.security.ocsp.responder.certificate";
+    public static final String SECURITY_IDENTITY_MAPPING_PATTERN_PREFIX = "nifi.security.identity.mapping.pattern.";
+    public static final String SECURITY_IDENTITY_MAPPING_VALUE_PREFIX = "nifi.security.identity.mapping.value.";
 
     // web properties
     public static final String WEB_WAR_DIR = "nifi.web.war.directory";
@@ -213,6 +218,9 @@ public class NiFiProperties extends Properties {
     public static final String DEFAULT_ZOOKEEPER_SESSION_TIMEOUT = "3 secs";
     public static final String DEFAULT_ZOOKEEPER_ROOT_NODE = "/nifi";
     public static final String DEFAULT_SITE_TO_SITE_HTTP_TRANSACTION_TTL = "30 secs";
+    public static final String DEFAULT_FLOW_CONFIGURATION_ARCHIVE_ENABLED = "true";
+    public static final String DEFAULT_FLOW_CONFIGURATION_ARCHIVE_MAX_TIME = "30 days";
+    public static final String DEFAULT_FLOW_CONFIGURATION_ARCHIVE_MAX_STORAGE = "500 MB";
 
     // cluster common defaults
     public static final String DEFAULT_CLUSTER_PROTOCOL_HEARTBEAT_INTERVAL = "5 sec";
@@ -518,7 +526,7 @@ public class NiFiProperties extends Properties {
     }
 
     /**
-     * @return the user authorities file
+     * @return the user login identity provider file
      */
     public File getLoginIdentityProviderConfigurationFile() {
         final String value = getProperty(LOGIN_IDENTITY_PROVIDER_CONFIGURATION_FILE);
@@ -774,7 +782,6 @@ public class NiFiProperties extends Properties {
      * Returns true if client certificates are required for REST API. Determined if the following conditions are all true:
      *
      * - login identity provider is not populated
-     * - anonymous authorities is empty
      * - Kerberos service support is not enabled
      *
      * @return true if client certificates are required for access to the REST API
@@ -939,5 +946,21 @@ public class NiFiProperties extends Properties {
 
     public boolean isStartEmbeddedZooKeeper() {
         return Boolean.parseBoolean(getProperty(STATE_MANAGEMENT_START_EMBEDDED_ZOOKEEPER));
+    }
+
+    public boolean isFlowConfigurationArchiveEnabled() {
+        return Boolean.parseBoolean(getProperty(FLOW_CONFIGURATION_ARCHIVE_ENABLED, DEFAULT_FLOW_CONFIGURATION_ARCHIVE_ENABLED));
+    }
+
+    public String getFlowConfigurationArchiveDir() {
+        return getProperty(FLOW_CONFIGURATION_ARCHIVE_DIR);
+    }
+
+    public String getFlowConfigurationArchiveMaxTime() {
+        return getProperty(FLOW_CONFIGURATION_ARCHIVE_MAX_TIME, DEFAULT_FLOW_CONFIGURATION_ARCHIVE_MAX_TIME);
+    }
+
+    public String getFlowConfigurationArchiveMaxStorage() {
+        return getProperty(FLOW_CONFIGURATION_ARCHIVE_MAX_STORAGE, DEFAULT_FLOW_CONFIGURATION_ARCHIVE_MAX_STORAGE);
     }
 }

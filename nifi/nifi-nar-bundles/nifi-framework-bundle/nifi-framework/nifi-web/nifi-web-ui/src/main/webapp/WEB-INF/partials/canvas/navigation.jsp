@@ -99,6 +99,12 @@
                                 ng-disabled="false">
                             <div class="graph-control-action-icon fa fa-gear"></div></button>
                     </div>
+                    <div class="button-spacer-small">&nbsp;</div>
+                    <div id="operate-policy" class="action-button" title="Access Policies">
+                        <button ng-click="appCtrl.nf.Actions['managePolicies'](appCtrl.nf.CanvasUtils.getSelection());"
+                                ng-disabled="!(appCtrl.nf.CanvasUtils.getSelection().size() <= 1 && appCtrl.nf.Common.canAccessTenants())">
+                            <div class="graph-control-action-icon fa fa-key"></div></button>
+                    </div>
                     <div class="button-spacer-large">&nbsp;</div>
                     <div id="operate-enable" class="action-button" title="Enable">
                         <button ng-click="appCtrl.nf.Actions['enable'](appCtrl.nf.CanvasUtils.getSelection());"
@@ -127,7 +133,13 @@
                     <div id="operate-template" class="action-button" title="Create Template">
                         <button ng-click="appCtrl.nf.Actions['template'](appCtrl.nf.CanvasUtils.getSelection());"
                                 ng-disabled="!(appCtrl.nf.Canvas.canWrite() && (appCtrl.nf.CanvasUtils.getSelection().empty() || appCtrl.nf.CanvasUtils.canRead(appCtrl.nf.CanvasUtils.getSelection())));">
-                            <div class="graph-control-action-icon icon icon-template"></div></button>
+                            <div class="graph-control-action-icon icon icon-template-save"></div></button>
+                    </div>
+                    <div class="button-spacer-small">&nbsp;</div>
+                    <div id="operate-template-upload" class="action-button" title="Upload Template">
+                        <button ng-click="appCtrl.nf.Actions['uploadTemplate']();"
+                                ng-disabled="!(appCtrl.nf.Canvas.canWrite() && appCtrl.nf.CanvasUtils.getSelection().empty());">
+                            <div class="graph-control-action-icon icon icon-template-import"></div></button>
                     </div>
                     <div class="clear"></div>
                 </div>

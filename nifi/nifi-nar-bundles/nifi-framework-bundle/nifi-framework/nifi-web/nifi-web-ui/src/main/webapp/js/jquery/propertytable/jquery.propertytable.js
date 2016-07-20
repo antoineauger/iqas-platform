@@ -923,6 +923,7 @@
 
                 newControllerServiceDialog.modal({
                     headerText: 'Add Controller Service',
+                    scrollableContentStyle: 'scrollable',
                     buttons: [{
                         buttonText: 'Create',
                         color: {
@@ -1218,9 +1219,15 @@
                 var controllerService = controllerServiceEntity.component;
                 $.Deferred(function (deferred) {
                     if (nf.Common.isDefinedAndNotNull(controllerService.parentGroupId)) {
-                        nf.ProcessGroupConfiguration.showConfiguration(controllerService.parentGroupId).done(function () {
-                            deferred.resolve();
-                        });
+                        if ($('#process-group-configuration').is(':visible')) {
+                            nf.ProcessGroupConfiguration.loadConfiguration(controllerService.parentGroupId).done(function () {
+                                deferred.resolve();
+                            });
+                        } else {
+                            nf.ProcessGroupConfiguration.showConfiguration(controllerService.parentGroupId).done(function () {
+                                deferred.resolve();
+                            });
+                        }
                     } else {
                         if ($('#settings').is(':visible')) {
                             // reload the settings
@@ -1327,9 +1334,11 @@
                 var tooltip = nf.Common.formatPropertyTooltip(propertyDescriptor, propertyHistory);
 
                 if (nf.Common.isDefinedAndNotNull(tooltip)) {
-                    infoIcon.qtip($.extend({
-                        content: tooltip,
-                    }, nf.Common.config.tooltipConfig));
+                    infoIcon.qtip($.extend({},
+                        nf.Common.config.tooltipConfig,
+                        {
+                            content: tooltip
+                        }));
                 }
             }
         });
@@ -1492,6 +1501,7 @@
 
                         newPropertyDialog.modal({
                             headerText: 'Add Property',
+                            scrollableContentStyle: 'scrollable',
                             buttons: [{
                                 buttonText: 'Ok',
                                 color: {

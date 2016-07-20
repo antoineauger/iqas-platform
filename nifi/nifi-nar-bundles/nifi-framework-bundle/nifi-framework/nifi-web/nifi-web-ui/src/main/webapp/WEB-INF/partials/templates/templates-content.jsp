@@ -20,32 +20,13 @@
     <span id="template-group-id" class="hidden"><c:out value="${param.groupId}"/></span>
     <div id="templates-header-and-filter">
         <div id="templates-header-text">NiFi Templates</div>
-        <div id="templates-filter-controls" class="filter-controls">
+        <div id="templates-filter-controls">
             <div id="templates-filter-stats" class="filter-status">
                 Displaying&nbsp;<span id="displayed-templates"></span>&nbsp;of&nbsp;<span id="total-templates"></span>
             </div>
             <div id="templates-filter-container" class="filter-container">
                 <input type="text" id="templates-filter" class="filter"/>
                 <div id="templates-filter-type" class="filter-type"></div>
-            </div>
-        </div>
-        <div id="upload-template-container" class="hidden">
-            <div id="select-template-container">
-                <div id="template-browse-container">
-                    <button id="select-template-button" class="fa fa-plus">
-                        <form id="template-upload-form" enctype="multipart/form-data" method="post">
-                            <input type="file" name="template" id="template-file-field"/>
-                        </form>
-                    </button>
-                    <div id="upload-template-status" class="import-status"></div>
-                </div>
-            </div>
-            <div id="submit-template-container">
-                <button><div id="upload-template-button" title="Upload template" class="icon icon-template-import"></div></button>
-                <button id="cancel-upload-template-button" title="Cancel" class="fa fa-undo"></button>
-                <div id="selected-template-name"></div>
-            </div>
-            <div id="template-upload-form-container">
             </div>
         </div>
     </div>
