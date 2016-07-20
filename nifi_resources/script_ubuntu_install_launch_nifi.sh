@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-ctx logger info "==== Setting proxy ISAE ===="
+echo "==== Setting proxy ISAE ===="
 
 sudo echo 'export http_proxy="http://proxy.isae.fr:3128"' >> /etc/profile
 sudo echo 'export https_proxy="http://proxy.isae.fr:3128"' >> /etc/profile
@@ -50,7 +50,7 @@ echo "[OK]"
 
 echo "==== Downloading and decompressing Apache nifi ===="
 
-cd
+cd 
 wget http://apache.crihan.fr/dist/nifi/0.6.1/nifi-0.6.1-bin.tar.gz
 tar xvzf nifi-0.6.1-bin.tar.gz
 rm nifi-0.6.1-bin.tar.gz
@@ -91,15 +91,15 @@ else
 fi
 
 
-ctx logger info "==== Starting Apache nifi ===="
+echo "==== Starting Apache nifi ===="
 
 ./nifi-0.6.1/bin/nifi.sh start
 
-ctx logger info "Apache nifi is now running, point your browser on one of these addresses:" 
-ctx logger info ifconfig | awk -F "[: ]+" '/inet addr:/ { if ($4 != "127.0.0.1") print "http://"$4":8080/nifi/" }'
+echo "Apache nifi is now running, point your browser on one of these addresses:" 
+echo ifconfig | awk -F "[: ]+" '/inet addr:/ { if ($4 != "127.0.0.1") print "http://"$4":8080/nifi/" }'
 
-ctx logger info "==== TODO tasks list ===="
+echo "==== TODO tasks list ===="
 
-ctx logger info ">>>> TODO: Please also add the noatime option to each partition of /etc/fstab to increase throughput"
+echo ">>>> TODO: Please also add the noatime option to each partition of /etc/fstab to increase throughput"
 
 
