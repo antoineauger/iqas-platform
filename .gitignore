@@ -1,3 +1,6 @@
 nifi/git
 cloudify_resources/vagrant_VMs/.vagrant
 cloudify/.cloudify
+cloudify_resources/my_virtualenv
+cloudify_resources/vagrant_VMs/nifi-slave/.vagrant
+cloudify_resources/vagrant_VMs/nifi-master/.vagrant
