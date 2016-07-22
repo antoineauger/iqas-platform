@@ -31,6 +31,9 @@ node_types:
         description: Path to access to the GUI 
         type: string
         default: /nifi
+      nifi_version:
+        description: Nifi version to install
+        type: string
     interfaces:
       cloudify.interfaces.lifecycle:
         create: scripts/nifi/install-nifi.sh
@@ -52,6 +55,9 @@ node_types:
         description: IP address
         type: string
         default: localhost
+      nifi_version:
+        description: Nifi version to install
+        type: string
     interfaces:
       cloudify.interfaces.lifecycle:
-        create: scripts/nifi/install-nifi.sh
+        create: scripts/nifi/start-nifi.sh

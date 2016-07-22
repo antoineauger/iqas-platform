@@ -1,1 +1,0 @@
-{"rsync":{"/home/vagrant/sync":{"type":"rsync","guestpath":"/home/vagrant/sync","hostpath":"/Users/an.auger/Documents/GIT/iQAS_platform/cloudify_resources/vagrant_VMs","disabled":false,"__vagrantfile":true,"owner":"vagrant","group":"vagrant"}}}

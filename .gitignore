@@ -1,1 +1,3 @@
 nifi/git
+cloudify_resources/vagrant_VMs/.vagrant
+cloudify/.cloudify

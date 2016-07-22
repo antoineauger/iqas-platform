@@ -36,8 +36,8 @@ if [[ "$_java" ]]; then
     if [[ "$version" > "1.7" ]]; then
         ctx logger info "Found a suitable JAVA version (found version: ${version})"
     else
-    	ctx logger info "Unable to find a suitable JAVA version, JAVA version is less than 1.7 (found version: ${version})"
-    	ctx logger info "Installation of JAVA 1.8"
+        ctx logger info "Unable to find a suitable JAVA version, JAVA version is less than 1.7 (found version: ${version})"
+        ctx logger info "Installation of JAVA 1.8"
         sudo apt-get -qq install openjdk-8-jre
         sudo apt-get -qq install openjdk-8-jdk
     fi
@@ -46,15 +46,16 @@ fi
 #################
 
 ctx logger info "Setting JAVA_HOME env variable"
-TEMP_PATH=$(readlink -f /usr/bin/java | sed "s:bin/java::")
-sudo echo 'export JAVA_HOME="'$TEMP_PATH'"' >> /etc/profile
+temp_path=$(readlink -f /usr/bin/java | sed "s:bin/java::")
+sudo echo 'export JAVA_HOME="'$temp_path'"' >> /etc/profile
 source /etc/profile
-ctx logger info "JAVA_HOME=${TEMP_PATH}"
+ctx logger info "JAVA_HOME=${temp_path}"
 
 #################
 
-url='http://apache.crihan.fr/dist/nifi/0.6.1/nifi-0.6.1-bin.tar.gz'
-tar_archive='nifi-0.6.1-bin.tar.gz'
+export NIFI_VERSION=$(ctx node properties nifi_version)
+url='http://apache.crihan.fr/dist/nifi/${nifi_version}/nifi-${nifi_version}-bin.tar.gz'
+tar_archive='nifi-${nifi_version}-bin.tar.gz'
 ctx logger info "Downloading Apache nifi at ${url}"
 cd ~
 

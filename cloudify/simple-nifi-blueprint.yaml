@@ -45,6 +45,10 @@ inputs:
       Path to a private key that resided on the management machine.
       SSH-ing into agent machines will be done with this key.
 
+  nifi_version:
+    description: >
+      Nifi version to install
+
 node_templates:
 
   nifincm:
@@ -60,6 +64,7 @@ node_templates:
       ip: { get_input: ip_vm_1 }
       NCM_GUI_port: { get_input: NCM_GUI_port }
       path: { get_input: path }
+      nifi_version: { get_input: nifi_version }
     relationships:
       - type: cloudify.relationships.contained_in
         target: VM1
@@ -79,6 +84,7 @@ node_templates:
               key: { get_input: agent_private_key_path }
     properties:
       ip: { get_input: ip_vm_1 }
+      nifi_version: { get_input: nifi_version }
     relationships:
       - type: cloudify.relationships.contained_in
         target: VM1
@@ -94,6 +100,7 @@ node_templates:
               key: { get_input: agent_private_key_path }
     properties:
       ip: { get_input: ip_vm_2 }
+      nifi_version: { get_input: nifi_version }
     relationships:
       - type: cloudify.relationships.contained_in
         target: VM2
@@ -124,7 +131,7 @@ outputs:
   endpoint:
     description: Apache nifi GUI
     value:
-      nifi_gui_endpoint: { concat: ['http://', 
+      nifi_gui_endpoint: { concat: ['http://',
                                     { get_attribute: [nifincm, ip] },
                                     ':',
                                     { get_property: [nifincm, NCM_GUI_port] },
