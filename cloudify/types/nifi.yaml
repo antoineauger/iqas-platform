@@ -37,8 +37,10 @@ node_types:
     interfaces:
       cloudify.interfaces.lifecycle:
         create: scripts/nifi/install-nifi.sh
+        #configure: scripts/nifi/configure-nifi-ncm.sh
         start: scripts/nifi/start-nifi.sh
         stop: scripts/nifi/stop-nifi.sh
+        #delete: scripts/nifi/uninstall-nifi.sh
 
   ###########################################################
   # Mongo Database.
@@ -60,4 +62,8 @@ node_types:
         type: string
     interfaces:
       cloudify.interfaces.lifecycle:
-        create: scripts/nifi/start-nifi.sh
+        #create: scripts/nifi/install-nifi.sh
+        #configure: scripts/nifi/configure-nifi-slave.sh
+        #start: scripts/nifi/start-nifi.sh
+        #stop: scripts/nifi/stop-nifi.sh
+        #delete: scripts/nifi/uninstall-nifi.sh
