@@ -4,3 +4,4 @@ cloudify/.cloudify
 cloudify_resources/my_virtualenv
 cloudify_resources/vagrant_VMs/nifi-slave/.vagrant
 cloudify_resources/vagrant_VMs/nifi-master/.vagrant
+flink_resources/flink-filtering-module/.idea

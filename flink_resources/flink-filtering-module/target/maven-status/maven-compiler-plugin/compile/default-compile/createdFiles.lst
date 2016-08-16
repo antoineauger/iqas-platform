@@ -1,0 +1,6 @@
+org/apache/flink/SocketTextStreamWordCount$LineSplitter.class
+org/apache/flink/WordCount$LineSplitter.class
+org/apache/flink/SocketTextStreamWordCount.class
+org/apache/flink/BatchJob.class
+org/apache/flink/StreamingJob.class
+org/apache/flink/WordCount.class
