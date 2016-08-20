@@ -27,7 +27,6 @@ else
     ctx logger info "Installation of JAVA 1.7"
     sudo apt-get -qq install openjdk-7-jre
     sudo apt-get -qq install openjdk-7-jdk
-
 fi
 
 if [[ "$_java" ]]; then
