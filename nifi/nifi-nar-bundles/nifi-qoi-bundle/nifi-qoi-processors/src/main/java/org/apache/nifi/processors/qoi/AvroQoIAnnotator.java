@@ -41,7 +41,7 @@ import java.io.*;
 import java.util.*;
 
 @EventDriven
-@Tags({"qoi", "annotation", "avro"})
+@Tags({"iqas", "qoi", "annotation", "avro"})
 @CapabilityDescription("Allows the user to select QoI attributes of interest to annotate an Avro flowfile. " +
         "QoI attributes are computed according to their definition as dynamic properties. " +
         "Then, QoI attributes are added to each Avro record under the property 'qoi'. " +
@@ -49,11 +49,8 @@ import java.util.*;
 @InputRequirement(InputRequirement.Requirement.INPUT_REQUIRED)
 @DynamicProperty(name = "Own-defined QoI attributes", value = "Attribute Expression Language", supportsExpressionLanguage = true, description = "QoI attributes of interest for the user")
 @WritesAttributes({
-        @WritesAttribute(attribute = "avail_qoi_attr_metadata", description = "TODO"),
-        @WritesAttribute(attribute = "qoi", description = "TODO"),
-        @WritesAttribute(attribute = "avail_qoi_attr_content", description = "TODO")
+        @WritesAttribute(attribute = "qoi", description = "QoI attributes specified by the user, if destination is 'attribute' in processor's properties.")
 })
-/*@ReadsAttributes({@ReadsAttribute(attribute="", description="")})*/
 public class AvroQoIAnnotator extends AbstractProcessor {
 
     /**
@@ -88,7 +85,6 @@ public class AvroQoIAnnotator extends AbstractProcessor {
     /**
      * Properties
      */
-
     public static final String DESTINATION_ATTRIBUTE = "attribute";
     public static final String DESTINATION_CONTENT = "content";
     public static final String DESTINATION_BOTH = "content and attribute";
@@ -294,9 +290,9 @@ public class AvroQoIAnnotator extends AbstractProcessor {
 
                         // QoI annotation
                         for (String s : qoiAttrToAnnotate.keySet()) {
-                            qoiAttrToAppendAttr.put(s,context.getProperty(s).evaluateAttributeExpressions(copyForAttributes, knownProperties).getValue());
+                            qoiAttrToAppendAttr.put(s, context.getProperty(s).evaluateAttributeExpressions(copyForAttributes, knownProperties).getValue());
                         }
-                        newRecord = AvroUtil.annotateRecordWithQoIAttr(getLogger(), newRecord,checkpointName,qoiAttrToAppendAttr);
+                        newRecord = AvroUtil.annotateRecordWithQoIAttr(getLogger(), newRecord, checkpointName, qoiAttrToAppendAttr);
 
                         // Set the writer for Avro records
                         DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(newSchema);
@@ -348,7 +344,6 @@ public class AvroQoIAnnotator extends AbstractProcessor {
         }
         else {
             getLogger().error("Unable to compute some QoI attributes using Avro fields. Missing Avro fields: " + missingAvroFields.toString());
-            //original = session.putAllAttributes(original, qoiAttrToAppendAttr);
             session.transfer(original, REL_COMPUT_FAILURE);
             session.remove(copyForAttributes);
         }
