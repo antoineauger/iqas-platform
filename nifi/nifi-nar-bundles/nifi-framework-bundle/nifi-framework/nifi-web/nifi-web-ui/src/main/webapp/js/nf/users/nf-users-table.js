@@ -23,10 +23,6 @@ nf.UsersTable = (function () {
      * Configuration object used to hold a number of configuration items.
      */
     var config = {
-        filterText: 'Filter',
-        styles: {
-            filterList: 'users-filter-list'
-        },
         urls: {
             users: '../nifi-api/tenants/users',
             userGroups: '../nifi-api/tenants/user-groups'
@@ -35,7 +31,7 @@ nf.UsersTable = (function () {
 
     var initUserDeleteDialog = function () {
         $('#user-delete-dialog').modal({
-            headerText: 'Delete User',
+            headerText: 'Delete Account',
             buttons: [{
                 buttonText: 'Delete',
                 color: {
@@ -365,7 +361,7 @@ nf.UsersTable = (function () {
             contentType: 'application/json'
         }).done(function (groupEntity) {
             nf.UsersTable.loadUsersTable();
-        });
+        }).fail(nf.Common.handleAjaxError);
     };
 
     /**
@@ -480,15 +476,7 @@ nf.UsersTable = (function () {
         // define the function for filtering the list
         $('#users-filter').keyup(function () {
             applyFilter();
-        }).focus(function () {
-            if ($(this).hasClass(config.styles.filterList)) {
-                $(this).removeClass(config.styles.filterList).val('');
-            }
-        }).blur(function () {
-            if ($(this).val() === '') {
-                $(this).addClass(config.styles.filterList).val(config.filterText);
-            }
-        }).addClass(config.styles.filterList).val(config.filterText);
+        });
 
         // filter type
         $('#users-filter-type').combo({
@@ -530,9 +518,11 @@ nf.UsersTable = (function () {
         var actionFormatter = function (row, cell, value, columnDef, dataContext) {
             var markup = '';
 
-            markup += '<div title="Edit" class="pointer edit-user fa fa-pencil" style="margin-right: 3px;"></div>';
-
-            markup += '<div title="Remove" class="pointer delete-user fa fa-trash"></div>';
+            // ensure user can modify the user
+            if (nf.Common.canModifyTenants()) {
+                markup += '<div title="Edit" class="pointer edit-user fa fa-pencil" style="margin-right: 3px;"></div>';
+                markup += '<div title="Remove" class="pointer delete-user fa fa-trash"></div>';
+            }
 
             return markup;
         };
@@ -626,9 +616,20 @@ nf.UsersTable = (function () {
     var sort = function (sortDetails, data) {
         // defines a function for sorting
         var comparer = function (a, b) {
-            var aString = nf.Common.isDefinedAndNotNull(a.component[sortDetails.columnId]) ? a.component[sortDetails.columnId] : '';
-            var bString = nf.Common.isDefinedAndNotNull(b.component[sortDetails.columnId]) ? b.component[sortDetails.columnId] : '';
-            return aString === bString ? 0 : aString > bString ? 1 : -1;
+            if(a.permissions.canRead && b.permissions.canRead) {
+                var aString = nf.Common.isDefinedAndNotNull(a.component[sortDetails.columnId]) ? a.component[sortDetails.columnId] : '';
+                var bString = nf.Common.isDefinedAndNotNull(b.component[sortDetails.columnId]) ? b.component[sortDetails.columnId] : '';
+                return aString === bString ? 0 : aString > bString ? 1 : -1;
+            } else {
+                if (!a.permissions.canRead && !b.permissions.canRead){
+                    return 0;
+                }
+                if(a.permissions.canRead){
+                    return 1;
+                } else {
+                    return -1;
+                }
+            }
         };
 
         // perform the sort
@@ -641,12 +642,7 @@ nf.UsersTable = (function () {
      * accounts for that.
      */
     var getFilterText = function () {
-        var filterText = '';
-        var filterField = $('#users-filter');
-        if (!filterField.hasClass(config.styles.filterList)) {
-            filterText = filterField.val();
-        }
-        return filterText;
+        return $('#users-filter').val();
     };
 
     /**
@@ -824,11 +820,17 @@ nf.UsersTable = (function () {
             initUserDeleteDialog();
             initUsersTable();
 
-            $('#new-user-button').on('click', function () {
-                buildUsersList();
-                buildGroupsList();
-                $('#user-dialog').modal('show');
-            });
+            if (nf.Common.canModifyTenants()) {
+                $('#new-user-button').on('click', function () {
+                    buildUsersList();
+                    buildGroupsList();
+                    $('#user-dialog').modal('show');
+                });
+
+                $('#new-user-button').prop('disabled', false);
+            } else {
+                $('#new-user-button').prop('disabled', true);
+            }
         },
 
         /**

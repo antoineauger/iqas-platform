@@ -16,22 +16,15 @@
  */
 package org.apache.nifi.web.api;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
+import com.wordnik.swagger.annotations.Authorization;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.authorization.AccessDeniedException;
 import org.apache.nifi.authorization.AuthorizationRequest;
@@ -58,11 +51,21 @@ import org.apache.nifi.web.api.entity.PeersEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
-import com.wordnik.swagger.annotations.Authorization;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import org.apache.nifi.util.NiFiProperties;
 
 /**
  * RESTful endpoint for managing a SiteToSite connection.
@@ -79,16 +82,18 @@ public class SiteToSiteResource extends ApplicationResource {
     private NiFiServiceFacade serviceFacade;
     private ClusterCoordinator clusterCoordinator;
     private Authorizer authorizer;
-    public static final String CHECK_SUM = "checksum";
-    public static final String RESPONSE_CODE = "responseCode";
 
     private final ResponseCreator responseCreator = new ResponseCreator();
     private final VersionNegotiator transportProtocolVersionNegotiator = new TransportProtocolVersionNegotiator(1);
-    private final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance();
+    private final HttpRemoteSiteListener transactionManager;
+
+    public SiteToSiteResource(final NiFiProperties nifiProperties) {
+        transactionManager = HttpRemoteSiteListener.getInstance(nifiProperties);
+    }
 
     /**
      * Authorizes access to Site To Site details.
-     *
+     * <p>
      * Note: Protected for testing purposes
      */
     protected void authorizeSiteToSite() {
@@ -117,11 +122,12 @@ public class SiteToSiteResource extends ApplicationResource {
     @GET
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
-    // TODO - @PreAuthorize("hasRole('ROLE_NIFI')")
     @ApiOperation(
             value = "Returns the details about this NiFi necessary to communicate via site to site",
             response = ControllerEntity.class,
-            authorizations = @Authorization(value = "NiFi", type = "ROLE_NIFI")
+            authorizations = {
+                @Authorization(value = "Read - /site-to-site", type = "")
+            }
     )
     @ApiResponses(
             value = {
@@ -158,7 +164,6 @@ public class SiteToSiteResource extends ApplicationResource {
         return clusterContext(noCache(Response.ok(entity))).build();
     }
 
-
     /**
      * Returns the available Peers and its status of this NiFi.
      *
@@ -172,14 +177,16 @@ public class SiteToSiteResource extends ApplicationResource {
     @ApiOperation(
             value = "Returns the available Peers and its status of this NiFi",
             response = PeersEntity.class,
-            authorizations = @Authorization(value = "NiFi", type = "ROLE_NIFI")
+            authorizations = {
+                @Authorization(value = "Read - /site-to-site", type = "")
+            }
     )
     @ApiResponses(
             value = {
-                    @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
-                    @ApiResponse(code = 401, message = "Client could not be authenticated."),
-                    @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
-                    @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
+                @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
+                @ApiResponse(code = 401, message = "Client could not be authenticated."),
+                @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
+                @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
             }
     )
     public Response getPeers(@Context HttpServletRequest req) {
@@ -214,10 +221,22 @@ public class SiteToSiteResource extends ApplicationResource {
         } else {
             // Standalone mode.
             final PeerDTO peer = new PeerDTO();
-            // req.getLocalName returns private IP address, that can't be accessed from client in some environments.
+
+            // Private IP address or hostname may not be accessible from client in some environments.
             // So, use the value defined in nifi.properties instead when it is defined.
             final String remoteInputHost = properties.getRemoteInputHost();
-            peer.setHostname(isEmpty(remoteInputHost) ? req.getLocalName() : remoteInputHost);
+            String localName;
+            try {
+                // Get local host name using InetAddress if available, same as RAW socket does.
+                localName = InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Failed to get local host name using InetAddress.", e);
+                }
+                localName = req.getLocalName();
+            }
+
+            peer.setHostname(isEmpty(remoteInputHost) ? localName : remoteInputHost);
             peer.setPort(properties.getRemoteInputHttpPort());
             peer.setSecure(properties.isSiteToSiteSecure());
             peer.setFlowFileCount(0);  // doesn't matter how many FlowFiles we have, because we're the only host.

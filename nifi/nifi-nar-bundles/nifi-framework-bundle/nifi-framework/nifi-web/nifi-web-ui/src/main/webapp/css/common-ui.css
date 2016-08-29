@@ -100,7 +100,6 @@ i[class^="icon-"]:before, i[class*=" icon-"]:before {
 body {
     display: block;
     font-family: Roboto, sans-serif;
-    font-size: 62.5%;
     overflow: hidden;
     color: #262626;
 }
@@ -151,9 +150,8 @@ ul.links span.header-link-over {
 }
 
 .blank, .unset, .sensitive {
-    font-style: italic;
-    font-weight: normal;
-    color: #aaa;
+    font-weight: normal !important;
+    color: #a8a8a8 !important;
 }
 
 .required {
@@ -168,10 +166,6 @@ ul.links span.header-link-over {
 
 .ellipsis.multiline {
     white-space: normal;
-}
-
-input.filter-list {
-    color: #888;
 }
 
 .table-cell {
@@ -191,8 +185,22 @@ label {
     margin-bottom: 2px;
 }
 
-input::placeholder {
-    color: #728e9b; /*base-color*/
+/* placeholder styles */
+
+*::placeholder {
+    color: #728e9b;
+}
+*::-webkit-input-placeholder {
+    color: #728e9b;
+}
+*:-moz-placeholder {
+    color: #728e9b;
+}
+*::-moz-placeholder {
+    color: #728e9b;
+}
+*:-ms-input-placeholder {
+    color: #728e9b;
 }
 
 input[type=text], input[type=password], textarea {
@@ -255,12 +263,18 @@ div.ajax-loading {
     background-image: url(../images/iconLoading.gif);
 }
 
-div.ajax-complete {
-    background-image: url(../images/iconCommit.png);
+div.ajax-complete:before {
+    font-family: FontAwesome;
+    content: "\f00c";
+    font-size: 16px;
+    color: #70B59A;
 }
 
-div.ajax-error {
-    background-image: url(../images/iconDelete.png);
+div.ajax-error:before {
+    font-family: FontAwesome;
+    content: "\f1f8";
+    font-size: 16px;
+    color: #004849;
 }
 
 .refresh-button {
@@ -338,7 +352,7 @@ input:focus {
 
 .filter-container {
     height: 32px;
-    width: 318px;
+    width: 100%;
     float: left;
 }
 
@@ -352,8 +366,8 @@ input.filter {
 }
 
 .filter-type {
-    width: 120px;
     float: left;
+    width: 148px;
 }
 
 .filter-status {
@@ -371,11 +385,26 @@ button.fa {
     color: #004849;
     font-size: 16px;
     cursor: pointer;
+    line-height: 23px;
 }
 
 button.icon {
     color: #004849;
     font-size: 16px;
+}
+
+div.button-icon span {
+    padding-left: 5px;
+    vertical-align: middle;
+    font-style: normal;
+    font-family: Roboto;
+    font-size: 11px;
+}
+
+div.button-icon {
+    float: left !important;
+    margin-left: 20px;
+    font-size: 18px !important;
 }
 
 div.button {
@@ -413,6 +442,7 @@ div.secondary-button {
     position: relative;
     background: #E3E8EB;
     color: #004849;
+    cursor:pointer
 }
 
 div.secondary-button:hover {
@@ -449,6 +479,60 @@ div.nifi-tooltip {
     border-bottom: 1px solid #d0dbe0;
 }
 
+/*context menu */
+
+.context-menu {
+    display: none;
+    position: absolute;
+    z-index: 10006;
+    font-size: 13px;
+    padding:3px 0;
+    background-color:rgba(249,250,251,0.97); /*tint base-color 96%*/
+    border:1px solid #004849; /*link-color*/
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    width: 215px;
+    max-height: inherit;
+    color:#004849
+}
+
+div.context-menu-item {
+    cursor: pointer;
+    height: 20px;
+    padding-top: 4px;
+    padding-left: 4px;
+}
+
+div.context-menu-item.hover {
+    background-color:#C7D2D7; /*tint base-color 60%*/
+    box-shadow:0 1px 1px rgba(0,0,0,0.15);
+}
+
+.context-menu-item-img {
+    float: left;
+    width: 16px;
+    height: 16px;
+    background-size: cover;
+}
+
+.context-menu-item-img.fa{
+    position: relative;
+    top: 2px;
+    left: 2px;
+}
+
+.context-menu-item-img.icon {
+    position: relative;
+    top: 1px;
+    left: 3px;
+}
+
+div.context-menu-item-text {
+    margin-left: 4px;
+    line-height: 16px;
+    float: left;
+    color: #262626;
+}
+
 /* progress bars */
 
 md-progress-linear > div {
@@ -463,6 +547,7 @@ md-progress-linear > div {
     font-size: 12px;
     font-weight: 500;
     font-family: Roboto Slab;
+    text-transform: capitalize;
     padding-bottom: 4px;
     color: #262626;
 }
@@ -482,6 +567,7 @@ md-progress-linear > div {
     width: 100%;
     color: #775351;
     font-size: 13px;
+    font-weight: 500;
 }
 
 .setting-header{
@@ -492,4 +578,12 @@ md-progress-linear > div {
     font-weight: bold;
     padding-bottom: 20px;
     text-overflow: ellipsis;
+}
+
+.CodeMirror {
+    border: 1px solid #aaa;
+    font-family: monospace;
+    background-color: #fff;
+    cursor: default;
+    line-height: normal;
 }

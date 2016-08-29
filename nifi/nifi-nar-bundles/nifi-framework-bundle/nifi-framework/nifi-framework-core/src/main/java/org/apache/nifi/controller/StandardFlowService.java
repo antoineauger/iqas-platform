@@ -16,6 +16,36 @@
  */
 package org.apache.nifi.controller;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.authorization.AbstractPolicyBasedAuthorizer;
 import org.apache.nifi.authorization.Authorizer;
@@ -24,6 +54,7 @@ import org.apache.nifi.cluster.coordination.ClusterCoordinator;
 import org.apache.nifi.cluster.coordination.node.DisconnectionCode;
 import org.apache.nifi.cluster.coordination.node.NodeConnectionState;
 import org.apache.nifi.cluster.coordination.node.NodeConnectionStatus;
+import org.apache.nifi.cluster.exception.NoClusterCoordinatorException;
 import org.apache.nifi.cluster.protocol.ConnectionRequest;
 import org.apache.nifi.cluster.protocol.ConnectionResponse;
 import org.apache.nifi.cluster.protocol.DataFlow;
@@ -63,37 +94,6 @@ import org.apache.nifi.web.revision.RevisionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-
 public class StandardFlowService implements FlowService, ProtocolHandler {
 
     private static final String EVENT_CATEGORY = "Controller";
@@ -107,7 +107,6 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
     private final FlowConfigurationDAO dao;
     private final int gracefulShutdownSeconds;
     private final boolean autoResumeState;
-    private final StringEncryptor encryptor;
     private final Authorizer authorizer;
 
     // Lock is used to protect the flow.xml file.
@@ -136,6 +135,8 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
      */
     private NodeIdentifier nodeId;
 
+    private final NiFiProperties nifiProperties;
+
     // guardedBy rwLock
     private boolean firstControllerInitialization = true;
 
@@ -143,45 +144,45 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
     private static final Logger logger = LoggerFactory.getLogger(StandardFlowService.class);
 
     public static StandardFlowService createStandaloneInstance(
-        final FlowController controller,
-        final NiFiProperties properties,
-        final StringEncryptor encryptor,
-        final RevisionManager revisionManager,
-        final Authorizer authorizer) throws IOException {
+            final FlowController controller,
+            final NiFiProperties nifiProperties,
+            final StringEncryptor encryptor,
+            final RevisionManager revisionManager,
+            final Authorizer authorizer) throws IOException {
 
-        return new StandardFlowService(controller, properties, null, encryptor, false, null, revisionManager, authorizer);
+        return new StandardFlowService(controller, nifiProperties, null, encryptor, false, null, revisionManager, authorizer);
     }
 
     public static StandardFlowService createClusteredInstance(
-        final FlowController controller,
-        final NiFiProperties properties,
-        final NodeProtocolSenderListener senderListener,
-        final ClusterCoordinator coordinator,
-        final StringEncryptor encryptor,
-        final RevisionManager revisionManager,
-        final Authorizer authorizer) throws IOException {
+            final FlowController controller,
+            final NiFiProperties nifiProperties,
+            final NodeProtocolSenderListener senderListener,
+            final ClusterCoordinator coordinator,
+            final StringEncryptor encryptor,
+            final RevisionManager revisionManager,
+            final Authorizer authorizer) throws IOException {
 
-        return new StandardFlowService(controller, properties, senderListener, encryptor, true, coordinator, revisionManager, authorizer);
+        return new StandardFlowService(controller, nifiProperties, senderListener, encryptor, true, coordinator, revisionManager, authorizer);
     }
 
     private StandardFlowService(
-        final FlowController controller,
-        final NiFiProperties properties,
-        final NodeProtocolSenderListener senderListener,
-        final StringEncryptor encryptor,
-        final boolean configuredForClustering,
-        final ClusterCoordinator clusterCoordinator,
-        final RevisionManager revisionManager,
-        final Authorizer authorizer) throws IOException {
+            final FlowController controller,
+            final NiFiProperties nifiProperties,
+            final NodeProtocolSenderListener senderListener,
+            final StringEncryptor encryptor,
+            final boolean configuredForClustering,
+            final ClusterCoordinator clusterCoordinator,
+            final RevisionManager revisionManager,
+            final Authorizer authorizer) throws IOException {
 
+        this.nifiProperties = nifiProperties;
         this.controller = controller;
-        this.encryptor = encryptor;
-        flowXml = Paths.get(properties.getProperty(NiFiProperties.FLOW_CONFIGURATION_FILE));
+        flowXml = Paths.get(nifiProperties.getProperty(NiFiProperties.FLOW_CONFIGURATION_FILE));
 
-        gracefulShutdownSeconds = (int) FormatUtils.getTimeDuration(properties.getProperty(NiFiProperties.FLOW_CONTROLLER_GRACEFUL_SHUTDOWN_PERIOD), TimeUnit.SECONDS);
-        autoResumeState = properties.getAutoResumeState();
+        gracefulShutdownSeconds = (int) FormatUtils.getTimeDuration(nifiProperties.getProperty(NiFiProperties.FLOW_CONTROLLER_GRACEFUL_SHUTDOWN_PERIOD), TimeUnit.SECONDS);
+        autoResumeState = nifiProperties.getAutoResumeState();
 
-        dao = new StandardXMLFlowConfigurationDAO(flowXml, encryptor);
+        dao = new StandardXMLFlowConfigurationDAO(flowXml, encryptor, nifiProperties);
         this.clusterCoordinator = clusterCoordinator;
         if (clusterCoordinator != null) {
             clusterCoordinator.setFlowService(this);
@@ -195,8 +196,8 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
             this.senderListener = senderListener;
             senderListener.addHandler(this);
 
-            final InetSocketAddress nodeApiAddress = properties.getNodeApiAddress();
-            final InetSocketAddress nodeSocketAddress = properties.getClusterNodeProtocolAddress();
+            final InetSocketAddress nodeApiAddress = nifiProperties.getNodeApiAddress();
+            final InetSocketAddress nodeSocketAddress = nifiProperties.getClusterNodeProtocolAddress();
 
             String nodeUuid = null;
             final StateManager stateManager = controller.getStateManagerProvider().getStateManager(CLUSTER_NODE_CONFIG);
@@ -210,10 +211,10 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
 
             // use a random UUID as the proposed node identifier
             this.nodeId = new NodeIdentifier(nodeUuid,
-                nodeApiAddress.getHostName(), nodeApiAddress.getPort(),
-                nodeSocketAddress.getHostName(), nodeSocketAddress.getPort(),
-                properties.getRemoteInputHost(), properties.getRemoteInputPort(),
-                properties.getRemoteInputHttpPort(), properties.isSiteToSiteSecure());
+                    nodeApiAddress.getHostName(), nodeApiAddress.getPort(),
+                    nodeSocketAddress.getHostName(), nodeSocketAddress.getPort(),
+                    nifiProperties.getRemoteInputHost(), nifiProperties.getRemoteInputPort(),
+                    nifiProperties.getRemoteInputHttpPort(), nifiProperties.isSiteToSiteSecure());
 
         } else {
             this.configuredForClustering = false;
@@ -246,7 +247,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
     public void overwriteFlow(final InputStream is) throws IOException {
         writeLock.lock();
         try (final OutputStream output = Files.newOutputStream(flowXml, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-            final OutputStream gzipOut = new GZIPOutputStream(output);) {
+                final OutputStream gzipOut = new GZIPOutputStream(output);) {
             FileUtils.copy(is, gzipOut);
         } finally {
             writeLock.unlock();
@@ -255,7 +256,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
 
     @Override
     public void saveFlowChanges(final TimeUnit delayUnit, final long delay) {
-        final boolean archiveEnabled = NiFiProperties.getInstance().isFlowConfigurationArchiveEnabled();
+        final boolean archiveEnabled = nifiProperties.isFlowConfigurationArchiveEnabled();
         saveFlowChanges(delayUnit, delay, archiveEnabled);
     }
 
@@ -444,7 +445,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
              * the response will be null and we should load the local dataflow
              * and heartbeat until a manager is located.
              */
-            final boolean localFlowEmpty = StandardFlowSynchronizer.isEmpty(proposedFlow, encryptor);
+            final boolean localFlowEmpty = StandardFlowSynchronizer.isEmpty(proposedFlow);
             final ConnectionResponse response = connect(localFlowEmpty, localFlowEmpty);
 
             // obtain write lock while we are updating the controller. We need to ensure that we don't
@@ -520,6 +521,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
             disconnectionCode = DisconnectionCode.STARTUP_FAILURE;
         }
         clusterCoordinator.disconnectionRequestedByNode(getNodeId(), disconnectionCode, ex.toString());
+        controller.setClustered(false, null);
     }
 
     private FlowResponseMessage handleFlowRequest(final FlowRequestMessage request) throws ProtocolException {
@@ -585,13 +587,12 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
 
             // reconnect
             final ConnectionResponse connectionResponse = new ConnectionResponse(getNodeId(), request.getDataFlow(),
-                request.getInstanceId(), request.getNodeConnectionStatuses(), request.getComponentRevisions());
+                    request.getInstanceId(), request.getNodeConnectionStatuses(), request.getComponentRevisions());
 
-            connectionResponse.setCoordinatorDN(request.getRequestorDN());
             loadFromConnectionResponse(connectionResponse);
 
             clusterCoordinator.resetNodeStatuses(connectionResponse.getNodeConnectionStatuses().stream()
-                .collect(Collectors.toMap(status -> status.getNodeIdentifier(), status -> status)));
+                    .collect(Collectors.toMap(status -> status.getNodeIdentifier(), status -> status)));
             controller.resumeHeartbeats();  // we are now connected, so resume sending heartbeats.
 
             logger.info("Node reconnected.");
@@ -639,7 +640,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
 
     // write lock must already be acquired
     private void loadFromBytes(final DataFlow proposedFlow, final boolean allowEmptyFlow)
-        throws IOException, FlowSerializationException, FlowSynchronizationException, UninheritableFlowException {
+            throws IOException, FlowSerializationException, FlowSynchronizationException, UninheritableFlowException {
         logger.trace("Loading flow from bytes");
 
         // resolve the given flow (null means load flow from disk)
@@ -697,16 +698,15 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
     }
 
     /**
-     * In NiFi 0.x, templates were stored in a templates directory as separate files. They are
-     * now stored in the flow itself. If there already are templates in that directory, though,
-     * we want to restore them.
+     * In NiFi 0.x, templates were stored in a templates directory as separate
+     * files. They are now stored in the flow itself. If there already are
+     * templates in that directory, though, we want to restore them.
      *
      * @return the templates found in the templates directory
      * @throws IOException if unable to read from the file system
      */
     public List<Template> loadTemplates() throws IOException {
-        final NiFiProperties properties = NiFiProperties.getInstance();
-        final Path templatePath = properties.getTemplateDirectory();
+        final Path templatePath = nifiProperties.getTemplateDirectory();
 
         final File[] files = templatePath.toFile().listFiles(pathname -> {
             final String lowerName = pathname.getName().toLowerCase();
@@ -720,7 +720,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
         final List<Template> templates = new ArrayList<>();
         for (final File file : files) {
             try (final FileInputStream fis = new FileInputStream(file);
-                final BufferedInputStream bis = new BufferedInputStream(fis)) {
+                    final BufferedInputStream bis = new BufferedInputStream(fis)) {
 
                 final TemplateDTO templateDto;
                 try {
@@ -772,12 +772,12 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
                 try {
                     response = senderListener.requestConnection(requestMsg).getConnectionResponse();
                     if (response.getRejectionReason() != null) {
-                        logger.warn("Connection request was blocked by cluster manager with the explanation: " + response.getRejectionReason());
+                        logger.warn("Connection request was blocked by cluster coordinator with the explanation: " + response.getRejectionReason());
                         // set response to null and treat a firewall blockage the same as getting no response from manager
                         response = null;
                         break;
                     } else if (response.shouldTryLater()) {
-                        logger.info("Flow controller requested by cluster manager to retry connection in " + response.getTryLaterSeconds() + " seconds.");
+                        logger.info("Flow controller requested by cluster coordinator to retry connection in " + response.getTryLaterSeconds() + " seconds.");
                         try {
                             Thread.sleep(response.getTryLaterSeconds() * 1000);
                         } catch (final InterruptedException ie) {
@@ -788,13 +788,29 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
                         // we received a successful connection response from manager
                         break;
                     }
+                } catch (final NoClusterCoordinatorException ncce) {
+                    logger.warn("There is currently no Cluster Coordinator. This often happens upon restart of NiFi when running an embedded ZooKeeper. Will register this node "
+                        + "to become the active Cluster Coordinator and will attempt to connect to cluster again");
+                    controller.registerForClusterCoordinator(true);
+
+                    try {
+                        Thread.sleep(1000L);
+                    } catch (final InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
                 } catch (final Exception pe) {
                     // could not create a socket and communicate with manager
-                    logger.warn("Failed to connect to cluster due to: " + pe, pe);
+                    logger.warn("Failed to connect to cluster due to: " + pe);
+                    if (logger.isDebugEnabled()) {
+                        logger.warn("", pe);
+                    }
+
                     if (retryOnCommsFailure) {
                         try {
                             Thread.sleep(response == null ? 5000 : response.getTryLaterSeconds());
                         } catch (final InterruptedException ie) {
+                            Thread.currentThread().interrupt();
                             break;
                         }
                     } else {
@@ -818,7 +834,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
                     controller.getStateManagerProvider().getStateManager(CLUSTER_NODE_CONFIG).setState(map, Scope.LOCAL);
                 } catch (final IOException ioe) {
                     logger.warn("Received successful response from Cluster Manager but failed to persist state about the Node's Unique Identifier and the Node's Index. "
-                        + "This node may be assigned a different UUID when the node is restarted.", ioe);
+                            + "This node may be assigned a different UUID when the node is restarted.", ioe);
                 }
 
                 return response;
@@ -832,7 +848,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
         writeLock.lock();
         try {
             clusterCoordinator.resetNodeStatuses(response.getNodeConnectionStatuses().stream()
-                .collect(Collectors.toMap(status -> status.getNodeIdentifier(), status -> status)));
+                    .collect(Collectors.toMap(status -> status.getNodeIdentifier(), status -> status)));
 
             // get the dataflow from the response
             final DataFlow dataFlow = response.getDataFlow();
@@ -849,11 +865,9 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
             revisionManager.reset(response.getComponentRevisions().stream().map(rev -> rev.toRevision()).collect(Collectors.toList()));
 
             // mark the node as clustered
-            controller.setClustered(true, response.getInstanceId(), response.getCoordinatorDN());
+            controller.setClustered(true, response.getInstanceId());
 
-            final NodeConnectionStatus status = clusterCoordinator.getConnectionStatus(nodeId);
-            final Set<String> roles = status == null ? Collections.emptySet() : status.getRoles();
-            controller.setConnectionStatus(new NodeConnectionStatus(nodeId, NodeConnectionState.CONNECTED, roles));
+            controller.setConnectionStatus(new NodeConnectionStatus(nodeId, NodeConnectionState.CONNECTED));
 
             // start the processors as indicated by the dataflow
             controller.onFlowInitialized(autoResumeState);
@@ -867,7 +881,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
             throw new ConnectionException(CONNECTION_EXCEPTION_MSG_PREFIX + "local or cluster flow is malformed.", fse);
         } catch (final FlowSynchronizationException fse) {
             throw new FlowSynchronizationException(CONNECTION_EXCEPTION_MSG_PREFIX + "local flow controller partially updated. "
-                + "Administrator should disconnect node and review flow for corruption.", fse);
+                    + "Administrator should disconnect node and review flow for corruption.", fse);
         } catch (final Exception ex) {
             throw new ConnectionException("Failed to connect node to cluster due to: " + ex, ex);
         } finally {
@@ -885,14 +899,13 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
             }
 
             try (final InputStream in = Files.newInputStream(flowXml, StandardOpenOption.READ);
-                final InputStream gzipIn = new GZIPInputStream(in)) {
+                    final InputStream gzipIn = new GZIPInputStream(in)) {
                 FileUtils.copy(gzipIn, os);
             }
         } finally {
             readLock.unlock();
         }
     }
-
 
     public void loadSnippets(final byte[] bytes) throws IOException {
         if (bytes.length == 0) {
@@ -907,13 +920,12 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
         }
     }
 
-
     private class SaveReportingTask implements Runnable {
 
         @Override
         public void run() {
             final ClassLoader currentCl = Thread.currentThread().getContextClassLoader();
-            final ClassLoader cl = NarClassLoaders.getFrameworkClassLoader();
+            final ClassLoader cl = NarClassLoaders.getInstance().getFrameworkClassLoader();
             Thread.currentThread().setContextClassLoader(cl);
             try {
                 //Hang onto the SaveHolder here rather than setting it to null because if the save fails we will try again
@@ -960,6 +972,7 @@ public class StandardFlowService implements FlowService, ProtocolHandler {
     }
 
     private class SaveHolder {
+
         private final Calendar saveTime;
         private final boolean shouldArchive;
 

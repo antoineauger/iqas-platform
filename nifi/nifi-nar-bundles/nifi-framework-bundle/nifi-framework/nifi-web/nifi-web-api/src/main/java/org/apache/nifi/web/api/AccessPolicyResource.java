@@ -23,6 +23,7 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import com.wordnik.swagger.annotations.Authorization;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.nifi.authorization.AbstractPolicyBasedAuthorizer;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.RequestAction;
 import org.apache.nifi.authorization.resource.Authorizable;
@@ -37,6 +38,7 @@ import org.apache.nifi.web.api.dto.RevisionDTO;
 import org.apache.nifi.web.api.entity.AccessPolicyEntity;
 import org.apache.nifi.web.api.request.ClientIdParameter;
 import org.apache.nifi.web.api.request.LongParameter;
+import org.apache.nifi.web.dao.AccessPolicyDAO;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -83,9 +85,7 @@ public class AccessPolicyResource extends ApplicationResource {
      * @return accessPolicyEntity
      */
     public AccessPolicyEntity populateRemainingAccessPolicyEntityContent(AccessPolicyEntity accessPolicyEntity) {
-        if (accessPolicyEntity.getComponent() != null) {
-            accessPolicyEntity.setUri(generateResourceUri("policies", accessPolicyEntity.getId()));
-        }
+        accessPolicyEntity.setUri(generateResourceUri("policies", accessPolicyEntity.getId()));
         return accessPolicyEntity;
     }
 
@@ -102,14 +102,18 @@ public class AccessPolicyResource extends ApplicationResource {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{action}/{resource: .+}")
-    // TODO - @PreAuthorize("hasAnyRole('ROLE_MONITOR', 'ROLE_DFM', 'ROLE_ADMIN')")
     @ApiOperation(
-            value = "Gets an access policy",
+            value = "Gets an access policy for the specified action and resource",
+            notes = "Will return the effective policy if no component specific policy exists for the specified action and resource. "
+                    + "Must have Read permissions to the policy with the desired action and resource. Permissions for the policy that is "
+                    + "returned will be indicated in the response. This means the client could be authorized to get the policy for a "
+                    + "given component but the effective policy may be inherited from an ancestor Process Group. If the client does not "
+                    + "have permissions to that policy, the response will not include the policy and the permissions in the response "
+                    + "will be marked accordingly. If the client does not have permissions to the policy of the desired action and resource "
+                    + "a 403 response will be returned.",
             response = AccessPolicyEntity.class,
             authorizations = {
-                    @Authorization(value = "Read Only", type = "ROLE_MONITOR"),
-                    @Authorization(value = "Data Flow Manager", type = "ROLE_DFM"),
-                    @Authorization(value = "Administrator", type = "ROLE_ADMIN")
+                    @Authorization(value = "Read - /policies/{resource}", type = "")
             }
     )
     @ApiResponses(
@@ -131,6 +135,11 @@ public class AccessPolicyResource extends ApplicationResource {
                     value = "The resource of the policy.",
                     required = true
             ) @PathParam("resource") String rawResource) {
+
+        // ensure we're running with a configurable authorizer
+        if (!(authorizer instanceof AbstractPolicyBasedAuthorizer)) {
+            throw new IllegalStateException(AccessPolicyDAO.MSG_NON_ABSTRACT_POLICY_BASED_AUTHORIZER);
+        }
 
         // parse the action and resource type
         final RequestAction requestAction = RequestAction.valueOfValue(action);
@@ -161,18 +170,17 @@ public class AccessPolicyResource extends ApplicationResource {
      * Creates a new access policy.
      *
      * @param httpServletRequest request
-     * @param accessPolicyEntity An accessPolicyEntity.
+     * @param requestAccessPolicyEntity An accessPolicyEntity.
      * @return An accessPolicyEntity.
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    // TODO - @PreAuthorize("hasRole('ROLE_DFM')")
     @ApiOperation(
             value = "Creates an access policy",
             response = AccessPolicyEntity.class,
             authorizations = {
-                    @Authorization(value = "Data Flow Manager", type = "ROLE_DFM")
+                    @Authorization(value = "Write - /policies/{resource}", type = "")
             }
     )
     @ApiResponses(
@@ -189,17 +197,22 @@ public class AccessPolicyResource extends ApplicationResource {
             @ApiParam(
                     value = "The access policy configuration details.",
                     required = true
-            ) final AccessPolicyEntity accessPolicyEntity) {
+            ) final AccessPolicyEntity requestAccessPolicyEntity) {
 
-        if (accessPolicyEntity == null || accessPolicyEntity.getComponent() == null) {
+        // ensure we're running with a configurable authorizer
+        if (!(authorizer instanceof AbstractPolicyBasedAuthorizer)) {
+            throw new IllegalStateException(AccessPolicyDAO.MSG_NON_ABSTRACT_POLICY_BASED_AUTHORIZER);
+        }
+
+        if (requestAccessPolicyEntity == null || requestAccessPolicyEntity.getComponent() == null) {
             throw new IllegalArgumentException("Access policy details must be specified.");
         }
 
-        if (accessPolicyEntity.getRevision() == null || (accessPolicyEntity.getRevision().getVersion() == null || accessPolicyEntity.getRevision().getVersion() != 0)) {
+        if (requestAccessPolicyEntity.getRevision() == null || (requestAccessPolicyEntity.getRevision().getVersion() == null || requestAccessPolicyEntity.getRevision().getVersion() != 0)) {
             throw new IllegalArgumentException("A revision of 0 must be specified when creating a new Policy.");
         }
 
-        final AccessPolicyDTO requestAccessPolicy = accessPolicyEntity.getComponent();
+        final AccessPolicyDTO requestAccessPolicy = requestAccessPolicyEntity.getComponent();
         if (requestAccessPolicy.getId() != null) {
             throw new IllegalArgumentException("Access policy ID cannot be specified.");
         }
@@ -212,35 +225,36 @@ public class AccessPolicyResource extends ApplicationResource {
         RequestAction.valueOfValue(requestAccessPolicy.getAction());
 
         if (isReplicateRequest()) {
-            return replicate(HttpMethod.POST, accessPolicyEntity);
+            return replicate(HttpMethod.POST, requestAccessPolicyEntity);
         }
 
         // handle expects request (usually from the cluster manager)
-        final boolean validationPhase = isValidationPhase(httpServletRequest);
-        if (validationPhase || !isTwoPhaseRequest(httpServletRequest)) {
-            // authorize access
-            serviceFacade.authorizeAccess(lookup -> {
-                final Authorizable accessPolicies = lookup.getAccessPolicyByResource(requestAccessPolicy.getResource());
-                accessPolicies.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
-            });
-        }
-        if (validationPhase) {
-            return generateContinueResponse().build();
-        }
+        return withWriteLock(
+                serviceFacade,
+                requestAccessPolicyEntity,
+                lookup -> {
+                    final Authorizable accessPolicies = lookup.getAccessPolicyByResource(requestAccessPolicy.getResource());
+                    accessPolicies.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
+                },
+                null,
+                accessPolicyEntity -> {
+                    final AccessPolicyDTO accessPolicy = accessPolicyEntity.getComponent();
 
-        // set the access policy id as appropriate
-        accessPolicyEntity.getComponent().setId(generateUuid());
+                    // set the access policy id as appropriate
+                    accessPolicy.setId(generateUuid());
 
-        // get revision from the config
-        final RevisionDTO revisionDTO = accessPolicyEntity.getRevision();
-        Revision revision = new Revision(revisionDTO.getVersion(), revisionDTO.getClientId(), accessPolicyEntity.getComponent().getId());
+                    // get revision from the config
+                    final RevisionDTO revisionDTO = accessPolicyEntity.getRevision();
+                    Revision revision = new Revision(revisionDTO.getVersion(), revisionDTO.getClientId(), accessPolicyEntity.getComponent().getId());
 
-        // create the access policy and generate the json
-        final AccessPolicyEntity entity = serviceFacade.createAccessPolicy(revision, accessPolicyEntity.getComponent());
-        populateRemainingAccessPolicyEntityContent(entity);
+                    // create the access policy and generate the json
+                    final AccessPolicyEntity entity = serviceFacade.createAccessPolicy(revision, accessPolicyEntity.getComponent());
+                    populateRemainingAccessPolicyEntityContent(entity);
 
-        // build the response
-        return clusterContext(generateCreatedResponse(URI.create(entity.getUri()), entity)).build();
+                    // build the response
+                    return clusterContext(generateCreatedResponse(URI.create(entity.getUri()), entity)).build();
+                }
+        );
     }
 
     /**
@@ -253,14 +267,11 @@ public class AccessPolicyResource extends ApplicationResource {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}")
-    // TODO - @PreAuthorize("hasAnyRole('ROLE_MONITOR', 'ROLE_DFM', 'ROLE_ADMIN')")
     @ApiOperation(
             value = "Gets an access policy",
             response = AccessPolicyEntity.class,
             authorizations = {
-                    @Authorization(value = "Read Only", type = "ROLE_MONITOR"),
-                    @Authorization(value = "Data Flow Manager", type = "ROLE_DFM"),
-                    @Authorization(value = "Administrator", type = "ROLE_ADMIN")
+                    @Authorization(value = "Read - /policies/{resource}", type = "")
             }
     )
     @ApiResponses(
@@ -279,14 +290,19 @@ public class AccessPolicyResource extends ApplicationResource {
             )
             @PathParam("id") final String id) {
 
+        // ensure we're running with a configurable authorizer
+        if (!(authorizer instanceof AbstractPolicyBasedAuthorizer)) {
+            throw new IllegalStateException(AccessPolicyDAO.MSG_NON_ABSTRACT_POLICY_BASED_AUTHORIZER);
+        }
+
         if (isReplicateRequest()) {
             return replicate(HttpMethod.GET);
         }
 
         // authorize access
         serviceFacade.authorizeAccess(lookup -> {
-            Authorizable authorizable  = lookup.getAccessPolicyById(id);
-            authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
+            Authorizable authorizable = lookup.getAccessPolicyById(id);
+            authorizable.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
         });
 
         // get the access policy
@@ -301,19 +317,18 @@ public class AccessPolicyResource extends ApplicationResource {
      *
      * @param httpServletRequest request
      * @param id                 The id of the access policy to update.
-     * @param accessPolicyEntity An accessPolicyEntity.
+     * @param requestAccessPolicyEntity An accessPolicyEntity.
      * @return An accessPolicyEntity.
      */
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}")
-    // TODO - @PreAuthorize("hasRole('ROLE_DFM')")
     @ApiOperation(
             value = "Updates a access policy",
             response = AccessPolicyEntity.class,
             authorizations = {
-                    @Authorization(value = "Data Flow Manager", type = "ROLE_DFM")
+                    @Authorization(value = "Write - /policies/{resource}", type = "")
             }
     )
     @ApiResponses(
@@ -335,38 +350,46 @@ public class AccessPolicyResource extends ApplicationResource {
             @ApiParam(
                     value = "The access policy configuration details.",
                     required = true
-            ) final AccessPolicyEntity accessPolicyEntity) {
+            ) final AccessPolicyEntity requestAccessPolicyEntity) {
 
-        if (accessPolicyEntity == null || accessPolicyEntity.getComponent() == null) {
+        // ensure we're running with a configurable authorizer
+        if (!(authorizer instanceof AbstractPolicyBasedAuthorizer)) {
+            throw new IllegalStateException(AccessPolicyDAO.MSG_NON_ABSTRACT_POLICY_BASED_AUTHORIZER);
+        }
+
+        if (requestAccessPolicyEntity == null || requestAccessPolicyEntity.getComponent() == null) {
             throw new IllegalArgumentException("Access policy details must be specified.");
         }
 
-        if (accessPolicyEntity.getRevision() == null) {
+        if (requestAccessPolicyEntity.getRevision() == null) {
             throw new IllegalArgumentException("Revision must be specified.");
         }
 
         // ensure the ids are the same
-        final AccessPolicyDTO accessPolicyDTO = accessPolicyEntity.getComponent();
-        if (!id.equals(accessPolicyDTO.getId())) {
+        final AccessPolicyDTO requestAccessPolicyDTO = requestAccessPolicyEntity.getComponent();
+        if (!id.equals(requestAccessPolicyDTO.getId())) {
             throw new IllegalArgumentException(String.format("The access policy id (%s) in the request body does not equal the "
-                    + "access policy id of the requested resource (%s).", accessPolicyDTO.getId(), id));
+                    + "access policy id of the requested resource (%s).", requestAccessPolicyDTO.getId(), id));
         }
 
         if (isReplicateRequest()) {
-            return replicate(HttpMethod.PUT, accessPolicyEntity);
+            return replicate(HttpMethod.PUT, requestAccessPolicyEntity);
         }
 
         // Extract the revision
-        final Revision revision = getRevision(accessPolicyEntity, id);
+        final Revision requestRevision = getRevision(requestAccessPolicyEntity, id);
         return withWriteLock(
                 serviceFacade,
-                revision,
+                requestAccessPolicyEntity,
+                requestRevision,
                 lookup -> {
-                    Authorizable authorizable  = lookup.getAccessPolicyById(id);
+                    Authorizable authorizable = lookup.getAccessPolicyById(id);
                     authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
                 },
                 null,
-                () -> {
+                (revision, accessPolicyEntity) -> {
+                    final AccessPolicyDTO accessPolicyDTO = accessPolicyEntity.getComponent();
+
                     // update the access policy
                     final AccessPolicyEntity entity = serviceFacade.updateAccessPolicy(revision, accessPolicyDTO);
                     populateRemainingAccessPolicyEntityContent(entity);
@@ -392,12 +415,11 @@ public class AccessPolicyResource extends ApplicationResource {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}")
-    // TODO - @PreAuthorize("hasRole('ROLE_DFM')")
     @ApiOperation(
             value = "Deletes an access policy",
             response = AccessPolicyEntity.class,
             authorizations = {
-                    @Authorization(value = "Data Flow Manager", type = "ROLE_DFM")
+                    @Authorization(value = "Write - /policies/{resource}", type = "")
             }
     )
     @ApiResponses(
@@ -427,24 +449,32 @@ public class AccessPolicyResource extends ApplicationResource {
             )
             @PathParam("id") final String id) {
 
+        // ensure we're running with a configurable authorizer
+        if (!(authorizer instanceof AbstractPolicyBasedAuthorizer)) {
+            throw new IllegalStateException(AccessPolicyDAO.MSG_NON_ABSTRACT_POLICY_BASED_AUTHORIZER);
+        }
+
         if (isReplicateRequest()) {
             return replicate(HttpMethod.DELETE);
         }
 
+        final AccessPolicyEntity requestAccessPolicyEntity = new AccessPolicyEntity();
+        requestAccessPolicyEntity.setId(id);
+
         // handle expects request (usually from the cluster manager)
-        final Revision revision = new Revision(version == null ? null : version.getLong(), clientId.getClientId(), id);
+        final Revision requestRevision = new Revision(version == null ? null : version.getLong(), clientId.getClientId(), id);
         return withWriteLock(
                 serviceFacade,
-                revision,
+                requestAccessPolicyEntity,
+                requestRevision,
                 lookup -> {
                     final Authorizable accessPolicy = lookup.getAccessPolicyById(id);
-                    accessPolicy.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
+                    accessPolicy.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
                 },
-                () -> {
-                },
-                () -> {
+                null,
+                (revision, accessPolicyEntity) -> {
                     // delete the specified access policy
-                    final AccessPolicyEntity entity = serviceFacade.deleteAccessPolicy(revision, id);
+                    final AccessPolicyEntity entity = serviceFacade.deleteAccessPolicy(revision, accessPolicyEntity.getId());
                     return clusterContext(generateOkResponse(entity)).build();
                 }
         );

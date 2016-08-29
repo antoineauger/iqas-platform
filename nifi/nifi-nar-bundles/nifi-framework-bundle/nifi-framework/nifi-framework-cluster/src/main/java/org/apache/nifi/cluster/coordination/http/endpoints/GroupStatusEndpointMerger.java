@@ -17,22 +17,21 @@
 
 package org.apache.nifi.cluster.coordination.http.endpoints;
 
+import org.apache.nifi.cluster.manager.ComponentEntityStatusMerger;
+import org.apache.nifi.cluster.manager.NodeResponse;
 import org.apache.nifi.cluster.manager.StatusMerger;
 import org.apache.nifi.cluster.protocol.NodeIdentifier;
 import org.apache.nifi.web.api.dto.status.NodeProcessGroupStatusSnapshotDTO;
 import org.apache.nifi.web.api.dto.status.ProcessGroupStatusDTO;
-import org.apache.nifi.web.api.dto.status.ProcessGroupStatusSnapshotDTO;
-import org.apache.nifi.web.api.dto.status.RemoteProcessGroupStatusSnapshotDTO;
 import org.apache.nifi.web.api.entity.ProcessGroupStatusEntity;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
-public class GroupStatusEndpointMerger extends AbstractNodeStatusEndpoint<ProcessGroupStatusEntity, ProcessGroupStatusDTO> {
+public class GroupStatusEndpointMerger extends AbstractSingleEntityEndpoint<ProcessGroupStatusEntity> implements ComponentEntityStatusMerger<ProcessGroupStatusDTO> {
     public static final Pattern GROUP_STATUS_URI_PATTERN = Pattern.compile("/nifi-api/flow/process-groups/(?:(?:root)|(?:[a-f0-9\\-]{36}))/status");
 
     @Override
@@ -46,44 +45,41 @@ public class GroupStatusEndpointMerger extends AbstractNodeStatusEndpoint<Proces
     }
 
     @Override
-    protected ProcessGroupStatusDTO getDto(ProcessGroupStatusEntity entity) {
-        return entity.getProcessGroupStatus();
-    }
+    protected void mergeResponses(ProcessGroupStatusEntity clientEntity, Map<NodeIdentifier, ProcessGroupStatusEntity> entityMap, Set<NodeResponse> successfulResponses,
+                                  Set<NodeResponse> problematicResponses) {
+        final ProcessGroupStatusDTO mergedProcessGroupStatus = clientEntity.getProcessGroupStatus();
+        mergedProcessGroupStatus.setNodeSnapshots(new ArrayList<>());
 
-    @Override
-    protected void mergeResponses(ProcessGroupStatusDTO clientDto, Map<NodeIdentifier, ProcessGroupStatusDTO> dtoMap, NodeIdentifier selectedNodeId) {
-        final ProcessGroupStatusDTO mergedProcessGroupStatus = clientDto;
-        mergedProcessGroupStatus.setNodeSnapshots(new ArrayList<NodeProcessGroupStatusSnapshotDTO>());
+        final NodeIdentifier selectedNodeId = entityMap.entrySet().stream()
+                .filter(e -> e.getValue() == clientEntity)
+                .map(e -> e.getKey())
+                .findFirst()
+                .orElse(null);
 
         final NodeProcessGroupStatusSnapshotDTO selectedNodeSnapshot = new NodeProcessGroupStatusSnapshotDTO();
-        selectedNodeSnapshot.setStatusSnapshot(clientDto.getAggregateSnapshot().clone());
+        selectedNodeSnapshot.setStatusSnapshot(mergedProcessGroupStatus.getAggregateSnapshot().clone());
         selectedNodeSnapshot.setAddress(selectedNodeId.getApiAddress());
         selectedNodeSnapshot.setApiPort(selectedNodeId.getApiPort());
         selectedNodeSnapshot.setNodeId(selectedNodeId.getId());
 
         mergedProcessGroupStatus.getNodeSnapshots().add(selectedNodeSnapshot);
 
-        for (final Map.Entry<NodeIdentifier, ProcessGroupStatusDTO> entry : dtoMap.entrySet()) {
+        for (final Map.Entry<NodeIdentifier, ProcessGroupStatusEntity> entry : entityMap.entrySet()) {
             final NodeIdentifier nodeId = entry.getKey();
-            final ProcessGroupStatusDTO nodeProcessGroupStatus = entry.getValue();
+            final ProcessGroupStatusEntity nodeProcessGroupStatusEntity = entry.getValue();
+            final ProcessGroupStatusDTO nodeProcessGroupStatus = nodeProcessGroupStatusEntity.getProcessGroupStatus();
             if (nodeProcessGroupStatus == mergedProcessGroupStatus) {
                 continue;
             }
 
-            final ProcessGroupStatusSnapshotDTO nodeSnapshot = nodeProcessGroupStatus.getAggregateSnapshot();
-            for (final RemoteProcessGroupStatusSnapshotDTO remoteProcessGroupStatus : nodeSnapshot.getRemoteProcessGroupStatusSnapshots()) {
-                final List<String> nodeAuthorizationIssues = remoteProcessGroupStatus.getAuthorizationIssues();
-                if (nodeAuthorizationIssues != null && !nodeAuthorizationIssues.isEmpty()) {
-                    for (final ListIterator<String> iter = nodeAuthorizationIssues.listIterator(); iter.hasNext();) {
-                        final String Issue = iter.next();
-                        iter.set("[" + nodeId.getApiAddress() + ":" + nodeId.getApiPort() + "] -- " + Issue);
-                    }
-                    remoteProcessGroupStatus.setAuthorizationIssues(nodeAuthorizationIssues);
-                }
-            }
-
-            StatusMerger.merge(mergedProcessGroupStatus, nodeProcessGroupStatus, nodeId.getId(), nodeId.getApiAddress(), nodeId.getApiPort());
+            mergeStatus(mergedProcessGroupStatus, clientEntity.getCanRead(), nodeProcessGroupStatus, nodeProcessGroupStatusEntity.getCanRead(), nodeId);
         }
     }
 
+    @Override
+    public void mergeStatus(ProcessGroupStatusDTO clientStatus, boolean clientStatusReadablePermission, ProcessGroupStatusDTO status, boolean statusReadablePermission,
+                            NodeIdentifier statusNodeIdentifier) {
+        StatusMerger.merge(clientStatus, clientStatusReadablePermission, status, statusReadablePermission, statusNodeIdentifier.getId(), statusNodeIdentifier.getApiAddress(),
+                statusNodeIdentifier.getApiPort());
+    }
 }

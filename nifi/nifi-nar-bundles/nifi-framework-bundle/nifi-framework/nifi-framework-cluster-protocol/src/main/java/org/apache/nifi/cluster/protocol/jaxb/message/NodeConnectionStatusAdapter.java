@@ -30,20 +30,20 @@ public class NodeConnectionStatusAdapter extends XmlAdapter<AdaptedNodeConnectio
             adapted.getState(),
             adapted.getDisconnectCode(),
             adapted.getDisconnectReason(),
-            adapted.getConnectionRequestTime(),
-            adapted.getRoles());
+            adapted.getConnectionRequestTime());
     }
 
     @Override
     public AdaptedNodeConnectionStatus marshal(final NodeConnectionStatus toAdapt) throws Exception {
         final AdaptedNodeConnectionStatus adapted = new AdaptedNodeConnectionStatus();
-        adapted.setUpdateId(toAdapt.getUpdateIdentifier());
-        adapted.setNodeId(toAdapt.getNodeIdentifier());
-        adapted.setConnectionRequestTime(toAdapt.getConnectionRequestTime());
-        adapted.setDisconnectCode(toAdapt.getDisconnectCode());
-        adapted.setDisconnectReason(toAdapt.getDisconnectReason());
-        adapted.setState(toAdapt.getState());
-        adapted.setRoles(toAdapt.getRoles());
+        if (toAdapt != null) {
+            adapted.setUpdateId(toAdapt.getUpdateIdentifier());
+            adapted.setNodeId(toAdapt.getNodeIdentifier());
+            adapted.setConnectionRequestTime(toAdapt.getConnectionRequestTime());
+            adapted.setDisconnectCode(toAdapt.getDisconnectCode());
+            adapted.setDisconnectReason(toAdapt.getDisconnectReason());
+            adapted.setState(toAdapt.getState());
+        }
         return adapted;
     }
 }

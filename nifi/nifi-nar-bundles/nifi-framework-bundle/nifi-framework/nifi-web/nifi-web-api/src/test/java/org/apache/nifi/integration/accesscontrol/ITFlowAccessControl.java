@@ -28,13 +28,11 @@ import static org.junit.Assert.assertEquals;
  */
 public class ITFlowAccessControl {
 
-    private static final String FLOW_XML_PATH = "target/test-classes/access-control/flow-flow.xml";
-
     private static AccessControlHelper helper;
 
     @BeforeClass
     public static void setup() throws Exception {
-        helper = new AccessControlHelper(FLOW_XML_PATH, "flow-test-provider");
+        helper = new AccessControlHelper("src/test/resources/access-control/nifi-flow.properties");
     }
 
     /**
@@ -66,7 +64,7 @@ public class ITFlowAccessControl {
      */
     @Test
     public void testGetIdentity() throws Exception {
-        helper.testGenericGetUri(helper.getBaseUrl() + "/flow/identity");
+        helper.testGenericGetUri(helper.getBaseUrl() + "/flow/current-user");
     }
 
     /**
@@ -215,7 +213,7 @@ public class ITFlowAccessControl {
      */
     @Test
     public void testGetComponentHistory() throws Exception {
-        helper.testGenericGetUri(helper.getBaseUrl() + "/flow/history/components/my-component");
+        testComponentSpecificGetUri(helper.getBaseUrl() + "/flow/history/components/my-component");
     }
 
     public void testComponentSpecificGetUri(final String uri) throws Exception {

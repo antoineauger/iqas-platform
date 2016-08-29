@@ -19,10 +19,11 @@ package org.apache.nifi.controller.service;
 import org.apache.nifi.components.state.StateManager;
 import org.apache.nifi.components.state.StateManagerProvider;
 import org.apache.nifi.controller.ControllerService;
-import org.apache.nifi.controller.StandardFlowServiceTest;
 import org.apache.nifi.nar.ExtensionManager;
 import org.apache.nifi.nar.NarClassLoaders;
+import org.apache.nifi.registry.VariableRegistry;
 import org.apache.nifi.reporting.InitializationException;
+import org.apache.nifi.util.FileBasedVariableRegistry;
 import org.apache.nifi.util.NiFiProperties;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -33,13 +34,16 @@ public class StandardControllerServiceProviderTest {
 
     private ControllerService proxied;
     private ControllerService implementation;
+    private static VariableRegistry variableRegistry;
+    private static NiFiProperties nifiProperties;
 
     @BeforeClass
     public static void setupSuite() throws Exception {
-        System.setProperty(NiFiProperties.PROPERTIES_FILE_PATH, StandardFlowServiceTest.class.getResource("/conf/nifi.properties").getFile());
-        NiFiProperties properties = NiFiProperties.getInstance();
-        NarClassLoaders.load(properties);
-        ExtensionManager.discoverExtensions();
+        System.setProperty(NiFiProperties.PROPERTIES_FILE_PATH, StandardControllerServiceProviderTest.class.getResource("/conf/nifi.properties").getFile());
+        nifiProperties = NiFiProperties.createBasicNiFiProperties(null, null);
+        NarClassLoaders.getInstance().init(nifiProperties.getFrameworkWorkingDirectory(), nifiProperties.getExtensionsWorkingDirectory());
+        ExtensionManager.discoverExtensions(NarClassLoaders.getInstance().getExtensionClassLoaders());
+        variableRegistry = new FileBasedVariableRegistry(nifiProperties.getVariableRegistryPropertiesPaths());
     }
 
     @Before
@@ -67,7 +71,7 @@ public class StandardControllerServiceProviderTest {
             @Override
             public void onComponentRemoved(String componentId) {
             }
-        });
+        }, variableRegistry, nifiProperties);
         ControllerServiceNode node = provider.createControllerService(clazz, id, true);
         proxied = node.getProxiedControllerService();
         implementation = node.getControllerServiceImplementation();

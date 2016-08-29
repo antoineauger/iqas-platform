@@ -74,7 +74,6 @@
         <script type="text/javascript" src="assets/angular-aria/angular-aria.min.js"></script>
         <script type="text/javascript" src="assets/angular-animate/angular-animate.min.js"></script>
         <script type="text/javascript" src="assets/angular-material/angular-material.min.js"></script>
-        <script type="text/javascript" src="assets/angular-sanitize/angular-sanitize.min.js"></script>
         <script type="text/javascript" src="js/json2.js"></script>
         <script type="text/javascript" src="js/nf/nf-namespace.js?${project.version}"></script>
         <script type="text/javascript" src="js/nf/nf-ng-namespace.js?${project.version}"></script>
@@ -127,7 +126,6 @@
         <jsp:include page="/WEB-INF/partials/processor-details.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/process-group-configuration.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/policy-management.jsp"/>
-        <jsp:include page="/WEB-INF/partials/canvas/process-group-details.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/remote-process-group-configuration.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/remote-process-group-details.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/remote-process-group-ports.jsp"/>
@@ -142,7 +140,7 @@
         <jsp:include page="/WEB-INF/partials/canvas/queue-listing.jsp"/>
         <jsp:include page="/WEB-INF/partials/canvas/component-state-dialog.jsp"/>
         <jsp:include page="/WEB-INF/partials/connection-details.jsp"/>
-        <div id="context-menu" class="unselectable"></div>
+        <div id="context-menu" class="context-menu unselectable"></div>
         <span id="nifi-content-viewer-url" class="hidden"></span>
     </body>
 </html>

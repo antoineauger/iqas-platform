@@ -57,12 +57,10 @@ nf.Actions = (function () {
             dataType: 'json',
             contentType: 'application/json'
         }).fail(function (xhr, status, error) {
-            if (xhr.status === 400 || xhr.status === 404 || xhr.status === 409) {
-                nf.Dialog.showOkDialog({
-                    headerText: 'Update Resource',
-                    dialogContent: nf.Common.escapeHtml(xhr.responseText)
-                });
-            }
+            nf.Dialog.showOkDialog({
+                headerText: 'Update Resource',
+                dialogContent: nf.Common.escapeHtml(xhr.responseText)
+            });
         });
     };
 
@@ -71,9 +69,6 @@ nf.Actions = (function () {
         $.ajax({
             type: 'GET',
             url: config.urls.api + '/flow/process-groups/' + encodeURIComponent(response.id),
-            data: {
-                verbose: true
-            },
             dataType: 'json'
         }).done(function (response) {
             nf.Graph.set(response.processGroupFlow.flow);
@@ -148,7 +143,7 @@ nf.Actions = (function () {
                             var connections = nf.Connection.getComponentConnections(remoteProcessGroup.id);
                             $.each(connections, function (_, connection) {
                                 if (connection.permissions.canRead) {
-                                    nf.Connection.reload(connection.component);
+                                    nf.Connection.reload(connection.id);
                                 }
                             });
                         }
@@ -202,16 +197,16 @@ nf.Actions = (function () {
                 var selectionData = selection.datum();
 
                 // the source is in the current group
-                if (selectionData.component.source.groupId === nf.Canvas.getGroupId()) {
-                    var source = d3.select('#id-' + selectionData.component.source.id);
+                if (selectionData.sourceGroupId === nf.Canvas.getGroupId()) {
+                    var source = d3.select('#id-' + selectionData.sourceId);
                     nf.Actions.show(source);
-                } else if (selectionData.component.source.type === 'REMOTE_OUTPUT_PORT') {
+                } else if (selectionData.sourceType === 'REMOTE_OUTPUT_PORT') {
                     // if the source is remote
-                    var remoteSource = d3.select('#id-' + selectionData.component.source.groupId);
+                    var remoteSource = d3.select('#id-' + selectionData.sourceGroupId);
                     nf.Actions.show(remoteSource);
                 } else {
                     // if the source is local but in a sub group
-                    nf.CanvasUtils.showComponent(selectionData.component.source.groupId, selectionData.component.source.id);
+                    nf.CanvasUtils.showComponent(selectionData.sourceGroupId, selectionData.sourceId);
                 }
             }
         },
@@ -226,16 +221,16 @@ nf.Actions = (function () {
                 var selectionData = selection.datum();
 
                 // the destination is in the current group or its remote
-                if (selectionData.component.destination.groupId === nf.Canvas.getGroupId()) {
-                    var destination = d3.select('#id-' + selectionData.component.destination.id);
+                if (selectionData.destinationGroupId === nf.Canvas.getGroupId()) {
+                    var destination = d3.select('#id-' + selectionData.destinationId);
                     nf.Actions.show(destination);
-                } else if (selectionData.component.destination.type === 'REMOTE_INPUT_PORT') {
+                } else if (selectionData.destinationType === 'REMOTE_INPUT_PORT') {
                     // if the destination is remote
-                    var remoteDestination = d3.select('#id-' + selectionData.component.destination.groupId);
+                    var remoteDestination = d3.select('#id-' + selectionData.destinationGroupId);
                     nf.Actions.show(remoteDestination);
                 } else {
                     // if the destination is local but in a sub group
-                    nf.CanvasUtils.showComponent(selectionData.component.destination.groupId, selectionData.component.destination.id);
+                    nf.CanvasUtils.showComponent(selectionData.destinationGroupId, selectionData.destinationId);
                 }
             }
         },
@@ -524,7 +519,7 @@ nf.Actions = (function () {
 
                         startRequests.push(updateResource(uri, entity).done(function (response) {
                             if (nf.CanvasUtils.isProcessGroup(selected)) {
-                                nf.ProcessGroup.reload(d.component);
+                                nf.ProcessGroup.reload(d.id);
                             } else {
                                 nf[d.type].set(response);
                             }
@@ -594,7 +589,7 @@ nf.Actions = (function () {
 
                         stopRequests.push(updateResource(uri, entity).done(function (response) {
                             if (nf.CanvasUtils.isProcessGroup(selected)) {
-                                nf.ProcessGroup.reload(d.component);
+                                nf.ProcessGroup.reload(d.id);
                             } else {
                                 nf[d.type].set(response);
                             }
@@ -999,8 +994,9 @@ nf.Actions = (function () {
                         $('#drop-request-status-message').text(dropRequest.state);
 
                         // update the current number of enqueued flowfiles
-                        if (nf.Common.isDefinedAndNotNull(connection.status) && nf.Common.isDefinedAndNotNull(dropRequest.currentCount)) {
+                        if (nf.Common.isDefinedAndNotNull(dropRequest.currentCount)) {
                             connection.status.queued = dropRequest.current;
+                            connection.status.aggregateSnapshot.queued = dropRequest.current;
                             nf.Connection.refresh(connection.id);
                         }
 
@@ -1028,13 +1024,19 @@ nf.Actions = (function () {
                         }).done(function (response) {
                             dropRequest = response.dropRequest;
                             processDropRequest(nextDelay);
-                        }).fail(completeDropRequest);
+                        }).fail(function (xhr, status, error) {
+                            if (xhr.status === 403) {
+                                nf.Common.handleAjaxError(xhr, status, error);
+                            } else {
+                                completeDropRequest()
+                            }
+                        });
                     };
 
                     // issue the request to delete the flow files
                     $.ajax({
                         type: 'POST',
-                        url: '../nifi-api/flowfile-queues/' + connection.id + '/drop-requests',
+                        url: '../nifi-api/flowfile-queues/' + encodeURIComponent(connection.id) + '/drop-requests',
                         dataType: 'json',
                         contentType: 'application/json'
                     }).done(function (response) {
@@ -1047,7 +1049,13 @@ nf.Actions = (function () {
                         // process the drop request
                         dropRequest = response.dropRequest;
                         processDropRequest(1);
-                    }).fail(completeDropRequest);
+                    }).fail(function (xhr, status, error) {
+                        if (xhr.status === 403) {
+                            nf.Common.handleAjaxError(xhr, status, error);
+                        } else {
+                            completeDropRequest()
+                        }
+                    });
                 }
             });
         },
@@ -1083,7 +1091,7 @@ nf.Actions = (function () {
             var processor = selection.datum();
 
             // view the state for the selected processor
-            nf.ComponentState.showState(processor, nf.CanvasUtils.supportsModification(selection));
+            nf.ComponentState.showState(processor, nf.CanvasUtils.isConfigurable(selection));
         },
 
         /**
@@ -1142,16 +1150,13 @@ nf.Actions = (function () {
                 return;
             }
 
-            // ensure the selected components are eligible being moved into a new group
-            $.when(nf.CanvasUtils.eligibleForMove(selection)).done(function () {
-                // determine the origin of the bounding box for the selected components
-                var origin = nf.CanvasUtils.getOrigin(selection);
+            // determine the origin of the bounding box for the selected components
+            var origin = nf.CanvasUtils.getOrigin(selection);
 
-                var pt = {'x': origin.x, 'y': origin.y};
-                $.when(nf.ng.Bridge.injector.get('groupComponent').promptForGroupName(pt)).done(function (processGroup) {
-                    var group = d3.select('#id-' + processGroup.id);
-                    nf.CanvasUtils.moveComponents(selection, group);
-                });
+            var pt = {'x': origin.x, 'y': origin.y};
+            $.when(nf.ng.Bridge.injector.get('groupComponent').promptForGroupName(pt)).done(function (processGroup) {
+                var group = d3.select('#id-' + processGroup.id);
+                nf.CanvasUtils.moveComponents(selection, group);
             });
         },
 
@@ -1220,58 +1225,73 @@ nf.Actions = (function () {
                 },
                 handler: {
                     click: function () {
+                        // get the template details
+                        var templateName = $('#new-template-name').val();
+
+                        // ensure the template name is not blank
+                        if (nf.Common.isBlank(templateName)) {
+                            nf.Dialog.showOkDialog({
+                                headerText: 'Create Template',
+                                dialogContent: "The template name cannot be blank."
+                            });
+                            return;
+                        }
+
                         // hide the dialog
                         $('#new-template-dialog').modal('hide');
 
-                        // get the template details
-                        var templateName = $('#new-template-name').val();
+                        // get the description
                         var templateDescription = $('#new-template-description').val();
 
-                            // create a snippet
-                            var snippet = nf.Snippet.marshal(selection);
+                        // create a snippet
+                        var snippet = nf.Snippet.marshal(selection);
 
-                            // create the snippet
-                            nf.Snippet.create(snippet).done(function (response) {
-                                var createSnippetEntity = {
-                                    'name': templateName,
-                                    'description': templateDescription,
-                                    'snippetId': response.snippet.id
-                                };
+                        // create the snippet
+                        nf.Snippet.create(snippet).done(function (response) {
+                            var createSnippetEntity = {
+                                'name': templateName,
+                                'description': templateDescription,
+                                'snippetId': response.snippet.id
+                            };
 
-                                // create the template
-                                $.ajax({
-                                    type: 'POST',
-                                    url: config.urls.api + '/process-groups/' + encodeURIComponent(nf.Canvas.getGroupId()) + '/templates',
-                                    data: JSON.stringify(createSnippetEntity),
-                                    dataType: 'json',
-                                    contentType: 'application/json'
-                                }).done(function () {
-                                    // show the confirmation dialog
-                                    nf.Dialog.showOkDialog({
-                                        headerText: 'Create Template',
-                                        dialogContent: "Template '" + nf.Common.escapeHtml(templateName) + "' was successfully created."
-                                    });
-                                }).always(function () {
-                                    // clear the template dialog fields
-                                    $('#new-template-name').val('');
-                                    $('#new-template-description').val('');
-                                }).fail(nf.Common.handleAjaxError);
+                            // create the template
+                            $.ajax({
+                                type: 'POST',
+                                url: config.urls.api + '/process-groups/' + encodeURIComponent(nf.Canvas.getGroupId()) + '/templates',
+                                data: JSON.stringify(createSnippetEntity),
+                                dataType: 'json',
+                                contentType: 'application/json'
+                            }).done(function () {
+                                // show the confirmation dialog
+                                nf.Dialog.showOkDialog({
+                                    headerText: 'Create Template',
+                                    dialogContent: "Template '" + nf.Common.escapeHtml(templateName) + "' was successfully created."
+                                });
+                            }).always(function () {
+                                // clear the template dialog fields
+                                $('#new-template-name').val('');
+                                $('#new-template-description').val('');
                             }).fail(nf.Common.handleAjaxError);
-                        }
+                        }).fail(nf.Common.handleAjaxError);
                     }
-                }, {
-                    buttonText: 'Cancel',
-                    color: {
-                        base: '#E3E8EB',
-                        hover: '#C7D2D7',
-                        text: '#004849'
-                    },
-                    handler: {
-                        click: function () {
-                            $('#new-template-dialog').modal('hide');
-                        }
+                }
+            }, {
+                buttonText: 'Cancel',
+                color: {
+                    base: '#E3E8EB',
+                    hover: '#C7D2D7',
+                    text: '#004849'
+                },
+                handler: {
+                    click: function () {
+                        // clear the template dialog fields
+                        $('#new-template-name').val('');
+                        $('#new-template-description').val('');
+
+                        $('#new-template-dialog').modal('hide');
                     }
-                }]).modal('show');
+                }
+            }]).modal('show');
 
             // auto focus on the template name
             $('#new-template-name').focus();
@@ -1403,8 +1423,8 @@ nf.Actions = (function () {
             // determine the current max zIndex
             var maxZIndex = -1;
             $.each(nf.Connection.get(), function (_, otherConnection) {
-                if (connection.id !== otherConnection.id && otherConnection.component.zIndex > maxZIndex) {
-                    maxZIndex = otherConnection.component.zIndex;
+                if (connection.id !== otherConnection.id && otherConnection.zIndex > maxZIndex) {
+                    maxZIndex = otherConnection.zIndex;
                 }
             });
 

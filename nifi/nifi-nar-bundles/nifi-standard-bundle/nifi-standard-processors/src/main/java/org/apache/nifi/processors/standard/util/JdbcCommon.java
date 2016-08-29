@@ -68,6 +68,8 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class JdbcCommon {
 
+    private static final int MAX_DIGITS_IN_BIGINT = 19;
+
     public static long convertToAvroStream(final ResultSet rs, final OutputStream outStream) throws SQLException, IOException {
         return convertToAvroStream(rs, outStream, null, null);
     }
@@ -77,7 +79,11 @@ public class JdbcCommon {
         return convertToAvroStream(rs, outStream, recordName, null);
     }
 
-    public static long convertToAvroStream(final ResultSet rs, final OutputStream outStream, String recordName, ResultSetRowCallback callback)
+    public static long convertToAvroStream(final ResultSet rs, final OutputStream outStream, String recordName, ResultSetRowCallback callback) throws IOException, SQLException {
+        return convertToAvroStream(rs, outStream, recordName, callback, 0);
+    }
+
+    public static long convertToAvroStream(final ResultSet rs, final OutputStream outStream, String recordName, ResultSetRowCallback callback, final int maxRows)
             throws SQLException, IOException {
         final Schema schema = createSchema(rs, recordName);
         final GenericRecord rec = new GenericData.Record(schema);
@@ -114,9 +120,31 @@ public class JdbcCommon {
                         // org.apache.avro.AvroRuntimeException: Unknown datum type java.lang.Byte
                         rec.put(i - 1, ((Byte) value).intValue());
 
-                    } else if (value instanceof BigDecimal || value instanceof BigInteger) {
-                        // Avro can't handle BigDecimal and BigInteger as numbers - it will throw an AvroRuntimeException such as: "Unknown datum type: java.math.BigDecimal: 38"
+                    } else if (value instanceof BigDecimal) {
+                        // Avro can't handle BigDecimal as a number - it will throw an AvroRuntimeException such as: "Unknown datum type: java.math.BigDecimal: 38"
                         rec.put(i - 1, value.toString());
+
+                    } else if (value instanceof BigInteger) {
+                        // Check the precision of the BIGINT. Some databases allow arbitrary precision (> 19), but Avro won't handle that.
+                        // It the SQL type is BIGINT and the precision is between 0 and 19 (inclusive); if so, the BigInteger is likely a
+                        // long (and the schema says it will be), so try to get its value as a long.
+                        // Otherwise, Avro can't handle BigInteger as a number - it will throw an AvroRuntimeException
+                        // such as: "Unknown datum type: java.math.BigInteger: 38". In this case the schema is expecting a string.
+                        int precision = meta.getPrecision(i);
+                        if (javaSqlType == BIGINT) {
+                            if (precision < 0 || precision > MAX_DIGITS_IN_BIGINT) {
+                                rec.put(i - 1, value.toString());
+                            } else {
+                                try {
+                                    rec.put(i - 1, ((BigInteger) value).longValueExact());
+                                } catch (ArithmeticException ae) {
+                                    // Since the value won't fit in a long, convert it to a string
+                                    rec.put(i - 1, value.toString());
+                                }
+                            }
+                        } else {
+                            rec.put(i - 1, value.toString());
+                        }
 
                     } else if (value instanceof Number || value instanceof Boolean) {
                         rec.put(i - 1, value);
@@ -131,6 +159,9 @@ public class JdbcCommon {
                 }
                 dataFileWriter.append(rec);
                 nrOfRows += 1;
+
+                if(maxRows > 0 && nrOfRows == maxRows)
+                    break;
             }
 
             return nrOfRows;
@@ -196,7 +227,15 @@ public class JdbcCommon {
                     break;
 
                 case BIGINT:
-                    builder.name(meta.getColumnName(i)).type().unionOf().nullBuilder().endNull().and().longType().endUnion().noDefault();
+                    // Check the precision of the BIGINT. Some databases allow arbitrary precision (> 19), but Avro won't handle that.
+                    // If the precision > 19 (or is negative), use a string for the type, otherwise use a long. The object(s) will be converted
+                    // to strings as necessary
+                    int precision = meta.getPrecision(i);
+                    if (precision < 0 || precision > MAX_DIGITS_IN_BIGINT) {
+                        builder.name(meta.getColumnName(i)).type().unionOf().nullBuilder().endNull().and().stringType().endUnion().noDefault();
+                    } else {
+                        builder.name(meta.getColumnName(i)).type().unionOf().nullBuilder().endNull().and().longType().endUnion().noDefault();
+                    }
                     break;
 
                 // java.sql.RowId is interface, is seems to be database

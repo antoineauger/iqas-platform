@@ -18,6 +18,7 @@ package org.apache.nifi.remote;
 
 import org.apache.nifi.processor.ProcessSession;
 import org.apache.nifi.remote.protocol.FlowFileTransaction;
+import org.apache.nifi.remote.protocol.HandshakeProperties;
 import org.apache.nifi.util.NiFiProperties;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -38,14 +39,16 @@ public class TestHttpRemoteSiteListener {
 
     @Test
     public void testNormalTransactionProgress() {
-        HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance();
+        HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance(NiFiProperties.createBasicNiFiProperties(null, null));
         String transactionId = transactionManager.createTransaction();
 
         assertTrue("Transaction should be active.", transactionManager.isTransactionActive(transactionId));
 
         ProcessSession processSession = Mockito.mock(ProcessSession.class);
         FlowFileTransaction transaction = new FlowFileTransaction(processSession, null, null, 0, null, null);
-        transactionManager.holdTransaction(transactionId, transaction);
+        transactionManager.holdTransaction(transactionId, transaction, new HandshakeProperties());
+
+        assertNotNull(transactionManager.getHandshakenProperties(transactionId));
 
         transaction = transactionManager.finalizeTransaction(transactionId);
         assertNotNull(transaction);
@@ -56,17 +59,17 @@ public class TestHttpRemoteSiteListener {
 
     @Test
     public void testDuplicatedTransactionId() {
-        HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance();
+        HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance(NiFiProperties.createBasicNiFiProperties(null, null));
         String transactionId = transactionManager.createTransaction();
 
         assertTrue("Transaction should be active.", transactionManager.isTransactionActive(transactionId));
 
         ProcessSession processSession = Mockito.mock(ProcessSession.class);
         FlowFileTransaction transaction = new FlowFileTransaction(processSession, null, null, 0, null, null);
-        transactionManager.holdTransaction(transactionId, transaction);
+        transactionManager.holdTransaction(transactionId, transaction, null);
 
         try {
-            transactionManager.holdTransaction(transactionId, transaction);
+            transactionManager.holdTransaction(transactionId, transaction, null);
             fail("The same transaction id can't hold another transaction");
         } catch (IllegalStateException e) {
         }
@@ -75,7 +78,7 @@ public class TestHttpRemoteSiteListener {
 
     @Test
     public void testNoneExistingTransaction() {
-        HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance();
+        HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance(NiFiProperties.createBasicNiFiProperties(null, null));
 
         String transactionId = "does-not-exist-1";
         assertFalse("Transaction should not be active.", transactionManager.isTransactionActive(transactionId));
@@ -83,10 +86,10 @@ public class TestHttpRemoteSiteListener {
         ProcessSession processSession = Mockito.mock(ProcessSession.class);
         FlowFileTransaction transaction = new FlowFileTransaction(processSession, null, null, 0, null, null);
         try {
-            transactionManager.holdTransaction(transactionId, transaction);
+            transactionManager.holdTransaction(transactionId, transaction, null);
         } catch (IllegalStateException e) {
-            fail("Transaction can be held even if the transaction id is not valid anymore," +
-                    " in order to support large file or slow network.");
+            fail("Transaction can be held even if the transaction id is not valid anymore,"
+                    + " in order to support large file or slow network.");
         }
 
         transactionId = "does-not-exist-2";
@@ -96,6 +99,5 @@ public class TestHttpRemoteSiteListener {
         } catch (IllegalStateException e) {
         }
     }
-
 
 }

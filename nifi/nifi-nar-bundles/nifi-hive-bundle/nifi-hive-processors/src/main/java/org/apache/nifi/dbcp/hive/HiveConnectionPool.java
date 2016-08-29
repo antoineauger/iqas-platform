@@ -16,6 +16,8 @@
  */
 package org.apache.nifi.dbcp.hive;
 
+import java.io.File;
+
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -30,13 +32,15 @@ import org.apache.nifi.components.ValidationResult;
 import org.apache.nifi.controller.AbstractControllerService;
 import org.apache.nifi.controller.ConfigurationContext;
 import org.apache.nifi.hadoop.KerberosProperties;
-import org.apache.nifi.hadoop.KerberosTicketRenewer;
 import org.apache.nifi.hadoop.SecurityUtil;
+import org.apache.nifi.logging.ComponentLog;
 import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
 import org.apache.nifi.reporting.InitializationException;
-import org.apache.nifi.util.NiFiProperties;
-import org.apache.nifi.util.hive.HiveJdbcCommon;
+import org.apache.nifi.util.hive.AuthenticationFailedException;
+import org.apache.nifi.util.hive.HiveConfigurator;
+import org.apache.nifi.util.hive.HiveUtils;
+import org.apache.nifi.util.hive.ValidationResources;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
@@ -44,14 +48,16 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.nifi.controller.ControllerServiceInitializationContext;
+
 /**
- * Implementation for Database Connection Pooling Service used for Apache Hive connections. Apache DBCP is used for connection pooling functionality.
+ * Implementation for Database Connection Pooling Service used for Apache Hive
+ * connections. Apache DBCP is used for connection pooling functionality.
  */
 @Tags({"hive", "dbcp", "jdbc", "database", "connection", "pooling", "store"})
 @CapabilityDescription("Provides Database Connection Pooling Service for Apache Hive. Connections can be asked from pool and returned after usage.")
@@ -74,7 +80,7 @@ public class HiveConnectionPool extends AbstractControllerService implements Hiv
             .description("A file or comma separated list of files which contains the Hive configuration (hive-site.xml, e.g.). Without this, Hadoop "
                     + "will search the classpath for a 'hive-site.xml' file or will revert to a default configuration. Note that to enable authentication "
                     + "with Kerberos e.g., the appropriate properties must be set in the configuration files. Please see the Hive documentation for more details.")
-            .required(false).addValidator(HiveJdbcCommon.createMultipleFilesExistValidator()).build();
+            .required(false).addValidator(HiveUtils.createMultipleFilesExistValidator()).build();
 
     public static final PropertyDescriptor DB_USER = new PropertyDescriptor.Builder()
             .name("hive-db-user")
@@ -116,36 +122,38 @@ public class HiveConnectionPool extends AbstractControllerService implements Hiv
             .sensitive(false)
             .build();
 
-    static final long TICKET_RENEWAL_PERIOD = 60000;
+    private static final long TICKET_RENEWAL_PERIOD = 60000;
 
-    private volatile UserGroupInformation ugi;
-    private volatile KerberosTicketRenewer renewer;
+    private List<PropertyDescriptor> properties;
 
-    private final static List<PropertyDescriptor> properties;
-    private static KerberosProperties kerberosProperties;
-
-    private String  connectionUrl = "unknown";
+    private String connectionUrl = "unknown";
 
     // Holder of cached Configuration information so validation does not reload the same config over and over
     private final AtomicReference<ValidationResources> validationResourceHolder = new AtomicReference<>();
 
     private volatile BasicDataSource dataSource;
 
+    private volatile HiveConfigurator hiveConfigurator = new HiveConfigurator();
+    private volatile UserGroupInformation ugi;
+    private volatile File kerberosConfigFile = null;
+    private volatile KerberosProperties kerberosProperties;
 
-    static {
-        kerberosProperties = KerberosProperties.create(NiFiProperties.getInstance());
+    @Override
+    protected void init(final ControllerServiceInitializationContext context) {
         List<PropertyDescriptor> props = new ArrayList<>();
         props.add(DATABASE_URL);
         props.add(HIVE_CONFIGURATION_RESOURCES);
-        props.add(kerberosProperties.getKerberosPrincipal());
-        props.add(kerberosProperties.getKerberosKeytab());
         props.add(DB_USER);
         props.add(DB_PASSWORD);
         props.add(MAX_WAIT_TIME);
         props.add(MAX_TOTAL_CONNECTIONS);
-        properties = Collections.unmodifiableList(props);
-    }
 
+        kerberosConfigFile = context.getKerberosConfigurationFile();
+        kerberosProperties = new KerberosProperties(kerberosConfigFile);
+        props.add(kerberosProperties.getKerberosPrincipal());
+        props.add(kerberosProperties.getKerberosKeytab());
+        properties = props;
+    }
 
     @Override
     protected List<PropertyDescriptor> getSupportedPropertyDescriptors() {
@@ -160,22 +168,9 @@ public class HiveConnectionPool extends AbstractControllerService implements Hiv
 
         if (confFileProvided) {
             final String configFiles = validationContext.getProperty(HIVE_CONFIGURATION_RESOURCES).getValue();
-            ValidationResources resources = validationResourceHolder.get();
-
-            // if no resources in the holder, or if the holder has different resources loaded,
-            // then load the Configuration and set the new resources in the holder
-            if (resources == null || !configFiles.equals(resources.getConfigResources())) {
-                getLogger().debug("Reloading validation resources");
-                resources = new ValidationResources(configFiles, HiveJdbcCommon.getConfigurationFromFiles(configFiles));
-                validationResourceHolder.set(resources);
-            }
-
-            final Configuration hiveConfig = resources.getConfiguration();
             final String principal = validationContext.getProperty(kerberosProperties.getKerberosPrincipal()).getValue();
-            final String keytab = validationContext.getProperty(kerberosProperties.getKerberosKeytab()).getValue();
-
-            problems.addAll(KerberosProperties.validatePrincipalAndKeytab(
-                    this.getClass().getSimpleName(), hiveConfig, principal, keytab, getLogger()));
+            final String keyTab = validationContext.getProperty(kerberosProperties.getKerberosKeytab()).getValue();
+            problems.addAll(hiveConfigurator.validate(configFiles, principal, keyTab, validationResourceHolder, getLogger()));
         }
 
         return problems;
@@ -194,12 +189,14 @@ public class HiveConnectionPool extends AbstractControllerService implements Hiv
      * @throws InitializationException if unable to create a database connection
      */
     @OnEnabled
-    public void onConfigured(final ConfigurationContext context) throws InitializationException, IOException {
+    public void onConfigured(final ConfigurationContext context) throws InitializationException {
 
         connectionUrl = context.getProperty(DATABASE_URL).getValue();
 
+        ComponentLog log = getLogger();
+
         final String configFiles = context.getProperty(HIVE_CONFIGURATION_RESOURCES).getValue();
-        final Configuration hiveConfig = HiveJdbcCommon.getConfigurationFromFiles(configFiles);
+        final Configuration hiveConfig = hiveConfigurator.getConfigurationFromFiles(configFiles);
 
         // add any dynamic properties to the Hive configuration
         for (final Map.Entry<PropertyDescriptor, String> entry : context.getProperties().entrySet()) {
@@ -214,15 +211,14 @@ public class HiveConnectionPool extends AbstractControllerService implements Hiv
             final String principal = context.getProperty(kerberosProperties.getKerberosPrincipal()).getValue();
             final String keyTab = context.getProperty(kerberosProperties.getKerberosKeytab()).getValue();
 
-            getLogger().info("HBase Security Enabled, logging in as principal {} with keytab {}", new Object[]{principal, keyTab});
-            ugi = SecurityUtil.loginKerberos(hiveConfig, principal, keyTab);
+            log.info("Hive Security Enabled, logging in as principal {} with keytab {}", new Object[]{principal, keyTab});
+            try {
+                ugi = hiveConfigurator.authenticate(hiveConfig, principal, keyTab, TICKET_RENEWAL_PERIOD, log);
+            } catch (AuthenticationFailedException ae) {
+                log.error(ae.getMessage(), ae);
+            }
             getLogger().info("Successfully logged in as principal {} with keytab {}", new Object[]{principal, keyTab});
 
-            // if we got here then we have a ugi so start a renewer
-            if (ugi != null) {
-                final String id = getClass().getSimpleName();
-                renewer = SecurityUtil.startTicketRenewalThread(id, ugi, TICKET_RENEWAL_PERIOD, getLogger());
-            }
         }
         final String user = context.getProperty(DB_USER).getValue();
         final String passw = context.getProperty(DB_PASSWORD).getValue();
@@ -248,9 +244,7 @@ public class HiveConnectionPool extends AbstractControllerService implements Hiv
     @OnDisabled
     public void shutdown() {
 
-        if (renewer != null) {
-            renewer.stop();
-        }
+        hiveConfigurator.stopRenewer();
 
         try {
             dataSource.close();
@@ -288,24 +282,6 @@ public class HiveConnectionPool extends AbstractControllerService implements Hiv
     @Override
     public String getConnectionURL() {
         return connectionUrl;
-    }
-
-    private static class ValidationResources {
-        private final String configResources;
-        private final Configuration configuration;
-
-        public ValidationResources(String configResources, Configuration configuration) {
-            this.configResources = configResources;
-            this.configuration = configuration;
-        }
-
-        public String getConfigResources() {
-            return configResources;
-        }
-
-        public Configuration getConfiguration() {
-            return configuration;
-        }
     }
 
 }

@@ -40,9 +40,9 @@ import org.apache.nifi.cluster.protocol.NodeIdentifier;
 import org.apache.nifi.web.NiFiServiceFacade;
 import org.apache.nifi.web.api.dto.CounterDTO;
 import org.apache.nifi.web.api.dto.CountersDTO;
+import org.apache.nifi.web.api.entity.ComponentEntity;
 import org.apache.nifi.web.api.entity.CounterEntity;
 import org.apache.nifi.web.api.entity.CountersEntity;
-import org.apache.nifi.web.api.entity.Entity;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -57,10 +57,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -85,7 +83,7 @@ public class CountersResource extends ApplicationResource {
     private void authorizeCounters(final RequestAction action) {
         final NiFiUser user = NiFiUserUtils.getNiFiUser();
 
-        final Map<String,String> userContext;
+        final Map<String, String> userContext;
         if (!StringUtils.isBlank(user.getClientAddress())) {
             userContext = new HashMap<>();
             userContext.put(UserContextKeys.CLIENT_ADDRESS.name(), user.getClientAddress());
@@ -119,14 +117,12 @@ public class CountersResource extends ApplicationResource {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("") // necessary due to a bug in swagger
-    // TODO - @PreAuthorize("hasAnyRole('ROLE_MONITOR', 'ROLE_DFM', 'ROLE_ADMIN')")
     @ApiOperation(
             value = "Gets the current counters for this NiFi",
-            response = Entity.class,
+            notes = NON_GUARANTEED_ENDPOINT,
+            response = CountersEntity.class,
             authorizations = {
-                    @Authorization(value = "Read Only", type = "ROLE_MONITOR"),
-                    @Authorization(value = "Data Flow Manager", type = "ROLE_DFM"),
-                    @Authorization(value = "Administrator", type = "ROLE_ADMIN")
+                    @Authorization(value = "Read - /counters", type = "")
             }
     )
     @ApiResponses(
@@ -167,8 +163,8 @@ public class CountersResource extends ApplicationResource {
                 if (getReplicationTarget() == ReplicationTarget.CLUSTER_NODES) {
                     nodeResponse = getRequestReplicator().replicate(HttpMethod.GET, getAbsolutePath(), getRequestParameters(), getHeaders()).awaitMergedResponse();
                 } else {
-                    final Set<NodeIdentifier> coordinatorNode = Collections.singleton(getClusterCoordinatorNode());
-                    nodeResponse = getRequestReplicator().replicate(coordinatorNode, HttpMethod.GET, getAbsolutePath(), getRequestParameters(), getHeaders(), false).awaitMergedResponse();
+                    nodeResponse = getRequestReplicator().forwardToCoordinator(
+                            getClusterCoordinatorNode(), HttpMethod.GET, getAbsolutePath(), getRequestParameters(), getHeaders()).awaitMergedResponse();
                 }
 
                 final CountersEntity entity = (CountersEntity) nodeResponse.getUpdatedEntity();
@@ -204,19 +200,19 @@ public class CountersResource extends ApplicationResource {
      * Update the specified counter. This will reset the counter value to 0.
      *
      * @param httpServletRequest request
-     * @param id The id of the counter.
+     * @param id                 The id of the counter.
      * @return A counterEntity.
      */
     @PUT
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}")
-    // TODO - @PreAuthorize("hasRole('ROLE_DFM')")
     @ApiOperation(
             value = "Updates the specified counter. This will reset the counter value to 0",
+            notes = NON_GUARANTEED_ENDPOINT,
             response = CounterEntity.class,
             authorizations = {
-                    @Authorization(value = "Data Flow Manager", type = "ROLE_DFM")
+                    @Authorization(value = "Write - /counters", type = "")
             }
     )
     @ApiResponses(
@@ -236,27 +232,28 @@ public class CountersResource extends ApplicationResource {
             return replicate(HttpMethod.PUT);
         }
 
-        // handle expects request (usually from the cluster manager)
-        final boolean validationPhase = isValidationPhase(httpServletRequest);
-        if (validationPhase || !isTwoPhaseRequest(httpServletRequest)) {
-            // authorize access
-            serviceFacade.authorizeAccess(lookup -> {
-                authorizeCounters(RequestAction.WRITE);
-            });
-        }
-        if (validationPhase) {
-            return generateContinueResponse().build();
-        }
+        final ComponentEntity requestComponentEntity = new ComponentEntity();
+        requestComponentEntity.setId(id);
 
-        // reset the specified counter
-        final CounterDTO counter = serviceFacade.updateCounter(id);
+        return withWriteLock(
+                serviceFacade,
+                requestComponentEntity,
+                lookup -> {
+                    authorizeCounters(RequestAction.WRITE);
+                },
+                null,
+                (componentEntity) -> {
+                    // reset the specified counter
+                    final CounterDTO counter = serviceFacade.updateCounter(requestComponentEntity.getId());
 
-        // create the response entity
-        final CounterEntity entity = new CounterEntity();
-        entity.setCounter(counter);
+                    // create the response entity
+                    final CounterEntity entity = new CounterEntity();
+                    entity.setCounter(counter);
 
-        // generate the response
-        return clusterContext(generateOkResponse(entity)).build();
+                    // generate the response
+                    return clusterContext(generateOkResponse(entity)).build();
+                }
+        );
     }
 
     // setters

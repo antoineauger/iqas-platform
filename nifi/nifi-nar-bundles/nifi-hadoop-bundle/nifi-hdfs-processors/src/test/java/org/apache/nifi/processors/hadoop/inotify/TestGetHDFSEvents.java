@@ -34,6 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +58,7 @@ public class TestGetHDFSEvents {
     public void setup() {
         mockNiFiProperties = mock(NiFiProperties.class);
         when(mockNiFiProperties.getKerberosConfigurationFile()).thenReturn(null);
-        kerberosProperties = KerberosProperties.create(mockNiFiProperties);
+        kerberosProperties = new KerberosProperties(null);
         inotifyEventInputStream = mock(DFSInotifyEventInputStream.class);
         hdfsAdmin = mock(HdfsAdmin.class);
     }
@@ -133,7 +134,7 @@ public class TestGetHDFSEvents {
         runner.run();
 
         List<MockFlowFile> successfulFlowFiles = runner.getFlowFilesForRelationship(GetHDFSEvents.REL_SUCCESS);
-        assertEquals(6, successfulFlowFiles.size());
+        assertEquals(3, successfulFlowFiles.size());
         verify(eventBatch).getTxid();
         assertEquals("100", runner.getProcessContext().getStateManager().getState(Scope.CLUSTER).get("last.tx.id"));
     }
@@ -176,13 +177,13 @@ public class TestGetHDFSEvents {
         TestRunner runner = TestRunners.newTestRunner(processor);
 
         runner.setProperty(GetHDFSEvents.HDFS_PATH_TO_WATCH, "/some/path(/.*)?");
-        runner.setProperty(GetHDFSEvents.EVENT_TYPES, "create, metadata, rename");
+        runner.setProperty(GetHDFSEvents.EVENT_TYPES, "create, metadata");
         runner.run();
 
         List<MockFlowFile> successfulFlowFiles = runner.getFlowFilesForRelationship(GetHDFSEvents.REL_SUCCESS);
-        assertEquals(3, successfulFlowFiles.size());
+        assertEquals(2, successfulFlowFiles.size());
 
-        List<String> expectedEventTypes = Arrays.asList("CREATE", "METADATA", "RENAME");
+        List<String> expectedEventTypes = Arrays.asList("CREATE", "METADATA");
         for (MockFlowFile f : successfulFlowFiles) {
             String eventType = f.getAttribute(EventAttributes.EVENT_TYPE);
             assertTrue(expectedEventTypes.contains(eventType));
@@ -195,9 +196,9 @@ public class TestGetHDFSEvents {
     @Test
     public void makeSureExpressionLanguageIsWorkingProperlyWithinTheHdfsPathToWatch() throws Exception {
         Event[] events = new Event[] {
-                new Event.AppendEvent("/some/path/1/2/3/t.txt"),
-                new Event.AppendEvent("/some/path/1/2/4/t.txt"),
-                new Event.AppendEvent("/some/path/1/2/3/.t.txt")
+                new Event.CreateEvent.Builder().path("/some/path/1/2/3/t.txt").build(),
+                new Event.CreateEvent.Builder().path("/some/path/1/2/4/t.txt").build(),
+                new Event.CreateEvent.Builder().path("/some/path/1/2/3/.t.txt").build()
         };
 
         EventBatch eventBatch = mock(EventBatch.class);
@@ -211,7 +212,7 @@ public class TestGetHDFSEvents {
         TestRunner runner = TestRunners.newTestRunner(processor);
 
         runner.setProperty(GetHDFSEvents.HDFS_PATH_TO_WATCH, "/some/path/${literal(1)}/${literal(2)}/${literal(3)}/.*.txt");
-        runner.setProperty(GetHDFSEvents.EVENT_TYPES, "append");
+        runner.setProperty(GetHDFSEvents.EVENT_TYPES, "create");
         runner.setProperty(GetHDFSEvents.IGNORE_HIDDEN_FILES, "true");
         runner.run();
 
@@ -220,7 +221,7 @@ public class TestGetHDFSEvents {
 
         for (MockFlowFile f : successfulFlowFiles) {
             String eventType = f.getAttribute(EventAttributes.EVENT_TYPE);
-            assertTrue(eventType.equals("APPEND"));
+            assertTrue(eventType.equals("CREATE"));
         }
 
         verify(eventBatch).getTxid();
@@ -231,10 +232,7 @@ public class TestGetHDFSEvents {
         return new Event[]{
                     EventTestUtils.createCreateEvent(),
                     EventTestUtils.createCloseEvent(),
-                    EventTestUtils.createAppendEvent(),
-                    EventTestUtils.createRenameEvent(),
-                    EventTestUtils.createMetadataUpdateEvent(),
-                    EventTestUtils.createUnlinkEvent()
+                    EventTestUtils.createMetadataUpdateEvent()
             };
     }
 
@@ -255,7 +253,7 @@ public class TestGetHDFSEvents {
         }
 
         @Override
-        protected KerberosProperties getKerberosProperties() {
+        protected KerberosProperties getKerberosProperties(File kerberosConfigFile) {
             return testKerberosProperties;
         }
 

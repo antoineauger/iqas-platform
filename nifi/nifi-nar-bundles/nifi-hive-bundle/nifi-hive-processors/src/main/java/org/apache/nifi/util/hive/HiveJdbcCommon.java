@@ -29,11 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.nifi.components.ValidationContext;
-import org.apache.nifi.components.ValidationResult;
-import org.apache.nifi.components.Validator;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
@@ -59,6 +55,7 @@ import static java.sql.Types.DECIMAL;
 import static java.sql.Types.DOUBLE;
 import static java.sql.Types.FLOAT;
 import static java.sql.Types.INTEGER;
+import static java.sql.Types.JAVA_OBJECT;
 import static java.sql.Types.LONGNVARCHAR;
 import static java.sql.Types.LONGVARBINARY;
 import static java.sql.Types.LONGVARCHAR;
@@ -68,6 +65,7 @@ import static java.sql.Types.NVARCHAR;
 import static java.sql.Types.REAL;
 import static java.sql.Types.ROWID;
 import static java.sql.Types.SMALLINT;
+import static java.sql.Types.STRUCT;
 import static java.sql.Types.TIME;
 import static java.sql.Types.TIMESTAMP;
 import static java.sql.Types.TINYINT;
@@ -102,16 +100,24 @@ public class HiveJdbcCommon {
                 }
                 for (int i = 1; i <= nrOfColumns; i++) {
                     final int javaSqlType = meta.getColumnType(i);
-                    final Object value = rs.getObject(i);
+                    Object value = rs.getObject(i);
 
                     if (value == null) {
                         rec.put(i - 1, null);
 
-                    } else if (javaSqlType == BINARY || javaSqlType == VARBINARY || javaSqlType == LONGVARBINARY || javaSqlType == ARRAY || javaSqlType == BLOB || javaSqlType == CLOB) {
+                    } else if (javaSqlType == BINARY || javaSqlType == VARBINARY || javaSqlType == LONGVARBINARY || javaSqlType == BLOB || javaSqlType == CLOB) {
                         // bytes requires little bit different handling
-                        byte[] bytes = rs.getBytes(i);
-                        ByteBuffer bb = ByteBuffer.wrap(bytes);
-                        rec.put(i - 1, bb);
+                        ByteBuffer bb = null;
+                        if (value instanceof byte[]) {
+                            bb = ByteBuffer.wrap((byte[]) value);
+                        } else if (value instanceof ByteBuffer) {
+                            bb = (ByteBuffer) value;
+                        }
+                        if (bb != null) {
+                            rec.put(i - 1, bb);
+                        } else {
+                            throw new IOException("Could not process binary object of type " + value.getClass().getName());
+                        }
 
                     } else if (value instanceof Byte) {
                         // tinyint(1) type is returned by JDBC driver as java.sql.Types.TINYINT
@@ -125,9 +131,21 @@ public class HiveJdbcCommon {
                         // Avro can't handle BigDecimal and BigInteger as numbers - it will throw an AvroRuntimeException such as: "Unknown datum type: java.math.BigDecimal: 38"
                         rec.put(i - 1, value.toString());
 
-                    } else if (value instanceof Number || value instanceof Boolean) {
+                    } else if (value instanceof Number) {
+                        // Need to call the right getXYZ() method (instead of the getObject() method above), since Doubles are sometimes returned
+                        // when the JDBC type is 6 (Float) for example.
+                        if (javaSqlType == FLOAT) {
+                            value = rs.getFloat(i);
+                        } else if (javaSqlType == DOUBLE) {
+                            value = rs.getDouble(i);
+                        } else if (javaSqlType == INTEGER || javaSqlType == TINYINT || javaSqlType == SMALLINT) {
+                            value = rs.getInt(i);
+                        }
+
                         rec.put(i - 1, value);
 
+                    } else if (value instanceof Boolean) {
+                        rec.put(i - 1, value);
                     } else {
                         // The different types that we support are numbers (int, long, double, float),
                         // as well as boolean values and Strings. Since Avro doesn't provide
@@ -194,6 +212,9 @@ public class HiveJdbcCommon {
                 case NCHAR:
                 case NVARCHAR:
                 case VARCHAR:
+                case ARRAY:
+                case STRUCT:
+                case JAVA_OBJECT:
                     builder.name(columnName).type().unionOf().nullBuilder().endNull().and().stringType().endUnion().noDefault();
                     break;
 
@@ -257,7 +278,6 @@ public class HiveJdbcCommon {
                 case BINARY:
                 case VARBINARY:
                 case LONGVARBINARY:
-                case ARRAY:
                 case BLOB:
                 case CLOB:
                     builder.name(columnName).type().unionOf().nullBuilder().endNull().and().bytesType().endUnion().noDefault();
@@ -312,10 +332,19 @@ public class HiveJdbcCommon {
                     case NCHAR:
                     case NVARCHAR:
                     case VARCHAR:
-                        rowValues.add("\"" + StringEscapeUtils.escapeCsv(rs.getString(i)) + "\"");
+                        String valueString = rs.getString(i);
+                        if (valueString != null) {
+                            rowValues.add("\"" + StringEscapeUtils.escapeCsv(valueString) + "\"");
+                        } else {
+                            rowValues.add("");
+                        }
                         break;
                     default:
-                        rowValues.add(value.toString());
+                        if (value != null) {
+                            rowValues.add(value.toString());
+                        } else {
+                            rowValues.add("");
+                        }
                 }
             }
             // Write row values
@@ -333,34 +362,6 @@ public class HiveJdbcCommon {
      */
     public interface ResultSetRowCallback {
         void processRow(ResultSet resultSet) throws IOException;
-    }
-
-    /**
-     * Validates that one or more files exist, as specified in a single property.
-     */
-    public static Validator createMultipleFilesExistValidator() {
-        return new Validator() {
-
-            @Override
-            public ValidationResult validate(String subject, String input, ValidationContext context) {
-                final String[] files = input.split(",");
-                for (String filename : files) {
-                    try {
-                        final File file = new File(filename.trim());
-                        final boolean valid = file.exists() && file.isFile();
-                        if (!valid) {
-                            final String message = "File " + file + " does not exist or is not a file";
-                            return new ValidationResult.Builder().subject(subject).input(input).valid(false).explanation(message).build();
-                        }
-                    } catch (SecurityException e) {
-                        final String message = "Unable to access " + filename + " due to " + e.getMessage();
-                        return new ValidationResult.Builder().subject(subject).input(input).valid(false).explanation(message).build();
-                    }
-                }
-                return new ValidationResult.Builder().subject(subject).input(input).valid(true).build();
-            }
-
-        };
     }
 
     public static Configuration getConfigurationFromFiles(final String configFiles) {

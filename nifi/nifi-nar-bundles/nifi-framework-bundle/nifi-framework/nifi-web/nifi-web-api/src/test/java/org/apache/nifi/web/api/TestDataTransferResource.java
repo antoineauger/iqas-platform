@@ -64,6 +64,9 @@ public class TestDataTransferResource {
     private HttpServletRequest createCommonHttpServletRequest() {
         final HttpServletRequest req = mock(HttpServletRequest.class);
         doReturn("1").when(req).getHeader(eq(HttpHeaders.PROTOCOL_VERSION));
+        doReturn(new StringBuffer("http://nifi.example.com:8080")
+                .append("/nifi-api/data-transfer/output-ports/port-id/transactions/tx-id/flow-files"))
+                .when(req).getRequestURL();
         return req;
     }
 
@@ -175,7 +178,7 @@ public class TestDataTransferResource {
         final UriInfo uriInfo = mockUriInfo(locationUriStr);
         final InputStream inputStream = null;
 
-        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance();
+        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance(NiFiProperties.createBasicNiFiProperties(null, null));
         final String transactionId = transactionManager.createTransaction();
 
         final Response response = resource.extendPortTransactionTTL("input-ports", "port-id", transactionId, req, res, context, uriInfo, inputStream);
@@ -206,7 +209,7 @@ public class TestDataTransferResource {
         final ServletContext context = null;
         final InputStream inputStream = null;
 
-        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance();
+        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance(NiFiProperties.createBasicNiFiProperties(null, null));
         final String transactionId = transactionManager.createTransaction();
 
         final Response response = resource.receiveFlowFiles("port-id", transactionId, req, context, inputStream);
@@ -233,7 +236,7 @@ public class TestDataTransferResource {
         final ServletContext context = null;
         final InputStream inputStream = null;
 
-        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance();
+        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance(NiFiProperties.createBasicNiFiProperties(null, null));
         final String transactionId = transactionManager.createTransaction();
 
         final Response response = resource.receiveFlowFiles("port-id", transactionId, req, context, inputStream);
@@ -252,7 +255,7 @@ public class TestDataTransferResource {
         final ServletContext context = null;
         final InputStream inputStream = null;
 
-        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance();
+        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance(NiFiProperties.createBasicNiFiProperties(null, null));
         final String transactionId = transactionManager.createTransaction();
 
         final Response response = resource.commitInputPortTransaction(ResponseCode.CONFIRM_TRANSACTION.getCode(), "port-id", transactionId, req, context, inputStream);
@@ -275,7 +278,7 @@ public class TestDataTransferResource {
         final HttpServletResponse res = null;
         final InputStream inputStream = null;
 
-        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance();
+        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance(NiFiProperties.createBasicNiFiProperties(null, null));
         final String transactionId = transactionManager.createTransaction();
 
         final Response response = resource.transferFlowFiles("port-id", transactionId, req, res, context, inputStream);
@@ -297,7 +300,7 @@ public class TestDataTransferResource {
         final ServletContext context = null;
         final InputStream inputStream = null;
 
-        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance();
+        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance(NiFiProperties.createBasicNiFiProperties(null, null));
         final String transactionId = transactionManager.createTransaction();
 
         final Response response = resource.commitOutputPortTransaction(ResponseCode.CONFIRM_TRANSACTION.getCode(),
@@ -323,7 +326,7 @@ public class TestDataTransferResource {
         final ServletContext context = null;
         final InputStream inputStream = null;
 
-        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance();
+        final HttpRemoteSiteListener transactionManager = HttpRemoteSiteListener.getInstance(NiFiProperties.createBasicNiFiProperties(null, null));
         final String transactionId = transactionManager.createTransaction();
 
         final Response response = resource.commitOutputPortTransaction(ResponseCode.CONFIRM_TRANSACTION.getCode(),
@@ -339,7 +342,7 @@ public class TestDataTransferResource {
 
     private DataTransferResource getDataTransferResource() {
         final HttpFlowFileServerProtocol serverProtocol = mock(HttpFlowFileServerProtocol.class);
-        final DataTransferResource resource = new DataTransferResource() {
+        final DataTransferResource resource = new DataTransferResource(NiFiProperties.createBasicNiFiProperties(null, null)) {
             @Override
             protected void authorizeDataTransfer(ResourceType resourceType, String identifier) {
             }
@@ -349,7 +352,7 @@ public class TestDataTransferResource {
                 return serverProtocol;
             }
         };
-        resource.setProperties(NiFiProperties.getInstance());
+        resource.setProperties(NiFiProperties.createBasicNiFiProperties(null, null));
         return resource;
     }
 }

@@ -16,8 +16,13 @@
  */
 
 /**
- * Create a new dialog. The options are specified in the following
- * format:
+ * Create a new dialog.
+ *
+ * If the height, width, and fullscreen breakpoints options are not set this plugin will look for (and use)
+ * any CSS defined styles for height, min/max-height, width, min/max-width. If no CSS styles are defined then the
+ * plugin will attempt to calculate these values when the dialog is first opened (based on screen size).
+ *
+ * The options are specified in the following format:
  *
  * {
  *   header: true,
@@ -49,7 +54,18 @@
  *      close: closeHandler,
  *      open: openHandler,
  *      resize: resizeHandler
- *   }
+ *   },
+ *   height: "55%", //optional. Property can also be set with css (accepts 'px' or '%' values)
+ *   width: "34%", //optional. Property can also be set with css (accepts 'px' or '%' values)
+ *   min-height: "420px", //optional, defaults to 'height'. Property  can also be set with css (accepts 'px' values)
+ *   min-width: "470px" //optional, defaults to 'width'. Property can also be set with css (accepts 'px' values)
+ *   responsive: {
+ *       x: "true", //optional, default true
+ *       y: "true", //optional, default true
+ *       fullscreen-height: "420px", //optional, default is original dialog height (accepts 'px' values)
+ *       fullscreen-width: "470px", //optional, default is original dialog width (accepts 'px' values)
+ *      },
+ *      glasspane: "#728E9B" //optional, sets the color of modal glasspane...default if unset is the dialog header color
  * }
  *
  * The content of the dialog MUST be contained in an element with the class `dialog-content`
@@ -60,27 +76,6 @@
  *      //Dialog Content....
  *  </div>
  * </div>
- *
- * The height, width, and fullscreen breakpoints can be set on the dialog element through the
- * HTML5 `data-nf-dialog` attribute (These options must be a valid JSON format represented as a string).
- * If the `data-nf-dialog` attributes are not set this plugin will look for any CSS styles defined
- * for height, min/max-height, width, min/max-width and set them on the `data-nf-dialog` attribute.
- * If no styles are set on the dialog then the plugin will set the `data-nf-dialog` attributes to values
- * calculated when the dialog is first opened. Options are specified in the following format:
- *
- *  {
- *      "height": "55%", //optional. Property can also be set with css (accepts 'px' or '%' values)
- *      "width":"34%", //optional. Property can also be set with css (accepts 'px' or '%' values)
- *      "min-height": "420px", //optional, defaults to 'height'. Property  can also be set with css (accepts 'px' values)
- *      "min-width": "470px" //optional, defaults to 'width'. Property can also be set with css (accepts 'px' values)
- *      "responsive": {
- *          "x": "true", //optional, default true
- *          "y": "true", //optional, default true
- *          "fullscreen-height": "420px", //optional, default is original dialog height (accepts 'px' values)
- *          "fullscreen-width": "470px", //optional, default is original dialog width (accepts 'px' values)
- *      },
- *      "glasspane": "false" //optional, displays a modal glasspane behind the dialog...default true
- *  }
  *
  * @argument {jQuery} $
  */
@@ -108,15 +103,16 @@
             var buttonWrapper = $('<div class="dialog-buttons"></div>');
             var button;
             $.each(buttonModel, function (i, buttonConfig) {
+                var clazz = isDefinedAndNotNull(buttonConfig.clazz) ? buttonConfig.clazz : '';
                 if (buttonConfig.color) {
-                    button = $('<div class="button" style="color:' + buttonConfig.color.text + '; background:' + buttonConfig.color.base + ';"></div>').text(buttonConfig.buttonText);
+                    button = $('<div class="button ' + clazz + '" style="color:' + buttonConfig.color.text + '; background:' + buttonConfig.color.base + ';"><span>' + buttonConfig.buttonText + '</span></div>');
                     button.hover(function () {
                         $(this).css("background-color", buttonConfig.color.hover);
                     }, function () {
                         $(this).css("background-color", buttonConfig.color.base);
                     });
                 } else {
-                    button = $('<div class="button"></div>').text(buttonConfig.buttonText)
+                    button = $('<div class="button ' + clazz + '"><span>' + buttonConfig.buttonText + '</span></div>');
                 }
                 button.click(function () {
                     var handler = $(this).data('handler');
@@ -138,65 +134,41 @@
          */
         init: function (options) {
             return this.each(function () {
+                // get the combo
+                var dialog = $(this).addClass('dialog cancellable modal');
+                dialog.css('display', 'none');
+
+                var nfDialog = {};
+                if (isDefinedAndNotNull(dialog.data('nf-dialog'))) {
+                    nfDialog = dialog.data('nf-dialog');
+                }
+
                 // ensure the options have been properly specified
                 if (isDefinedAndNotNull(options)) {
 
-                    // get the combo
-                    var dialog = $(this).addClass('dialog cancellable modal');
-                    dialog.css('display', 'none');
-
-                    // determine if dialog needs a header
-                    if (!isDefinedAndNotNull(options.header) || options.header) {
-                        var dialogHeaderText = $('<span class="dialog-header-text"></span>');
-                        var dialogHeader = $('<div class="dialog-header"></div>').prepend(dialogHeaderText);
-
-                        // determine if the specified header text is null
-                        if (!isBlank(options.headerText)) {
-                            dialogHeaderText.text(options.headerText);
-                        }
-
-                        dialog.prepend(dialogHeader);
-                    }
-
-                    var nfDialog = {};
-                    if (isDefinedAndNotNull(dialog.data('nf-dialog'))) {
-                        nfDialog = dialog.data('nf-dialog');
-                    }
-
-                    // save the close handler
-                    if (isDefinedAndNotNull(options.handler)) {
-                        if (isDefinedAndNotNull(options.handler.close)) {
-                            nfDialog.close = options.handler.close;
-                        }
-                    }
-
-                    // save the open handler
-                    if (isDefinedAndNotNull(options.handler)) {
-                        if (isDefinedAndNotNull(options.handler.open)) {
-                            nfDialog.open = options.handler.open;
-                        }
-                    }
-
-                    // save the open handler
-                    if (isDefinedAndNotNull(options.handler)) {
-                        if (isDefinedAndNotNull(options.handler.resize)) {
-                            nfDialog.resize = options.handler.resize;
-                        }
-                    }
-
-                    // save the scrollable class name
-                    if (isDefinedAndNotNull(options.scrollableContentStyle)) {
-                        nfDialog.scrollableContentStyle = options.scrollableContentStyle;
-                    }
-
-                    // determine if dialog needs footer/buttons
-                    if (!isDefinedAndNotNull(options.footer) || options.footer) {
-                        // add the buttons
-                        addButtons(dialog, options.buttons);
-                    }
+                    $.extend(nfDialog, options);
 
                     //persist data attribute
                     dialog.data('nfDialog', nfDialog);
+                }
+
+                // determine if dialog needs a header
+                if (!isDefinedAndNotNull(nfDialog.header) || nfDialog.header) {
+                    var dialogHeaderText = $('<span class="dialog-header-text"></span>');
+                    var dialogHeader = $('<div class="dialog-header"></div>').prepend(dialogHeaderText);
+
+                    // determine if the specified header text is null
+                    if (!isBlank(nfDialog.headerText)) {
+                        dialogHeaderText.text(nfDialog.headerText);
+                    }
+
+                    dialog.prepend(dialogHeader);
+                }
+
+                // determine if dialog needs footer/buttons
+                if (!isDefinedAndNotNull(nfDialog.footer) || nfDialog.footer) {
+                    // add the buttons
+                    addButtons(dialog, nfDialog.buttons);
                 }
             });
         },
@@ -213,7 +185,10 @@
                 if (isDefinedAndNotNull($(this).data('nf-dialog'))) {
                     nfDialog = $(dialog).data('nf-dialog');
                 }
-                nfDialog.close = handler;
+                if (!isDefinedAndNotNull(nfDialog.handler)){
+                    nfDialog.handler = {};
+                }
+                nfDialog.handler.close = handler;
 
                 //persist data attribute
                 $(dialog).data('nfDialog', nfDialog);
@@ -232,7 +207,10 @@
                 if (isDefinedAndNotNull($(this).data('nf-dialog'))) {
                     nfDialog = $(dialog).data('nf-dialog');
                 }
-                nfDialog.open = handler;
+                if (!isDefinedAndNotNull(nfDialog.handler)){
+                    nfDialog.handler = {};
+                }
+                nfDialog.handler.open = handler;
 
                 //persist data attribute
                 $(dialog).data('nfDialog', nfDialog);
@@ -251,7 +229,10 @@
                 if (isDefinedAndNotNull($(this).data('nf-dialog'))) {
                     nfDialog = $(dialog).data('nf-dialog');
                 }
-                nfDialog.resize = handler;
+                if (!isDefinedAndNotNull(nfDialog.handler)){
+                    nfDialog.handler = {};
+                }
+                nfDialog.handler.resize = handler;
 
                 //persist data attribute
                 $(dialog).data('nfDialog', nfDialog);
@@ -431,10 +412,12 @@
                 }
             }
 
-            // invoke the handler
-            var handler = dialog.data('nf-dialog').resize;
-            if (isDefinedAndNotNull(handler) && typeof handler === 'function') {
-                handler.call(dialog);
+            if (isDefinedAndNotNull(nfDialog.handler)) {
+                var handler = nfDialog.handler.resize;
+                if (isDefinedAndNotNull(handler) && typeof handler === 'function') {
+                    // invoke the handler
+                    handler.call(dialog);
+                }
             }
         },
 
@@ -469,22 +452,23 @@
                 nfDialog = dialog.data('nf-dialog');
             }
 
-            // determine if dialog needs a glass pane overlay
-            var hasGlasspane;
+            var glasspane;
             if (isDefinedAndNotNull(nfDialog.glasspane)) {
-                hasGlasspane = nfDialog.glasspane;
+                glasspane = nfDialog.glasspane;
             } else {
-                nfDialog.glasspane = hasGlasspane = true;
+                nfDialog.glasspane = glasspane = dialog.find('.dialog-header').css('background-color'); //default to header color
             }
 
-            //create glass pane overlay
-            if(hasGlasspane && (top === window)) {
-                // build the dialog modal
-                var modalGlassMarkup = '<div data-nf-dialog-parent="' + dialog.attr('id') + '" class="modal-glass"></div>';
+            if(top !== window || !isDefinedAndNotNull(nfDialog.glasspane)) {
+                nfDialog.glasspane = glasspane = 'transparent';
+            }
 
-                var modalGlass = $(modalGlassMarkup);
-
-                modalGlass.css('z-index', zIndex - 1).appendTo($('body'));
+            if (!$('body').find("[data-nf-dialog-parent='" + dialog.attr('id') + "']").is(':visible')) {
+                //create glass pane overlay
+                $('<div></div>').attr('data-nf-dialog-parent', dialog.attr('id')).addClass("modal-glass").css({
+                    "background-color": glasspane,
+                    "z-index": zIndex - 1
+                }).appendTo($('body'));
             }
 
             //persist data attribute
@@ -497,10 +481,12 @@
                     dialog.modal('resize');
                     dialog.center();
 
-                    // invoke the handler
-                    var handler = dialog.data('nf-dialog').open;
-                    if (isDefinedAndNotNull(handler) && typeof handler === 'function') {
-                        handler.call(dialog);
+                    if (isDefinedAndNotNull(nfDialog.handler)) {
+                        var handler = nfDialog.handler.open;
+                        if (isDefinedAndNotNull(handler) && typeof handler === 'function') {
+                            // invoke the handler
+                            handler.call(dialog);
+                        }
                     }
                 }
             });
@@ -512,18 +498,26 @@
         hide: function () {
             return this.each(function () {
                 var dialog = $(this);
-                if (dialog.is(':visible')) {
-                    // remove the modal glass pane overlay
-                    $('body').find("[data-nf-dialog-parent='" + dialog.attr('id') + "']").remove();
 
-                    // hide the dialog
-                    dialog.hide();
+                var nfDialog = {};
+                if (isDefinedAndNotNull(dialog.data('nf-dialog'))) {
+                    nfDialog = dialog.data('nf-dialog');
+                }
 
-                    // invoke the handler
-                    var handler = dialog.data('nf-dialog').close;
+                if (isDefinedAndNotNull(nfDialog.handler)) {
+                    var handler = nfDialog.handler.close;
                     if (isDefinedAndNotNull(handler) && typeof handler === 'function') {
+                        // invoke the handler
                         handler.call(dialog);
                     }
+                }
+
+                // remove the modal glass pane overlay
+                $('body').find("[data-nf-dialog-parent='" + dialog.attr('id') + "']").remove();
+
+                if (dialog.is(':visible')) {
+                    // hide the dialog
+                    dialog.hide();
                 }
             });
         }

@@ -53,43 +53,38 @@ nf.CanvasUtils = (function () {
     
     var moveComponents = function (components, groupId) {
         return $.Deferred(function (deferred) {
-            // ensure the current selection is eligible for move into the specified group
-            nf.CanvasUtils.eligibleForMove(components, groupId).done(function () {
-                // create a snippet for the specified components
-                var snippet = nf.Snippet.marshal(components);
-                nf.Snippet.create(snippet).done(function (response) {
-                    // move the snippet into the target
-                    nf.Snippet.move(response.snippet.id, groupId).done(function () {
-                        var componentMap = d3.map();
+            // create a snippet for the specified components
+            var snippet = nf.Snippet.marshal(components);
+            nf.Snippet.create(snippet).done(function (response) {
+                // move the snippet into the target
+                nf.Snippet.move(response.snippet.id, groupId).done(function () {
+                    var componentMap = d3.map();
 
-                        // add the id to the type's array
-                        var addComponent = function (type, id) {
-                            if (!componentMap.has(type)) {
-                                componentMap.set(type, []);
-                            }
-                            componentMap.get(type).push(id);
-                        };
+                    // add the id to the type's array
+                    var addComponent = function (type, id) {
+                        if (!componentMap.has(type)) {
+                            componentMap.set(type, []);
+                        }
+                        componentMap.get(type).push(id);
+                    };
 
-                        // go through each component being removed
-                        components.each(function (d) {
-                            addComponent(d.type, d.id);
-                        });
-
-                        // refresh all component types as necessary (handle components that have been removed)
-                        componentMap.forEach(function (type, ids) {
-                            nf[type].remove(ids);
-                        });
-
-                        // refresh the birdseye
-                        nf.Birdseye.refresh();
-                        deferred.resolve();
-                    }).fail(nf.Common.handleAjaxError).fail(function () {
-                        deferred.reject();
+                    // go through each component being removed
+                    components.each(function (d) {
+                        addComponent(d.type, d.id);
                     });
+
+                    // refresh all component types as necessary (handle components that have been removed)
+                    componentMap.forEach(function (type, ids) {
+                        nf[type].remove(ids);
+                    });
+
+                    // refresh the birdseye
+                    nf.Birdseye.refresh();
+                    deferred.resolve();
                 }).fail(nf.Common.handleAjaxError).fail(function () {
                     deferred.reject();
                 });
-            }).fail(function () {
+            }).fail(nf.Common.handleAjaxError).fail(function () {
                 deferred.reject();
             });
         }).promise();
@@ -258,9 +253,7 @@ nf.CanvasUtils = (function () {
          * @param selection     selection
          */
         editable: function (selection) {
-            var selectionData = selection.datum();
-            
-            if (selectionData.permissions.canWrite && selectionData.permissions.canRead) {
+            if (nf.CanvasUtils.canModify(selection)) {
                 if (!selection.classed('connectable')) {
                     selection.call(nf.Connectable.activate);
                 }
@@ -427,7 +420,7 @@ nf.CanvasUtils = (function () {
          */
         activeThreadCount: function (selection, d, setOffset) {
             // if there is active threads show the count, otherwise hide
-            if (nf.Common.isDefinedAndNotNull(d.status) && d.status.aggregateSnapshot.activeThreadCount > 0) {
+            if (d.status.aggregateSnapshot.activeThreadCount > 0) {
                 // update the active thread count
                 var activeThreadCount = selection.select('text.active-thread-count')
                         .text(function () {
@@ -483,45 +476,55 @@ nf.CanvasUtils = (function () {
         bulletins: function (selection, d, getTooltipContainer, offset) {
             offset = nf.Common.isDefinedAndNotNull(offset) ? offset : 0;
 
-            // remove any existing tip if necessary
+            // get the tip
             var tip = d3.select('#bulletin-tip-' + d.id);
-            if (!tip.empty()) {
-                tip.remove();
+
+            var hasBulletins = false;
+            if (!nf.Common.isEmpty(d.bulletins)) {
+                // format the bulletins
+                var bulletins = nf.Common.getFormattedBulletins(d.bulletins);
+                hasBulletins = bulletins.length > 0;
+
+                if (hasBulletins) {
+                    // create the unordered list based off the formatted bulletins
+                    var list = nf.Common.formatUnorderedList(bulletins);
+                }
             }
 
             // if there are bulletins show them, otherwise hide
-            if (!nf.Common.isEmpty(d.bulletins)) {
+            if (hasBulletins) {
                 // update the tooltip
                 selection.select('text.bulletin-icon')
                         .each(function () {
-                            // if there are bulletins generate a tooltip
-                            tip = getTooltipContainer().append('div')
+                            // create the tip if necessary
+                            if (tip.empty()) {
+                                tip = getTooltipContainer().append('div')
                                     .attr('id', function () {
                                         return 'bulletin-tip-' + d.id;
                                     })
-                                    .attr('class', 'tooltip nifi-tooltip')
-                                    .html(function () {
-                                        // format the bulletins
-                                        var bulletins = nf.Common.getFormattedBulletins(d.bulletins);
-
-                                        // create the unordered list based off the formatted bulletins
-                                        var list = nf.Common.formatUnorderedList(bulletins);
-                                        if (list === null || list.length === 0) {
-                                            return '';
-                                        } else {
-                                            return $('<div></div>').append(list).html();
-                                        }
-                                    });
+                                    .attr('class', 'tooltip nifi-tooltip');
+                            }
 
                             // add the tooltip
+                            tip.html(function () {
+                                return $('<div></div>').append(list).html();
+                            });
+
                             nf.CanvasUtils.canvasTooltip(tip, d3.select(this));
                         });
 
                 // update the tooltip background
-                selection.select('rect.bulletin-background').classed('has-bulletins', true);
+                selection.select('text.bulletin-icon').style("visibility", "visible");
+                selection.select('rect.bulletin-background').style("visibility", "visible");
             } else {
+                // clean up if necessary
+                if (!tip.empty()) {
+                    tip.remove();
+                }
+
                 // update the tooltip background
-                selection.select('rect.bulletin-background').classed('has-bulletins', false);
+                selection.select('text.bulletin-icon').style("visibility", "hidden");
+                selection.select('rect.bulletin-background').style("visibility", "hidden");
             }
         },
         
@@ -551,6 +554,11 @@ nf.CanvasUtils = (function () {
          */
         isColorable: function(selection) {
             if (selection.empty()) {
+                return false;
+            }
+
+            // require read and write permissions
+            if (nf.CanvasUtils.canRead(selection) === false || nf.CanvasUtils.canModify(selection) === false) {
                 return false;
             }
             
@@ -671,15 +679,22 @@ nf.CanvasUtils = (function () {
          * @return {boolean}                    Whether the selection is runnable
          */
         isRunnable: function (selection) {
-            var runnable = false;
+            if (selection.size() !== 1) {
+                return false;
+            }
 
+            if (nf.CanvasUtils.isProcessGroup(selection)) {
+                return true;
+            }
+
+            if (nf.CanvasUtils.canModify(selection) === false) {
+                return false;
+            }
+
+            var runnable = false;
             var selectionData = selection.datum();
-            if (nf.CanvasUtils.isProcessor(selection)) {
-                runnable = nf.CanvasUtils.supportsModification(selection) && nf.Common.isEmpty(selectionData.component.validationErrors);
-            } else if (nf.CanvasUtils.isInputPort(selection) || nf.CanvasUtils.isOutputPort(selection)) {
-                runnable = nf.CanvasUtils.supportsModification(selection);
-            } else if (nf.CanvasUtils.isProcessGroup(selection)) {
-                runnable = true;
+            if (nf.CanvasUtils.isProcessor(selection) || nf.CanvasUtils.isInputPort(selection) || nf.CanvasUtils.isOutputPort(selection)) {
+                runnable = nf.CanvasUtils.supportsModification(selection) && selectionData.status.aggregateSnapshot.runStatus === 'Stopped';
             }
 
             return runnable;
@@ -714,13 +729,22 @@ nf.CanvasUtils = (function () {
          * @return {boolean}                    Whether the selection is runnable
          */
         isStoppable: function (selection) {
-            var stoppable = false;
+            if (selection.size() !== 1) {
+                return false;
+            }
 
+            if (nf.CanvasUtils.isProcessGroup(selection)) {
+                return true;
+            }
+
+            if (nf.CanvasUtils.canModify(selection) === false) {
+                return false;
+            }
+
+            var stoppable = false;
             var selectionData = selection.datum();
             if (nf.CanvasUtils.isProcessor(selection) || nf.CanvasUtils.isInputPort(selection) || nf.CanvasUtils.isOutputPort(selection)) {
-                stoppable = selectionData.component.state === 'RUNNING';
-            } else if (nf.CanvasUtils.isProcessGroup(selection)) {
-                stoppable = true;
+                stoppable = selectionData.status.aggregateSnapshot.runStatus === 'Running';
             }
 
             return stoppable;
@@ -739,7 +763,7 @@ nf.CanvasUtils = (function () {
                 // ensure its a processor, input port, or output port and supports modification and is disabled (can enable)
                 return ((nf.CanvasUtils.isProcessor(selected) || nf.CanvasUtils.isInputPort(selected) || nf.CanvasUtils.isOutputPort(selected)) &&
                         nf.CanvasUtils.supportsModification(selected) &&
-                        selectedData.component.state === 'DISABLED');
+                        selectedData.status.aggregateSnapshot.runStatus === 'Disabled');
             });
         },
 
@@ -750,6 +774,10 @@ nf.CanvasUtils = (function () {
          */
         canEnable: function (selection) {
             if (selection.empty()) {
+                return false;
+            }
+
+            if (nf.CanvasUtils.canModify(selection) === false) {
                 return false;
             }
 
@@ -769,7 +797,7 @@ nf.CanvasUtils = (function () {
                 // ensure its a processor, input port, or output port and supports modification and is stopped (can disable)
                 return ((nf.CanvasUtils.isProcessor(selected) || nf.CanvasUtils.isInputPort(selected) || nf.CanvasUtils.isOutputPort(selected)) &&
                         nf.CanvasUtils.supportsModification(selected) &&
-                        selectedData.component.state === 'STOPPED');
+                        selectedData.status.aggregateSnapshot.runStatus === 'Stopped');
             });
         },
 
@@ -780,6 +808,10 @@ nf.CanvasUtils = (function () {
          */
         canDisable: function (selection) {
             if (selection.empty()) {
+                return false;
+            }
+
+            if (nf.CanvasUtils.canModify(selection) === false) {
                 return false;
             }
 
@@ -813,6 +845,14 @@ nf.CanvasUtils = (function () {
          * @argument {selection} selection      The selection
          */
         canStartTransmitting: function (selection) {
+            if (selection.size() !== 1) {
+                return false;
+            }
+
+            if (nf.CanvasUtils.canModify(selection) === false || nf.CanvasUtils.canRead(selection) === false) {
+                return false;
+            }
+
             return nf.CanvasUtils.isRemoteProcessGroup(selection);
         },
         
@@ -842,6 +882,14 @@ nf.CanvasUtils = (function () {
          * @argument {selection} selection      The selection
          */
         canStopTransmitting: function (selection) {
+            if (selection.size() !== 1) {
+                return false;
+            }
+
+            if (nf.CanvasUtils.canModify(selection) === false || nf.CanvasUtils.canRead(selection) === false) {
+                return false;
+            }
+
             return nf.CanvasUtils.isRemoteProcessGroup(selection);
         },
 
@@ -872,11 +920,67 @@ nf.CanvasUtils = (function () {
          * @return {boolean}            Whether the selection is deletable
          */
         isDeletable: function (selection) {
-            if (selection.empty()) {
+            if (selection.size() !== 1) {
+                return false;
+            }
+
+            if (nf.CanvasUtils.canModify(selection) === false) {
                 return false;
             }
 
             return nf.CanvasUtils.supportsModification(selection);
+        },
+
+        /**
+         * Determines whether the specified selection is configurable.
+         *
+         * @param selection
+         */
+        isConfigurable: function (selection) {
+            // ensure the correct number of components are selected
+            if (selection.size() !== 1) {
+                return false;
+            }
+
+            if (nf.CanvasUtils.isProcessGroup(selection)) {
+                return true;
+            }
+            if (nf.CanvasUtils.canRead(selection) === false || nf.CanvasUtils.canModify(selection) === false) {
+                return false;
+            }
+            if (nf.CanvasUtils.isFunnel(selection)) {
+                return false;
+            }
+
+            return nf.CanvasUtils.supportsModification(selection);
+        },
+
+        /**
+         * Determines whether the specified selection has details.
+         *
+         * @param selection
+         */
+        hasDetails: function (selection) {
+            // ensure the correct number of components are selected
+            if (selection.size() !== 1) {
+                return false;
+            }
+
+            if (nf.CanvasUtils.isProcessGroup(selection)) {
+                return true;
+            }
+            if (nf.CanvasUtils.canRead(selection) === false) {
+                return false;
+            }
+            if (nf.CanvasUtils.canModify(selection)) {
+                if (nf.CanvasUtils.isProcessor(selection) || nf.CanvasUtils.isInputPort(selection) || nf.CanvasUtils.isOutputPort(selection) || nf.CanvasUtils.isRemoteProcessGroup(selection) || nf.CanvasUtils.isConnection(selection)) {
+                    return !nf.CanvasUtils.isConfigurable(selection);
+                }
+            } else {
+                return nf.CanvasUtils.isProcessor(selection) || nf.CanvasUtils.isConnection(selection) || nf.CanvasUtils.isInputPort(selection) || nf.CanvasUtils.isOutputPort(selection) || nf.CanvasUtils.isRemoteProcessGroup(selection);
+            }
+
+            return false;
         },
 
         /**
@@ -888,7 +992,7 @@ nf.CanvasUtils = (function () {
         canModify: function (selection) {
             var selectionSize = selection.size();
             var writableSize = selection.filter(function (d) {
-                return d.permissions.canWrite && d.permissions.canRead;
+                return d.permissions.canWrite;
             }).size();
             
             return selectionSize === writableSize;
@@ -922,24 +1026,11 @@ nf.CanvasUtils = (function () {
             // get the selection data
             var selectionData = selection.datum();
 
-            // check access policies first
-            if (selectionData.permissions.canRead === false || selectionData.permissions.canWrite === false) {
-                return false;
-            }
-
             var supportsModification = false;
             if (nf.CanvasUtils.isProcessor(selection) || nf.CanvasUtils.isInputPort(selection) || nf.CanvasUtils.isOutputPort(selection)) {
-                if (nf.Common.isDefinedAndNotNull(selectionData.status)) {
-                    supportsModification = !(selectionData.component.state === 'RUNNING' || nf.Common.isDefinedAndNotNull(selectionData.status.activeThreadCount) && selectionData.status.activeThreadCount > 0);
-                } else {
-                    supportsModification = selectionData.component.state !== 'RUNNING';
-                }
+                supportsModification = !(selectionData.status.aggregateSnapshot.runStatus === 'Running' || selectionData.status.aggregateSnapshot.activeThreadCount > 0);
             } else if (nf.CanvasUtils.isRemoteProcessGroup(selection)) {
-                if (nf.Common.isDefinedAndNotNull(selectionData.status)) {
-                    supportsModification = !(selectionData.component.transmitting === true || nf.Common.isDefinedAndNotNull(selectionData.status.activeThreadCount) && selectionData.status.activeThreadCount > 0);
-                } else {
-                    supportsModification = selectionData.component.transmitting !== true;
-                }
+                supportsModification = !(selectionData.status.transmissionStatus === 'Transmitting' || selectionData.status.aggregateSnapshot.activeThreadCount > 0);
             } else if (nf.CanvasUtils.isProcessGroup(selection)) {
                 supportsModification = true;
             } else if (nf.CanvasUtils.isFunnel(selection)) {
@@ -1028,7 +1119,11 @@ nf.CanvasUtils = (function () {
                 return false;
             }
 
-            // determine how many copyable componets are selected
+            if (nf.CanvasUtils.canRead(selection) === false) {
+                return false;
+            }
+
+            // determine how many copyable components are selected
             var copyable = selection.filter(function (d) {
                 var selected = d3.select(this);
                 if (nf.CanvasUtils.isConnection(selected)) {
@@ -1054,7 +1149,7 @@ nf.CanvasUtils = (function () {
          * Determines if something is currently pastable.
          */
         isPastable: function () {
-            return nf.Clipboard.isCopied();
+            return nf.Canvas.canWrite() && nf.Clipboard.isCopied();
         },
         
         /**
@@ -1104,11 +1199,11 @@ nf.CanvasUtils = (function () {
                     if (sourceData.permissions.canRead) {
                         // update the source status if necessary
                         if (nf.CanvasUtils.isProcessor(source)) {
-                            nf.Processor.reload(sourceData.component);
+                            nf.Processor.reload(sourceData.id);
                         } else if (nf.CanvasUtils.isInputPort(source)) {
-                            nf.Port.reload(sourceData.component);
+                            nf.Port.reload(sourceData.id);
                         } else if (nf.CanvasUtils.isRemoteProcessGroup(source)) {
-                            nf.RemoteProcessGroup.reload(sourceData.component);
+                            nf.RemoteProcessGroup.reload(sourceData.id);
                         }
                     }
                 }
@@ -1122,9 +1217,9 @@ nf.CanvasUtils = (function () {
                     if (destinationData.permissions.canRead) {
                         // update the destination component accordingly
                         if (nf.CanvasUtils.isProcessor(destination)) {
-                            nf.Processor.reload(destinationData.component);
+                            nf.Processor.reload(destinationData.id);
                         } else if (nf.CanvasUtils.isRemoteProcessGroup(destination)) {
-                            nf.RemoteProcessGroup.reload(destinationData.component);
+                            nf.RemoteProcessGroup.reload(destinationData.id);
                         }
                     }
                 }
@@ -1202,6 +1297,9 @@ nf.CanvasUtils = (function () {
          * @param {string} groupId
          */
         enterGroup: function (groupId) {
+            // hide the context menu
+            nf.ContextMenu.hide();
+
             // set the new group id
             nf.Canvas.setGroupId(groupId);
 
@@ -1281,7 +1379,7 @@ nf.CanvasUtils = (function () {
             // move the components into the destination and...
             moveComponents(components, groupData.id).done(function () {
                 // reload the target group
-                nf.ProcessGroup.reload(groupData.component);
+                nf.ProcessGroup.reload(groupData.id);
             });
         },
         
@@ -1375,157 +1473,6 @@ nf.CanvasUtils = (function () {
         },
         
         /**
-         * Ensures components are eligible to be moved. The new group can be optionally specified.
-         *
-         * 1) Ensuring that the input and output ports are not connected outside of this group
-         * 2) If the target is specified; ensuring there are no port name conflicts in the target group
-         *
-         * @argument {selection} selection      The selection being moved
-         * @argument {string} groupId           The id of the new group
-         */
-        eligibleForMove: function (selection, groupId) {
-            var inputPorts = [];
-            var outputPorts = [];
-
-            // separate out the component type accordingly
-            selection.each(function (d) {
-                var selected = d3.select(this);
-                if (nf.CanvasUtils.isInputPort(selected)) {
-                    inputPorts.push(selected.datum());
-                } else if (nf.CanvasUtils.isOutputPort(selected)) {
-                    outputPorts.push(selected.datum());
-                }
-            });
-
-            return $.Deferred(function (deferred) {
-                if (inputPorts.length > 0 || outputPorts.length > 0) {
-                    // create a deferred for checking input port connection status
-                    var portConnectionCheck = function () {
-                        return $.Deferred(function (portConnectionDeferred) {
-                            // ports in the root group cannot be moved
-                            if (nf.Canvas.getParentGroupId() === null) {
-                                nf.Dialog.showOkDialog({
-                                    headerText: 'Port',
-                                    dialogContent: 'Cannot move Ports out of the root group'
-                                });
-                                portConnectionDeferred.reject();
-                            } else {
-                                $.ajax({
-                                    type: 'GET',
-                                    url: config.urls.controller + '/process-groups/' + encodeURIComponent(nf.Canvas.getParentGroupId()) + '/connections',
-                                    dataType: 'json'
-                                }).done(function (response) {
-                                    var connections = response.connections;
-                                    var conflictingPorts = [];
-
-                                    if (!nf.Common.isEmpty(connections)) {
-                                        // check the input ports
-                                        $.each(inputPorts, function (i, inputPort) {
-                                            $.each(connections, function (j, connection) {
-                                                if (inputPort.id === connection.destination.id) {
-                                                    conflictingPorts.push(nf.Common.escapeHtml(inputPort.component.name));
-                                                }
-                                            });
-                                        });
-
-                                        // check the output ports
-                                        $.each(outputPorts, function (i, outputPort) {
-                                            $.each(connections, function (j, connection) {
-                                                if (outputPort.id === connection.source.id) {
-                                                    conflictingPorts.push(nf.Common.escapeHtml(outputPort.component.name));
-                                                }
-                                            });
-                                        });
-                                    }
-
-                                    // inform the user of the conflicting ports
-                                    if (conflictingPorts.length > 0) {
-                                        nf.Dialog.showOkDialog({
-                                            headerText: 'Port',
-                                            dialogContent: 'The following ports are currently connected outside of this group: <b>' + conflictingPorts.join('</b>, <b>') + '</b>'
-                                        });
-                                        portConnectionDeferred.reject();
-                                    } else {
-                                        portConnectionDeferred.resolve();
-                                    }
-
-                                }).fail(function () {
-                                    portConnectionDeferred.reject();
-                                });
-                            }
-                        }).promise();
-                    };
-
-                    // create a deferred for checking port names in the target
-                    var portNameCheck = function () {
-                        return $.Deferred(function (portNameDeferred) {
-
-                            // add the get request
-                            $.ajax({
-                                type: 'GET',
-                                url: config.urls.controller + '/process-groups/' + encodeURIComponent(groupId),
-                                data: {
-                                    verbose: true
-                                },
-                                dataType: 'json'
-                            }).done(function (response) {
-                                var processGroup = response.component;
-                                var processGroupContents = processGroup.contents;
-
-                                var conflictingPorts = [];
-                                var getConflictingPorts = function (selectedPorts, ports) {
-                                    if (selectedPorts.length > 0 && !nf.Common.isEmpty(ports)) {
-                                        $.each(selectedPorts, function (i, selectedPort) {
-                                            $.each(ports, function (j, port) {
-                                                if (selectedPort.component.name === port.name) {
-                                                    conflictingPorts.push(nf.Common.escapeHtml(port.name));
-                                                }
-                                            });
-                                        });
-                                    }
-                                };
-
-                                // check for conflicting ports
-                                getConflictingPorts(inputPorts, processGroupContents.inputPorts);
-                                getConflictingPorts(outputPorts, processGroupContents.outputPorts);
-
-                                // inform the user of the conflicting ports
-                                if (conflictingPorts.length > 0) {
-                                    nf.Dialog.showOkDialog({
-                                        headerText: 'Port',
-                                        dialogContent: 'The following ports already exist in the target process group: <b>' + conflictingPorts.join('</b>, <b>') + '</b>'
-                                    });
-                                    portNameDeferred.reject();
-                                } else {
-                                    portNameDeferred.resolve();
-                                }
-                            }).fail(function () {
-                                portNameDeferred.reject();
-                            });
-                        }).promise();
-                    };
-
-                    // execute the checks in order
-                    portConnectionCheck().done(function () {
-                        if (nf.Common.isDefinedAndNotNull(groupId)) {
-                            $.when(portNameCheck()).done(function () {
-                                deferred.resolve();
-                            }).fail(function () {
-                                deferred.reject();
-                            });
-                        } else {
-                            deferred.resolve();
-                        }
-                    }).fail(function () {
-                        deferred.reject();
-                    });
-                } else {
-                    deferred.resolve();
-                }
-            }).promise();
-        },
-        
-        /**
          * Determines if the component in the specified selection is a valid connection source.
          * 
          * @param {selection} selection         The selection
@@ -1536,9 +1483,18 @@ nf.CanvasUtils = (function () {
                 return false;
             }
 
-            return nf.CanvasUtils.isProcessor(selection) || nf.CanvasUtils.isProcessGroup(selection) ||
-                    nf.CanvasUtils.isRemoteProcessGroup(selection) || nf.CanvasUtils.isInputPort(selection) ||
-                    nf.CanvasUtils.isFunnel(selection);
+            // always allow connections from process groups
+            if (nf.CanvasUtils.isProcessGroup(selection)) {
+                return true;
+            }
+
+            // require read and write for a connection source since we'll need to read the source to obtain valid relationships, etc
+            if (nf.CanvasUtils.canRead(selection) === false || nf.CanvasUtils.canModify(selection) === false) {
+                return false;
+            }
+
+            return nf.CanvasUtils.isProcessor(selection) || nf.CanvasUtils.isRemoteProcessGroup(selection) ||
+                nf.CanvasUtils.isInputPort(selection) || nf.CanvasUtils.isFunnel(selection);
         },
         
         /**
@@ -1552,15 +1508,23 @@ nf.CanvasUtils = (function () {
                 return false;
             }
 
-            if (nf.CanvasUtils.isProcessGroup(selection) || nf.CanvasUtils.isRemoteProcessGroup(selection) ||
-                    nf.CanvasUtils.isOutputPort(selection) || nf.CanvasUtils.isFunnel(selection)) {
+            if (nf.CanvasUtils.isProcessGroup(selection)) {
+                return true;
+            }
+
+            // require write for a connection destination
+            if (nf.CanvasUtils.canModify(selection) === false) {
+                return false;
+            }
+
+            if (nf.CanvasUtils.isRemoteProcessGroup(selection) || nf.CanvasUtils.isOutputPort(selection) || nf.CanvasUtils.isFunnel(selection)) {
                 return true;
             }
 
             // if processor, ensure it supports input
             if (nf.CanvasUtils.isProcessor(selection)) {
                 var destinationData = selection.datum();
-                return destinationData.component.inputRequirement !== 'INPUT_FORBIDDEN';
+                return destinationData.inputRequirement !== 'INPUT_FORBIDDEN';
             }
         }
     };

@@ -21,15 +21,15 @@ $(document).ready(function () {
     if (nf.Canvas.SUPPORTS_SVG) {
 
         //Create Angular App
-        var app = angular.module('ngCanvasApp', ['ngResource', 'ngRoute', 'ngMaterial', 'ngSanitize', 'ngMessages']);
+        var app = angular.module('ngCanvasApp', ['ngResource', 'ngRoute', 'ngMaterial', 'ngMessages']);
 
         //Define Dependency Injection Annotations
         nf.ng.AppConfig.$inject = ['$mdThemingProvider', '$compileProvider'];
         nf.ng.AppCtrl.$inject = ['$scope', 'serviceProvider', '$compile', 'headerCtrl', 'graphControlsCtrl'];
         nf.ng.ServiceProvider.$inject = [];
-        nf.ng.BreadcrumbsCtrl.$inject = ['serviceProvider', '$sanitize'];
+        nf.ng.BreadcrumbsCtrl.$inject = ['serviceProvider'];
         nf.ng.Canvas.HeaderCtrl.$inject = ['serviceProvider', 'toolboxCtrl', 'globalMenuCtrl', 'flowStatusCtrl'];
-        nf.ng.Canvas.FlowStatusCtrl.$inject = ['serviceProvider', '$sanitize'];
+        nf.ng.Canvas.FlowStatusCtrl.$inject = ['serviceProvider'];
         nf.ng.Canvas.GlobalMenuCtrl.$inject = ['serviceProvider'];
         nf.ng.Canvas.ToolboxCtrl.$inject = ['processorComponent',
             'inputPortComponent',
@@ -118,6 +118,7 @@ nf.Canvas = (function () {
     var parentGroupId = null;
     var clustered = false;
     var connectedToCluster = false;
+    var configurableAuthorizer = false;
     var svg = null;
     var canvas = null;
 
@@ -552,9 +553,6 @@ nf.Canvas = (function () {
                     // ctrl-c
                     if (nf.Canvas.canWrite() && nf.CanvasUtils.isCopyable(selection)) {
                         nf.Actions.copy(selection);
-
-                        // only want to prevent default if the action was performed, otherwise default copy would be overridden
-                        evt.preventDefault();
                     }
                 } else if (evt.keyCode === 86) {
                     // ctrl-v
@@ -621,9 +619,6 @@ nf.Canvas = (function () {
         return $.ajax({
             type: 'GET',
             url: config.urls.api + '/flow/process-groups/' + encodeURIComponent(processGroupId),
-            data: {
-                verbose: true
-            },
             dataType: 'json'
         }).done(function (flowResponse) {
             // get the controller and its contents
@@ -730,9 +725,6 @@ nf.Canvas = (function () {
          */
         reload: function (options) {
             return $.Deferred(function (deferred) {
-                // hide the context menu
-                nf.ContextMenu.hide();
-
                 // issue the requests
                 var processGroupXhr = reloadProcessGroup(nf.Canvas.getGroupId(), options);
                 var statusXhr = nf.ng.Bridge.injector.get('flowStatusCtrl').reloadFlowStatus();
@@ -743,9 +735,6 @@ nf.Canvas = (function () {
                     dataType: 'json'
                 }).done(function (response) {
                     nf.ng.Bridge.injector.get('flowStatusCtrl').updateBulletins(response);
-                    deferred.resolve();
-                }).fail(function (xhr, status, error) {
-                    deferred.reject(xhr, status, error);
                 });
                 var clusterSummary = loadClusterSummary().done(function (response) {
                     var clusterSummary = response.clusterSummary;
@@ -887,6 +876,9 @@ nf.Canvas = (function () {
                     // get the auto refresh interval
                     var autoRefreshIntervalSeconds = parseInt(configDetails.autoRefreshIntervalSeconds, 10);
 
+                    // record whether we can configure the authorizer
+                    configurableAuthorizer = configDetails.supportsConfigurableAuthorizer;
+
                     // init storage
                     nf.Storage.init();
 
@@ -1009,6 +1001,13 @@ nf.Canvas = (function () {
          */
         getParentGroupId: function () {
             return parentGroupId;
+        },
+
+        /**
+         * Returns whether the authorizer is configurable.
+         */
+        isConfigurableAuthorizer: function () {
+            return configurableAuthorizer;
         },
 
         /**

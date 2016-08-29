@@ -28,7 +28,9 @@ import org.apache.nifi.authorization.AccessDeniedException;
 import org.apache.nifi.authorization.AuthorizationRequest;
 import org.apache.nifi.authorization.AuthorizationResult;
 import org.apache.nifi.authorization.AuthorizationResult.Result;
+import org.apache.nifi.authorization.AuthorizeControllerServiceReference;
 import org.apache.nifi.authorization.Authorizer;
+import org.apache.nifi.authorization.ControllerServiceReferencingComponentAuthorizable;
 import org.apache.nifi.authorization.RequestAction;
 import org.apache.nifi.authorization.UserContextKeys;
 import org.apache.nifi.authorization.resource.ResourceFactory;
@@ -39,10 +41,13 @@ import org.apache.nifi.web.IllegalClusterResourceRequestException;
 import org.apache.nifi.web.NiFiServiceFacade;
 import org.apache.nifi.web.Revision;
 import org.apache.nifi.web.api.dto.ClusterDTO;
+import org.apache.nifi.web.api.dto.ControllerServiceDTO;
 import org.apache.nifi.web.api.dto.NodeDTO;
+import org.apache.nifi.web.api.dto.ReportingTaskDTO;
 import org.apache.nifi.web.api.entity.ClusterEntity;
 import org.apache.nifi.web.api.entity.ControllerConfigurationEntity;
 import org.apache.nifi.web.api.entity.ControllerServiceEntity;
+import org.apache.nifi.web.api.entity.Entity;
 import org.apache.nifi.web.api.entity.HistoryEntity;
 import org.apache.nifi.web.api.entity.NodeEntity;
 import org.apache.nifi.web.api.entity.ReportingTaskEntity;
@@ -63,6 +68,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,8 +77,8 @@ import java.util.Map;
  */
 @Path("/controller")
 @Api(
-    value = "/controller",
-    description = "Provides realtime command and control of this NiFi instance"
+        value = "/controller",
+        description = "Provides realtime command and control of this NiFi instance"
 )
 public class ControllerResource extends ApplicationResource {
 
@@ -91,7 +97,7 @@ public class ControllerResource extends ApplicationResource {
     private void authorizeController(final RequestAction action) {
         final NiFiUser user = NiFiUserUtils.getNiFiUser();
 
-        final Map<String,String> userContext;
+        final Map<String, String> userContext;
         if (!StringUtils.isBlank(user.getClientAddress())) {
             userContext = new HashMap<>();
             userContext.put(UserContextKeys.CLIENT_ADDRESS.name(), user.getClientAddress());
@@ -124,23 +130,19 @@ public class ControllerResource extends ApplicationResource {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("config")
-    // TODO - @PreAuthorize("hasAnyRole('ROLE_MONITOR', 'ROLE_DFM', 'ROLE_ADMIN', 'ROLE_NIFI')")
     @ApiOperation(
             value = "Retrieves the configuration for this NiFi Controller",
             response = ControllerConfigurationEntity.class,
             authorizations = {
-                @Authorization(value = "Read Only", type = "ROLE_MONITOR"),
-                @Authorization(value = "Data Flow Manager", type = "ROLE_DFM"),
-                @Authorization(value = "Administrator", type = "ROLE_ADMIN"),
-                @Authorization(value = "ROLE_NIFI", type = "ROLE_NIFI")
+                    @Authorization(value = "Read - /controller", type = "")
             }
     )
     @ApiResponses(
             value = {
-                @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
-                @ApiResponse(code = 401, message = "Client could not be authenticated."),
-                @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
-                @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
+                    @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
+                    @ApiResponse(code = 401, message = "Client could not be authenticated."),
+                    @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
+                    @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
             }
     )
     public Response getControllerConfig() {
@@ -159,27 +161,26 @@ public class ControllerResource extends ApplicationResource {
      * Update the configuration for this NiFi.
      *
      * @param httpServletRequest request
-     * @param configEntity A controllerConfigurationEntity.
+     * @param requestConfigEntity       A controllerConfigurationEntity.
      * @return A controllerConfigurationEntity.
      */
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("config")
-    // TODO - @PreAuthorize("hasRole('ROLE_DFM')")
     @ApiOperation(
             value = "Retrieves the configuration for this NiFi",
             response = ControllerConfigurationEntity.class,
             authorizations = {
-                @Authorization(value = "Data Flow Manager", type = "ROLE_DFM")
+                    @Authorization(value = "Write - /controller", type = "")
             }
     )
     @ApiResponses(
             value = {
-                @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
-                @ApiResponse(code = 401, message = "Client could not be authenticated."),
-                @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
-                @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
+                    @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
+                    @ApiResponse(code = 401, message = "Client could not be authenticated."),
+                    @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
+                    @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
             }
     )
     public Response updateControllerConfig(
@@ -187,30 +188,31 @@ public class ControllerResource extends ApplicationResource {
             @ApiParam(
                     value = "The controller configuration.",
                     required = true
-            ) final ControllerConfigurationEntity configEntity) {
+            ) final ControllerConfigurationEntity requestConfigEntity) {
 
-        if (configEntity == null || configEntity.getControllerConfiguration() == null) {
+        if (requestConfigEntity == null || requestConfigEntity.getComponent() == null) {
             throw new IllegalArgumentException("Controller configuration must be specified");
         }
 
-        if (configEntity.getRevision() == null) {
+        if (requestConfigEntity.getRevision() == null) {
             throw new IllegalArgumentException("Revision must be specified.");
         }
 
         if (isReplicateRequest()) {
-            return replicate(HttpMethod.PUT, configEntity);
+            return replicate(HttpMethod.PUT, requestConfigEntity);
         }
 
-        final Revision revision = getRevision(configEntity.getRevision(), FlowController.class.getSimpleName());
+        final Revision requestRevision = getRevision(requestConfigEntity.getRevision(), FlowController.class.getSimpleName());
         return withWriteLock(
                 serviceFacade,
-                revision,
+                requestConfigEntity,
+                requestRevision,
                 lookup -> {
                     authorizeController(RequestAction.WRITE);
                 },
                 null,
-                () -> {
-                    final ControllerConfigurationEntity entity = serviceFacade.updateControllerConfiguration(revision, configEntity.getControllerConfiguration());
+                (revision, configEntity) -> {
+                    final ControllerConfigurationEntity entity = serviceFacade.updateControllerConfiguration(revision, configEntity.getComponent());
                     return clusterContext(generateOkResponse(entity)).build();
                 }
         );
@@ -223,79 +225,85 @@ public class ControllerResource extends ApplicationResource {
     /**
      * Creates a new Reporting Task.
      *
-     * @param httpServletRequest request
-     * @param reportingTaskEntity A reportingTaskEntity.
+     * @param httpServletRequest  request
+     * @param requestReportingTaskEntity A reportingTaskEntity.
      * @return A reportingTaskEntity.
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("reporting-tasks")
-    // TODO - @PreAuthorize("hasRole('ROLE_DFM')")
     @ApiOperation(
-        value = "Creates a new reporting task",
-        response = ReportingTaskEntity.class,
-        authorizations = {
-            @Authorization(value = "Data Flow Manager", type = "ROLE_DFM")
-        }
+            value = "Creates a new reporting task",
+            response = ReportingTaskEntity.class,
+            authorizations = {
+                    @Authorization(value = "Write - /controller", type = ""),
+                    @Authorization(value = "Read - any referenced Controller Services - /controller-services/{uuid}", type = "")
+            }
     )
     @ApiResponses(
-        value = {
-            @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
-            @ApiResponse(code = 401, message = "Client could not be authenticated."),
-            @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
-            @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
-        }
+            value = {
+                    @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
+                    @ApiResponse(code = 401, message = "Client could not be authenticated."),
+                    @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
+                    @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
+            }
     )
     public Response createReportingTask(
-        @Context final HttpServletRequest httpServletRequest,
-        @ApiParam(
-            value = "The reporting task configuration details.",
-            required = true
-        ) final ReportingTaskEntity reportingTaskEntity) {
+            @Context final HttpServletRequest httpServletRequest,
+            @ApiParam(
+                    value = "The reporting task configuration details.",
+                    required = true
+            ) final ReportingTaskEntity requestReportingTaskEntity) {
 
-        if (reportingTaskEntity == null || reportingTaskEntity.getComponent() == null) {
+        if (requestReportingTaskEntity == null || requestReportingTaskEntity.getComponent() == null) {
             throw new IllegalArgumentException("Reporting task details must be specified.");
         }
 
-        if (reportingTaskEntity.getRevision() == null || (reportingTaskEntity.getRevision().getVersion() == null || reportingTaskEntity.getRevision().getVersion() != 0)) {
+        if (requestReportingTaskEntity.getRevision() == null || (requestReportingTaskEntity.getRevision().getVersion() == null || requestReportingTaskEntity.getRevision().getVersion() != 0)) {
             throw new IllegalArgumentException("A revision of 0 must be specified when creating a new Reporting task.");
         }
 
-        if (reportingTaskEntity.getComponent().getId() != null) {
+        final ReportingTaskDTO requestReportingTask = requestReportingTaskEntity.getComponent();
+        if (requestReportingTask.getId() != null) {
             throw new IllegalArgumentException("Reporting task ID cannot be specified.");
         }
 
-        if (StringUtils.isBlank(reportingTaskEntity.getComponent().getType())) {
+        if (StringUtils.isBlank(requestReportingTask.getType())) {
             throw new IllegalArgumentException("The type of reporting task to create must be specified.");
         }
 
         if (isReplicateRequest()) {
-            return replicate(HttpMethod.POST, reportingTaskEntity);
+            return replicate(HttpMethod.POST, requestReportingTaskEntity);
         }
 
-        // handle expects request (usually from the cluster manager)
-        final boolean validationPhase = isValidationPhase(httpServletRequest);
-        if (validationPhase || !isTwoPhaseRequest(httpServletRequest)) {
-            // authorize access
-            serviceFacade.authorizeAccess(lookup -> {
-                authorizeController(RequestAction.WRITE);
-            });
-        }
-        if (validationPhase) {
-            return generateContinueResponse().build();
-        }
+        return withWriteLock(
+                serviceFacade,
+                requestReportingTaskEntity,
+                lookup -> {
+                    authorizeController(RequestAction.WRITE);
 
-        // set the processor id as appropriate
-        reportingTaskEntity.getComponent().setId(generateUuid());
+                    if (requestReportingTask.getProperties() != null) {
+                        final ControllerServiceReferencingComponentAuthorizable authorizable = lookup.getReportingTaskByType(requestReportingTask.getType());
+                        AuthorizeControllerServiceReference.authorizeControllerServiceReferences(requestReportingTask.getProperties(), authorizable, authorizer, lookup);
+                    }
+                },
+                null,
+                (reportingTaskEntity) -> {
+                    final ReportingTaskDTO reportingTask = reportingTaskEntity.getComponent();
 
-        // create the reporting task and generate the json
-        final Revision revision = getRevision(reportingTaskEntity, reportingTaskEntity.getComponent().getId());
-        final ReportingTaskEntity entity = serviceFacade.createReportingTask(revision, reportingTaskEntity.getComponent());
-        reportingTaskResource.populateRemainingReportingTaskEntityContent(entity);
+                    // set the processor id as appropriate
+                    reportingTask.setId(generateUuid());
 
-        // build the response
-        return clusterContext(generateCreatedResponse(URI.create(entity.getUri()), entity)).build();
+                    // create the reporting task and generate the json
+                    final Revision revision = getRevision(reportingTaskEntity, reportingTask.getId());
+                    final ReportingTaskEntity entity = serviceFacade.createReportingTask(revision, reportingTask);
+                    reportingTaskResource.populateRemainingReportingTaskEntityContent(entity);
+
+                    // build the response
+                    return clusterContext(generateCreatedResponse(URI.create(entity.getUri()), entity)).build();
+                }
+        );
     }
 
     // -------------------
@@ -305,79 +313,90 @@ public class ControllerResource extends ApplicationResource {
     /**
      * Creates a new Controller Service.
      *
-     * @param httpServletRequest request
-     * @param controllerServiceEntity A controllerServiceEntity.
+     * @param httpServletRequest      request
+     * @param requestControllerServiceEntity A controllerServiceEntity.
      * @return A controllerServiceEntity.
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("controller-services")
-    // TODO - @PreAuthorize("hasRole('ROLE_DFM')")
     @ApiOperation(
-        value = "Creates a new controller service",
-        response = ControllerServiceEntity.class,
-        authorizations = {
-            @Authorization(value = "Data Flow Manager", type = "ROLE_DFM")
-        }
+            value = "Creates a new controller service",
+            response = ControllerServiceEntity.class,
+            authorizations = {
+                    @Authorization(value = "Write - /controller", type = ""),
+                    @Authorization(value = "Read - any referenced Controller Services - /controller-services/{uuid}", type = "")
+            }
     )
     @ApiResponses(
-        value = {
-            @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
-            @ApiResponse(code = 401, message = "Client could not be authenticated."),
-            @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
-            @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
-        }
+            value = {
+                    @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
+                    @ApiResponse(code = 401, message = "Client could not be authenticated."),
+                    @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
+                    @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
+            }
     )
     public Response createControllerService(
-        @Context final HttpServletRequest httpServletRequest,
-        @ApiParam(
-            value = "The controller service configuration details.",
-            required = true
-        ) final ControllerServiceEntity controllerServiceEntity) {
+            @Context final HttpServletRequest httpServletRequest,
+            @ApiParam(
+                    value = "The controller service configuration details.",
+                    required = true
+            ) final ControllerServiceEntity requestControllerServiceEntity) {
 
-        if (controllerServiceEntity == null || controllerServiceEntity.getComponent() == null) {
+        if (requestControllerServiceEntity == null || requestControllerServiceEntity.getComponent() == null) {
             throw new IllegalArgumentException("Controller service details must be specified.");
         }
 
-        if (controllerServiceEntity.getRevision() == null || (controllerServiceEntity.getRevision().getVersion() == null || controllerServiceEntity.getRevision().getVersion() != 0)) {
+        if (requestControllerServiceEntity.getRevision() == null
+                || (requestControllerServiceEntity.getRevision().getVersion() == null || requestControllerServiceEntity.getRevision().getVersion() != 0)) {
             throw new IllegalArgumentException("A revision of 0 must be specified when creating a new Controller service.");
         }
 
-        if (controllerServiceEntity.getComponent().getId() != null) {
+        final ControllerServiceDTO requestControllerService = requestControllerServiceEntity.getComponent();
+        if (requestControllerService.getId() != null) {
             throw new IllegalArgumentException("Controller service ID cannot be specified.");
         }
 
-        if (StringUtils.isBlank(controllerServiceEntity.getComponent().getType())) {
+        if (requestControllerService.getParentGroupId() != null) {
+            throw new IllegalArgumentException("Parent process group ID cannot be specified.");
+        }
+
+        if (StringUtils.isBlank(requestControllerService.getType())) {
             throw new IllegalArgumentException("The type of controller service to create must be specified.");
         }
 
         if (isReplicateRequest()) {
-            return replicate(HttpMethod.POST, controllerServiceEntity);
+            return replicate(HttpMethod.POST, requestControllerServiceEntity);
         }
 
-        // handle expects request (usually from the cluster manager)
-        final boolean validationPhase = isValidationPhase(httpServletRequest);
-        if (validationPhase || !isTwoPhaseRequest(httpServletRequest)) {
-            // authorize access
-            serviceFacade.authorizeAccess(lookup -> {
-                authorizeController(RequestAction.WRITE);
-            });
-        }
-        if (validationPhase) {
-            return generateContinueResponse().build();
-        }
+        return withWriteLock(
+                serviceFacade,
+                requestControllerServiceEntity,
+                lookup -> {
+                    authorizeController(RequestAction.WRITE);
 
-        // set the processor id as appropriate
-        controllerServiceEntity.getComponent().setId(generateUuid());
+                    if (requestControllerService.getProperties() != null) {
+                        final ControllerServiceReferencingComponentAuthorizable authorizable = lookup.getControllerServiceByType(requestControllerService.getType());
+                        AuthorizeControllerServiceReference.authorizeControllerServiceReferences(requestControllerService.getProperties(), authorizable, authorizer, lookup);
+                    }
+                },
+                null,
+                (controllerServiceEntity) -> {
+                    final ControllerServiceDTO controllerService = controllerServiceEntity.getComponent();
 
-        // create the controller service and generate the json
-        final Revision revision = getRevision(controllerServiceEntity, controllerServiceEntity.getComponent().getId());
-        final ControllerServiceEntity entity = serviceFacade.createControllerService(revision, null, controllerServiceEntity.getComponent());
-        controllerServiceResource.populateRemainingControllerServiceEntityContent(entity);
+                    // set the processor id as appropriate
+                    controllerService.setId(generateUuid());
 
-        // build the response
-        return clusterContext(generateCreatedResponse(URI.create(entity.getUri()), entity)).build();
+                    // create the controller service and generate the json
+                    final Revision revision = getRevision(controllerServiceEntity, controllerService.getId());
+                    final ControllerServiceEntity entity = serviceFacade.createControllerService(revision, null, controllerService);
+                    controllerServiceResource.populateRemainingControllerServiceEntityContent(entity);
+
+                    // build the response
+                    return clusterContext(generateCreatedResponse(URI.create(entity.getUri()), entity)).build();
+                }
+        );
     }
 
     // -------
@@ -393,15 +412,12 @@ public class ControllerResource extends ApplicationResource {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("cluster")
-    // TODO - @PreAuthorize("hasAnyRole('ROLE_MONITOR', 'ROLE_DFM', 'ROLE_ADMIN')")
     @ApiOperation(
             value = "Gets the contents of the cluster",
             notes = "Returns the contents of the cluster including all nodes and their status.",
             response = ClusterEntity.class,
             authorizations = {
-                    @Authorization(value = "Read Only", type = "ROLE_MONITOR"),
-                    @Authorization(value = "DFM", type = "ROLE_DFM"),
-                    @Authorization(value = "Admin", type = "ROLE_ADMIN")
+                    @Authorization(value = "Read - /controller", type = "")
             }
     )
     @ApiResponses(
@@ -419,6 +435,10 @@ public class ControllerResource extends ApplicationResource {
         // ensure connected to the cluster
         if (!isConnectedToCluster()) {
             throw new IllegalClusterResourceRequestException("Only a node connected to a cluster can process the request.");
+        }
+
+        if (isReplicateRequest()) {
+            return replicate(HttpMethod.GET, getClusterCoordinatorNode());
         }
 
         final ClusterDTO dto = serviceFacade.getCluster();
@@ -441,14 +461,11 @@ public class ControllerResource extends ApplicationResource {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("cluster/nodes/{id}")
-    // TODO - @PreAuthorize("hasAnyRole('ROLE_MONITOR', 'ROLE_DFM', 'ROLE_ADMIN')")
     @ApiOperation(
             value = "Gets a node in the cluster",
             response = NodeEntity.class,
             authorizations = {
-                    @Authorization(value = "Read Only", type = "ROLE_MONITOR"),
-                    @Authorization(value = "Data Flow Manager", type = "ROLE_DFM"),
-                    @Authorization(value = "Administrator", type = "ROLE_ADMIN")
+                    @Authorization(value = "Read - /controller", type = "")
             }
     )
     @ApiResponses(
@@ -488,7 +505,7 @@ public class ControllerResource extends ApplicationResource {
     /**
      * Updates the contents of the specified node in this NiFi cluster.
      *
-     * @param id The id of the node
+     * @param id         The id of the node
      * @param nodeEntity A nodeEntity
      * @return A nodeEntity
      */
@@ -496,12 +513,11 @@ public class ControllerResource extends ApplicationResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("cluster/nodes/{id}")
-    // TODO - @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @ApiOperation(
             value = "Updates a node in the cluster",
             response = NodeEntity.class,
             authorizations = {
-                    @Authorization(value = "Administrator", type = "ROLE_ADMIN")
+                    @Authorization(value = "Write - /controller", type = "")
             }
     )
     @ApiResponses(
@@ -542,6 +558,10 @@ public class ControllerResource extends ApplicationResource {
                     + "not equal the node id of the requested resource (%s).", requestNodeDTO.getNodeId(), id));
         }
 
+        if (isReplicateRequest()) {
+            return replicateToCoordinator(HttpMethod.PUT, nodeEntity);
+        }
+
         // update the node
         final NodeDTO node = serviceFacade.updateNode(requestNodeDTO);
 
@@ -563,12 +583,11 @@ public class ControllerResource extends ApplicationResource {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("cluster/nodes/{id}")
-    // TODO - @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @ApiOperation(
             value = "Removes a node from the cluster",
             response = NodeEntity.class,
             authorizations = {
-                    @Authorization(value = "Administrator", type = "ROLE_ADMIN")
+                    @Authorization(value = "Write - /controller", type = "")
             }
     )
     @ApiResponses(
@@ -594,6 +613,10 @@ public class ControllerResource extends ApplicationResource {
             throw new IllegalClusterResourceRequestException("Only a node connected to a cluster can process the request.");
         }
 
+        if (isReplicateRequest()) {
+            return replicateToCoordinator(HttpMethod.DELETE, getRequestParameters());
+        }
+
         serviceFacade.deleteNode(id);
 
         // create the response entity
@@ -617,12 +640,11 @@ public class ControllerResource extends ApplicationResource {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("history")
-    // TODO - @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ApiOperation(
             value = "Purges history",
             response = HistoryEntity.class,
             authorizations = {
-                    @Authorization(value = "Administrator", type = "ROLE_ADMIN")
+                    @Authorization(value = "Write - /controller", type = "")
             }
     )
     @ApiResponses(
@@ -648,26 +670,33 @@ public class ControllerResource extends ApplicationResource {
 
         // Note: History requests are not replicated throughout the cluster and are instead handled by the nodes independently
 
-        // handle expects request (usually from the cluster manager)
-        final boolean validationPhase = isValidationPhase(httpServletRequest);
-        if (validationPhase || !isTwoPhaseRequest(httpServletRequest)) {
-            // authorize access
-            serviceFacade.authorizeAccess(lookup -> {
-                authorizeController(RequestAction.WRITE);
-            });
+        return withWriteLock(
+                serviceFacade,
+                new EndDateEntity(endDate.getDateTime()),
+                lookup -> {
+                    authorizeController(RequestAction.WRITE);
+                },
+                null,
+                (endDateEtity) -> {
+                    // purge the actions
+                    serviceFacade.deleteActions(endDateEtity.getEndDate());
+
+                    // generate the response
+                    return generateOkResponse(new HistoryEntity()).build();
+                }
+        );
+    }
+
+    private class EndDateEntity extends Entity {
+        final Date endDate;
+
+        public EndDateEntity(Date endDate) {
+            this.endDate = endDate;
         }
-        if (validationPhase) {
-            return generateContinueResponse().build();
+
+        public Date getEndDate() {
+            return endDate;
         }
-
-        // purge the actions
-        serviceFacade.deleteActions(endDate.getDateTime());
-
-        // create the response entity
-        final HistoryEntity entity = new HistoryEntity();
-
-        // generate the response
-        return generateOkResponse(entity).build();
     }
 
     // setters

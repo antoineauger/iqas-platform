@@ -16,9 +16,22 @@
  */
 package org.apache.nifi.web.api;
 
-import java.net.URI;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
+import com.wordnik.swagger.annotations.Authorization;
+import org.apache.nifi.authorization.AccessDeniedException;
+import org.apache.nifi.authorization.Authorizer;
+import org.apache.nifi.authorization.RequestAction;
+import org.apache.nifi.authorization.user.NiFiUserUtils;
+import org.apache.nifi.controller.Snippet;
+import org.apache.nifi.web.NiFiServiceFacade;
+import org.apache.nifi.web.Revision;
+import org.apache.nifi.web.api.dto.SnippetDTO;
+import org.apache.nifi.web.api.entity.ComponentEntity;
+import org.apache.nifi.web.api.entity.SnippetEntity;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -32,30 +45,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.apache.nifi.authorization.Authorizer;
-import org.apache.nifi.authorization.RequestAction;
-import org.apache.nifi.authorization.user.NiFiUserUtils;
-import org.apache.nifi.controller.Snippet;
-import org.apache.nifi.web.NiFiServiceFacade;
-import org.apache.nifi.web.Revision;
-import org.apache.nifi.web.api.dto.SnippetDTO;
-import org.apache.nifi.web.api.entity.SnippetEntity;
-
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
-import com.wordnik.swagger.annotations.Authorization;
+import java.net.URI;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * RESTful endpoint for querying dataflow snippets.
  */
 @Path("/snippets")
 @Api(
-    value = "/snippets",
-    description = "Endpoint for accessing dataflow snippets."
+        value = "/snippets",
+        description = "Endpoint for accessing dataflow snippets."
 )
 public class SnippetResource extends ApplicationResource {
 
@@ -95,154 +95,160 @@ public class SnippetResource extends ApplicationResource {
      * Creates a snippet based off the specified configuration.
      *
      * @param httpServletRequest request
-     * @param snippetEntity A snippetEntity
+     * @param requestSnippetEntity      A snippetEntity
      * @return A snippetEntity
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    // TODO - @PreAuthorize("hasRole('ROLE_DFM')")
     @ApiOperation(
-        value = "Creates a snippet",
-        response = SnippetEntity.class,
-        authorizations = {
-            @Authorization(value = "Read Only", type = "ROLE_MONITOR"),
-            @Authorization(value = "Data Flow Manager", type = "ROLE_DFM"),
-            @Authorization(value = "Administrator", type = "ROLE_ADMIN")
-        }
+            value = "Creates a snippet",
+            response = SnippetEntity.class,
+            authorizations = {
+                    @Authorization(value = "Read or Write - /{component-type}/{uuid} - For every component (all Read or all Write) in the Snippet and their descendant components", type = "")
+            }
     )
     @ApiResponses(
-        value = {
-            @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
-            @ApiResponse(code = 401, message = "Client could not be authenticated."),
-            @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
-            @ApiResponse(code = 404, message = "The specified resource could not be found."),
-            @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
-        }
+            value = {
+                    @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
+                    @ApiResponse(code = 401, message = "Client could not be authenticated."),
+                    @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
+                    @ApiResponse(code = 404, message = "The specified resource could not be found."),
+                    @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
+            }
     )
     public Response createSnippet(
-        @Context HttpServletRequest httpServletRequest,
-        @ApiParam(
-            value = "The snippet configuration details.",
-            required = true
-        )
-        final SnippetEntity snippetEntity) {
+            @Context HttpServletRequest httpServletRequest,
+            @ApiParam(
+                    value = "The snippet configuration details.",
+                    required = true
+            )
+            final SnippetEntity requestSnippetEntity) {
 
-        if (snippetEntity == null || snippetEntity.getSnippet() == null) {
+        if (requestSnippetEntity == null || requestSnippetEntity.getSnippet() == null) {
             throw new IllegalArgumentException("Snippet details must be specified.");
         }
 
-        if (snippetEntity.getSnippet().getId() != null) {
+        if (requestSnippetEntity.getSnippet().getId() != null) {
             throw new IllegalArgumentException("Snippet ID cannot be specified.");
         }
 
         if (isReplicateRequest()) {
-            return replicate(HttpMethod.POST, snippetEntity);
+            return replicate(HttpMethod.POST, requestSnippetEntity);
         }
 
-        // handle expects request (usually from the cluster manager)
-        final boolean validationPhase = isValidationPhase(httpServletRequest);
-        if (validationPhase || !isTwoPhaseRequest(httpServletRequest)) {
-            // authorize access
-            serviceFacade.authorizeAccess(lookup -> {
-                final SnippetDTO snippet = snippetEntity.getSnippet();
-                authorizeSnippet(snippet, authorizer, lookup, RequestAction.READ);
-            });
-        }
-        if (validationPhase) {
-            return generateContinueResponse().build();
-        }
+        return withWriteLock(
+                serviceFacade,
+                requestSnippetEntity,
+                lookup -> {
+                    final SnippetDTO snippet = requestSnippetEntity.getSnippet();
 
-        // set the processor id as appropriate
-        snippetEntity.getSnippet().setId(generateUuid());
+                    // the snippet being created may be used later for batch component modifications,
+                    // copy/paste, or template creation. during those subsequent actions, the snippet
+                    // will again be authorized accordingly (read or write). at this point we do not
+                    // know what the snippet will be used for so we need to attempt to authorize as
+                    // read OR write
 
-        // create the snippet
-        final SnippetEntity entity = serviceFacade.createSnippet(snippetEntity.getSnippet());
-        populateRemainingSnippetEntityContent(entity);
+                    try {
+                        authorizeSnippet(snippet, authorizer, lookup, RequestAction.READ);
+                    } catch (final AccessDeniedException e) {
+                        authorizeSnippet(snippet, authorizer, lookup, RequestAction.WRITE);
+                    }
+                },
+                null,
+                (snippetEntity) -> {
+                    // set the processor id as appropriate
+                    snippetEntity.getSnippet().setId(generateUuid());
 
-        // build the response
-        return clusterContext(generateCreatedResponse(URI.create(entity.getSnippet().getUri()), entity)).build();
+                    // create the snippet
+                    final SnippetEntity entity = serviceFacade.createSnippet(snippetEntity.getSnippet());
+                    populateRemainingSnippetEntityContent(entity);
+
+                    // build the response
+                    return clusterContext(generateCreatedResponse(URI.create(entity.getSnippet().getUri()), entity)).build();
+                }
+        );
     }
 
     /**
-     * Updates the specified snippet. The contents of the snippet (component
-     * ids) cannot be updated once the snippet is created.
+     * Move's the components in this Snippet into a new Process Group.
      *
      * @param httpServletRequest request
-     * @param snippetId The id of the snippet.
-     * @param snippetEntity A snippetEntity
+     * @param snippetId          The id of the snippet.
+     * @param requestSnippetEntity      A snippetEntity
      * @return A snippetEntity
      */
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}")
-    // TODO - @PreAuthorize("hasRole('ROLE_DFM')")
     @ApiOperation(
-        value = "Updates a snippet",
-        response = SnippetEntity.class,
-        authorizations = {
-            @Authorization(value = "Data Flow Manager", type = "ROLE_DFM")
-        }
+            value = "Move's the components in this Snippet into a new Process Group and drops the snippet",
+            response = SnippetEntity.class,
+            authorizations = {
+                    @Authorization(value = "Write Process Group - /process-groups/{uuid}", type = ""),
+                    @Authorization(value = "Write - /{component-type}/{uuid} - For each component in the Snippet and their descendant components", type = "")
+            }
     )
     @ApiResponses(
-        value = {
-            @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
-            @ApiResponse(code = 401, message = "Client could not be authenticated."),
-            @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
-            @ApiResponse(code = 404, message = "The specified resource could not be found."),
-            @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
-        }
+            value = {
+                    @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
+                    @ApiResponse(code = 401, message = "Client could not be authenticated."),
+                    @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
+                    @ApiResponse(code = 404, message = "The specified resource could not be found."),
+                    @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
+            }
     )
     public Response updateSnippet(
-        @Context HttpServletRequest httpServletRequest,
-        @ApiParam(
-            value = "The snippet id.",
-            required = true
-        )
-        @PathParam("id") String snippetId,
-        @ApiParam(
-            value = "The snippet configuration details.",
-            required = true
-        ) final SnippetEntity snippetEntity) {
+            @Context HttpServletRequest httpServletRequest,
+            @ApiParam(
+                    value = "The snippet id.",
+                    required = true
+            )
+            @PathParam("id") String snippetId,
+            @ApiParam(
+                    value = "The snippet configuration details.",
+                    required = true
+            ) final SnippetEntity requestSnippetEntity) {
 
-        if (snippetEntity == null || snippetEntity.getSnippet() == null) {
+        if (requestSnippetEntity == null || requestSnippetEntity.getSnippet() == null) {
             throw new IllegalArgumentException("Snippet details must be specified.");
         }
 
         // ensure the ids are the same
-        final SnippetDTO requestSnippetDTO = snippetEntity.getSnippet();
+        final SnippetDTO requestSnippetDTO = requestSnippetEntity.getSnippet();
         if (!snippetId.equals(requestSnippetDTO.getId())) {
             throw new IllegalArgumentException(String.format("The snippet id (%s) in the request body does not equal the "
-                + "snippet id of the requested resource (%s).", requestSnippetDTO.getId(), snippetId));
+                    + "snippet id of the requested resource (%s).", requestSnippetDTO.getId(), snippetId));
         }
 
         if (isReplicateRequest()) {
-            return replicate(HttpMethod.PUT, snippetEntity);
+            return replicate(HttpMethod.PUT, requestSnippetEntity);
         }
 
         // get the revision from this snippet
-        final Set<Revision> revisions = serviceFacade.getRevisionsFromSnippet(snippetId);
+        final Set<Revision> requestRevisions = serviceFacade.getRevisionsFromSnippet(snippetId);
         return withWriteLock(
-            serviceFacade,
-            revisions,
-            lookup -> {
-                // ensure write access to the target process group
-                if (requestSnippetDTO.getParentGroupId() != null) {
-                    lookup.getProcessGroup(requestSnippetDTO.getParentGroupId()).authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
-                }
+                serviceFacade,
+                requestSnippetEntity,
+                requestRevisions,
+                lookup -> {
+                    // ensure write access to the target process group
+                    if (requestSnippetDTO.getParentGroupId() != null) {
+                        lookup.getProcessGroup(requestSnippetDTO.getParentGroupId()).getAuthorizable().authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
+                    }
 
-                // ensure read permission to every component in the snippet
-                final Snippet snippet = lookup.getSnippet(snippetId);
-                authorizeSnippet(snippet, authorizer, lookup, RequestAction.WRITE);
-            },
-            () -> serviceFacade.verifyUpdateSnippet(requestSnippetDTO, revisions.stream().map(rev -> rev.getComponentId()).collect(Collectors.toSet())),
-            () -> {
-                // update the snippet
-                final SnippetEntity entity = serviceFacade.updateSnippet(revisions, snippetEntity.getSnippet());
-                populateRemainingSnippetEntityContent(entity);
-                return clusterContext(generateOkResponse(entity)).build();
-            }
+                        // ensure write permission to every component in the snippet
+                        final Snippet snippet = lookup.getSnippet(snippetId);
+                        authorizeSnippet(snippet, authorizer, lookup, RequestAction.WRITE);
+                },
+                () -> serviceFacade.verifyUpdateSnippet(requestSnippetDTO, requestRevisions.stream().map(rev -> rev.getComponentId()).collect(Collectors.toSet())),
+                (revisions, snippetEntity) -> {
+                    // update the snippet
+                    final SnippetEntity entity = serviceFacade.updateSnippet(revisions, snippetEntity.getSnippet());
+                    populateRemainingSnippetEntityContent(entity);
+                    return clusterContext(generateOkResponse(entity)).build();
+                }
         );
     }
 
@@ -250,62 +256,66 @@ public class SnippetResource extends ApplicationResource {
      * Removes the specified snippet.
      *
      * @param httpServletRequest request
-     * @param snippetId The id of the snippet to remove.
+     * @param snippetId          The id of the snippet to remove.
      * @return A entity containing the client id and an updated revision.
      */
     @DELETE
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{id}")
-    // TODO - @PreAuthorize("hasRole('ROLE_DFM')")
     @ApiOperation(
-        value = "Deletes the components in a snippet and drops the snippet",
-        response = SnippetEntity.class,
-        authorizations = {
-            @Authorization(value = "Data Flow Manager", type = "ROLE_DFM")
-        }
+            value = "Deletes the components in a snippet and drops the snippet",
+            response = SnippetEntity.class,
+            authorizations = {
+                    @Authorization(value = "Write - /{component-type}/{uuid} - For each component in the Snippet and their descendant components", type = "")
+            }
     )
     @ApiResponses(
-        value = {
-            @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
-            @ApiResponse(code = 401, message = "Client could not be authenticated."),
-            @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
-            @ApiResponse(code = 404, message = "The specified resource could not be found."),
-            @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
-        }
+            value = {
+                    @ApiResponse(code = 400, message = "NiFi was unable to complete the request because it was invalid. The request should not be retried without modification."),
+                    @ApiResponse(code = 401, message = "Client could not be authenticated."),
+                    @ApiResponse(code = 403, message = "Client is not authorized to make this request."),
+                    @ApiResponse(code = 404, message = "The specified resource could not be found."),
+                    @ApiResponse(code = 409, message = "The request was valid but NiFi was not in the appropriate state to process it. Retrying the same request later may be successful.")
+            }
     )
     public Response deleteSnippet(
-        @Context final HttpServletRequest httpServletRequest,
-        @ApiParam(
-            value = "The snippet id.",
-            required = true
-        )
-        @PathParam("id") final String snippetId) {
+            @Context final HttpServletRequest httpServletRequest,
+            @ApiParam(
+                    value = "The snippet id.",
+                    required = true
+            )
+            @PathParam("id") final String snippetId) {
 
         if (isReplicateRequest()) {
             return replicate(HttpMethod.DELETE);
         }
 
+        final ComponentEntity requestEntity = new ComponentEntity();
+        requestEntity.setId(snippetId);
+
         // get the revision from this snippet
-        final Set<Revision> revisions = serviceFacade.getRevisionsFromSnippet(snippetId);
+        final Set<Revision> requestRevisions = serviceFacade.getRevisionsFromSnippet(snippetId);
         return withWriteLock(
-            serviceFacade,
-            revisions,
-            lookup -> {
-                // ensure read permission to every component in the snippet
-                final Snippet snippet = lookup.getSnippet(snippetId);
-                authorizeSnippet(snippet, authorizer, lookup, RequestAction.WRITE);
-            },
-            () -> serviceFacade.verifyDeleteSnippet(snippetId, revisions.stream().map(rev -> rev.getComponentId()).collect(Collectors.toSet())),
-            () -> {
-                // delete the specified snippet
-                final SnippetEntity snippetEntity = serviceFacade.deleteSnippet(revisions, snippetId);
-                return clusterContext(generateOkResponse(snippetEntity)).build();
-            }
+                serviceFacade,
+                requestEntity,
+                requestRevisions,
+                lookup -> {
+                    // ensure read permission to every component in the snippet
+                    final Snippet snippet = lookup.getSnippet(snippetId);
+                    authorizeSnippet(snippet, authorizer, lookup, RequestAction.WRITE);
+                },
+                () -> serviceFacade.verifyDeleteSnippet(snippetId, requestRevisions.stream().map(rev -> rev.getComponentId()).collect(Collectors.toSet())),
+                (revisions, entity) -> {
+                    // delete the specified snippet
+                    final SnippetEntity snippetEntity = serviceFacade.deleteSnippet(revisions, entity.getId());
+                    return clusterContext(generateOkResponse(snippetEntity)).build();
+                }
         );
     }
 
     /* setters */
+
     public void setServiceFacade(NiFiServiceFacade serviceFacade) {
         this.serviceFacade = serviceFacade;
     }

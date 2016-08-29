@@ -22,18 +22,6 @@ import java.util.Objects;
 
 public final class ResourceFactory {
 
-    private final static Resource CONNECTION_RESOURCE = new Resource() {
-        @Override
-        public String getIdentifier() {
-            return ResourceType.Connection.getValue();
-        }
-
-        @Override
-        public String getName() {
-            return "Connection";
-        }
-    };
-
     private final static Resource CONTROLLER_RESOURCE = new Resource() {
         @Override
         public String getIdentifier() {
@@ -43,30 +31,6 @@ public final class ResourceFactory {
         @Override
         public String getName() {
             return "Controller";
-        }
-    };
-
-    private final static Resource CONTROLLER_SERVICE_RESOURCE = new Resource() {
-        @Override
-        public String getIdentifier() {
-            return ResourceType.ControllerService.getValue();
-        }
-
-        @Override
-        public String getName() {
-            return "Controller Service";
-        }
-    };
-
-    private final static Resource FUNNEL_RESOURCE = new Resource() {
-        @Override
-        public String getIdentifier() {
-            return ResourceType.Funnel.getValue();
-        }
-
-        @Override
-        public String getName() {
-            return "Funnel";
         }
     };
 
@@ -82,42 +46,6 @@ public final class ResourceFactory {
         }
     };
 
-    private final static Resource INPUT_PORT_RESOURCE = new Resource() {
-        @Override
-        public String getIdentifier() {
-            return ResourceType.InputPort.getValue();
-        }
-
-        @Override
-        public String getName() {
-            return "Input Port";
-        }
-    };
-
-    private final static Resource LABEL_RESOURCE = new Resource() {
-        @Override
-        public String getIdentifier() {
-            return ResourceType.Label.getValue();
-        }
-
-        @Override
-        public String getName() {
-            return "Label";
-        }
-    };
-
-    private final static Resource OUTPUT_PORT_RESOURCE = new Resource() {
-        @Override
-        public String getIdentifier() {
-            return ResourceType.OutputPort.getValue();
-        }
-
-        @Override
-        public String getName() {
-            return "Output Port";
-        }
-    };
-
     private final static Resource POLICY_RESOURCE = new Resource() {
         @Override
         public String getIdentifier() {
@@ -127,30 +55,6 @@ public final class ResourceFactory {
         @Override
         public String getName() {
             return "Policy";
-        }
-    };
-
-    private final static Resource PROCESSOR_RESOURCE = new Resource() {
-        @Override
-        public String getIdentifier() {
-            return ResourceType.Processor.getValue();
-        }
-
-        @Override
-        public String getName() {
-            return "Processor";
-        }
-    };
-
-    private final static Resource PROCESS_GROUP_RESOURCE = new Resource() {
-        @Override
-        public String getIdentifier() {
-            return ResourceType.ProcessGroup.getValue();
-        }
-
-        @Override
-        public String getName() {
-            return "Process Group";
         }
     };
 
@@ -178,15 +82,15 @@ public final class ResourceFactory {
         }
     };
 
-    private final static Resource PROVENANCE_EVENT_RESOURCE = new Resource() {
+    private final static Resource DATA_RESOURCE = new Resource() {
         @Override
         public String getIdentifier() {
-            return ResourceType.ProvenanceEvent.getValue();
+            return ResourceType.Data.getValue();
         }
 
         @Override
         public String getName() {
-            return "Provenance Event";
+            return "Data";
         }
     };
 
@@ -199,30 +103,6 @@ public final class ResourceFactory {
         @Override
         public String getName() {
             return "Proxy User Requests";
-        }
-    };
-
-    private final static Resource REMOTE_PROCESS_GROUP_RESOURCE = new Resource() {
-        @Override
-        public String getIdentifier() {
-            return ResourceType.RemoteProcessGroup.getValue();
-        }
-
-        @Override
-        public String getName() {
-            return "Remote Process Group";
-        }
-    };
-
-    private final static Resource REPORTING_TASK_RESOURCE = new Resource() {
-        @Override
-        public String getIdentifier() {
-            return ResourceType.ReportingTask.getValue();
-        }
-
-        @Override
-        public String getName() {
-            return "Reporting Task";
         }
     };
 
@@ -262,18 +142,6 @@ public final class ResourceFactory {
         }
     };
 
-    private final static Resource TEMPLATE_RESOURCE = new Resource() {
-        @Override
-        public String getIdentifier() {
-            return ResourceType.Template.getValue();
-        }
-
-        @Override
-        public String getName() {
-            return "Template";
-        }
-    };
-
     private final static Resource TENANT_RESOURCE = new Resource() {
         @Override
         public String getIdentifier() {
@@ -300,15 +168,6 @@ public final class ResourceFactory {
     };
 
     /**
-     * Gets the Resource for accessing Connections.
-     *
-     * @return The resource for accessing connections
-     */
-    public static Resource getConnectionResource() {
-        return CONNECTION_RESOURCE;
-    }
-
-    /**
      * Gets the Resource for accessing the Controller. This includes Controller level configuration, bulletins, reporting tasks, and the cluster.
      *
      * @return  The resource for accessing the Controller
@@ -318,75 +177,12 @@ public final class ResourceFactory {
     }
 
     /**
-     * Gets the Resource for accessing Controller Services.
-     *
-     * @return The resource for accessing Controller Services
-     */
-    public static Resource getControllerServiceResource() {
-        return CONTROLLER_SERVICE_RESOURCE;
-    }
-
-    /**
-     * Gets the Resource for accessing Funnels.
-     *
-     * @return The resource for accessing Funnels.
-     */
-    public static Resource getFunnelResource() {
-        return FUNNEL_RESOURCE;
-    }
-
-    /**
      * Gets the Resource for accessing the NiFi flow. This includes the data flow structure, component status, search results, and banner/about text.
      *
      * @return  The NiFi resource
      */
     public static Resource getFlowResource() {
         return FLOW_RESOURCE;
-    }
-
-    /**
-     * Gets the Resource for accessing Input Ports.
-     *
-     * @return The resource for accessing Input Ports
-     */
-    public static Resource getInputPortResource() {
-        return INPUT_PORT_RESOURCE;
-    }
-
-    /**
-     * Gets the Resource for accessing Labels.
-     *
-     * @return The resource for accessing Labels
-     */
-    public static Resource getLabelResource() {
-        return LABEL_RESOURCE;
-    }
-
-    /**
-     * Gets the Resource for accessing Output Ports.
-     *
-     * @return The resource for accessing Output Ports
-     */
-    public static Resource getOutputPortResource() {
-        return OUTPUT_PORT_RESOURCE;
-    }
-
-    /**
-     * Gets the Resource for accessing Processors.
-     *
-     * @return The resource for accessing Processors
-     */
-    public static Resource getProcessorResource() {
-        return PROCESSOR_RESOURCE;
-    }
-
-    /**
-     * Gets the Resource for accessing Process Groups.
-     *
-     * @return The resource for accessing Process Groups
-     */
-    public static Resource getProcessGroupResource() {
-        return PROCESS_GROUP_RESOURCE;
     }
 
     /**
@@ -418,24 +214,6 @@ public final class ResourceFactory {
     }
 
     /**
-     * Gets the Resource for accessing Remote Process Groups.
-     *
-     * @return The resource accessing Remote Process Groups
-     */
-    public static Resource getRemoteProcessGroupResource() {
-        return REMOTE_PROCESS_GROUP_RESOURCE;
-    }
-
-    /**
-     * Gets the Resource for accessing Reporting Tasks.
-     *
-     * @return The resource for accessing Reporting Tasks
-     */
-    public static Resource getReportingTaskResource() {
-        return REPORTING_TASK_RESOURCE;
-    }
-
-    /**
      * Gets the Resource for detailing all available NiFi Resources.
      *
      * @return  The Resource resource
@@ -461,15 +239,6 @@ public final class ResourceFactory {
      */
     public static Resource getSystemResource() {
         return SYSTEM_RESOURCE;
-    }
-
-    /**
-     * Gets the Resource for accessing Templates.
-     *
-     * @return The Resource for accessing Tempaltes
-     */
-    public static Resource getTemplateResource() {
-        return TEMPLATE_RESOURCE;
     }
 
     /**
@@ -588,40 +357,16 @@ public final class ResourceFactory {
      * @param resource The resource for the component being accessed
      * @return The resource for the provenance of the component being accessed
      */
-    public static Resource getProvenanceEventResource(final Resource resource) {
+    public static Resource getDataResource(final Resource resource) {
         return new Resource() {
             @Override
             public String getIdentifier() {
-                return String.format("%s%s", PROVENANCE_EVENT_RESOURCE.getIdentifier(), resource.getIdentifier());
+                return String.format("%s%s", DATA_RESOURCE.getIdentifier(), resource.getIdentifier());
             }
 
             @Override
             public String getName() {
-                return "Provenance Events for " + resource.getName();
-            }
-        };
-    }
-
-    /**
-     * Gets a Resource fo accessing a flowfile queue for the specified connection.
-     *
-     * @param connectionIdentifier  The identifier of the connection
-     * @param connectionName        The name of the connection
-     * @return                      The resource
-     */
-    public static Resource getFlowFileQueueResource(final String connectionIdentifier, final String connectionName) {
-        Objects.requireNonNull(connectionIdentifier, "The connection identifier must be specified.");
-        Objects.requireNonNull(connectionName, "The connection name must be specified.");
-
-        return new Resource() {
-            @Override
-            public String getIdentifier() {
-                return String.format("/flowfile-queue/%s", connectionIdentifier);
-            }
-
-            @Override
-            public String getName() {
-                return connectionName + " queue";
+                return "Data for " + resource.getName();
             }
         };
     }

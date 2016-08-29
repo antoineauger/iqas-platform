@@ -16,11 +16,15 @@
  */
 package org.apache.nifi.web.api;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.sun.jersey.api.core.HttpContext;
 import com.sun.jersey.api.representation.Form;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.sun.jersey.server.impl.model.method.dispatch.FormDispatchProvider;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.nifi.authorization.AuthorizableLookup;
+import org.apache.nifi.authorization.AuthorizeAccess;
 import org.apache.nifi.authorization.Authorizer;
 import org.apache.nifi.authorization.RequestAction;
 import org.apache.nifi.authorization.resource.Authorizable;
@@ -28,8 +32,8 @@ import org.apache.nifi.authorization.user.NiFiUser;
 import org.apache.nifi.authorization.user.NiFiUserUtils;
 import org.apache.nifi.cluster.coordination.ClusterCoordinator;
 import org.apache.nifi.cluster.coordination.http.replication.RequestReplicator;
+import org.apache.nifi.cluster.exception.NoClusterCoordinatorException;
 import org.apache.nifi.cluster.manager.NodeResponse;
-import org.apache.nifi.cluster.manager.exception.NoClusterCoordinatorException;
 import org.apache.nifi.cluster.manager.exception.UnknownNodeException;
 import org.apache.nifi.cluster.protocol.NodeIdentifier;
 import org.apache.nifi.controller.Snippet;
@@ -40,16 +44,17 @@ import org.apache.nifi.remote.exception.HandshakeException;
 import org.apache.nifi.remote.exception.NotAuthorizedException;
 import org.apache.nifi.remote.protocol.ResponseCode;
 import org.apache.nifi.remote.protocol.http.HttpHeaders;
+import org.apache.nifi.util.ComponentIdGenerator;
 import org.apache.nifi.util.NiFiProperties;
-import org.apache.nifi.util.TypeOneUUIDGenerator;
-import org.apache.nifi.web.AuthorizableLookup;
-import org.apache.nifi.web.AuthorizeAccess;
 import org.apache.nifi.web.NiFiServiceFacade;
 import org.apache.nifi.web.Revision;
 import org.apache.nifi.web.api.dto.RevisionDTO;
 import org.apache.nifi.web.api.dto.SnippetDTO;
 import org.apache.nifi.web.api.entity.ComponentEntity;
+import org.apache.nifi.web.api.entity.Entity;
 import org.apache.nifi.web.api.entity.TransactionResultEntity;
+import org.apache.nifi.web.security.ProxiedEntitiesUtils;
+import org.apache.nifi.web.security.util.CacheKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,8 +80,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -95,6 +102,8 @@ public abstract class ApplicationResource {
     public static final String PROXY_PORT_HTTP_HEADER = "X-ProxyPort";
     public static final String PROXY_CONTEXT_PATH_HTTP_HEADER = "X-ProxyContextPath";
 
+    protected static final String NON_GUARANTEED_ENDPOINT = "Note: This endpoint is subject to change as NiFi and it's REST API evolve.";
+
     private static final Logger logger = LoggerFactory.getLogger(ApplicationResource.class);
 
     public static final String NODEWISE = "false";
@@ -112,6 +121,8 @@ public abstract class ApplicationResource {
     private RequestReplicator requestReplicator;
     private ClusterCoordinator clusterCoordinator;
 
+    private static final int MAX_CACHE_SOFT_LIMIT = 500;
+    private final Cache<CacheKey, Request<? extends Entity>> twoPhaseCommitCache = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
 
     /**
      * Generate a resource uri based off of the specified parameters.
@@ -205,14 +216,15 @@ public abstract class ApplicationResource {
         if (seed.isPresent()) {
             try {
                 UUID seedId = UUID.fromString(seed.get());
-                uuid = new UUID(seedId.getMostSignificantBits(), Math.abs(seed.get().hashCode()));
+                uuid = new UUID(seedId.getMostSignificantBits(), seed.get().hashCode());
             } catch (Exception e) {
                 logger.warn("Provided 'seed' does not represent UUID. Will not be able to extract most significant bits for ID generation.");
                 uuid = UUID.nameUUIDFromBytes(seed.get().getBytes(StandardCharsets.UTF_8));
             }
         } else {
-            uuid = TypeOneUUIDGenerator.generateId();
+            uuid = ComponentIdGenerator.generateId();
         }
+
         return uuid.toString();
     }
 
@@ -345,8 +357,8 @@ public abstract class ApplicationResource {
      * @return <code>true</code> if the request represents a two-phase commit style request
      */
     protected boolean isTwoPhaseRequest(final HttpServletRequest httpServletRequest) {
-        final String headerValue = httpServletRequest.getHeader(RequestReplicator.REQUEST_TRANSACTION_ID_HEADER);
-        return headerValue != null;
+        final String transactionId = httpServletRequest.getHeader(RequestReplicator.REQUEST_TRANSACTION_ID_HEADER);
+        return transactionId != null && isConnectedToCluster();
     }
 
     /**
@@ -363,6 +375,14 @@ public abstract class ApplicationResource {
         return isTwoPhaseRequest(httpServletRequest) && httpServletRequest.getHeader(RequestReplicator.REQUEST_VALIDATION_HTTP_HEADER) != null;
     }
 
+    protected boolean isExecutionPhase(final HttpServletRequest httpServletRequest) {
+        return isTwoPhaseRequest(httpServletRequest) && httpServletRequest.getHeader(RequestReplicator.REQUEST_EXECUTION_HTTP_HEADER) != null;
+    }
+
+    protected boolean isCancellationPhase(final HttpServletRequest httpServletRequest) {
+        return isTwoPhaseRequest(httpServletRequest) && httpServletRequest.getHeader(RequestReplicator.REQUEST_TRANSACTION_CANCELATION_HTTP_HEADER) != null;
+    }
+
     /**
      * Checks whether or not the request should be replicated to the cluster
      *
@@ -374,6 +394,7 @@ public abstract class ApplicationResource {
             return false;
         }
 
+        // If not connected to the cluster, we do not replicate
         if (!isConnectedToCluster()) {
             return false;
         }
@@ -415,13 +436,18 @@ public abstract class ApplicationResource {
     protected void authorizeSnippet(final Snippet snippet, final Authorizer authorizer, final AuthorizableLookup lookup, final RequestAction action) {
         final Consumer<Authorizable> authorize = authorizable -> authorizable.authorize(authorizer, action, NiFiUserUtils.getNiFiUser());
 
-        snippet.getProcessGroups().keySet().stream().map(id -> lookup.getProcessGroup(id)).forEach(authorize);
+        snippet.getProcessGroups().keySet().stream().map(id -> lookup.getProcessGroup(id)).forEach(processGroupAuthorizable -> {
+            // authorize the process group
+            authorize.accept(processGroupAuthorizable.getAuthorizable());
+
+            // authorize the contents of the group
+            processGroupAuthorizable.getEncapsulatedAuthorizables().forEach(authorize);
+        });
         snippet.getRemoteProcessGroups().keySet().stream().map(id -> lookup.getRemoteProcessGroup(id)).forEach(authorize);
-        snippet.getProcessors().keySet().stream().map(id -> lookup.getProcessor(id)).forEach(authorize);
+        snippet.getProcessors().keySet().stream().map(id -> lookup.getProcessor(id).getAuthorizable()).forEach(authorize);
         snippet.getInputPorts().keySet().stream().map(id -> lookup.getInputPort(id)).forEach(authorize);
         snippet.getOutputPorts().keySet().stream().map(id -> lookup.getOutputPort(id)).forEach(authorize);
-        snippet.getConnections().keySet().stream().map(id -> lookup.getConnection(id)).forEach(authorize);
-        snippet.getConnections().keySet().stream().map(id -> lookup.getConnection(id)).forEach(authorize);
+        snippet.getConnections().keySet().stream().map(id -> lookup.getConnection(id)).forEach(connAuth -> authorize.accept(connAuth.getAuthorizable()));
         snippet.getFunnels().keySet().stream().map(id -> lookup.getFunnel(id)).forEach(authorize);
     }
 
@@ -435,13 +461,18 @@ public abstract class ApplicationResource {
     protected void authorizeSnippet(final SnippetDTO snippet, final Authorizer authorizer, final AuthorizableLookup lookup, final RequestAction action) {
         final Consumer<Authorizable> authorize = authorizable -> authorizable.authorize(authorizer, action, NiFiUserUtils.getNiFiUser());
 
-        snippet.getProcessGroups().keySet().stream().map(id -> lookup.getProcessGroup(id)).forEach(authorize);
+        snippet.getProcessGroups().keySet().stream().map(id -> lookup.getProcessGroup(id)).forEach(processGroupAuthorizable -> {
+            // authorize the process group
+            authorize.accept(processGroupAuthorizable.getAuthorizable());
+
+            // authorize the contents of the group
+            processGroupAuthorizable.getEncapsulatedAuthorizables().forEach(authorize);
+        });
         snippet.getRemoteProcessGroups().keySet().stream().map(id -> lookup.getRemoteProcessGroup(id)).forEach(authorize);
-        snippet.getProcessors().keySet().stream().map(id -> lookup.getProcessor(id)).forEach(authorize);
+        snippet.getProcessors().keySet().stream().map(id -> lookup.getProcessor(id).getAuthorizable()).forEach(authorize);
         snippet.getInputPorts().keySet().stream().map(id -> lookup.getInputPort(id)).forEach(authorize);
         snippet.getOutputPorts().keySet().stream().map(id -> lookup.getOutputPort(id)).forEach(authorize);
-        snippet.getConnections().keySet().stream().map(id -> lookup.getConnection(id)).forEach(authorize);
-        snippet.getConnections().keySet().stream().map(id -> lookup.getConnection(id)).forEach(authorize);
+        snippet.getConnections().keySet().stream().map(id -> lookup.getConnection(id)).forEach(connAuth -> authorize.accept(connAuth.getAuthorizable()));
         snippet.getFunnels().keySet().stream().map(id -> lookup.getFunnel(id)).forEach(authorize);
     }
 
@@ -455,12 +486,43 @@ public abstract class ApplicationResource {
      * @param action        executor
      * @return the response
      */
-    protected Response withWriteLock(final NiFiServiceFacade serviceFacade, final Revision revision, final AuthorizeAccess authorizer,
-                                     final Runnable verifier, final Supplier<Response> action) {
+    protected <T extends Entity> Response withWriteLock(final NiFiServiceFacade serviceFacade, final T entity, final Revision revision, final AuthorizeAccess authorizer,
+                                                        final Runnable verifier, final BiFunction<Revision, T, Response> action) {
 
         final NiFiUser user = NiFiUserUtils.getNiFiUser();
-        return withWriteLock(serviceFacade, authorizer, verifier, action,
-            () -> serviceFacade.verifyRevision(revision, user));
+
+        if (isTwoPhaseRequest(httpServletRequest)) {
+            if (isValidationPhase(httpServletRequest)) {
+                // authorize access
+                serviceFacade.authorizeAccess(authorizer);
+                serviceFacade.verifyRevision(revision, user);
+
+                // verify if necessary
+                if (verifier != null) {
+                    verifier.run();
+                }
+
+                // store the request
+                phaseOneStoreTransaction(entity, revision, null);
+
+                return generateContinueResponse().build();
+            } else if (isExecutionPhase(httpServletRequest)) {
+                // get the original request and run the action
+                final Request<T> phaseOneRequest = phaseTwoVerifyTransaction();
+                return action.apply(phaseOneRequest.getRevision(), phaseOneRequest.getRequest());
+            } else if (isCancellationPhase(httpServletRequest)) {
+                cancelTransaction();
+                return generateOkResponse().build();
+            } else {
+                throw new IllegalStateException("This request does not appear to be part of the two phase commit.");
+            }
+        } else {
+            // authorize access and run the action
+            serviceFacade.authorizeAccess(authorizer);
+            serviceFacade.verifyRevision(revision, user);
+
+            return action.apply(revision, entity);
+        }
     }
 
     /**
@@ -473,43 +535,197 @@ public abstract class ApplicationResource {
      * @param action        executor
      * @return the response
      */
-    protected Response withWriteLock(final NiFiServiceFacade serviceFacade, final Set<Revision> revisions, final AuthorizeAccess authorizer,
-                                     final Runnable verifier, final Supplier<Response> action) {
+    protected <T extends Entity> Response withWriteLock(final NiFiServiceFacade serviceFacade, final T entity, final Set<Revision> revisions, final AuthorizeAccess authorizer,
+                                                        final Runnable verifier, final BiFunction<Set<Revision>, T, Response> action) {
+
         final NiFiUser user = NiFiUserUtils.getNiFiUser();
-        return withWriteLock(serviceFacade, authorizer, verifier, action,
-            () -> serviceFacade.verifyRevisions(revisions, user));
+
+        if (isTwoPhaseRequest(httpServletRequest)) {
+            if (isValidationPhase(httpServletRequest)) {
+                // authorize access
+                serviceFacade.authorizeAccess(authorizer);
+                serviceFacade.verifyRevisions(revisions, user);
+
+                // verify if necessary
+                if (verifier != null) {
+                    verifier.run();
+                }
+
+                // store the request
+                phaseOneStoreTransaction(entity, null, revisions);
+
+                return generateContinueResponse().build();
+            } else if (isExecutionPhase(httpServletRequest)) {
+                // get the original request and run the action
+                final Request<T> phaseOneRequest = phaseTwoVerifyTransaction();
+                return action.apply(phaseOneRequest.getRevisions(), phaseOneRequest.getRequest());
+            } else if (isCancellationPhase(httpServletRequest)) {
+                cancelTransaction();
+                return generateOkResponse().build();
+            } else {
+                throw new IllegalStateException("This request does not appear to be part of the two phase commit.");
+            }
+        } else {
+            // authorize access and run the action
+            serviceFacade.authorizeAccess(authorizer);
+            serviceFacade.verifyRevisions(revisions, user);
+
+            return action.apply(revisions, entity);
+        }
     }
 
-
     /**
-     * Executes an action through the service facade using the specified revision.
+     * Executes an action through the service facade.
      *
      * @param serviceFacade service facade
-     * @param authorizer authorizer
-     * @param verifier verifier
-     * @param action the action to execute
-     * @param verifyRevision a callback that will claim the necessary revisions for the operation
+     * @param authorizer    authorizer
+     * @param verifier      verifier
+     * @param action        the action to execute
      * @return the response
      */
-    private Response withWriteLock(
-            final NiFiServiceFacade serviceFacade, final AuthorizeAccess authorizer, final Runnable verifier, final Supplier<Response> action,
-        final Runnable verifyRevision) {
+    protected <T extends Entity> Response withWriteLock(final NiFiServiceFacade serviceFacade, final T entity, final AuthorizeAccess authorizer,
+                                                        final Runnable verifier, final Function<T, Response> action) {
 
-        final boolean validationPhase = isValidationPhase(httpServletRequest);
-        if (validationPhase || !isTwoPhaseRequest(httpServletRequest)) {
+        if (isTwoPhaseRequest(httpServletRequest)) {
+            if (isValidationPhase(httpServletRequest)) {
+                // authorize access
+                serviceFacade.authorizeAccess(authorizer);
+
+                // verify if necessary
+                if (verifier != null) {
+                    verifier.run();
+                }
+
+                // store the request
+                phaseOneStoreTransaction(entity, null, null);
+
+                return generateContinueResponse().build();
+            } else if (isExecutionPhase(httpServletRequest)) {
+                // get the original request and run the action
+                final Request<T> phaseOneRequest = phaseTwoVerifyTransaction();
+                return action.apply(phaseOneRequest.getRequest());
+            } else if (isCancellationPhase(httpServletRequest)) {
+                cancelTransaction();
+                return generateOkResponse().build();
+            } else {
+                throw new IllegalStateException("This request does not appear to be part of the two phase commit.");
+            }
+        } else {
             // authorize access
             serviceFacade.authorizeAccess(authorizer);
-            verifyRevision.run();
+
+            // run the action
+            return action.apply(entity);
+        }
+    }
+
+    private <T extends Entity> void phaseOneStoreTransaction(final T requestEntity, final Revision revision, final Set<Revision> revisions) {
+        if (twoPhaseCommitCache.size() > MAX_CACHE_SOFT_LIMIT) {
+            throw new IllegalStateException("The maximum number of requests are in progress.");
         }
 
-        if (validationPhase) {
-            if (verifier != null) {
-                verifier.run();
+        // get the transaction id
+        final String transactionId = httpServletRequest.getHeader(RequestReplicator.REQUEST_TRANSACTION_ID_HEADER);
+        if (StringUtils.isBlank(transactionId)) {
+            throw new IllegalArgumentException("Two phase commit Transaction Id missing.");
+        }
+
+        synchronized (twoPhaseCommitCache) {
+            final CacheKey key = new CacheKey(transactionId);
+            if (twoPhaseCommitCache.getIfPresent(key) != null) {
+                throw new IllegalStateException("Transaction " + transactionId + " is already in progress.");
             }
-            return generateContinueResponse().build();
+
+            // store the entry for the second phase
+            final NiFiUser user = NiFiUserUtils.getNiFiUser();
+            final Request<T> request = new Request<>(ProxiedEntitiesUtils.buildProxiedEntitiesChainString(user), getAbsolutePath().toString(), revision, revisions, requestEntity);
+            twoPhaseCommitCache.put(key, request);
+        }
+    }
+
+    private <T extends Entity> Request<T> phaseTwoVerifyTransaction() {
+        // get the transaction id
+        final String transactionId = httpServletRequest.getHeader(RequestReplicator.REQUEST_TRANSACTION_ID_HEADER);
+        if (StringUtils.isBlank(transactionId)) {
+            throw new IllegalArgumentException("Two phase commit Transaction Id missing.");
         }
 
-        return action.get();
+        // get the entry for the second phase
+        final Request<T> request;
+        synchronized (twoPhaseCommitCache) {
+            final CacheKey key = new CacheKey(transactionId);
+            request = (Request<T>) twoPhaseCommitCache.getIfPresent(key);
+            if (request == null) {
+                throw new IllegalArgumentException("The request from phase one is missing.");
+            }
+
+            twoPhaseCommitCache.invalidate(key);
+        }
+        final String phaseOneChain = request.getUserChain();
+
+        // build the chain for the current request
+        final NiFiUser user = NiFiUserUtils.getNiFiUser();
+        final String phaseTwoChain = ProxiedEntitiesUtils.buildProxiedEntitiesChainString(user);
+
+        if (phaseOneChain == null || !phaseOneChain.equals(phaseTwoChain)) {
+            throw new IllegalArgumentException("The same user must issue the request for phase one and two.");
+        }
+
+        final String phaseOneUri = request.getUri();
+        if (phaseOneUri == null || !phaseOneUri.equals(getAbsolutePath().toString())) {
+            throw new IllegalArgumentException("The URI must be the same for phase one and two.");
+        }
+
+        return request;
+    }
+
+    private void cancelTransaction() {
+        // get the transaction id
+        final String transactionId = httpServletRequest.getHeader(RequestReplicator.REQUEST_TRANSACTION_ID_HEADER);
+        if (StringUtils.isBlank(transactionId)) {
+            throw new IllegalArgumentException("Two phase commit Transaction Id missing.");
+        }
+
+        synchronized (twoPhaseCommitCache) {
+            final CacheKey key = new CacheKey(transactionId);
+            twoPhaseCommitCache.invalidate(key);
+        }
+    }
+
+    private final class Request<T extends Entity> {
+        final String userChain;
+        final String uri;
+        final Revision revision;
+        final Set<Revision> revisions;
+        final T request;
+
+        public Request(String userChain, String uri, Revision revision, Set<Revision> revisions, T request) {
+            this.userChain = userChain;
+            this.uri = uri;
+            this.revision = revision;
+            this.revisions = revisions;
+            this.request = request;
+        }
+
+        public String getUserChain() {
+            return userChain;
+        }
+
+        public String getUri() {
+            return uri;
+        }
+
+        public Revision getRevision() {
+            return revision;
+        }
+
+        public Set<Revision> getRevisions() {
+            return revisions;
+        }
+
+        public T getRequest() {
+            return request;
+        }
     }
 
     /**
@@ -567,11 +783,10 @@ public abstract class ApplicationResource {
                 // If we are to replicate directly to the nodes, we need to indicate that the replication source is
                 // the cluster coordinator so that the node knows to service the request.
                 final Set<NodeIdentifier> targetNodes = Collections.singleton(nodeId);
-                return requestReplicator.replicate(targetNodes, method, path, entity, headers, true).awaitMergedResponse().getResponse();
+                return requestReplicator.replicate(targetNodes, method, path, entity, headers, true, true).awaitMergedResponse().getResponse();
             } else {
                 headers.put(RequestReplicator.REPLICATION_TARGET_NODE_UUID_HEADER, nodeId.getId());
-                return requestReplicator.replicate(Collections.singleton(getClusterCoordinatorNode()), method,
-                    path, entity, headers, false).awaitMergedResponse().getResponse();
+                return requestReplicator.forwardToCoordinator(getClusterCoordinatorNode(), method, path, entity, headers).awaitMergedResponse().getResponse();
             }
         } catch (final InterruptedException ie) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Request to " + method + " " + path + " was interrupted").type("text/plain").build();
@@ -591,18 +806,32 @@ public abstract class ApplicationResource {
         return clusterCoordinator.isActiveClusterCoordinator() ? ReplicationTarget.CLUSTER_NODES : ReplicationTarget.CLUSTER_COORDINATOR;
     }
 
+
     protected Response replicate(final String method, final NodeIdentifier targetNode) {
+        return replicate(method, targetNode, getRequestParameters());
+    }
+
+    protected Response replicate(final String method, final NodeIdentifier targetNode, final Object entity) {
         try {
             // Determine whether we should replicate only to the cluster coordinator, or if we should replicate directly
             // to the cluster nodes themselves.
             if (getReplicationTarget() == ReplicationTarget.CLUSTER_NODES) {
                 final Set<NodeIdentifier> nodeIds = Collections.singleton(targetNode);
-                return getRequestReplicator().replicate(nodeIds, method, getAbsolutePath(), getRequestParameters(), getHeaders(), true).awaitMergedResponse().getResponse();
+                return getRequestReplicator().replicate(nodeIds, method, getAbsolutePath(), entity, getHeaders(), true, true).awaitMergedResponse().getResponse();
             } else {
-                final Set<NodeIdentifier> coordinatorNode = Collections.singleton(getClusterCoordinatorNode());
                 final Map<String, String> headers = getHeaders(Collections.singletonMap(RequestReplicator.REPLICATION_TARGET_NODE_UUID_HEADER, targetNode.getId()));
-                return getRequestReplicator().replicate(coordinatorNode, method, getAbsolutePath(), getRequestParameters(), headers, false).awaitMergedResponse().getResponse();
+                return requestReplicator.forwardToCoordinator(getClusterCoordinatorNode(), method, getAbsolutePath(), entity, headers).awaitMergedResponse().getResponse();
             }
+        } catch (final InterruptedException ie) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Request to " + method + " " + getAbsolutePath() + " was interrupted").type("text/plain").build();
+        }
+    }
+
+    protected Response replicateToCoordinator(final String method, final Object entity) {
+        try {
+            final NodeIdentifier coordinatorNode = getClusterCoordinatorNode();
+            final Set<NodeIdentifier> coordinatorNodes = Collections.singleton(coordinatorNode);
+            return getRequestReplicator().replicate(coordinatorNodes, method, getAbsolutePath(), entity, getHeaders(), true, false).awaitMergedResponse().getResponse();
         } catch (final InterruptedException ie) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Request to " + method + " " + getAbsolutePath() + " was interrupted").type("text/plain").build();
         }
@@ -649,8 +878,8 @@ public abstract class ApplicationResource {
      * used will be those provided by the {@link #getHeaders()} method. The URI that will be used will be
      * that provided by the {@link #getAbsolutePath()} method
      *
-     * @param method the HTTP method to use
-     * @param entity the entity to replicate
+     * @param method            the HTTP method to use
+     * @param entity            the entity to replicate
      * @param headersToOverride the headers to override
      * @return the response from the request
      * @see #replicateNodeResponse(String, Object, Map)
@@ -669,12 +898,10 @@ public abstract class ApplicationResource {
      * that provided by the {@link #getAbsolutePath()} method. This method returns the NodeResponse,
      * rather than a Response object.
      *
-     * @param method the HTTP method to use
-     * @param entity the entity to replicate
+     * @param method            the HTTP method to use
+     * @param entity            the entity to replicate
      * @param headersToOverride the headers to override
-     *
      * @return the response from the request
-     *
      * @throws InterruptedException if interrupted while replicating the request
      * @see #replicate(String, Object, Map)
      */
@@ -687,7 +914,7 @@ public abstract class ApplicationResource {
         if (getReplicationTarget() == ReplicationTarget.CLUSTER_NODES) {
             return requestReplicator.replicate(method, path, entity, headers).awaitMergedResponse();
         } else {
-            return requestReplicator.replicate(Collections.singleton(getClusterCoordinatorNode()), method, path, entity, headers, false).awaitMergedResponse();
+            return requestReplicator.forwardToCoordinator(getClusterCoordinatorNode(), method, path, entity, headers).awaitMergedResponse();
         }
     }
 
@@ -837,7 +1064,7 @@ public abstract class ApplicationResource {
         }
 
         public Response handshakeExceptionResponse(HandshakeException e) {
-            if(logger.isDebugEnabled()){
+            if (logger.isDebugEnabled()) {
                 logger.debug("Handshake failed, {}", e.getMessage());
             }
             ResponseCode handshakeRes = e.getResponseCode();

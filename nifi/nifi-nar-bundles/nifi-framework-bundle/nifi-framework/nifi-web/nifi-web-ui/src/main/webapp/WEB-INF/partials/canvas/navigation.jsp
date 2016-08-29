@@ -23,17 +23,15 @@
 </nf-breadcrumbs>
 <div id="graph-controls">
     <div id="navigation-control" class="graph-control">
-        <div class="graph-control-docked pointer" title="Navigate"
+        <div class="graph-control-docked pointer fa fa-compass" title="Navigate"
              ng-click="appCtrl.serviceProvider.graphControlsCtrl.undock($event)">
-            <div class="graph-control-icon fa fa-compass"></div>
         </div>
-        <div class="graph-control-header-container hidden">
-            <div class="graph-control-header-icon">
-                <div class="graph-control-icon fa fa-compass"></div>
+        <div class="graph-control-header-container hidden pointer"
+             ng-click="appCtrl.serviceProvider.graphControlsCtrl.expand($event)">
+            <div class="graph-control-header-icon fa fa-compass">
             </div>
             <div class="graph-control-header">Navigate</div>
-            <div class="graph-control-header-action"
-                 ng-click="appCtrl.serviceProvider.graphControlsCtrl.expand($event)">
+            <div class="graph-control-header-action">
                 <div class="graph-control-expansion fa fa-plus-square-o pointer"></div>
             </div>
             <div class="clear"></div>
@@ -65,17 +63,15 @@
         </div>
     </div>
     <div id="operation-control" class="graph-control">
-        <div class="graph-control-docked pointer" title="Operate"
+        <div class="graph-control-docked pointer fa fa-hand-o-up" title="Operate"
              ng-click="appCtrl.serviceProvider.graphControlsCtrl.undock($event)">
-            <div class="graph-control-icon fa fa-hand-o-up"></div>
         </div>
-        <div class="graph-control-header-container hidden">
-            <div class="graph-control-header-icon">
-                <div class="graph-control-icon fa fa-hand-o-up"></div>
+        <div class="graph-control-header-container hidden pointer"
+             ng-click="appCtrl.serviceProvider.graphControlsCtrl.expand($event)">
+            <div class="graph-control-header-icon fa fa-hand-o-up">
             </div>
             <div class="graph-control-header">Operate</div>
-            <div class="graph-control-header-action"
-                 ng-click="appCtrl.serviceProvider.graphControlsCtrl.expand($event)">
+            <div class="graph-control-header-action">
                 <div class="graph-control-expansion fa fa-plus-square-o pointer"></div>
             </div>
             <div class="clear"></div>
@@ -95,14 +91,14 @@
             <div id="operation-buttons">
                 <div>
                     <div id="operate-configure" class="action-button" title="Configuration">
-                        <button ng-click="appCtrl.nf.Actions['showConfiguration'](appCtrl.nf.CanvasUtils.getSelection());"
-                                ng-disabled="false">
+                        <button ng-click="appCtrl.serviceProvider.graphControlsCtrl.openConfigureOrDetailsView();"
+                                ng-disabled="!(appCtrl.serviceProvider.graphControlsCtrl.canConfigureOrOpenDetails())">
                             <div class="graph-control-action-icon fa fa-gear"></div></button>
                     </div>
-                    <div class="button-spacer-small">&nbsp;</div>
-                    <div id="operate-policy" class="action-button" title="Access Policies">
+                    <div class="button-spacer-small" ng-if="appCtrl.nf.Canvas.isConfigurableAuthorizer()">&nbsp;</div>
+                    <div id="operate-policy" class="action-button" title="Access Policies" ng-if="appCtrl.nf.Canvas.isConfigurableAuthorizer()">
                         <button ng-click="appCtrl.nf.Actions['managePolicies'](appCtrl.nf.CanvasUtils.getSelection());"
-                                ng-disabled="!(appCtrl.nf.CanvasUtils.getSelection().size() <= 1 && appCtrl.nf.Common.canAccessTenants())">
+                                ng-disabled="!(appCtrl.serviceProvider.graphControlsCtrl.canManagePolicies())">
                             <div class="graph-control-action-icon fa fa-key"></div></button>
                     </div>
                     <div class="button-spacer-large">&nbsp;</div>
@@ -146,13 +142,13 @@
                 <div style="margin-top: 5px;">
                     <div id="operate-copy" class="action-button" title="Copy">
                         <button ng-click="appCtrl.nf.Actions['copy'](appCtrl.nf.CanvasUtils.getSelection());"
-                                ng-disabled="!appCtrl.nf.CanvasUtils.isCopyable(appCtrl.nf.CanvasUtils.getSelection()) || !appCtrl.nf.CanvasUtils.canRead(appCtrl.nf.CanvasUtils.getSelection());">
+                                ng-disabled="!appCtrl.nf.CanvasUtils.isCopyable(appCtrl.nf.CanvasUtils.getSelection());">
                             <div class="graph-control-action-icon fa fa-copy"></div></button>
                     </div>
                     <div class="button-spacer-small">&nbsp;</div>
                     <div id="operate-paste" class="action-button" title="Paste">
                         <button ng-click="appCtrl.nf.Actions['paste'](appCtrl.nf.CanvasUtils.getSelection());"
-                                ng-disabled="!appCtrl.nf.Clipboard.isCopied()">
+                                ng-disabled="!appCtrl.nf.CanvasUtils.isPastable()">
                             <div class="graph-control-action-icon fa fa-paste"></div></button>
                     </div>
                     <div class="button-spacer-large">&nbsp;</div>

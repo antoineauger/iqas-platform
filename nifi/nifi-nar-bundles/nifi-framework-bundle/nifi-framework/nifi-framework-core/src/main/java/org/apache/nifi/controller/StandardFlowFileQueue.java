@@ -79,7 +79,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * processing. Must be thread safe.
  *
  */
-public final class StandardFlowFileQueue implements FlowFileQueue {
+public class StandardFlowFileQueue implements FlowFileQueue {
 
     public static final int MAX_EXPIRED_RECORDS_PER_ITERATION = 100000;
     public static final int SWAP_RECORD_POLL_SIZE = 10000;
@@ -1299,6 +1299,11 @@ public final class StandardFlowFileQueue implements FlowFileQueue {
             @Override
             public String getSwapLocation() {
                 return null;
+            }
+
+            @Override
+            public List<ContentClaim> getTransientClaims() {
+                return Collections.emptyList();
             }
         };
     }

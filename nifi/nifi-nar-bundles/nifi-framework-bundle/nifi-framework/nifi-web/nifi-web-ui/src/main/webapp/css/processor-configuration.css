@@ -69,7 +69,13 @@ div.processor-configuration-warning-icon {
     margin-right: 8px;
     width: 18px;
     height: 16px;
-    background-image: url(../images/iconAlert.png);
+}
+
+div.processor-configuration-warning-icon:before {
+    font-family: FontAwesome;
+    content: "\f071";
+    font-size: 16px;
+    color: #ba554a;
 }
 
 #auto-terminate-relationship-names {
@@ -112,10 +118,6 @@ div.relationship-description {
     outline: none;
 }
 
-#run-duration-labels {
-    font-family: sans-serif;
-}
-
 #run-duration-zero {
     float: left;
 }
@@ -156,7 +158,6 @@ div.relationship-description {
 
 #run-duration-explanation {
     margin-top: 5px;
-    color: #9F6000;
     font-size: 9px;
     font-weight: bold;
     line-height: normal;

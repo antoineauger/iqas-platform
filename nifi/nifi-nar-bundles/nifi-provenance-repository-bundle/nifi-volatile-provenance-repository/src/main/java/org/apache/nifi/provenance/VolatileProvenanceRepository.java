@@ -84,14 +84,26 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
     private Authorizer authorizer;  // effectively final
     private ProvenanceAuthorizableFactory resourceFactory;  // effectively final
 
+    /**
+     * Default no args constructor for service loading only
+     */
     public VolatileProvenanceRepository() {
-        final NiFiProperties properties = NiFiProperties.getInstance();
+        ringBuffer = null;
+        searchableFields = null;
+        searchableAttributes = null;
+        queryExecService = null;
+        scheduledExecService = null;
+        authorizer = null;
+        resourceFactory = null;
+    }
 
-        final int bufferSize = properties.getIntegerProperty(BUFFER_SIZE, DEFAULT_BUFFER_SIZE);
+    public VolatileProvenanceRepository(final NiFiProperties nifiProperties) {
+
+        final int bufferSize = nifiProperties.getIntegerProperty(BUFFER_SIZE, DEFAULT_BUFFER_SIZE);
         ringBuffer = new RingBuffer<>(bufferSize);
 
-        final String indexedFieldString = properties.getProperty(NiFiProperties.PROVENANCE_INDEXED_FIELDS);
-        final String indexedAttrString = properties.getProperty(NiFiProperties.PROVENANCE_INDEXED_ATTRIBUTES);
+        final String indexedFieldString = nifiProperties.getProperty(NiFiProperties.PROVENANCE_INDEXED_FIELDS);
+        final String indexedAttrString = nifiProperties.getProperty(NiFiProperties.PROVENANCE_INDEXED_ATTRIBUTES);
 
         searchableFields = Collections.unmodifiableList(SearchableFieldParser.extractSearchableFields(indexedFieldString, true));
         searchableAttributes = Collections.unmodifiableList(SearchableFieldParser.extractSearchableFields(indexedAttrString, false));
@@ -181,6 +193,7 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
         return records.isEmpty() ? null : records.get(0);
     }
 
+    @Override
     public ProvenanceEventRecord getEvent(final long id) {
         final List<ProvenanceEventRecord> records = ringBuffer.getSelectedElements(new Filter<ProvenanceEventRecord>() {
             @Override
@@ -192,6 +205,7 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
         return records.isEmpty() ? null : records.get(0);
     }
 
+    @Override
     public ProvenanceEventRecord getEvent(final long id, final NiFiUser user) {
         final ProvenanceEventRecord event = getEvent(id);
         if (event == null) {
@@ -235,7 +249,6 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
         return result;
     }
 
-
     public boolean isAuthorized(final ProvenanceEventRecord event, final NiFiUser user) {
         if (authorizer == null) {
             return true;
@@ -243,7 +256,7 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
 
         final Authorizable eventAuthorizable;
         try {
-            eventAuthorizable = resourceFactory.createProvenanceAuthorizable(event.getComponentId());
+            eventAuthorizable = resourceFactory.createDataAuthorizable(event.getComponentId());
         } catch (final ResourceNotFoundException rnfe) {
             return false;
         }
@@ -257,7 +270,7 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
             return;
         }
 
-        final Authorizable eventAuthorizable = resourceFactory.createProvenanceAuthorizable(event.getComponentId());
+        final Authorizable eventAuthorizable = resourceFactory.createDataAuthorizable(event.getComponentId());
         eventAuthorizable.authorize(authorizer, RequestAction.READ, user, event.getAttributes());
     }
 
@@ -310,10 +323,8 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
                             if (!pattern.matcher(eventAttributeValue).matches()) {
                                 return false;
                             }
-                        } else {
-                            if (!searchValue.equalsIgnoreCase(eventAttributeValue)) {
-                                return false;
-                            }
+                        } else if (!searchValue.equalsIgnoreCase(eventAttributeValue)) {
+                            return false;
                         }
                     } else {
                         // if FlowFileUUID, search parent & child UUID's also.
@@ -361,10 +372,8 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
                             if (!pattern.matcher(String.valueOf(fieldValue)).matches()) {
                                 return false;
                             }
-                        } else {
-                            if (!searchValue.equalsIgnoreCase(String.valueOf(fieldValue))) {
-                                return false;
-                            }
+                        } else if (!searchValue.equalsIgnoreCase(String.valueOf(fieldValue))) {
+                            return false;
                         }
                     }
                 }
@@ -453,7 +462,7 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
     }
 
     public Lineage computeLineage(final String flowFileUUID, final NiFiUser user) throws IOException {
-        return computeLineage(Collections.<String> singleton(flowFileUUID), user, LineageComputationType.FLOWFILE_LINEAGE, null);
+        return computeLineage(Collections.<String>singleton(flowFileUUID), user, LineageComputationType.FLOWFILE_LINEAGE, null);
     }
 
     private Lineage computeLineage(final Collection<String> flowFileUuids, final NiFiUser user, final LineageComputationType computationType, final Long eventId) throws IOException {
@@ -471,6 +480,20 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
         }
 
         return new FlowFileLineage(result.getNodes(), result.getEdges());
+    }
+
+    @Override
+    public ComputeLineageSubmission submitLineageComputation(final long eventId, final NiFiUser user) {
+        final ProvenanceEventRecord event = getEvent(eventId);
+        if (event == null) {
+            final String userId = user.getIdentity();
+            final AsyncLineageSubmission result = new AsyncLineageSubmission(LineageComputationType.FLOWFILE_LINEAGE, eventId, Collections.<String>emptySet(), 1, userId);
+            result.getResult().setError("Could not find event with ID " + eventId);
+            lineageSubmissionMap.put(result.getLineageIdentifier(), result);
+            return result;
+        }
+
+        return submitLineageComputation(event.getFlowFileUuid(), user);
     }
 
     @Override
@@ -508,7 +531,7 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
 
         final ProvenanceEventRecord event = getEvent(eventId, user);
         if (event == null) {
-            final AsyncLineageSubmission submission = new AsyncLineageSubmission(LineageComputationType.EXPAND_PARENTS, eventId, Collections.<String> emptyList(), 1, userId);
+            final AsyncLineageSubmission submission = new AsyncLineageSubmission(LineageComputationType.EXPAND_PARENTS, eventId, Collections.<String>emptyList(), 1, userId);
             lineageSubmissionMap.put(submission.getLineageIdentifier(), submission);
             submission.getResult().update(Collections.<ProvenanceEventRecord>emptyList());
             return submission;
@@ -521,7 +544,7 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
             case CLONE:
                 return submitLineageComputation(event.getParentUuids(), user, LineageComputationType.EXPAND_PARENTS, eventId);
             default: {
-                final AsyncLineageSubmission submission = new AsyncLineageSubmission(LineageComputationType.EXPAND_PARENTS, eventId, Collections.<String> emptyList(), 1, userId);
+                final AsyncLineageSubmission submission = new AsyncLineageSubmission(LineageComputationType.EXPAND_PARENTS, eventId, Collections.<String>emptyList(), 1, userId);
                 lineageSubmissionMap.put(submission.getLineageIdentifier(), submission);
                 submission.getResult().setError("Event ID " + eventId + " indicates an event of type " + event.getEventType() + " so its parents cannot be expanded");
                 return submission;
@@ -539,7 +562,7 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
 
         final ProvenanceEventRecord event = getEvent(eventId, user);
         if (event == null) {
-            final AsyncLineageSubmission submission = new AsyncLineageSubmission(LineageComputationType.EXPAND_CHILDREN, eventId, Collections.<String> emptyList(), 1, userId);
+            final AsyncLineageSubmission submission = new AsyncLineageSubmission(LineageComputationType.EXPAND_CHILDREN, eventId, Collections.<String>emptyList(), 1, userId);
             lineageSubmissionMap.put(submission.getLineageIdentifier(), submission);
             submission.getResult().update(Collections.<ProvenanceEventRecord>emptyList());
             return submission;
@@ -552,7 +575,7 @@ public class VolatileProvenanceRepository implements ProvenanceRepository {
             case CLONE:
                 return submitLineageComputation(event.getChildUuids(), user, LineageComputationType.EXPAND_CHILDREN, eventId);
             default: {
-                final AsyncLineageSubmission submission = new AsyncLineageSubmission(LineageComputationType.EXPAND_CHILDREN, eventId, Collections.<String> emptyList(), 1, userId);
+                final AsyncLineageSubmission submission = new AsyncLineageSubmission(LineageComputationType.EXPAND_CHILDREN, eventId, Collections.<String>emptyList(), 1, userId);
                 lineageSubmissionMap.put(submission.getLineageIdentifier(), submission);
                 submission.getResult().setError("Event ID " + eventId + " indicates an event of type " + event.getEventType() + " so its children cannot be expanded");
                 return submission;

@@ -17,11 +17,10 @@
 package org.apache.nifi.authorization.resource;
 
 public enum ResourceType {
-    Connection("/connections"),
     Controller("/controller"),
     ControllerService("/controller-services"),
     Counters("/counters"),
-    Funnel("/funnel"),
+    Funnel("/funnels"),
     Flow("/flow"),
     InputPort("/input-ports"),
     Label("/labels"),
@@ -30,7 +29,7 @@ public enum ResourceType {
     Processor("/processors"),
     ProcessGroup("/process-groups"),
     Provenance("/provenance"),
-    ProvenanceEvent("/provenance-events"),
+    Data("/data"),
     Proxy("/proxy"),
     RemoteProcessGroup("/remote-process-groups"),
     ReportingTask("/reporting-tasks"),

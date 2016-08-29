@@ -16,6 +16,57 @@
  */
 package org.apache.nifi.web;
 
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.nifi.action.Action;
+import org.apache.nifi.action.Component;
+import org.apache.nifi.action.FlowChangeAction;
+import org.apache.nifi.action.Operation;
+import org.apache.nifi.action.component.details.FlowChangeExtensionDetails;
+import org.apache.nifi.action.details.FlowChangeConfigureDetails;
+import org.apache.nifi.admin.service.AuditService;
+import org.apache.nifi.authorization.AccessDeniedException;
+import org.apache.nifi.authorization.AuthorizationRequest;
+import org.apache.nifi.authorization.AuthorizationResult;
+import org.apache.nifi.authorization.AuthorizationResult.Result;
+import org.apache.nifi.authorization.AuthorizeControllerServiceReference;
+import org.apache.nifi.authorization.Authorizer;
+import org.apache.nifi.authorization.ControllerServiceReferencingComponentAuthorizable;
+import org.apache.nifi.authorization.RequestAction;
+import org.apache.nifi.authorization.UserContextKeys;
+import org.apache.nifi.authorization.resource.Authorizable;
+import org.apache.nifi.authorization.resource.ResourceFactory;
+import org.apache.nifi.authorization.user.NiFiUser;
+import org.apache.nifi.authorization.user.NiFiUserUtils;
+import org.apache.nifi.cluster.coordination.ClusterCoordinator;
+import org.apache.nifi.cluster.coordination.http.replication.RequestReplicator;
+import org.apache.nifi.cluster.exception.NoClusterCoordinatorException;
+import org.apache.nifi.cluster.manager.NodeResponse;
+import org.apache.nifi.cluster.manager.exception.IllegalClusterStateException;
+import org.apache.nifi.cluster.protocol.NodeIdentifier;
+import org.apache.nifi.controller.ControllerService;
+import org.apache.nifi.controller.reporting.ReportingTaskProvider;
+import org.apache.nifi.controller.service.ControllerServiceProvider;
+import org.apache.nifi.registry.VariableRegistry;
+import org.apache.nifi.util.NiFiProperties;
+import org.apache.nifi.web.api.dto.AllowableValueDTO;
+import org.apache.nifi.web.api.dto.ControllerServiceDTO;
+import org.apache.nifi.web.api.dto.ProcessorConfigDTO;
+import org.apache.nifi.web.api.dto.ProcessorDTO;
+import org.apache.nifi.web.api.dto.PropertyDescriptorDTO;
+import org.apache.nifi.web.api.dto.ReportingTaskDTO;
+import org.apache.nifi.web.api.dto.RevisionDTO;
+import org.apache.nifi.web.api.entity.AllowableValueEntity;
+import org.apache.nifi.web.api.entity.ControllerServiceEntity;
+import org.apache.nifi.web.api.entity.ProcessorEntity;
+import org.apache.nifi.web.api.entity.ReportingTaskEntity;
+import org.apache.nifi.web.util.ClientResponseUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,61 +81,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.nifi.action.Action;
-import org.apache.nifi.action.Component;
-import org.apache.nifi.action.FlowChangeAction;
-import org.apache.nifi.action.Operation;
-import org.apache.nifi.action.component.details.FlowChangeExtensionDetails;
-import org.apache.nifi.action.details.FlowChangeConfigureDetails;
-import org.apache.nifi.admin.service.AuditService;
-import org.apache.nifi.authorization.AccessDeniedException;
-import org.apache.nifi.authorization.AuthorizationRequest;
-import org.apache.nifi.authorization.AuthorizationResult;
-import org.apache.nifi.authorization.AuthorizationResult.Result;
-import org.apache.nifi.authorization.Authorizer;
-import org.apache.nifi.authorization.RequestAction;
-import org.apache.nifi.authorization.UserContextKeys;
-import org.apache.nifi.authorization.resource.Authorizable;
-import org.apache.nifi.authorization.resource.ResourceFactory;
-import org.apache.nifi.authorization.user.NiFiUser;
-import org.apache.nifi.authorization.user.NiFiUserUtils;
-import org.apache.nifi.cluster.coordination.ClusterCoordinator;
-import org.apache.nifi.cluster.coordination.http.replication.RequestReplicator;
-import org.apache.nifi.cluster.manager.NodeResponse;
-import org.apache.nifi.cluster.manager.exception.IllegalClusterStateException;
-import org.apache.nifi.cluster.manager.exception.NoClusterCoordinatorException;
-import org.apache.nifi.cluster.protocol.NodeIdentifier;
-import org.apache.nifi.controller.ControllerService;
-import org.apache.nifi.controller.reporting.ReportingTaskProvider;
-import org.apache.nifi.controller.service.ControllerServiceProvider;
-import org.apache.nifi.util.NiFiProperties;
-import org.apache.nifi.web.api.dto.ControllerServiceDTO;
-import org.apache.nifi.web.api.dto.ProcessorConfigDTO;
-import org.apache.nifi.web.api.dto.ProcessorDTO;
-import org.apache.nifi.web.api.dto.PropertyDescriptorDTO;
-import org.apache.nifi.web.api.dto.ReportingTaskDTO;
-import org.apache.nifi.web.api.dto.RevisionDTO;
-import org.apache.nifi.web.api.entity.ControllerServiceEntity;
-import org.apache.nifi.web.api.entity.ProcessorEntity;
-import org.apache.nifi.web.api.entity.ReportingTaskEntity;
-import org.apache.nifi.web.util.ClientResponseUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-
 /**
  * Implements the NiFiWebConfigurationContext interface to support a context in both standalone and clustered environments.
  */
 public class StandardNiFiWebConfigurationContext implements NiFiWebConfigurationContext {
 
     private static final Logger logger = LoggerFactory.getLogger(StandardNiFiWebConfigurationContext.class);
-    public static final String VERBOSE_PARAM = "verbose";
 
     private NiFiProperties properties;
     private NiFiServiceFacade serviceFacade;
@@ -94,6 +96,7 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
     private ReportingTaskProvider reportingTaskProvider;
     private AuditService auditService;
     private Authorizer authorizer;
+    private VariableRegistry variableRegistry;
 
     private void authorizeFlowAccess(final NiFiUser user) {
         // authorize access
@@ -144,7 +147,7 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
             case ProcessorConfiguration:
                 // authorize access
                 serviceFacade.authorizeAccess(lookup -> {
-                    final Authorizable authorizable = lookup.getProcessor(requestContext.getId());
+                    final Authorizable authorizable = lookup.getProcessor(requestContext.getId()).getAuthorizable();
                     authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
                 });
 
@@ -153,7 +156,7 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
             case ControllerServiceConfiguration:
                 // authorize access
                 serviceFacade.authorizeAccess(lookup -> {
-                    final Authorizable authorizable = lookup.getControllerService(requestContext.getId());
+                    final Authorizable authorizable = lookup.getControllerService(requestContext.getId()).getAuthorizable();
                     authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
                 });
 
@@ -162,7 +165,7 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
             case ReportingTaskConfiguration:
                 // authorize access
                 serviceFacade.authorizeAccess(lookup -> {
-                    final Authorizable authorizable = lookup.getReportingTask(requestContext.getId());
+                    final Authorizable authorizable = lookup.getReportingTask(requestContext.getId()).getAuthorizable();
                     authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
                 });
 
@@ -289,7 +292,6 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
         return componentFacade.updateComponent(requestContext, annotationData, properties);
     }
 
-
     private NodeResponse replicate(final String method, final URI uri, final Object entity, final Map<String, String> headers) throws InterruptedException {
         final NodeIdentifier coordinatorNode = clusterCoordinator.getElectedActiveCoordinatorNode();
         if (coordinatorNode == null) {
@@ -297,7 +299,7 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
         }
 
         final Set<NodeIdentifier> coordinatorNodes = Collections.singleton(coordinatorNode);
-        return requestReplicator.replicate(coordinatorNodes, method, uri, entity, headers, false).awaitMergedResponse();
+        return requestReplicator.replicate(coordinatorNodes, method, uri, entity, headers, false, true).awaitMergedResponse();
     }
 
 
@@ -336,7 +338,7 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
 
             // authorize access
             serviceFacade.authorizeAccess(lookup -> {
-                final Authorizable authorizable = lookup.getProcessor(id);
+                final Authorizable authorizable = lookup.getProcessor(id).getAuthorizable();
                 authorizable.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
             });
 
@@ -353,7 +355,6 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
 
                 // set the request parameters
                 final MultivaluedMap<String, String> parameters = new MultivaluedMapImpl();
-                parameters.add(VERBOSE_PARAM, "true");
 
                 // replicate request
                 NodeResponse nodeResponse;
@@ -388,8 +389,12 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
 
             // authorize access
             serviceFacade.authorizeAccess(lookup -> {
-                final Authorizable authorizable = lookup.getProcessor(id);
-                authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
+                // authorize the processor
+                final ControllerServiceReferencingComponentAuthorizable authorizable = lookup.getProcessor(id);
+                authorizable.getAuthorizable().authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
+
+                // authorize any referenced service
+                AuthorizeControllerServiceReference.authorizeControllerServiceReferences(properties, authorizable, authorizer, lookup);
             });
 
             final ProcessorDTO processor;
@@ -479,12 +484,13 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
             for(String key : processorConfig.getDescriptors().keySet()){
 
                 PropertyDescriptorDTO descriptor = processorConfig.getDescriptors().get(key);
-                List<PropertyDescriptorDTO.AllowableValueDTO> allowableValuesDTO = descriptor.getAllowableValues();
+                List<AllowableValueEntity> allowableValuesEntity = descriptor.getAllowableValues();
                 Map<String,String> allowableValues = new HashMap<>();
 
-                if(allowableValuesDTO != null) {
-                    for (PropertyDescriptorDTO.AllowableValueDTO value : allowableValuesDTO) {
-                        allowableValues.put(value.getValue(), value.getDisplayName());
+                if(allowableValuesEntity != null) {
+                    for (AllowableValueEntity allowableValueEntity : allowableValuesEntity) {
+                        final AllowableValueDTO allowableValueDTO = allowableValueEntity.getAllowableValue();
+                        allowableValues.put(allowableValueDTO.getValue(), allowableValueDTO.getDisplayName());
                     }
                 }
 
@@ -516,7 +522,7 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
 
             // authorize access
             serviceFacade.authorizeAccess(lookup -> {
-                final Authorizable authorizable = lookup.getControllerService(id);
+                final Authorizable authorizable = lookup.getControllerService(id).getAuthorizable();
                 authorizable.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
             });
 
@@ -574,8 +580,12 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
 
             // authorize access
             serviceFacade.authorizeAccess(lookup -> {
-                final Authorizable authorizable = lookup.getControllerService(id);
-                authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
+                // authorize the controller service
+                final ControllerServiceReferencingComponentAuthorizable authorizable = lookup.getControllerService(id);
+                authorizable.getAuthorizable().authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
+
+                // authorize any referenced service
+                AuthorizeControllerServiceReference.authorizeControllerServiceReferences(properties, authorizable, authorizer, lookup);
             });
 
             final ControllerServiceDTO controllerService;
@@ -677,7 +687,7 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
 
             // authorize access
             serviceFacade.authorizeAccess(lookup -> {
-                final Authorizable authorizable = lookup.getReportingTask(id);
+                final Authorizable authorizable = lookup.getReportingTask(id).getAuthorizable();
                 authorizable.authorize(authorizer, RequestAction.READ, NiFiUserUtils.getNiFiUser());
             });
 
@@ -735,8 +745,12 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
 
             // authorize access
             serviceFacade.authorizeAccess(lookup -> {
-                final Authorizable authorizable = lookup.getReportingTask(id);
-                authorizable.authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
+                // authorize the reporting task
+                final ControllerServiceReferencingComponentAuthorizable authorizable = lookup.getReportingTask(id);
+                authorizable.getAuthorizable().authorize(authorizer, RequestAction.WRITE, NiFiUserUtils.getNiFiUser());
+
+                // authorize any referenced service
+                AuthorizeControllerServiceReference.authorizeControllerServiceReferences(properties, authorizable, authorizer, lookup);
             });
 
             final ReportingTaskDTO reportingTask;
@@ -888,5 +902,9 @@ public class StandardNiFiWebConfigurationContext implements NiFiWebConfiguration
 
     public void setAuthorizer(final Authorizer authorizer) {
         this.authorizer = authorizer;
+    }
+
+    public void setVariableRegistry(final VariableRegistry variableRegistry){
+        this.variableRegistry = variableRegistry;
     }
 }

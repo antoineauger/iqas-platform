@@ -21,7 +21,7 @@ import org.apache.nifi.cluster.coordination.http.EndpointResponseMerger;
 import org.apache.nifi.cluster.manager.BulletinMerger;
 import org.apache.nifi.cluster.manager.NodeResponse;
 import org.apache.nifi.cluster.protocol.NodeIdentifier;
-import org.apache.nifi.web.api.dto.BulletinDTO;
+import org.apache.nifi.web.api.entity.BulletinEntity;
 import org.apache.nifi.web.api.entity.ControllerBulletinsEntity;
 
 import java.net.URI;
@@ -38,7 +38,7 @@ import static org.apache.nifi.reporting.BulletinRepository.MAX_BULLETINS_FOR_CON
 import static org.apache.nifi.reporting.BulletinRepository.MAX_BULLETINS_PER_COMPONENT;
 
 public class ControllerBulletinsEndpointMerger extends AbstractSingleEntityEndpoint<ControllerBulletinsEntity> implements EndpointResponseMerger {
-    public static final Pattern CONTROLLER_BULLETINS_URI_PATTERN = Pattern.compile("/nifi-api/controller/bulletins");
+    public static final Pattern CONTROLLER_BULLETINS_URI_PATTERN = Pattern.compile("/nifi-api/flow/controller/bulletins");
 
     @Override
     public boolean canHandle(URI uri, String method) {
@@ -54,30 +54,44 @@ public class ControllerBulletinsEndpointMerger extends AbstractSingleEntityEndpo
     protected void mergeResponses(ControllerBulletinsEntity clientEntity, Map<NodeIdentifier, ControllerBulletinsEntity> entityMap,
                                   Set<NodeResponse> successfulResponses, Set<NodeResponse> problematicResponses) {
 
-        final Map<NodeIdentifier, List<BulletinDTO>> bulletinDtos = new HashMap<>();
-        final Map<NodeIdentifier, List<BulletinDTO>> controllerServiceBulletinDtos = new HashMap<>();
-        final Map<NodeIdentifier, List<BulletinDTO>> reportingTaskBulletinDtos = new HashMap<>();
+        final Map<NodeIdentifier, List<BulletinEntity>> bulletinDtos = new HashMap<>();
+        final Map<NodeIdentifier, List<BulletinEntity>> controllerServiceBulletinDtos = new HashMap<>();
+        final Map<NodeIdentifier, List<BulletinEntity>> reportingTaskBulletinDtos = new HashMap<>();
         for (final Map.Entry<NodeIdentifier, ControllerBulletinsEntity> entry : entityMap.entrySet()) {
             final NodeIdentifier nodeIdentifier = entry.getKey();
             final ControllerBulletinsEntity entity = entry.getValue();
+            final String nodeAddress = nodeIdentifier.getApiAddress() + ":" + nodeIdentifier.getApiPort();
 
             // consider the bulletins if present and authorized
             if (entity.getBulletins() != null) {
                 entity.getBulletins().forEach(bulletin -> {
+                    if (bulletin.getNodeAddress() == null) {
+                        bulletin.setNodeAddress(nodeAddress);
+                    }
+
                     bulletinDtos.computeIfAbsent(nodeIdentifier, nodeId -> new ArrayList<>()).add(bulletin);
                 });
             }
             if (entity.getControllerServiceBulletins() != null) {
                 entity.getControllerServiceBulletins().forEach(bulletin -> {
+                    if (bulletin.getNodeAddress() == null) {
+                        bulletin.setNodeAddress(nodeAddress);
+                    }
+
                     controllerServiceBulletinDtos.computeIfAbsent(nodeIdentifier, nodeId -> new ArrayList<>()).add(bulletin);
                 });
             }
             if (entity.getReportingTaskBulletins() != null) {
                 entity.getReportingTaskBulletins().forEach(bulletin -> {
+                    if (bulletin.getNodeAddress() == null) {
+                        bulletin.setNodeAddress(nodeAddress);
+                    }
+
                     reportingTaskBulletinDtos.computeIfAbsent(nodeIdentifier, nodeId -> new ArrayList<>()).add(bulletin);
                 });
             }
         }
+
         clientEntity.setBulletins(BulletinMerger.mergeBulletins(bulletinDtos));
         clientEntity.setControllerServiceBulletins(BulletinMerger.mergeBulletins(controllerServiceBulletinDtos));
         clientEntity.setReportingTaskBulletins(BulletinMerger.mergeBulletins(reportingTaskBulletinDtos));
