@@ -7,3 +7,4 @@ cloudify_resources/vagrant_VMs/nifi-master/.vagrant
 flink_resources/flink-filtering-module/.idea
 _autonomic_loops/.idea
 _virtual_sensors/.idea
+_autonomic_loops/src/.idea
