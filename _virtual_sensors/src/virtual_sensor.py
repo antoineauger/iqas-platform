@@ -25,9 +25,10 @@ class VirtualSensor(threading.Thread):
 		self.obs_consumption = self.capabilities['obs_consumption'] # how much battery is used when sensing one observation
 		self.infinite_battery = self.capabilities['infinite_battery'] # if set to True, all battery considerations are ignored
 
-		self.start() # start sensor's main thread
+		self.start() # We start the sensor's main thread
 
 	def __repr__(self):
+		""" Return a string representation for a virtual sensor object """
 		return "Sensor ID: {}\n" \
                "Enabled: {}\n" \
 		       "Currently sensing observations: {}\n" \
@@ -53,18 +54,18 @@ class VirtualSensor(threading.Thread):
 	# The following methods represent the API of the virtual sensor
 	# Sensor state (connection and observations measurement)
 
-	def enable_sensor(self, new_value):
+	def enable_sensor(self, value):
 		""" Method to activate/deactivate a sensor, i.e. connect or disconnect it to the network """
-		if new_value:
+		if value:
 			if self.infinite_battery or self.battery_level > 0.0:
 				self.enabled = True
 		else:
 			self.enabled = False
 			self.enable_sensing_process(False)
 
-	def enable_sensing_process(self, new_value):
+	def enable_sensing_process(self, value):
 		""" Method to start the observation acquisition process """
-		if new_value:
+		if value:
 			if 'frequency' in self.capabilities.keys() and self.capabilities['frequency'] > 0.0:
 				if self.enabled and not self.sensing:
 					self.sensing = True
@@ -80,8 +81,8 @@ class VirtualSensor(threading.Thread):
 	def get_parameter(self, param_name):
 		return self.capabilities[param_name]
 
-	def set_parameter(self, param_name, new_value):
-		self.capabilities[param_name] = new_value
+	def set_parameter(self, param_name, value):
+		self.capabilities[param_name] = value
 
 	def recharge_battery(self):
 		self.battery_level = 100.0
