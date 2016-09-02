@@ -1,6 +1,8 @@
 import logging
 import threading
 
+from json_utils.json_post_request import post_dict_to_url
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -11,17 +13,17 @@ class VirtualSensor(threading.Thread):
 		Available APIs to interact with the sensor: TODO
 	"""
 
-	def __init__(self, sensorID, enabled, endpoint, capabilities):
+	def __init__(self, sensor_id, enabled, endpoint, capabilities):
 		threading.Thread.__init__(self)
 		self.setDaemon(True)
 		self._stopevent = threading.Event() # to stop the main thread
-		self.sensorID = sensorID
+		self.sensorID = sensor_id
 		self.enabled = enabled
 		self.endpoint = endpoint
 		self.sensing = False
 
 		self.capabilities = capabilities # dict of capabilities e.g.: {'type': 'temperature', 'min_value': -100, 'max_value': 100, 'resolution': 0.5, 'format': float}
-		self.battery_level = self.capabilities['battery_level'] # in percentage
+		self.url_publish_obs = self.capabilities['url_publish_obs'] # where to send observations
 		self.obs_consumption = self.capabilities['obs_consumption'] # how much battery is used when sensing one observation
 		self.infinite_battery = self.capabilities['infinite_battery'] # if set to True, all battery considerations are ignored
 
@@ -33,8 +35,7 @@ class VirtualSensor(threading.Thread):
                "Enabled: {}\n" \
 		       "Currently sensing observations: {}\n" \
                "Endpoint: {}\n" \
-               "Capabilities: {}\n" \
-               "Battery level: {}%\n".format(self.sensorID, self.enabled, self.sensing, self.endpoint, self.capabilities, self.battery_level)
+               "Capabilities: {}\n".format(self.sensorID, self.enabled, self.sensing, self.endpoint, self.capabilities)
 
 	def __del__(self):
 		self._stopevent.set()
@@ -46,8 +47,9 @@ class VirtualSensor(threading.Thread):
 				logger.error("In sensor {} thread (freq={}s)".format(self.sensorID, self.capabilities['frequency']))
 
 				# TODO measure and send data
+				post_dict_to_url(self.url_publish_obs, {'test': 'this is only a test'})
 				if not self.infinite_battery:
-					self.battery_level -= self.obs_consumption
+					self.capabilities['battery_level'] -= self.obs_consumption
 
 			self._stopevent.wait(self.capabilities['frequency']) # We pause based on sensor's frequency
 
@@ -57,7 +59,7 @@ class VirtualSensor(threading.Thread):
 	def enable_sensor(self, value):
 		""" Method to activate/deactivate a sensor, i.e. connect or disconnect it to the network """
 		if value:
-			if self.infinite_battery or self.battery_level > 0.0:
+			if self.infinite_battery or self.capabilities['battery_level'] > 0.0:
 				self.enabled = True
 		else:
 			self.enabled = False
@@ -85,7 +87,7 @@ class VirtualSensor(threading.Thread):
 		self.capabilities[param_name] = value
 
 	def recharge_battery(self):
-		self.battery_level = 100.0
+		self.capabilities['battery_level'] = 100.0
 
 	# Events to randomly affect sensor or sensor measurement process
 	# Useful to introduce biased data or simulate sensor failures
