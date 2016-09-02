@@ -1,9 +1,8 @@
 import logging
 import threading
-import json
 
-from obs_utils.obs_generator import ObsGenerator
 from json_utils.json_post_request import post_dict_to_url
+from obs_utils.obs_generator import ObsGenerator
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -11,7 +10,8 @@ logger.setLevel(logging.DEBUG)
 class VirtualSensor(threading.Thread):
 	"""
 		Class for representing a virtual sensor, i.e. a sensor which produce observations from an optional input file.
-		Output format for observations: JSON
+		The output format for each observation is a JSON formatted as follows:
+			{"observation": RAW_DATA_OBSERVATION}
 		Available APIs to interact with the sensor: TODO
 	"""
 
@@ -41,7 +41,9 @@ class VirtualSensor(threading.Thread):
 
 	# TODO: replace this main thread by a Python scheduler?
 	def run(self):
-		""" Sensor's main thread. We should never stop this thread, except when destroying the sensor object """
+		"""
+			Sensor's main thread. We should never stop this thread, except when destroying the sensor object
+		"""
 		# TODO load observations from 1) file or 2) generate according input
 		while not self._stopevent.isSet():
 			if self.sensing:
@@ -63,7 +65,10 @@ class VirtualSensor(threading.Thread):
 	# Sensor state (connection and observations measurement)
 
 	def enable_sensor(self, value):
-		""" Method to activate/deactivate a sensor, i.e. connect or disconnect it to the network """
+		"""
+			Method to activate/deactivate a sensor, i.e. connect or disconnect it to the network
+			:param value: bool (True/False)
+		"""
 		if value:
 			if self.infinite_battery or self.capabilities['battery_level'] > 0.0:
 				self.enabled = True
@@ -72,7 +77,12 @@ class VirtualSensor(threading.Thread):
 			self.enable_sensing_process(False)
 
 	def enable_sensing_process(self, value):
-		""" Method to start the observation acquisition process """
+		"""
+			Method to start the observation acquisition process
+			:param value: bool (True/False)
+			:returns: result ("OK"/"NOK") + details (message error if any)
+			:rtype boolean and str
+		"""
 		if value:
 			if 'frequency' in self.capabilities.keys() and self.capabilities['frequency'] > 0.0:
 				if self.no_more_obs:
@@ -104,6 +114,12 @@ class VirtualSensor(threading.Thread):
 	# Sensor capabilities
 
 	def get_capability(self, capability):
+		"""
+			Method to get a specific sensor capability
+			:param capability: str
+			:returns: result ("OK"/"NOK") + details (message error if any) + current value
+			:rtype bool, str and str
+		"""
 		if capability in self.capabilities.keys():
 			return "OK", "", self.capabilities[capability]
 		else:
@@ -112,6 +128,13 @@ class VirtualSensor(threading.Thread):
 			return "NOK", error_message, ""
 
 	def set_capability(self, capability, value):
+		"""
+			Method to set a specific sensor capability
+			:param capability: str
+			:param value: the new value for the capability (str, int, float or bool)
+			:returns: result ("OK"/"NOK") + details (message error if any)
+			:rtype bool and str
+		"""
 		if capability in self.capabilities.keys():
 			self.capabilities[capability] = value
 			return "OK", ""
