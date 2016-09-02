@@ -3,10 +3,8 @@ import json
 from httplib2 import Http
 
 def post_dict_to_url(url, dictionary):
-    '''
-    Pass the whole dictionary as a json body to the url.
-    Make sure to use a new Http object each time for thread safety.
-    '''
+    """ Method to post a dict object (transformed in a JSON payload) to the specified url"""
+    print(dictionary)
     http_obj = Http()
     resp, content = http_obj.request(
         uri=url,

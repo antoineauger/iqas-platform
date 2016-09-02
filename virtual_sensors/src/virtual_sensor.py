@@ -1,6 +1,8 @@
 import logging
 import threading
+import json
 
+from obs_utils.obs_generator import ObsGenerator
 from json_utils.json_post_request import post_dict_to_url
 
 logger = logging.getLogger(__name__)
@@ -13,45 +15,49 @@ class VirtualSensor(threading.Thread):
 		Available APIs to interact with the sensor: TODO
 	"""
 
-	def __init__(self, sensor_id, enabled, endpoint, capabilities):
+	def __init__(self, sensor_id, enabled, endpoint, config, capabilities):
 		threading.Thread.__init__(self)
 		self.setDaemon(True)
 		self._stopevent = threading.Event() # to stop the main thread
-		self.sensorID = sensor_id
+		self.sensor_id = sensor_id
 		self.enabled = enabled
 		self.endpoint = endpoint
 		self.sensing = False
 
+		self.no_more_obs = False
+
+		self.config = config
+		self.obs_generator = ObsGenerator(self.config)
+		self.url_publish_obs = self.config['url_publish_obs']  # where to send observations
+
 		self.capabilities = capabilities # dict of capabilities e.g.: {'type': 'temperature', 'min_value': -100, 'max_value': 100, 'resolution': 0.5, 'format': float}
-		self.url_publish_obs = self.capabilities['url_publish_obs'] # where to send observations
 		self.obs_consumption = self.capabilities['obs_consumption'] # how much battery is used when sensing one observation
 		self.infinite_battery = self.capabilities['infinite_battery'] # if set to True, all battery considerations are ignored
 
 		self.start() # We start the sensor's main thread
 
-	def __repr__(self):
-		""" Return a string representation for a virtual sensor object """
-		return "Sensor ID: {}\n" \
-               "Enabled: {}\n" \
-		       "Currently sensing observations: {}\n" \
-               "Endpoint: {}\n" \
-               "Capabilities: {}\n".format(self.sensorID, self.enabled, self.sensing, self.endpoint, self.capabilities)
-
 	def __del__(self):
 		self._stopevent.set()
 
+	# TODO: replace this main thread by a Python scheduler?
 	def run(self):
 		""" Sensor's main thread. We should never stop this thread, except when destroying the sensor object """
+		# TODO load observations from 1) file or 2) generate according input
 		while not self._stopevent.isSet():
 			if self.sensing:
-				logger.error("In sensor {} thread (freq={}s)".format(self.sensorID, self.capabilities['frequency']))
+				logger.error("In sensor {} thread (freq={}s)".format(self.sensor_id,
+				                                                     self.capabilities['frequency']))
 
-				# TODO measure and send data
-				post_dict_to_url(self.url_publish_obs, {'test': 'this is only a test'})
-				if not self.infinite_battery:
-					self.capabilities['battery_level'] -= self.obs_consumption
-
-			self._stopevent.wait(self.capabilities['frequency']) # We pause based on sensor's frequency
+				obs = self.obs_generator.generate_one_observation()
+				if obs is not None:
+					post_dict_to_url(self.url_publish_obs, {'observation': obs})
+					if not self.infinite_battery:
+						self.capabilities['battery_level'] -= self.obs_consumption
+					self._stopevent.wait(self.capabilities['frequency'])  # We pause based on sensor's frequency
+				else:
+					self.sensing = False
+					self.no_more_obs = True
+					self._stopevent.set()
 
 	# The following methods represent the API of the virtual sensor
 	# Sensor state (connection and observations measurement)
@@ -69,22 +75,50 @@ class VirtualSensor(threading.Thread):
 		""" Method to start the observation acquisition process """
 		if value:
 			if 'frequency' in self.capabilities.keys() and self.capabilities['frequency'] > 0.0:
-				if self.enabled and not self.sensing:
-					self.sensing = True
+				if self.no_more_obs:
+					error_message = "Unable to retrieve more observations for sensor {}.".format(self.sensor_id)
+					logger.error(error_message)
+					return "NOK", error_message
+				elif not self.enabled:
+					error_message = "Unable to start the observation acquisition process for sensor {}. " \
+					                "The sensor is disabled.".format(self.sensor_id)
+					logger.error(error_message)
+					return "NOK", error_message
+				elif self.sensing:
+					error_message = "Sensor {} is already sensing. Check its connectivity with the server if you do not " \
+					                "receive any observation.".format(self.sensor_id)
+					logger.error(error_message)
+					return "NOK", error_message
 				else:
-					logger.error("Unable to start the observation acquisition process for sensor {}. The sensor is disabled.".format(self.sensorID))
+					self.sensing = True
+					return "OK", ""
 			else:
-				logger.error("Unable to retrieve 'frequency' capability for sensor {}. The acquisition process has not been started.".format(self.sensorID))
+				error_message = "Unable to retrieve 'frequency' capability for sensor {}. " \
+				                "The acquisition process has not been started.".format(self.sensor_id)
+				logger.error(error_message)
+				return "NOK", error_message
 		else:
 			self.sensing = False
+			return "OK", ""
 
 	# Sensor capabilities
 
-	def get_parameter(self, param_name):
-		return self.capabilities[param_name]
+	def get_capability(self, capability):
+		if capability in self.capabilities.keys():
+			return "OK", "", self.capabilities[capability]
+		else:
+			error_message = "Unknown parameter '{}' for sensor {}".format(capability, self.sensor_id)
+			logger.error(error_message)
+			return "NOK", error_message, ""
 
-	def set_parameter(self, param_name, value):
-		self.capabilities[param_name] = value
+	def set_capability(self, capability, value):
+		if capability in self.capabilities.keys():
+			self.capabilities[capability] = value
+			return "OK", ""
+		else:
+			error_message = "Unknown parameter '{}' for sensor {}".format(capability, self.sensor_id)
+			logger.error(error_message)
+			return "NOK", error_message
 
 	def recharge_battery(self):
 		self.capabilities['battery_level'] = 100.0
