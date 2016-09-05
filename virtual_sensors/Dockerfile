@@ -1,8 +1,9 @@
-# A super-simple "hello world" server that exposes port 8080
+# A shippable 'virtual sensor' for the iQAS platform
 #
-# VERSION               0.1.0
+# VERSION: 1.0
+
 FROM ubuntu
-MAINTAINER Joshua Conner <joshua.conner@gmail.com>
+MAINTAINER Antoine Auger <antoine.auger@isae.fr>
 
 # create user
 RUN groupadd web
