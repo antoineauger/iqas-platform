@@ -49,10 +49,12 @@ class VirtualSensor(threading.Thread):
 			if self.sensing:
 				logger.error("In sensor {} thread (freq={}s)".format(self.sensor_id,
 				                                                     self.capabilities['frequency']))
-
 				obs = self.obs_generator.generate_one_observation()
 				if obs is not None:
-					post_dict_to_url(self.url_publish_obs, {'observation': obs})
+					try:
+						post_dict_to_url(self.url_publish_obs, {'observation': obs})
+					except ConnectionRefusedError:
+						logger.error("ConnectionRefusedError: [Errno 61] Connection refused.")
 					if not self.infinite_battery:
 						self.capabilities['battery_level'] -= self.obs_consumption
 					self._stopevent.wait(self.capabilities['frequency'])  # We pause based on sensor's frequency

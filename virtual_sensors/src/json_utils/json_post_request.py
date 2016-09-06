@@ -14,5 +14,5 @@ def post_dict_to_url(url, dictionary):
         method='POST',
         headers={'Content-Type': 'application/json; charset=UTF-8',
                  'Connection': 'Close'},
-        body=json.dumps(dictionary),
+        body=json.dumps(dictionary)
     )
