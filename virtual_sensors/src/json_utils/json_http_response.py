@@ -1,5 +1,6 @@
 import json
 
+
 def generate_sensor_representation(response, sensor):
 	"""
 		Return a JSON representation of a virtual sensor
@@ -18,6 +19,7 @@ def generate_sensor_representation(response, sensor):
 	dict_response['config'] = sensor.config
 	return json.dumps(dict_response)
 
+
 def generate_sensor_capabilities(response, sensor):
 	"""
 		Return a JSON representation of the sensor's capabilities
@@ -31,6 +33,7 @@ def generate_sensor_capabilities(response, sensor):
 	dict_response['sensor_id'] = sensor.sensor_id
 	dict_response['capabilities'] = sensor.capabilities
 	return json.dumps(dict_response)
+
 
 def generate_API_response(response, result, details, capability='', old_value='', value=''):
 	"""

@@ -12,6 +12,7 @@ logger.setLevel(logging.DEBUG)
 
 # Bottle parameters
 
+
 def usage():
     """ Print short help """
     print("iQAS: an integration platform for QoI Assessment as a Service")
@@ -33,10 +34,12 @@ logger.warning("Virtual sensor '{}' listening on {}".format(sensor_id, sensor_en
 
 # REST APIs for the virtual sensor (see also the corresponding class virtual_sensor.py)
 
+
 @app.route('/' + sensor_id, method='GET')
 def init_virtual_sensor():
     """ Return an overview of the specified virtual sensor """
     return generate_sensor_representation(response, sensor)
+
 
 @app.route('/' + sensor_id + '/enabled', method='GET')
 def get_sensor_enabled():
@@ -47,6 +50,7 @@ def get_sensor_enabled():
                                           old_value="",
                                           value=sensor.enabled)
     return json_response
+
 
 @app.route('/' + sensor_id + '/enabled', method='POST')
 def set_sensor_enabled():
@@ -65,8 +69,9 @@ def set_sensor_enabled():
         json_response = generate_API_response(response,
                                               result="NOK",
                                               details="Only one boolean is accepted for this POST request. "
-                                                                 "E.g.: {'value': true}")
+                                                      "E.g.: {'value': true}")
     return json_response
+
 
 @app.route('/' + sensor_id + '/sensing', method='GET')
 def get_sensor_sensing():
@@ -77,6 +82,7 @@ def get_sensor_sensing():
                                           old_value="",
                                           value=sensor.sensing)
     return json_response
+
 
 @app.route('/' + sensor_id + '/sensing', method='POST')
 def set_sensor_sensing():
@@ -98,10 +104,12 @@ def set_sensor_sensing():
                                                             "E.g.: {'value': true}")
     return json_response
 
+
 @app.route('/' + sensor_id + '/capabilities', method='GET')
 def get_sensor_details():
     """ Return the different capabilities of the specified virtual sensor """
     return generate_sensor_capabilities(response, sensor)
+
 
 @app.route('/' + sensor_id + '/capabilities/<capability>', method='GET')
 def get_sensor_capability(capability):
@@ -114,6 +122,7 @@ def get_sensor_capability(capability):
                                           old_value="",
                                           value=value)
     return json_response
+
 
 @app.route('/' + sensor_id + '/capabilities/<capability>', method='POST')
 def set_sensor_capability(capability):

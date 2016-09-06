@@ -7,6 +7,7 @@ from obs_utils.obs_generator import ObsGenerator
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+
 class VirtualSensor(threading.Thread):
 	"""
 		Class for representing a virtual sensor, i.e. a sensor which produce observations from an optional input file.
