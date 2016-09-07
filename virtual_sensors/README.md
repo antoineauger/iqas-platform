@@ -1,60 +1,62 @@
-# hello-world-docker-bottle
-A simple Python "hello world" server in Docker using bottle.
+# docker-virtual-sensor
+A shippable 'virtual sensor' for the iQAS platform.
 
-### Running from the index.docker.io image
-This image exists in the index.docker.io registry already, so you can run it with:
+### Building the docker-virtual-sensor image
+Inside the resources root directory (virtual_sensors), type the following command:
 ```
-$ docker pull joshuaconner/hello-world-docker-bottle
-$ docker run -d -p 8080 joshuaconner/hello-world-docker-bottle
+$ docker build -t antoineog/docker-virtual-sensor .
 ```
-This will map port 8080, which the server is listening on, to a dynamically allocated port on the host. You can see which port by running `docker ps`:
+
+Note: by default, the virtual sensor use a raw temperature dataset from Aarhus. 
+If you want to specify your own raw observation file, copy it in the `virtual_sensors/data` directory and add the `--build-arg obsFile=[YOUR-FILENAME]` option.
+For instance:
+```
+$ docker build --build-arg obsFile=my_data_file.txt -t antoineog/docker-virtual-sensor .
+```
+
+### Running from the docker-virtual-sensor image
+The generic command is:
+```
+$ docker run -p 127.0.0.1:[PORT]:8080 antoineog/docker-virtual-sensor [SENSOR-ID] [URL-TO-PUBLISH]
+```
+
+You should specify 3 arguments:
+
+* PORT: The port you want the virtual sensor will be listening to on localhost (to send API requests)
+* SENSOR-ID: The name of the virtual sensor
+* URL-TO-PUBLISH: The URL where the virtual sensor has to send its observations
+
+For instance, you could type:
+```
+$ docker run -p 127.0.0.1:9092:8080 antoineog/docker-virtual-sensor "s01" "http://10.161.3.183:8081/publish/observation"
+```
+To exit the container, just press `CTRL` + `C`.
+
+Instead, if you prefer to run the docker container in background (in detached mode), just add the `-d` option:
+```
+$ docker run -dp 127.0.0.1:9092:8080 antoineog/docker-virtual-sensor "s01" "http://10.161.3.183:8081/publish/observation"
+```
+
+### Managing the docker-virtual-sensor container
+
+The following are a quick remainder of basic docker commands.
+
+You can see docker containers and their statuses by running `docker ps`. 
 ```
 $ docker ps
-CONTAINER ID        IMAGE                                    COMMAND                CREATED             STATUS              PORTS                     NAMES
-e9b36d702141        joshuaconner/hello_world_bottle:latest   /usr/bin/python /hom   3 seconds ago       Up 2 seconds        0.0.0.0:49173->8080/tcp   kickass_archimedes
+CONTAINER ID        IMAGE                             COMMAND                  CREATED             STATUS              PORTS                      NAMES
+0657fb1624c3        antoineog/docker-virtual-sensor   "/usr/bin/python3 /ho"   47 seconds ago      Up 51 seconds       127.0.0.1:9092->8080/tcp   prickly_roentgen
 ```
-This shows that port 8080 on the container is mapped to port 49173 on the host. Thus, assuming `curl` is installed (if not, run `sudo apt-get install curl` first), you can do:
+Note: use the command `docker ps -a` if the list is empty or if you do not find your container.
+
+To stop a given container, just type the following command:
 ```
-$ curl localhost:49173
-Hello World!
+$ docker stop prickly_roentgen
+prickly_roentgen
 ```
 
-##### Building from source
-You can also build from source using:
+Now the container is stopped, you can remove it:
 ```
-$ docker build -t you/your_tag_name /PATH/TO/THIS/REPOSITORY
-$ docker run -d -p 8080 you/your_tag_name
+$ docker rm prickly_roentgen
+prickly_roentgen
 ```
-
-##### Linking to another container
-If you'd like to link to another container, the image exposes port 8080 as well.
-```
-$ docker run -name hello -d joshuaconner/hello-world-docker-bottle
-$ docker run -i -t -link hello:my_hello ubuntu bash
-```
-
-Then, running `env` in the second container will show the information exposed about our linked container
-```
-root@177dc3b29bf7:/# env
-HOSTNAME=177dc3b29bf7
-TERM=xterm
-MY_HELLO_PORT_8080_TCP_ADDR=172.17.0.81
-MY_HELLO_PORT_8080_TCP_PROTO=tcp
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-MY_HELLO_PORT_8080_TCP=tcp://172.17.0.81:8080
-PWD=/
-MY_HELLO_PORT=tcp://172.17.0.81:8080
-SHLVL=1
-HOME=/
-MY_HELLO_NAME=/tender_galileo/my_hello
-MY_HELLO_PORT_8080_TCP_PORT=8080
-container=lxc
-_=/usr/bin/env
-```
-
-If we were to install curl in this container with `apt-get install curl` we could then do:
-```
-root@177dc3b29bf7:/# curl 172.17.0.81:8080
-Hello World!
-```
-

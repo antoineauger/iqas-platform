@@ -2,24 +2,37 @@
 #
 # VERSION: 1.0
 
-FROM ubuntu
+FROM ubuntu:16.04
 MAINTAINER Antoine Auger <antoine.auger@isae.fr>
+
+# To pass in arguments rather than here
+ENV http_proxy http://proxy.isae.fr:3128
+ENV https_proxy http://proxy.isae.fr:3128
+ENV no_proxy isae.fr
 
 # create user
 RUN groupadd web
 RUN useradd -d /home/bottle -m bottle
 
 # make sure sources are up to date
-RUN echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > /etc/apt/sources.list
-RUN apt-get update
+RUN echo "deb http://archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" > /etc/apt/sources.list
+
+RUN apt-get update && apt-get install -y \ 
+	net-tools \
+	python3-pip
 RUN apt-get upgrade -y
 
-# install pip and hello-world server requirements
-RUN apt-get install python-pip -y
-ADD server.py /home/bottle/server.py
-RUN pip install bottle
+# install python 3 and pip3
+RUN pip3 install --upgrade pip
+RUN pip3 install bottle httplib2
+
+# copy directories
+COPY . /home/bottle/virtualSensor
+ARG obsFile=raw_observations.txt
+COPY ./data/$obsFile /home/bottle/virtualSensor/data/raw_observations.txt
 
 # in case you'd prefer to use links, expose the port
+WORKDIR /home/bottle/virtualSensor/src
 EXPOSE 8080
-ENTRYPOINT ["/usr/bin/python", "/home/bottle/server.py"]
+# ENTRYPOINT ["/usr/bin/python3", "/home/bottle/virtualSensor/src/server.py"]
 USER bottle

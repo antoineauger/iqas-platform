@@ -19,15 +19,16 @@ def usage():
     print("Module: Virtual Sensor")
     print("(C) 2016 ISAE-SUPAERO\n")
 
-if len(sys.argv) != 4:
+if len(sys.argv) != 3:
     print('ERROR: Wrong number of parameters')
     usage()
     exit()
 
 app = Bottle()
-bottle_host = str(sys.argv[1])
-bottle_port = int(sys.argv[2])
-sensor_id = str(sys.argv[3])
+bottle_host = "0.0.0.0" # To listen on all interfaces
+bottle_port = 8080
+sensor_id = str(sys.argv[1])
+url_publish_obs = str(sys.argv[2])
 sensor = None
 sensor_endpoint = 'http://' + bottle_host + ':' + str(bottle_port) + '/' + sensor_id
 logger.warning("Virtual sensor '{}' listening on {}".format(sensor_id, sensor_endpoint))
@@ -142,6 +143,7 @@ def set_sensor_capability(capability):
 
 with open('../etc/sensor.config') as config_file:
     config = json.load(config_file)
+    config['url_publish_obs'] = url_publish_obs
 
 with open('../etc/capabilities.config') as capabilities_file:
     capabilities = json.load(capabilities_file)
@@ -156,4 +158,4 @@ sensor = VirtualSensor(sensor_id=sensor_id,
                        capabilities=capabilities)
 
 # Start of a bottle server to handle calls to the sensor API
-run(app, host=bottle_host, port=bottle_port, debug=True)
+run(app, host=bottle_host, port=bottle_port, quiet=True)
