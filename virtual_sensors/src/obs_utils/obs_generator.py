@@ -2,11 +2,12 @@ class ObsGenerator(object):
 	"""
 	    Observation generator class
 	    2 modes:
-	        -read observations from file
-	        -generate them according to the etc/sensor.config file
+	        -read observations from file [OK]
+	        -generate them according to the etc/sensor.config file [TODO]
 	"""
 
 	def __init__(self, config):
+		# TODO refactor to allow to swith between modes
 		self.config = config
 		self.generation_method_obs = self.config['generation_method_obs']  # provided from file or generated
 		self.path_obs_file = self.config['path_obs_file']  # location of the raw data file
