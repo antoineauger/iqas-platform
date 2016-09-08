@@ -18,13 +18,13 @@
 
     <parent>
         <groupId>org.apache.nifi</groupId>
-        <artifactId>nifi-qoi-bundle</artifactId>
+        <artifactId>nifi-iqas-bundle</artifactId>
         <version>1.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>nifi-qoi-nar</artifactId>
+    <artifactId>nifi-iqas-nar</artifactId>
     <packaging>nar</packaging>
-    <description>Nifi nar for QoI annotation</description>
+    <description>Nifi nar for iQAS platform</description>
     <properties>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <source.skip>true</source.skip>
@@ -33,7 +33,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-qoi-processors</artifactId>
+            <artifactId>nifi-iqas-processors</artifactId>
             <version>1.1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
