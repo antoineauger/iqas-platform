@@ -222,7 +222,9 @@ public class AvroQoIAnnotator extends AbstractProcessor {
 
         ArrayList<String> qoiAttrList = new ArrayList<>();
         qoiAttrList.addAll(Arrays.asList(context.getProperty(QOI_ATTR_TO_ANNOTATE).getValue().split(",")));
-        avroAttrListToImport.addAll(Arrays.asList(context.getProperty(AVRO_ATTR_TO_IMPORT).getValue().split(",")));
+        if (context.getProperty(AVRO_ATTR_TO_IMPORT).isSet()) {
+            avroAttrListToImport.addAll(Arrays.asList(context.getProperty(AVRO_ATTR_TO_IMPORT).getValue().split(",")));
+        }
 
         for (PropertyDescriptor descriptor : context.getProperties().keySet()) {
             if (descriptor.isDynamic() && qoiAttrList.contains(descriptor.getName())) {
@@ -298,32 +300,16 @@ public class AvroQoIAnnotator extends AbstractProcessor {
                         DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(newSchema);
                         DataFileWriter<GenericRecord> writer = new DataFileWriter<>(datumWriter);
 
-                        // Destination for QoI attributes
-                        switch (context.getProperty(DESTINATION).getValue()) {
-                            case DESTINATION_ATTRIBUTE:
-                                // Attribute destination already done
-                                break;
-                            case DESTINATION_CONTENT:
-                                // No attribute destination
-                                qoiAttrToAppendAttr.clear();
-                                // Content destination
-                                try (DataFileWriter<GenericRecord> w = writer.create(newRecord.getSchema(), out)) {
-                                    w.append(newRecord);
-                                    w.close();
-                                } catch (Exception e) {
-                                    getLogger().error(e.toString());
-                                }
-                                break;
-                            case DESTINATION_BOTH:
-                                // Attribute destination already done
-                                // Content destination
-                                try (DataFileWriter<GenericRecord> w = writer.create(newRecord.getSchema(), out)) {
-                                    w.append(newRecord);
-                                    w.close();
-                                } catch (Exception e) {
-                                    getLogger().error(e.toString());
-                                }
-                                break;
+                        if (context.getProperty(DESTINATION).getValue().equals(DESTINATION_CONTENT)) {
+                            // If destination equals content, no qoi attributes to add to the Flowfile
+                            qoiAttrToAppendAttr.clear();
+                        }
+
+                        try (DataFileWriter<GenericRecord> w = writer.create(newRecord.getSchema(), out)) {
+                            w.append(newRecord);
+                            w.close();
+                        } catch (Exception e) {
+                            getLogger().error(e.toString());
                         }
 
                     }
