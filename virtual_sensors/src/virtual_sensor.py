@@ -47,6 +47,7 @@ class VirtualSensor(threading.Thread):
 		"""
 		# TODO load observations from 1) file or 2) generate according input
 		while not self._stopevent.isSet():
+			# TODO : only for testing, remove!
 			if not self.sensing:
 				logger.error("In sensor {} thread (freq={}s)".format(self.sensor_id,
 				                                                     self.capabilities['frequency']))
