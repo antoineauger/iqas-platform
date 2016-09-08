@@ -16,7 +16,7 @@
     <parent>
         <groupId>org.apache.nifi</groupId>
         <artifactId>nifi-kafka-bundle</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>nifi-kafka-0-8-processors</artifactId>
@@ -37,12 +37,12 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>0.8.2.2</version>
+            <version>${kafka8.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.10</artifactId>
-            <version>0.8.2.2</version>
+            <version>${kafka8.version}</version>
             <exclusions>
                 <!-- Transitive dependencies excluded because they are located 
                 in a legacy Maven repository, which Maven 3 doesn't support. -->
