@@ -72,7 +72,6 @@
         <module>nifi-email-bundle</module>
     	<module>nifi-ranger-bundle</module>
         <module>nifi-qoi-bundle</module>
-        <module>nifi-sensors-bundle</module>
   </modules>
     
   <dependencyManagement>
