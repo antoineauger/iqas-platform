@@ -18,7 +18,14 @@ import java.util.Map;
 
 public class GenericAvroSerde<T extends GenericRecord> implements Serde<T> {
 
+    private Schema observationSchema = null;
+
     public GenericAvroSerde() {
+        try {
+            observationSchema = new Schema.Parser().parse(getClass().getResourceAsStream("/observation_schema.avsc"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -42,7 +49,6 @@ public class GenericAvroSerde<T extends GenericRecord> implements Serde<T> {
 
             @Override
             public byte[] serialize(String topic, T data) {
-                Schema observationSchema = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"iqas_raw_data\",\"fields\":[{\"name\":\"type\",\"type\":\"string\"},{\"name\":\"provenance\",\"type\":\"string\"},{\"name\":\"date\",\"type\":\"int\"},{\"name\":\"value\",\"type\":\"double\"},{\"name\":\"qoi\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"qoi_record\",\"fields\":[{\"name\":\"checkpointName\",\"type\":\"string\"},{\"name\":\"qoi_attr\",\"type\":{\"type\":\"map\",\"values\":\"string\"}}]}}}]}");
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(observationSchema);
                 DataFileWriter<GenericRecord> writer = new DataFileWriter<>(datumWriter);

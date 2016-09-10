@@ -1,0 +1,45 @@
+{
+  "type": "record",
+  "name": "iqas_raw_data",
+  "fields": [
+    {
+      "name": "type",
+      "type": "string"
+    },
+    {
+      "name": "provenance",
+      "type": "string"
+    },
+    {
+      "name": "date",
+      "type": "int"
+    },
+    {
+      "name": "value",
+      "type": "double"
+    },
+    {
+      "name": "qoi",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "qoi_record",
+          "fields": [
+            {
+              "name": "checkpointName",
+              "type": "string"
+            },
+            {
+              "name": "qoi_attr",
+              "type": {
+                "type": "map",
+                "values": "string"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
