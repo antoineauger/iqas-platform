@@ -85,9 +85,8 @@ public class AvroQoIAnnotator extends AbstractProcessor {
     /**
      * Properties
      */
-    public static final String DESTINATION_ATTRIBUTE = "attribute";
-    public static final String DESTINATION_CONTENT = "content";
-    public static final String DESTINATION_BOTH = "content and attribute";
+    public static final String PUT_QOI_AS_ATTRIBUTES = "true";
+    public static final String DONT_PUT_QOI_AS_ATTRIBUTES = "false";
 
     private static final PropertyDescriptor QOI_CHECKPOINT_NAME = new PropertyDescriptor.Builder()
             .name("QoI checkpoint name")
@@ -118,12 +117,10 @@ public class AvroQoIAnnotator extends AbstractProcessor {
             .build();
 
     private static final PropertyDescriptor DESTINATION = new PropertyDescriptor.Builder()
-            .name("Destination")
-            .description("Control if QoI attributes are written as a new flowfile attribute " +
-                    ", written in the flowfile content or both. Writing to flowfile content will overwrite any " +
-                    "existing flowfile content.")
-            .allowableValues(DESTINATION_ATTRIBUTE, DESTINATION_CONTENT, DESTINATION_BOTH)
-            .defaultValue(DESTINATION_ATTRIBUTE)
+            .name("Add QoI to flowfile attributes")
+            .description("Control if QoI attributes are added as flowfile attributes.")
+            .allowableValues(PUT_QOI_AS_ATTRIBUTES, DONT_PUT_QOI_AS_ATTRIBUTES)
+            .defaultValue(DONT_PUT_QOI_AS_ATTRIBUTES)
             .expressionLanguageSupported(false)
             .dynamic(false)
             .required(true)
@@ -228,7 +225,7 @@ public class AvroQoIAnnotator extends AbstractProcessor {
 
         for (PropertyDescriptor descriptor : context.getProperties().keySet()) {
             if (descriptor.isDynamic() && qoiAttrList.contains(descriptor.getName())) {
-                getLogger().error("Adding new QoI attribute: {} {}", new Object[]{descriptor.getName(), context.getProperty(descriptor)});
+                //getLogger().error("Adding new QoI attribute: {} {}", new Object[]{descriptor.getName(), context.getProperty(descriptor)});
                 newQoiAttrToAnnotate.put(descriptor.getName(), context.getProperty(descriptor));
                 this.knownProperties.put(descriptor.getName(), context.getProperty(descriptor).getValue());
             }
@@ -294,14 +291,14 @@ public class AvroQoIAnnotator extends AbstractProcessor {
                         for (String s : qoiAttrToAnnotate.keySet()) {
                             qoiAttrToAppendAttr.put(s, context.getProperty(s).evaluateAttributeExpressions(copyForAttributes, knownProperties).getValue());
                         }
-                        newRecord = AvroUtil.annotateRecordWithQoIAttr(getLogger(), newRecord, checkpointName, qoiAttrToAppendAttr);
+                        newRecord = AvroUtil.annotateRecordWithQoIAttr(newRecord, checkpointName, qoiAttrToAppendAttr);
 
                         // Set the writer for Avro records
                         DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(newSchema);
                         DataFileWriter<GenericRecord> writer = new DataFileWriter<>(datumWriter);
 
-                        if (context.getProperty(DESTINATION).getValue().equals(DESTINATION_CONTENT)) {
-                            // If destination equals content, no qoi attributes to add to the Flowfile
+                        if (context.getProperty(DESTINATION).getValue().equals(DONT_PUT_QOI_AS_ATTRIBUTES)) {
+                            // No qoi attributes to add to the Flowfile
                             qoiAttrToAppendAttr.clear();
                         }
 

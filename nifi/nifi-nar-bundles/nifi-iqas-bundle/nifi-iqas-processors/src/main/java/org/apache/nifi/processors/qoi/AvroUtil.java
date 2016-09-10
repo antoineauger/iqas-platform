@@ -61,7 +61,7 @@ public class AvroUtil {
      *
      * @return
      */
-    public static Schema buildQoISchema(ComponentLog log, boolean underArrayFormat) {
+    public static Schema buildQoISchema(boolean underArrayFormat) {
         Schema schemaToReturn;
         String stringNewSchema;
 
@@ -102,13 +102,13 @@ public class AvroUtil {
      * @param qoiAttributes
      * @return
      */
-    public static GenericRecord annotateRecordWithQoIAttr(ComponentLog log, GenericRecord record, String checkpointName, Map<String, String> qoiAttributes) {
+    public static GenericRecord annotateRecordWithQoIAttr(GenericRecord record, String checkpointName, Map<String, String> qoiAttributes) {
         GenericRecord recordToReturn = record;
         List<GenericRecord> list = new ArrayList<>();
         Map<String, String> map = new HashMap<>(qoiAttributes);
 
         // Writing of the QoI attributes
-        GenericRecord qoiRecord = new GenericData.Record(AvroUtil.buildQoISchema(log, false));
+        GenericRecord qoiRecord = new GenericData.Record(AvroUtil.buildQoISchema(false));
         qoiRecord.put("checkpointName",checkpointName);
         qoiRecord.put("qoi_attr",map);
 
