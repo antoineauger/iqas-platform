@@ -1,0 +1,970 @@
+<?xml version="1.0" ?>
+<template encoding-version="1.0">
+  <description></description>
+  <groupId>09b57f0f-0157-1000-e3ce-91222bcd6cc5</groupId>
+  <name>testKafka</name>
+  <snippet>
+    <connections>
+      <id>0157101f-25a2-19d7-0000-000000000000</id>
+      <parentGroupId>09b57f0f-0157-1000-0000-000000000000</parentGroupId>
+      <backPressureDataSizeThreshold>1 GB</backPressureDataSizeThreshold>
+      <backPressureObjectThreshold>10000</backPressureObjectThreshold>
+      <destination>
+        <groupId>09b57f0f-0157-1000-0000-000000000000</groupId>
+        <id>0157101e-25a2-19d7-0000-000000000000</id>
+        <type>PROCESSOR</type>
+      </destination>
+      <flowFileExpiration>0 sec</flowFileExpiration>
+      <labelIndex>1</labelIndex>
+      <name></name>
+      <prioritizers>org.apache.nifi.prioritizer.FirstInFirstOutPrioritizer</prioritizers>
+      <source>
+        <groupId>e9ff6fa5-0156-1000-0000-000000000000</groupId>
+        <id>0157101c-25a2-19d7-0000-000000000000</id>
+        <type>OUTPUT_PORT</type>
+      </source>
+      <zIndex>0</zIndex>
+    </connections>
+    <processGroups>
+      <id>e9ff6fa5-0156-1000-0000-000000000000</id>
+      <parentGroupId>09b57f0f-0157-1000-0000-000000000000</parentGroupId>
+      <position>
+        <x>109.0</x>
+        <y>0.0</y>
+      </position>
+      <comments></comments>
+      <contents>
+        <connections>
+          <id>01571017-25a2-19d7-0000-000000000000</id>
+          <parentGroupId>e9ff6fa5-0156-1000-0000-000000000000</parentGroupId>
+          <backPressureDataSizeThreshold>1 GB</backPressureDataSizeThreshold>
+          <backPressureObjectThreshold>10000</backPressureObjectThreshold>
+          <destination>
+            <groupId>e9ff6fa5-0156-1000-0000-000000000000</groupId>
+            <id>01571016-25a2-19d7-0000-000000000000</id>
+            <type>PROCESSOR</type>
+          </destination>
+          <flowFileExpiration>0 sec</flowFileExpiration>
+          <labelIndex>1</labelIndex>
+          <name></name>
+          <prioritizers>org.apache.nifi.prioritizer.FirstInFirstOutPrioritizer</prioritizers>
+          <selectedRelationships>success</selectedRelationships>
+          <source>
+            <groupId>e9ff6fa5-0156-1000-0000-000000000000</groupId>
+            <id>e9f140f6-0156-1000-0000-000000000000</id>
+            <type>PROCESSOR</type>
+          </source>
+          <zIndex>0</zIndex>
+        </connections>
+        <connections>
+          <id>01571018-25a2-19d7-0000-000000000000</id>
+          <parentGroupId>e9ff6fa5-0156-1000-0000-000000000000</parentGroupId>
+          <backPressureDataSizeThreshold>1 GB</backPressureDataSizeThreshold>
+          <backPressureObjectThreshold>10000</backPressureObjectThreshold>
+          <destination>
+            <groupId>e9ff6fa5-0156-1000-0000-000000000000</groupId>
+            <id>e9fd4817-0156-1000-0000-000000000000</id>
+            <type>PROCESSOR</type>
+          </destination>
+          <flowFileExpiration>0 sec</flowFileExpiration>
+          <labelIndex>1</labelIndex>
+          <name></name>
+          <prioritizers>org.apache.nifi.prioritizer.FirstInFirstOutPrioritizer</prioritizers>
+          <selectedRelationships>success</selectedRelationships>
+          <source>
+            <groupId>e9ff6fa5-0156-1000-0000-000000000000</groupId>
+            <id>01571016-25a2-19d7-0000-000000000000</id>
+            <type>PROCESSOR</type>
+          </source>
+          <zIndex>0</zIndex>
+        </connections>
+        <connections>
+          <id>01571019-25a2-19d7-0000-000000000000</id>
+          <parentGroupId>e9ff6fa5-0156-1000-0000-000000000000</parentGroupId>
+          <backPressureDataSizeThreshold>1 GB</backPressureDataSizeThreshold>
+          <backPressureObjectThreshold>10000</backPressureObjectThreshold>
+          <destination>
+            <groupId>e9ff6fa5-0156-1000-0000-000000000000</groupId>
+            <id>e9fd7f0c-0156-1000-0000-000000000000</id>
+            <type>PROCESSOR</type>
+          </destination>
+          <flowFileExpiration>0 sec</flowFileExpiration>
+          <labelIndex>1</labelIndex>
+          <name></name>
+          <prioritizers>org.apache.nifi.prioritizer.FirstInFirstOutPrioritizer</prioritizers>
+          <selectedRelationships>failure</selectedRelationships>
+          <selectedRelationships>incompatible</selectedRelationships>
+          <source>
+            <groupId>e9ff6fa5-0156-1000-0000-000000000000</groupId>
+            <id>01571016-25a2-19d7-0000-000000000000</id>
+            <type>PROCESSOR</type>
+          </source>
+          <zIndex>0</zIndex>
+        </connections>
+        <connections>
+          <id>0157101d-25a2-19d7-0000-000000000000</id>
+          <parentGroupId>e9ff6fa5-0156-1000-0000-000000000000</parentGroupId>
+          <backPressureDataSizeThreshold>1 GB</backPressureDataSizeThreshold>
+          <backPressureObjectThreshold>10000</backPressureObjectThreshold>
+          <destination>
+            <groupId>e9ff6fa5-0156-1000-0000-000000000000</groupId>
+            <id>0157101c-25a2-19d7-0000-000000000000</id>
+            <type>OUTPUT_PORT</type>
+          </destination>
+          <flowFileExpiration>0 sec</flowFileExpiration>
+          <labelIndex>1</labelIndex>
+          <name></name>
+          <prioritizers>org.apache.nifi.prioritizer.FirstInFirstOutPrioritizer</prioritizers>
+          <selectedRelationships>success</selectedRelationships>
+          <source>
+            <groupId>e9ff6fa5-0156-1000-0000-000000000000</groupId>
+            <id>01571016-25a2-19d7-0000-000000000000</id>
+            <type>PROCESSOR</type>
+          </source>
+          <zIndex>0</zIndex>
+        </connections>
+        <controllerServices>
+          <id>e9f6209f-0156-1000-0000-000000000000</id>
+          <parentGroupId>e9ff6fa5-0156-1000-0000-000000000000</parentGroupId>
+          <descriptors>
+            <entry>
+              <key>Maximum Outstanding Requests</key>
+              <value>
+                <name>Maximum Outstanding Requests</name>
+              </value>
+            </entry>
+            <entry>
+              <key>Request Expiration</key>
+              <value>
+                <name>Request Expiration</name>
+              </value>
+            </entry>
+          </descriptors>
+          <name>StandardHttpContextMap</name>
+          <properties>
+            <entry>
+              <key>Maximum Outstanding Requests</key>
+              <value>5000</value>
+            </entry>
+            <entry>
+              <key>Request Expiration</key>
+              <value>1 min</value>
+            </entry>
+          </properties>
+          <state>ENABLED</state>
+          <type>org.apache.nifi.http.StandardHttpContextMap</type>
+        </controllerServices>
+        <outputPorts>
+          <id>0157101c-25a2-19d7-0000-000000000000</id>
+          <parentGroupId>e9ff6fa5-0156-1000-0000-000000000000</parentGroupId>
+          <position>
+            <x>1633.9893150465034</x>
+            <y>256.4839249738229</y>
+          </position>
+          <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+          <name>to_kafka</name>
+          <state>STOPPED</state>
+          <type>OUTPUT_PORT</type>
+        </outputPorts>
+        <processors>
+          <id>e9f140f6-0156-1000-0000-000000000000</id>
+          <parentGroupId>e9ff6fa5-0156-1000-0000-000000000000</parentGroupId>
+          <position>
+            <x>640.5</x>
+            <y>387.5</y>
+          </position>
+          <config>
+            <bulletinLevel>WARN</bulletinLevel>
+            <comments></comments>
+            <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+            <descriptors>
+              <entry>
+                <key>Listening Port</key>
+                <value>
+                  <name>Listening Port</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Hostname</key>
+                <value>
+                  <name>Hostname</name>
+                </value>
+              </entry>
+              <entry>
+                <key>SSL Context Service</key>
+                <value>
+                  <identifiesControllerService>org.apache.nifi.ssl.SSLContextService</identifiesControllerService>
+                  <name>SSL Context Service</name>
+                </value>
+              </entry>
+              <entry>
+                <key>HTTP Context Map</key>
+                <value>
+                  <identifiesControllerService>org.apache.nifi.http.HttpContextMap</identifiesControllerService>
+                  <name>HTTP Context Map</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Allowed Paths</key>
+                <value>
+                  <name>Allowed Paths</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Default URL Character Set</key>
+                <value>
+                  <name>Default URL Character Set</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Allow GET</key>
+                <value>
+                  <name>Allow GET</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Allow POST</key>
+                <value>
+                  <name>Allow POST</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Allow PUT</key>
+                <value>
+                  <name>Allow PUT</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Allow DELETE</key>
+                <value>
+                  <name>Allow DELETE</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Allow HEAD</key>
+                <value>
+                  <name>Allow HEAD</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Allow OPTIONS</key>
+                <value>
+                  <name>Allow OPTIONS</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Additional HTTP Methods</key>
+                <value>
+                  <name>Additional HTTP Methods</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Client Authentication</key>
+                <value>
+                  <name>Client Authentication</name>
+                </value>
+              </entry>
+            </descriptors>
+            <lossTolerant>false</lossTolerant>
+            <penaltyDuration>30 sec</penaltyDuration>
+            <properties>
+              <entry>
+                <key>Listening Port</key>
+                <value>8081</value>
+              </entry>
+              <entry>
+                <key>Hostname</key>
+              </entry>
+              <entry>
+                <key>SSL Context Service</key>
+              </entry>
+              <entry>
+                <key>HTTP Context Map</key>
+                <value>e9f6209f-0156-1000-0000-000000000000</value>
+              </entry>
+              <entry>
+                <key>Allowed Paths</key>
+                <value>/publish/(observation)</value>
+              </entry>
+              <entry>
+                <key>Default URL Character Set</key>
+                <value>UTF-8</value>
+              </entry>
+              <entry>
+                <key>Allow GET</key>
+                <value>true</value>
+              </entry>
+              <entry>
+                <key>Allow POST</key>
+                <value>true</value>
+              </entry>
+              <entry>
+                <key>Allow PUT</key>
+                <value>true</value>
+              </entry>
+              <entry>
+                <key>Allow DELETE</key>
+                <value>true</value>
+              </entry>
+              <entry>
+                <key>Allow HEAD</key>
+                <value>false</value>
+              </entry>
+              <entry>
+                <key>Allow OPTIONS</key>
+                <value>false</value>
+              </entry>
+              <entry>
+                <key>Additional HTTP Methods</key>
+              </entry>
+              <entry>
+                <key>Client Authentication</key>
+                <value>No Authentication</value>
+              </entry>
+            </properties>
+            <runDurationMillis>0</runDurationMillis>
+            <schedulingPeriod>0 sec</schedulingPeriod>
+            <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+            <yieldDuration>1 sec</yieldDuration>
+          </config>
+          <name>HandleHttpRequest</name>
+          <relationships>
+            <autoTerminate>false</autoTerminate>
+            <name>success</name>
+          </relationships>
+          <style></style>
+          <type>org.apache.nifi.processors.standard.HandleHttpRequest</type>
+        </processors>
+        <processors>
+          <id>e9fd4817-0156-1000-0000-000000000000</id>
+          <parentGroupId>e9ff6fa5-0156-1000-0000-000000000000</parentGroupId>
+          <position>
+            <x>1574.5</x>
+            <y>378.5</y>
+          </position>
+          <config>
+            <bulletinLevel>WARN</bulletinLevel>
+            <comments></comments>
+            <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+            <descriptors>
+              <entry>
+                <key>HTTP Status Code</key>
+                <value>
+                  <name>HTTP Status Code</name>
+                </value>
+              </entry>
+              <entry>
+                <key>HTTP Context Map</key>
+                <value>
+                  <identifiesControllerService>org.apache.nifi.http.HttpContextMap</identifiesControllerService>
+                  <name>HTTP Context Map</name>
+                </value>
+              </entry>
+            </descriptors>
+            <lossTolerant>false</lossTolerant>
+            <penaltyDuration>30 sec</penaltyDuration>
+            <properties>
+              <entry>
+                <key>HTTP Status Code</key>
+                <value>200</value>
+              </entry>
+              <entry>
+                <key>HTTP Context Map</key>
+                <value>e9f6209f-0156-1000-0000-000000000000</value>
+              </entry>
+            </properties>
+            <runDurationMillis>0</runDurationMillis>
+            <schedulingPeriod>0 sec</schedulingPeriod>
+            <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+            <yieldDuration>1 sec</yieldDuration>
+          </config>
+          <name>HandleHttpResponse</name>
+          <relationships>
+            <autoTerminate>true</autoTerminate>
+            <name>failure</name>
+          </relationships>
+          <relationships>
+            <autoTerminate>true</autoTerminate>
+            <name>success</name>
+          </relationships>
+          <style></style>
+          <type>org.apache.nifi.processors.standard.HandleHttpResponse</type>
+        </processors>
+        <processors>
+          <id>e9fd7f0c-0156-1000-0000-000000000000</id>
+          <parentGroupId>e9ff6fa5-0156-1000-0000-000000000000</parentGroupId>
+          <position>
+            <x>1579.5</x>
+            <y>548.5</y>
+          </position>
+          <config>
+            <bulletinLevel>WARN</bulletinLevel>
+            <comments></comments>
+            <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+            <descriptors>
+              <entry>
+                <key>HTTP Status Code</key>
+                <value>
+                  <name>HTTP Status Code</name>
+                </value>
+              </entry>
+              <entry>
+                <key>HTTP Context Map</key>
+                <value>
+                  <identifiesControllerService>org.apache.nifi.http.HttpContextMap</identifiesControllerService>
+                  <name>HTTP Context Map</name>
+                </value>
+              </entry>
+            </descriptors>
+            <lossTolerant>false</lossTolerant>
+            <penaltyDuration>30 sec</penaltyDuration>
+            <properties>
+              <entry>
+                <key>HTTP Status Code</key>
+                <value>503</value>
+              </entry>
+              <entry>
+                <key>HTTP Context Map</key>
+                <value>e9f6209f-0156-1000-0000-000000000000</value>
+              </entry>
+            </properties>
+            <runDurationMillis>0</runDurationMillis>
+            <schedulingPeriod>0 sec</schedulingPeriod>
+            <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+            <yieldDuration>1 sec</yieldDuration>
+          </config>
+          <name>HandleHttpResponse</name>
+          <relationships>
+            <autoTerminate>true</autoTerminate>
+            <name>failure</name>
+          </relationships>
+          <relationships>
+            <autoTerminate>true</autoTerminate>
+            <name>success</name>
+          </relationships>
+          <style></style>
+          <type>org.apache.nifi.processors.standard.HandleHttpResponse</type>
+        </processors>
+        <processors>
+          <id>01571016-25a2-19d7-0000-000000000000</id>
+          <parentGroupId>e9ff6fa5-0156-1000-0000-000000000000</parentGroupId>
+          <position>
+            <x>1100.9893150465034</x>
+            <y>392.9839249738229</y>
+          </position>
+          <config>
+            <bulletinLevel>WARN</bulletinLevel>
+            <comments></comments>
+            <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+            <descriptors>
+              <entry>
+                <key>Hadoop configuration files</key>
+                <value>
+                  <name>Hadoop configuration files</name>
+                </value>
+              </entry>
+              <entry>
+                <key>Record schema</key>
+                <value>
+                  <name>Record schema</name>
+                </value>
+              </entry>
+            </descriptors>
+            <lossTolerant>false</lossTolerant>
+            <penaltyDuration>30 sec</penaltyDuration>
+            <properties>
+              <entry>
+                <key>Hadoop configuration files</key>
+              </entry>
+              <entry>
+                <key>Record schema</key>
+                <value>{"type":"record","name":"iqas_raw_data","fields":[{"name":"type","type":"string","default":"temperature"},{"name":"provenance","type":"string"},{"name":"date","type":"int"},{"name":"value","type":"double"}]}</value>
+              </entry>
+            </properties>
+            <runDurationMillis>0</runDurationMillis>
+            <schedulingPeriod>0 sec</schedulingPeriod>
+            <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+            <yieldDuration>1 sec</yieldDuration>
+          </config>
+          <name>iQASRawDataLayer</name>
+          <relationships>
+            <autoTerminate>false</autoTerminate>
+            <name>failure</name>
+          </relationships>
+          <relationships>
+            <autoTerminate>false</autoTerminate>
+            <name>incompatible</name>
+          </relationships>
+          <relationships>
+            <autoTerminate>false</autoTerminate>
+            <name>success</name>
+          </relationships>
+          <style></style>
+          <type>org.apache.nifi.processors.kite.ConvertJSONToAvro</type>
+        </processors>
+      </contents>
+      <name>iQASTemperatureAdapter</name>
+    </processGroups>
+    <processors>
+      <id>0157101e-25a2-19d7-0000-000000000000</id>
+      <parentGroupId>09b57f0f-0157-1000-0000-000000000000</parentGroupId>
+      <position>
+        <x>655.0000000000006</x>
+        <y>29.000000000000057</y>
+      </position>
+      <config>
+        <bulletinLevel>WARN</bulletinLevel>
+        <comments></comments>
+        <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+        <descriptors>
+          <entry>
+            <key>bootstrap.servers</key>
+            <value>
+              <name>bootstrap.servers</name>
+            </value>
+          </entry>
+          <entry>
+            <key>security.protocol</key>
+            <value>
+              <name>security.protocol</name>
+            </value>
+          </entry>
+          <entry>
+            <key>sasl.kerberos.service.name</key>
+            <value>
+              <name>sasl.kerberos.service.name</name>
+            </value>
+          </entry>
+          <entry>
+            <key>ssl.context.service</key>
+            <value>
+              <identifiesControllerService>org.apache.nifi.ssl.SSLContextService</identifiesControllerService>
+              <name>ssl.context.service</name>
+            </value>
+          </entry>
+          <entry>
+            <key>topic</key>
+            <value>
+              <name>topic</name>
+            </value>
+          </entry>
+          <entry>
+            <key>acks</key>
+            <value>
+              <name>acks</name>
+            </value>
+          </entry>
+          <entry>
+            <key>kafka-key</key>
+            <value>
+              <name>kafka-key</name>
+            </value>
+          </entry>
+          <entry>
+            <key>key-attribute-encoding</key>
+            <value>
+              <name>key-attribute-encoding</name>
+            </value>
+          </entry>
+          <entry>
+            <key>message-demarcator</key>
+            <value>
+              <name>message-demarcator</name>
+            </value>
+          </entry>
+          <entry>
+            <key>max.request.size</key>
+            <value>
+              <name>max.request.size</name>
+            </value>
+          </entry>
+          <entry>
+            <key>max.block.ms</key>
+            <value>
+              <name>max.block.ms</name>
+            </value>
+          </entry>
+          <entry>
+            <key>partitioner.class</key>
+            <value>
+              <name>partitioner.class</name>
+            </value>
+          </entry>
+          <entry>
+            <key>compression.type</key>
+            <value>
+              <name>compression.type</name>
+            </value>
+          </entry>
+        </descriptors>
+        <lossTolerant>false</lossTolerant>
+        <penaltyDuration>30 sec</penaltyDuration>
+        <properties>
+          <entry>
+            <key>bootstrap.servers</key>
+            <value>localhost:9092</value>
+          </entry>
+          <entry>
+            <key>security.protocol</key>
+            <value>PLAINTEXT</value>
+          </entry>
+          <entry>
+            <key>sasl.kerberos.service.name</key>
+          </entry>
+          <entry>
+            <key>ssl.context.service</key>
+          </entry>
+          <entry>
+            <key>topic</key>
+            <value>test</value>
+          </entry>
+          <entry>
+            <key>acks</key>
+            <value>0</value>
+          </entry>
+          <entry>
+            <key>kafka-key</key>
+          </entry>
+          <entry>
+            <key>key-attribute-encoding</key>
+            <value>utf-8</value>
+          </entry>
+          <entry>
+            <key>message-demarcator</key>
+          </entry>
+          <entry>
+            <key>max.request.size</key>
+            <value>1 MB</value>
+          </entry>
+          <entry>
+            <key>max.block.ms</key>
+            <value>30 sec</value>
+          </entry>
+          <entry>
+            <key>partitioner.class</key>
+            <value>org.apache.kafka.clients.producer.internals.DefaultPartitioner</value>
+          </entry>
+          <entry>
+            <key>compression.type</key>
+            <value>none</value>
+          </entry>
+        </properties>
+        <runDurationMillis>0</runDurationMillis>
+        <schedulingPeriod>0 sec</schedulingPeriod>
+        <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+        <yieldDuration>1 sec</yieldDuration>
+      </config>
+      <name>PublishKafka</name>
+      <relationships>
+        <autoTerminate>true</autoTerminate>
+        <name>failure</name>
+      </relationships>
+      <relationships>
+        <autoTerminate>true</autoTerminate>
+        <name>success</name>
+      </relationships>
+      <style></style>
+      <type>org.apache.nifi.processors.kafka.pubsub.PublishKafka_0_10</type>
+    </processors>
+    <processors>
+      <id>01571021-25a2-19d7-0000-000000000000</id>
+      <parentGroupId>09b57f0f-0157-1000-0000-000000000000</parentGroupId>
+      <position>
+        <x>0.0</x>
+        <y>273.00000000000017</y>
+      </position>
+      <config>
+        <bulletinLevel>WARN</bulletinLevel>
+        <comments></comments>
+        <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+        <descriptors>
+          <entry>
+            <key>bootstrap.servers</key>
+            <value>
+              <name>bootstrap.servers</name>
+            </value>
+          </entry>
+          <entry>
+            <key>security.protocol</key>
+            <value>
+              <name>security.protocol</name>
+            </value>
+          </entry>
+          <entry>
+            <key>sasl.kerberos.service.name</key>
+            <value>
+              <name>sasl.kerberos.service.name</name>
+            </value>
+          </entry>
+          <entry>
+            <key>ssl.context.service</key>
+            <value>
+              <identifiesControllerService>org.apache.nifi.ssl.SSLContextService</identifiesControllerService>
+              <name>ssl.context.service</name>
+            </value>
+          </entry>
+          <entry>
+            <key>topic</key>
+            <value>
+              <name>topic</name>
+            </value>
+          </entry>
+          <entry>
+            <key>group.id</key>
+            <value>
+              <name>group.id</name>
+            </value>
+          </entry>
+          <entry>
+            <key>auto.offset.reset</key>
+            <value>
+              <name>auto.offset.reset</name>
+            </value>
+          </entry>
+          <entry>
+            <key>key-attribute-encoding</key>
+            <value>
+              <name>key-attribute-encoding</name>
+            </value>
+          </entry>
+          <entry>
+            <key>message-demarcator</key>
+            <value>
+              <name>message-demarcator</name>
+            </value>
+          </entry>
+          <entry>
+            <key>max.poll.records</key>
+            <value>
+              <name>max.poll.records</name>
+            </value>
+          </entry>
+          <entry>
+            <key>max-uncommit-offset-wait</key>
+            <value>
+              <name>max-uncommit-offset-wait</name>
+            </value>
+          </entry>
+        </descriptors>
+        <lossTolerant>false</lossTolerant>
+        <penaltyDuration>30 sec</penaltyDuration>
+        <properties>
+          <entry>
+            <key>bootstrap.servers</key>
+            <value>localhost:9092</value>
+          </entry>
+          <entry>
+            <key>security.protocol</key>
+            <value>PLAINTEXT</value>
+          </entry>
+          <entry>
+            <key>sasl.kerberos.service.name</key>
+          </entry>
+          <entry>
+            <key>ssl.context.service</key>
+          </entry>
+          <entry>
+            <key>topic</key>
+            <value>test</value>
+          </entry>
+          <entry>
+            <key>group.id</key>
+            <value>consumer2</value>
+          </entry>
+          <entry>
+            <key>auto.offset.reset</key>
+            <value>latest</value>
+          </entry>
+          <entry>
+            <key>key-attribute-encoding</key>
+            <value>utf-8</value>
+          </entry>
+          <entry>
+            <key>message-demarcator</key>
+          </entry>
+          <entry>
+            <key>max.poll.records</key>
+            <value>10000</value>
+          </entry>
+          <entry>
+            <key>max-uncommit-offset-wait</key>
+            <value>1 secs</value>
+          </entry>
+        </properties>
+        <runDurationMillis>0</runDurationMillis>
+        <schedulingPeriod>0 sec</schedulingPeriod>
+        <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+        <yieldDuration>1 sec</yieldDuration>
+      </config>
+      <name>ConsumeKafka_0_10</name>
+      <relationships>
+        <autoTerminate>false</autoTerminate>
+        <name>success</name>
+      </relationships>
+      <style></style>
+      <type>org.apache.nifi.processors.kafka.pubsub.ConsumeKafka_0_10</type>
+    </processors>
+    <processors>
+      <id>0157102c-25a2-19d7-0000-000000000000</id>
+      <parentGroupId>09b57f0f-0157-1000-0000-000000000000</parentGroupId>
+      <position>
+        <x>897.0000000000006</x>
+        <y>276.00000000000017</y>
+      </position>
+      <config>
+        <bulletinLevel>WARN</bulletinLevel>
+        <comments></comments>
+        <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+        <descriptors>
+          <entry>
+            <key>bootstrap.servers</key>
+            <value>
+              <name>bootstrap.servers</name>
+            </value>
+          </entry>
+          <entry>
+            <key>security.protocol</key>
+            <value>
+              <name>security.protocol</name>
+            </value>
+          </entry>
+          <entry>
+            <key>sasl.kerberos.service.name</key>
+            <value>
+              <name>sasl.kerberos.service.name</name>
+            </value>
+          </entry>
+          <entry>
+            <key>ssl.context.service</key>
+            <value>
+              <identifiesControllerService>org.apache.nifi.ssl.SSLContextService</identifiesControllerService>
+              <name>ssl.context.service</name>
+            </value>
+          </entry>
+          <entry>
+            <key>topic</key>
+            <value>
+              <name>topic</name>
+            </value>
+          </entry>
+          <entry>
+            <key>acks</key>
+            <value>
+              <name>acks</name>
+            </value>
+          </entry>
+          <entry>
+            <key>kafka-key</key>
+            <value>
+              <name>kafka-key</name>
+            </value>
+          </entry>
+          <entry>
+            <key>key-attribute-encoding</key>
+            <value>
+              <name>key-attribute-encoding</name>
+            </value>
+          </entry>
+          <entry>
+            <key>message-demarcator</key>
+            <value>
+              <name>message-demarcator</name>
+            </value>
+          </entry>
+          <entry>
+            <key>max.request.size</key>
+            <value>
+              <name>max.request.size</name>
+            </value>
+          </entry>
+          <entry>
+            <key>max.block.ms</key>
+            <value>
+              <name>max.block.ms</name>
+            </value>
+          </entry>
+          <entry>
+            <key>partitioner.class</key>
+            <value>
+              <name>partitioner.class</name>
+            </value>
+          </entry>
+          <entry>
+            <key>compression.type</key>
+            <value>
+              <name>compression.type</name>
+            </value>
+          </entry>
+        </descriptors>
+        <lossTolerant>false</lossTolerant>
+        <penaltyDuration>30 sec</penaltyDuration>
+        <properties>
+          <entry>
+            <key>bootstrap.servers</key>
+            <value>localhost:9092</value>
+          </entry>
+          <entry>
+            <key>security.protocol</key>
+            <value>PLAINTEXT</value>
+          </entry>
+          <entry>
+            <key>sasl.kerberos.service.name</key>
+          </entry>
+          <entry>
+            <key>ssl.context.service</key>
+          </entry>
+          <entry>
+            <key>topic</key>
+            <value>obsOkay</value>
+          </entry>
+          <entry>
+            <key>acks</key>
+            <value>0</value>
+          </entry>
+          <entry>
+            <key>kafka-key</key>
+          </entry>
+          <entry>
+            <key>key-attribute-encoding</key>
+            <value>utf-8</value>
+          </entry>
+          <entry>
+            <key>message-demarcator</key>
+          </entry>
+          <entry>
+            <key>max.request.size</key>
+            <value>1 MB</value>
+          </entry>
+          <entry>
+            <key>max.block.ms</key>
+            <value>30 sec</value>
+          </entry>
+          <entry>
+            <key>partitioner.class</key>
+            <value>org.apache.kafka.clients.producer.internals.DefaultPartitioner</value>
+          </entry>
+          <entry>
+            <key>compression.type</key>
+            <value>none</value>
+          </entry>
+        </properties>
+        <runDurationMillis>0</runDurationMillis>
+        <schedulingPeriod>0 sec</schedulingPeriod>
+        <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+        <yieldDuration>1 sec</yieldDuration>
+      </config>
+      <name>PublishKafka_TEST</name>
+      <relationships>
+        <autoTerminate>true</autoTerminate>
+        <name>failure</name>
+      </relationships>
+      <relationships>
+        <autoTerminate>true</autoTerminate>
+        <name>success</name>
+      </relationships>
+      <style></style>
+      <type>org.apache.nifi.processors.kafka.pubsub.PublishKafka_0_10</type>
+    </processors>
+  </snippet>
+  <timestamp>09/08/2016 17:59:55 CEST</timestamp>
+</template>

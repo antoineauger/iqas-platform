@@ -26,7 +26,7 @@ if len(sys.argv) != 3:
 
 app = Bottle()
 bottle_host = "0.0.0.0" # To listen on all interfaces
-bottle_port = 8080
+bottle_port = 9090
 sensor_id = str(sys.argv[1])
 url_publish_obs = str(sys.argv[2])
 sensor = None

@@ -7,5 +7,5 @@ cloudify_resources/vagrant_VMs/nifi-master/.vagrant
 flink_resources/flink-filtering-module/.idea
 virtual_sensors/.idea
 autonomic_loops/.idea
-kafka_streams/target
 kafka_streams/.idea
+kafka_streams/target

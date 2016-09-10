@@ -47,13 +47,15 @@ class VirtualSensor(threading.Thread):
 		"""
 		# TODO load observations from 1) file or 2) generate according input
 		while not self._stopevent.isSet():
-			if self.sensing:
+			# TODO : only for testing, remove!
+			if not self.sensing:
 				logger.error("In sensor {} thread (freq={}s)".format(self.sensor_id,
 				                                                     self.capabilities['frequency']))
 				obs = self.obs_generator.generate_one_observation()
 				if obs is not None:
 					try:
-						post_dict_to_url(self.url_publish_obs, {'observation': obs})
+						formatted_obs = obs.strip('\n').split(' ')
+						post_dict_to_url(self.url_publish_obs, {'provenance': self.sensor_id, 'date': int(float(formatted_obs[0])), 'value': float(formatted_obs[1])})
 					except ConnectionRefusedError:
 						logger.error("ConnectionRefusedError: [Errno 61] Connection refused.")
 					if not self.infinite_battery:
