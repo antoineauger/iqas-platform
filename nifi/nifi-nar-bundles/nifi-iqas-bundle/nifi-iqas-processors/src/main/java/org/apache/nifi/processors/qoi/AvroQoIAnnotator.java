@@ -152,6 +152,7 @@ public class AvroQoIAnnotator extends AbstractProcessor {
             .description("A flowfile is routed to this relationship if it cannot be parsed as Avro")
             .build();
 
+    private AvroUtil avroUtil;
     private List<PropertyDescriptor> properties;
     private Set<Relationship> relationships;
     private volatile Schema schema = null;
@@ -217,6 +218,8 @@ public class AvroQoIAnnotator extends AbstractProcessor {
         this.knownProperties.clear();
         final Map<String, PropertyValue> newQoiAttrToAnnotate = new HashMap<>();
 
+        avroUtil = new AvroUtil();
+
         ArrayList<String> qoiAttrList = new ArrayList<>();
         qoiAttrList.addAll(Arrays.asList(context.getProperty(QOI_ATTR_TO_ANNOTATE).getValue().split(",")));
         if (context.getProperty(AVRO_ATTR_TO_IMPORT).isSet()) {
@@ -279,19 +282,19 @@ public class AvroQoIAnnotator extends AbstractProcessor {
                         }
 
                         // Definition of the new Avro record
-                        Schema newSchema = AvroUtil.buildGlobalSchema(record.getSchema().getType().toString().toLowerCase(),
+                        Schema newSchema = avroUtil.buildGlobalSchema(record.getSchema().getType().toString().toLowerCase(),
                                 record.getSchema().getName(),
                                 record.getSchema().getNamespace(),
                                 record.getSchema().getFields());
 
                         // Preserve the given fields from the old Avro record
-                        GenericRecord newRecord = AvroUtil.copyFields(record,record.getSchema().getFields(),newSchema);
+                        GenericRecord newRecord = avroUtil.copyFields(record,record.getSchema().getFields(),newSchema);
 
                         // QoI annotation
                         for (String s : qoiAttrToAnnotate.keySet()) {
                             qoiAttrToAppendAttr.put(s, context.getProperty(s).evaluateAttributeExpressions(copyForAttributes, knownProperties).getValue());
                         }
-                        newRecord = AvroUtil.annotateRecordWithQoIAttr(newRecord, checkpointName, qoiAttrToAppendAttr);
+                        newRecord = avroUtil.annotateRecordWithQoIAttr(newRecord, checkpointName, qoiAttrToAppendAttr);
 
                         // Set the writer for Avro records
                         DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(newSchema);
