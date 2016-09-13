@@ -33,6 +33,6 @@ COPY ./data/$obsFile /home/bottle/virtualSensor/data/raw_observations.txt
 
 # in case you'd prefer to use links, expose the port
 WORKDIR /home/bottle/virtualSensor/src
-EXPOSE 8080
-# ENTRYPOINT ["/usr/bin/python3", "/home/bottle/virtualSensor/src/server.py"]
+EXPOSE 9090
+ENTRYPOINT ["/usr/bin/python3", "/home/bottle/virtualSensor/src/server.py"]
 USER bottle
