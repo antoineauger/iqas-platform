@@ -1,0 +1,44 @@
+========= Information layer =========
+
+*** Monitor ***
+
+
+
+*** Analyze ***
+
+
+
+*** Plan ***
+
+
+
+*** Execute ***
+
+
+
+*** Knowledge Base ***
+
+
+
+
+========= Raw Data layer =========
+
+*** Monitor ***
+
+
+
+*** Analyze ***
+
+
+
+*** Plan ***
+
+
+
+*** Execute ***
+
+
+
+*** Knowledge Base ***
+
+
