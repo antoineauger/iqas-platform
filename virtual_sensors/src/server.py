@@ -10,9 +10,8 @@ from virtual_sensor import VirtualSensor
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# Bottle parameters
 
-
+# Helper function and check of the arguments supplied
 def usage():
     """ Print short help """
     print("iQAS: an integration platform for QoI Assessment as a Service")
@@ -24,6 +23,8 @@ if len(sys.argv) != 3:
     usage()
     exit()
 
+
+# Bottle parameters
 app = Bottle()
 bottle_host = "0.0.0.0" # To listen on all interfaces
 bottle_port = 9090
@@ -33,9 +34,8 @@ sensor = None
 sensor_endpoint = 'http://' + bottle_host + ':' + str(bottle_port) + '/' + sensor_id
 logger.warning("Virtual sensor '{}' listening on {}".format(sensor_id, sensor_endpoint))
 
+
 # REST APIs for the virtual sensor (see also the corresponding class virtual_sensor.py)
-
-
 @app.route('/' + sensor_id, method='GET')
 def init_virtual_sensor():
     """ Return an overview of the specified virtual sensor """
@@ -141,6 +141,8 @@ def set_sensor_capability(capability):
                                           value=value)
     return json_response
 
+
+# Configuration of the virtual sensor and its capabilities are imported from file
 with open('../etc/sensor.config') as config_file:
     config = json.load(config_file)
     config['url_publish_obs'] = url_publish_obs
@@ -148,7 +150,6 @@ with open('../etc/sensor.config') as config_file:
 with open('../etc/capabilities.config') as capabilities_file:
     capabilities = json.load(capabilities_file)
 
-# TODO check that supplied parameters are correct
 
 # Virtual sensor creation
 sensor = VirtualSensor(sensor_id=sensor_id,
@@ -156,6 +157,7 @@ sensor = VirtualSensor(sensor_id=sensor_id,
                        endpoint=sensor_endpoint,
                        config=config,
                        capabilities=capabilities)
+
 
 # Start of a bottle server to handle calls to the sensor API
 run(app, host=bottle_host, port=bottle_port, quiet=True)

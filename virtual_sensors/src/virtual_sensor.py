@@ -15,7 +15,6 @@ class VirtualSensor(threading.Thread):
 			{"observation": RAW_DATA_OBSERVATION}
 		Available APIs to interact with the sensor: TODO
 	"""
-
 	def __init__(self, sensor_id, enabled, endpoint, config, capabilities):
 		threading.Thread.__init__(self)
 		self.setDaemon(True)
@@ -48,7 +47,7 @@ class VirtualSensor(threading.Thread):
 		# TODO load observations from 1) file or 2) generate according input
 		while not self._stopevent.isSet():
 			# TODO : only for testing, remove!
-			if not self.sensing:
+			if self.sensing:
 				logger.error("In sensor {} thread (freq={}s)".format(self.sensor_id,
 				                                                     self.capabilities['frequency']))
 				obs = self.obs_generator.generate_one_observation()
