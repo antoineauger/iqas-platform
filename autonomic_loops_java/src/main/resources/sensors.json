@@ -1,0 +1,42 @@
+{
+  "sensors": [
+    {
+      "sensor_id": "s01",
+      "type": "physical",
+      "location_name": "Toulouse",
+      "coordinates": [
+        {
+          "x": 0.5656312,
+          "y": 5313453456
+        }
+      ],
+      "topics": [
+        {
+          "name": "temperature",
+          "endpoint": "http://127.0.0.1:9091/s01"
+        },
+        {
+          "name": "visibility",
+          "endpoint": "http://127.0.0.1:9092/s01"
+        }
+      ]
+    },
+    {
+      "sensor_id": "s02",
+      "type": "physical",
+      "location_name": "Toulouse",
+      "coordinates": [
+        {
+          "x": 0.5656312,
+          "y": 5313453456
+        }
+      ],
+      "topics": [
+        {
+          "name": "visibility",
+          "endpoint": "http://127.0.0.1:9093/s02"
+        }
+      ]
+    }
+  ]
+}

@@ -9,3 +9,5 @@ virtual_sensors/.idea
 autonomic_loops/.idea
 kafka_streams/.idea
 kafka_streams/target
+autonomic_loops_java/.idea
+autonomic_loops_java/target
