@@ -4,7 +4,6 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import fr.isae.iqas.mapek.event.AddSensorSource;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -16,7 +15,6 @@ public class AnalyzeActor extends UntypedActor {
 
     public AnalyzeActor(ActorRef monitor) {
         this.monitor = monitor;
-        this.monitor.tell(new AddSensorSource(), this.getSelf());
     }
 
     @Override
