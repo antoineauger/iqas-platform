@@ -11,6 +11,7 @@ import akka.kafka.Subscriptions;
 import akka.kafka.javadsl.Consumer;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Sink;
+import fr.isae.iqas.MainClass;
 import fr.isae.iqas.mapek.event.AddKafkaTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;
@@ -18,7 +19,10 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import scala.concurrent.duration.Duration;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,22 +30,32 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class MonitorActor extends UntypedActor {
-    LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+    private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private final ActorMaterializer materializer;
-    private final ConsumerSettings<byte[], String> consumerSettings;
-
+    private ActorMaterializer materializer = null;
     private ActorRef kafkaActor;
+    private ConsumerSettings<byte[], String> consumerSettings = null;
     private ArrayList<String> watchedTopics = new ArrayList<>();
 
     public MonitorActor() {
-        this.consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
-                        .withBootstrapServers("localhost:9092")
-                        .withGroupId("group1")
-                        .withClientId("client1")
-                        .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+        try {
+            // Reading iQAS configuration
+            Properties prop = new Properties();
+            InputStream input = getClass().getResourceAsStream("iqas.properties");
+            prop.load(input);
 
-        this.materializer = ActorMaterializer.create(getContext().system());
+            consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
+                    .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
+                    .withGroupId("group1")
+                    .withClientId("client1")
+                    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+
+            materializer = ActorMaterializer.create(getContext().system());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -51,7 +65,7 @@ public class MonitorActor extends UntypedActor {
                 getSelf(), "tick", getContext().dispatcher(), null);
 
         // Default KafkaActor for reuse
-        this.kafkaActor = getContext().system().actorOf(KafkaConsumerActor.props(consumerSettings));
+        kafkaActor = getContext().system().actorOf(KafkaConsumerActor.props(consumerSettings));
         //getContext().watch(kafkaActor);
     }
 
@@ -101,11 +115,11 @@ public class MonitorActor extends UntypedActor {
     }
 
     private void restartKafkaActor() {
-        getContext().system().stop(this.kafkaActor);
+        getContext().system().stop(kafkaActor);
 
-        this.kafkaActor = getContext().system().actorOf(KafkaConsumerActor.props(consumerSettings));
+        kafkaActor = getContext().system().actorOf(KafkaConsumerActor.props(consumerSettings));
 
-        for (String topic : this.watchedTopics) {
+        for (String topic : watchedTopics) {
             Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(new TopicPartition(topic, 0)))
                     .runWith(Sink.foreach(a -> System.out.println(a)), materializer);
         }

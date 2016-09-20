@@ -13,6 +13,8 @@
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
+
+        <!-- kafka -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-streams</artifactId>
@@ -23,16 +25,25 @@
             <artifactId>kafka-clients</artifactId>
             <version>0.10.0.1</version>
         </dependency>
+
+        <!-- avro -->
+
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
             <version>1.7.7</version>
         </dependency>
+
+        <!-- kafka -->
+
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
         </dependency>
+
+        <!-- akka framework -->
+
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-actor_2.11</artifactId>
@@ -47,6 +58,14 @@
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-http-experimental_2.11</artifactId>
             <version>2.4.10</version>
+        </dependency>
+
+        <!-- mongoDB -->
+
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-reactivestreams</artifactId>
+            <version>1.2.0</version>
         </dependency>
     </dependencies>
 
