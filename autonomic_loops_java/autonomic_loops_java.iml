@@ -44,13 +44,13 @@
     <orderEntry type="library" name="Maven: com.typesafe:ssl-config-akka_2.11:0.2.1" level="project" />
     <orderEntry type="library" name="Maven: com.typesafe:ssl-config-core_2.11:0.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4" level="project" />
+    <orderEntry type="library" name="Maven: org.reactivestreams:reactive-streams:1.0.0" level="project" />
     <orderEntry type="library" name="Maven: com.typesafe.akka:akka-http-experimental_2.11:2.4.10" level="project" />
     <orderEntry type="library" name="Maven: com.typesafe.akka:akka-http-core_2.11:2.4.10" level="project" />
     <orderEntry type="library" name="Maven: com.typesafe.akka:akka-parsing_2.11:2.4.10" level="project" />
-    <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-reactivestreams:1.2.0" level="project" />
-    <orderEntry type="library" name="Maven: org.reactivestreams:reactive-streams:1.0.0" level="project" />
-    <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-async:3.2.0" level="project" />
-    <orderEntry type="library" name="Maven: org.mongodb:bson:3.2.0" level="project" />
-    <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-core:3.2.0" level="project" />
+    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-http-jackson-experimental_2.11:2.4.10" level="project" />
+    <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-async:3.3.0" level="project" />
+    <orderEntry type="library" name="Maven: org.mongodb:bson:3.3.0" level="project" />
+    <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-core:3.3.0" level="project" />
   </component>
 </module>

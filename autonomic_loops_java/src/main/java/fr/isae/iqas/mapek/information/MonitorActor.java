@@ -1,7 +1,6 @@
 package fr.isae.iqas.mapek.information;
 
 import akka.actor.ActorRef;
-import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -11,7 +10,6 @@ import akka.kafka.Subscriptions;
 import akka.kafka.javadsl.Consumer;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Sink;
-import fr.isae.iqas.MainClass;
 import fr.isae.iqas.mapek.event.AddKafkaTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;

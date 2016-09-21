@@ -1,7 +1,9 @@
 package fr.isae.iqas;
 
 import akka.NotUsed;
+import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
@@ -13,18 +15,17 @@ import akka.stream.ActorMaterializer;
 import akka.stream.Materializer;
 import akka.stream.javadsl.Flow;
 import com.mongodb.ConnectionString;
-import com.mongodb.reactivestreams.client.*;
-import fr.isae.iqas.database.SubscriberHelpers.ObservableSubscriber;
+import com.mongodb.async.client.MongoClient;
+import com.mongodb.async.client.MongoClients;
+import com.mongodb.async.client.MongoCollection;
+import com.mongodb.async.client.MongoDatabase;
+import fr.isae.iqas.database.MongoController;
+import fr.isae.iqas.server.APIGatewayActor;
 import fr.isae.iqas.server.RESTServer;
 import org.bson.Document;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletionStage;
 
@@ -40,31 +41,25 @@ public class MainClass extends UntypedActor {
         prop.load(input);
 
         // Database initialization
-        MongoClient mongoClient = MongoClients.create(new ConnectionString("mongodb://"
-                + prop.get("database_endpoint_address") + ":" + prop.get("database_endpoint_port")));
+        MongoClient mongoClient = MongoClients.create(new ConnectionString("mongodb://localhost"));
+
+        //MongoClient mongoClient = MongoClients.create(new ConnectionString("mongodb://"
+        //        + prop.get("database_endpoint_address") + ":" + prop.get("database_endpoint_port")));
         MongoDatabase database = mongoClient.getDatabase("iqas");
         MongoCollection<Document> collection = database.getCollection("sensors");
-        ObservableSubscriber subscriber = new ObservableSubscriber<Success>();
+        //ObservableSubscriber subscriber = new ObservableSubscriber<Success>();
+        MongoController mongoController = new MongoController(database);
 
-        // Sensors declaration
-        List<Document> documents = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(MainClass.class.getClassLoader().getResourceAsStream("sensors.json"), StandardCharsets.UTF_8))) {
-            String sCurrentLine;
-            while ((sCurrentLine = reader.readLine()) != null) {
-                documents.add(Document.parse(sCurrentLine));
-            }
-            collection.insertMany(documents).subscribe(subscriber);
-            subscriber.await();
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-        }
+        // Sensors insertion into mongoDB
+        mongoController.putSensorsFromFileIntoDB("sensors.json", true);
 
         // Top-level actors creation
         final ActorSystem system = ActorSystem.create("MySystem");
         final Materializer materializer = ActorMaterializer.create(system);
+        final ActorRef apiGatewayActor = system.actorOf(Props.create(APIGatewayActor.class), "apiGatewayActor");
 
         // REST server creation
-        final RESTServer app = new RESTServer();
+        final RESTServer app = new RESTServer(mongoController, apiGatewayActor);
         final Route route = app.createRoute();
         final Flow<HttpRequest, HttpResponse, NotUsed> handler = route.flow(system, materializer);
         final CompletionStage<ServerBinding> binding = Http.get(system).bindAndHandle(handler,
