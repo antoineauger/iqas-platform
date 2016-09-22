@@ -39,7 +39,7 @@ public class MongoController extends AllDirectives {
      * GET sensors
      */
 
-    public void _findSensors(String sensor_id, final SingleResultCallback<List<VirtualSensor>> callback) {
+    private void _findSensors(String sensor_id, final SingleResultCallback<List<VirtualSensor>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("sensors");
         if (sensor_id != null) {
             collection.find(eq("sensor_id", sensor_id)).map((mydoc) -> new VirtualSensor(mydoc)).into(new ArrayList<>(), callback);
@@ -76,7 +76,8 @@ public class MongoController extends AllDirectives {
     /**
      * GET requests
      */
-    public void _findRequests(String request_id, final SingleResultCallback<List<Request>> callback) {
+
+    private void _findRequests(String request_id, final SingleResultCallback<List<Request>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
         if (request_id != null) {
             collection.find(eq("request_id", request_id)).map((mydoc) -> new Request(mydoc)).into(new ArrayList<>(), callback);
@@ -112,7 +113,7 @@ public class MongoController extends AllDirectives {
 
     // ######### Internal mongoDB methods #########
 
-    public void _dropIQASDatabase(final SingleResultCallback<Void> callback) {
+    private void _dropIQASDatabase(final SingleResultCallback<Void> callback) {
         mongoDatabase.drop(callback);
     }
 
@@ -126,7 +127,7 @@ public class MongoController extends AllDirectives {
         });
     }
 
-    public void _dropCollection(String collectionName, final SingleResultCallback<Void> callback) {
+    private void _dropCollection(String collectionName, final SingleResultCallback<Void> callback) {
         mongoDatabase.getCollection(collectionName).drop(callback);
     }
 

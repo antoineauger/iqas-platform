@@ -47,7 +47,7 @@ public class MainClass extends UntypedActor {
 
         // MongoDB initialization
         mongoController.dropIQASDatabase();
-        mongoController.putSensorsFromFileIntoDB("sensors.json");
+        mongoController.putSensorsFromFileIntoDB("templates/sensors.json");
 
         // Top-level actors creation
         final ActorSystem system = ActorSystem.create("MySystem");
