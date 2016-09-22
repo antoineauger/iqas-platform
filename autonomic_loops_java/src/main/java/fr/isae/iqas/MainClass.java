@@ -17,12 +17,10 @@ import akka.stream.javadsl.Flow;
 import com.mongodb.ConnectionString;
 import com.mongodb.async.client.MongoClient;
 import com.mongodb.async.client.MongoClients;
-import com.mongodb.async.client.MongoCollection;
 import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.server.APIGatewayActor;
 import fr.isae.iqas.server.RESTServer;
-import org.bson.Document;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,17 +39,15 @@ public class MainClass extends UntypedActor {
         prop.load(input);
 
         // Database initialization
-        MongoClient mongoClient = MongoClients.create(new ConnectionString("mongodb://localhost"));
+        MongoClient mongoClient = MongoClients.create(new ConnectionString("mongodb://"
+                + prop.get("database_endpoint_address") + ":" + prop.get("database_endpoint_port")));
 
-        //MongoClient mongoClient = MongoClients.create(new ConnectionString("mongodb://"
-        //        + prop.get("database_endpoint_address") + ":" + prop.get("database_endpoint_port")));
         MongoDatabase database = mongoClient.getDatabase("iqas");
-        MongoCollection<Document> collection = database.getCollection("sensors");
-        //ObservableSubscriber subscriber = new ObservableSubscriber<Success>();
         MongoController mongoController = new MongoController(database);
 
-        // Sensors insertion into mongoDB
-        mongoController.putSensorsFromFileIntoDB("sensors.json", true);
+        // MongoDB initialization
+        mongoController.dropIQASDatabase();
+        mongoController.putSensorsFromFileIntoDB("sensors.json");
 
         // Top-level actors creation
         final ActorSystem system = ActorSystem.create("MySystem");

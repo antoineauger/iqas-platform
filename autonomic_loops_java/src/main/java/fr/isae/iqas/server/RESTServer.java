@@ -2,7 +2,6 @@ package fr.isae.iqas.server;
 
 import akka.actor.ActorRef;
 import akka.http.javadsl.model.ContentTypes;
-import akka.http.javadsl.model.HttpEntities;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 import fr.isae.iqas.database.MongoController;
@@ -34,6 +33,20 @@ public class RESTServer extends AllDirectives {
 
     public CompletionStage<Route> getAllSensors(Executor ctx) {
         return CompletableFuture.supplyAsync(() -> mongoController.getAllSensors(), ctx);
+    }
+
+    // TODO : put sensor method here ?
+
+    public CompletionStage<Route> getRequest(Executor ctx, String request_id) {
+        return CompletableFuture.supplyAsync(() -> mongoController.getRequest(request_id), ctx);
+    }
+
+    public CompletionStage<Route> getAllRequests(Executor ctx) {
+        return CompletableFuture.supplyAsync(() -> mongoController.getAllRequests(), ctx);
+    }
+
+    public CompletionStage<Route> putRequest(Executor ctx) {
+        return null;
     }
 
     public Route createRoute() {
@@ -75,11 +88,8 @@ public class RESTServer extends AllDirectives {
                         get(() -> route(
                                 // matches the empty path
                                 pathSingleSlash(() ->
-                                        // return a constant string with a certain content type
-                                        complete(HttpEntities.create(ContentTypes.TEXT_HTML_UTF8, "<html><body>Hello world!</body></html>"))
-                                ),
-                                path("request", () ->
-                                        iqasRequest
+                                        // homepage + TODO : API overview
+                                        getFromResource("web/index.html", ContentTypes.TEXT_HTML_UTF8)
                                 ),
                                 path(segment("sensors"), () ->
                                         extractExecutionContext(ctx ->
@@ -89,6 +99,16 @@ public class RESTServer extends AllDirectives {
                                 path(segment("sensors").slash(segment()), (sensor_id) ->
                                         extractExecutionContext(ctx ->
                                                 onSuccess(() -> getSensor(ctx, sensor_id), Function.identity())
+                                        )
+                                ),
+                                path(segment("requests"), () ->
+                                        extractExecutionContext(ctx ->
+                                                onSuccess(() -> getAllRequests(ctx), Function.identity())
+                                        )
+                                ),
+                                path(segment("requests").slash(segment()), (request_id) ->
+                                        extractExecutionContext(ctx ->
+                                                onSuccess(() -> getRequest(ctx, request_id), Function.identity())
                                         )
                                 )
                         )),
