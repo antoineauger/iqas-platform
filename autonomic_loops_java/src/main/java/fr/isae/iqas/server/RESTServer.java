@@ -1,10 +1,12 @@
 package fr.isae.iqas.server;
 
 import akka.actor.ActorRef;
+import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.model.ContentTypes;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 import fr.isae.iqas.database.MongoController;
+import fr.isae.iqas.model.Request;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -45,8 +47,10 @@ public class RESTServer extends AllDirectives {
         return CompletableFuture.supplyAsync(() -> mongoController.getAllRequests(), ctx);
     }
 
-    public CompletionStage<Route> putRequest(Executor ctx) {
-        return null;
+    public Route putRequest(Request req) {
+        System.out.println(req.getRequest_id());
+        apiGatewayActor.tell(req, ActorRef.noSender());
+        return complete("OK for PUT request");
     }
 
     public Route createRoute() {
@@ -75,16 +79,6 @@ public class RESTServer extends AllDirectives {
 
         return
                 route(
-                        path("ping", () ->
-                                route(
-                                        get(() -> route(
-                                                complete("PONG GET!")
-                                        )),
-                                        post(() -> route(
-                                                complete("PONG POST!")
-                                        ))
-                                )
-                        ),
                         get(() -> route(
                                 // matches the empty path
                                 pathSingleSlash(() ->
@@ -112,8 +106,18 @@ public class RESTServer extends AllDirectives {
                                         )
                                 )
                         )),
-                        get(() -> complete("Unknown endpoint.")),
-                        post(() -> complete("Unknown endpoint."))
+                        put(() -> route(
+                                path(segment("requests"), () ->
+                                        entity(Jackson.unmarshaller(Request.class), myRequest ->
+                                                putRequest(myRequest)
+                                        ).orElse(
+                                                complete("[ERROR] Malformed request submitted!")
+                                        )
+                                )
+                        )),
+                        get(() -> complete("[ERROR] Unknown endpoint.")),
+                        post(() -> complete("[ERROR] Unknown endpoint.")),
+                        put(() -> complete("[ERROR] Unknown endpoint."))
                 );
     }
 
