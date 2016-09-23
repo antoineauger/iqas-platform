@@ -3,6 +3,7 @@ package fr.isae.iqas.server;
 import akka.actor.ActorRef;
 import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.model.ContentTypes;
+import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 import fr.isae.iqas.database.MongoController;
@@ -111,13 +112,28 @@ public class RESTServer extends AllDirectives {
                                         entity(Jackson.unmarshaller(Request.class), myRequest ->
                                                 putRequest(myRequest)
                                         ).orElse(
-                                                complete("[ERROR] Malformed request submitted!")
+                                                complete(HttpResponse.create()
+                                                        .withStatus(400)
+                                                        .withEntity("Malformed request submitted!")
+                                                )
                                         )
                                 )
                         )),
-                        get(() -> complete("[ERROR] Unknown endpoint.")),
-                        post(() -> complete("[ERROR] Unknown endpoint.")),
-                        put(() -> complete("[ERROR] Unknown endpoint."))
+                        get(() -> complete(
+                                HttpResponse.create()
+                                        .withStatus(404)
+                                        .withEntity("Unknown API endpoint!"))
+                        ),
+                        post(() -> complete(
+                                HttpResponse.create()
+                                        .withStatus(404)
+                                        .withEntity("Unknown API endpoint!"))
+                        ),
+                        put(() -> complete(
+                                HttpResponse.create()
+                                        .withStatus(404)
+                                        .withEntity("Unknown API endpoint!"))
+                        )
                 );
     }
 
