@@ -9,7 +9,9 @@ import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.MainClass;
 import fr.isae.iqas.model.Request;
 import fr.isae.iqas.model.virtualsensor.VirtualSensor;
+import org.apache.log4j.Logger;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -17,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import org.apache.log4j.Logger;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -36,7 +37,7 @@ public class MongoController extends AllDirectives {
     // ######### Exposed mongoDB methods #########
 
     /**
-     * GET sensors
+     * Sensors
      */
 
     private void _findSensors(String sensor_id, final SingleResultCallback<List<VirtualSensor>> callback) {
@@ -74,7 +75,7 @@ public class MongoController extends AllDirectives {
     }
 
     /**
-     * GET requests
+     * Requests
      */
 
     private void _findRequests(String request_id, final SingleResultCallback<List<Request>> callback) {
@@ -110,6 +111,26 @@ public class MongoController extends AllDirectives {
         });
         return completeOKWithFuture(requests, Jackson.marshaller());
     }
+
+    public Route putRequest(Request request) {
+        final CompletableFuture<Request> r = new CompletableFuture<>();
+        MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
+        Document documentRequest = request.toBSON();
+        collection.insertOne(documentRequest, (result, t) -> {
+            if (t == null) {
+                logger.info("Successfully inserted Requests into requests collection!");
+                ObjectId test = (ObjectId) documentRequest.get("_id");
+                request.setRequest_id(test.toString());
+                r.complete(request);
+            } else {
+                logger.info("Failed to insert Requests: " + t.toString());
+            }
+        });
+        return completeOKWithFuture(r, Jackson.marshaller());
+    }
+
+    // TODO : putRequests useful ?
+    // ArrayList<Document> documents = requests.stream().map(Request::toBSON).collect(Collectors.toCollection(ArrayList::new));
 
     // ######### Internal mongoDB methods #########
 
