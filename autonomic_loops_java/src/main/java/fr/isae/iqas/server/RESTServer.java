@@ -26,8 +26,8 @@ public class RESTServer extends AllDirectives {
     ActorRef apiGatewayActor;
 
     public RESTServer(MongoController mongoController, ActorRef apiGatewayActor) {
-        this.apiGatewayActor = apiGatewayActor;
         this.mongoController = mongoController;
+        this.apiGatewayActor = apiGatewayActor;
     }
 
     public CompletionStage<Route> getSensor(Executor ctx, String sensor_id) {
@@ -48,10 +48,9 @@ public class RESTServer extends AllDirectives {
         return CompletableFuture.supplyAsync(() -> mongoController.getAllRequests(), ctx);
     }
 
-    public Route putRequest(Request req) {
-        System.out.println(req.getRequest_id());
+    public CompletionStage<Route> putRequest(Executor ctx, Request req) {
         apiGatewayActor.tell(req, ActorRef.noSender());
-        return complete("OK for PUT request");
+        return CompletableFuture.supplyAsync(() -> mongoController.putRequest(req), ctx);
     }
 
     public Route createRoute() {
@@ -110,7 +109,9 @@ public class RESTServer extends AllDirectives {
                         put(() -> route(
                                 path(segment("requests"), () ->
                                         entity(Jackson.unmarshaller(Request.class), myRequest ->
-                                                putRequest(myRequest)
+                                                extractExecutionContext(ctx ->
+                                                    onSuccess(() -> putRequest(ctx, myRequest), Function.identity())
+                                                )
                                         ).orElse(
                                                 complete(HttpResponse.create()
                                                         .withStatus(400)

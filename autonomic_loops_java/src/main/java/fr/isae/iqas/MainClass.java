@@ -52,7 +52,7 @@ public class MainClass extends UntypedActor {
         // Top-level actors creation
         final ActorSystem system = ActorSystem.create("MySystem");
         final Materializer materializer = ActorMaterializer.create(system);
-        final ActorRef apiGatewayActor = system.actorOf(Props.create(APIGatewayActor.class), "apiGatewayActor");
+        final ActorRef apiGatewayActor = system.actorOf(Props.create(APIGatewayActor.class, mongoController), "apiGatewayActor");
 
         // REST server creation
         final RESTServer app = new RESTServer(mongoController, apiGatewayActor);

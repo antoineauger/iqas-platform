@@ -3,6 +3,7 @@ package fr.isae.iqas.server;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.model.Request;
 
 /**
@@ -10,15 +11,19 @@ import fr.isae.iqas.model.Request;
  */
 public class APIGatewayActor extends UntypedActor {
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+    MongoController mongoController;
 
-    public APIGatewayActor() {
-
+    public APIGatewayActor(MongoController mongoController) {
+        this.mongoController = mongoController;
     }
 
     @Override
     public void onReceive(Object message) throws Throwable {
         if (message instanceof Request) {
+
+            Request receivedRequest = (Request) message;
             log.info("Received Request: {}", message.toString());
+            mongoController.putRequest(receivedRequest);
 
             // We do not acknowledge the message since it was coming from REST server
         }
