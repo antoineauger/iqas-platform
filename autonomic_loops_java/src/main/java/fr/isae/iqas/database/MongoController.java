@@ -34,21 +34,19 @@ import static com.mongodb.client.model.Filters.eq;
 public class MongoController extends AllDirectives {
     private static Logger logger = Logger.getLogger(MongoController.class);
 
-    private String apiGatewayActorName;
+    private String pathAPIGatewayActor;
     private MongoDatabase mongoDatabase;
     private UntypedActorContext context;
 
-    public MongoController(MongoDatabase mongoDatabase, UntypedActorContext context, String apiGatewayActorName) {
-        System.out.println("========> MONGO CREATION");
-
-        this.apiGatewayActorName = apiGatewayActorName;
-
+    public MongoController(MongoDatabase mongoDatabase, UntypedActorContext context, String pathAPIGatewayActor) {
+        this.pathAPIGatewayActor = pathAPIGatewayActor;
         this.mongoDatabase = mongoDatabase;
         this.context = context;
+        logger.info("MongoController successfully created!");
     }
 
     public Future<ActorRef> getAPIGatewayActor() {
-        return context.actorSelection("/user/" + apiGatewayActorName).
+        return context.actorSelection(pathAPIGatewayActor).
                 resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
@@ -62,8 +60,7 @@ public class MongoController extends AllDirectives {
         MongoCollection<Document> collection = mongoDatabase.getCollection("sensors");
         if (sensor_id != null) {
             collection.find(eq("sensor_id", sensor_id)).map((mydoc) -> new VirtualSensor(mydoc)).into(new ArrayList<>(), callback);
-        }
-        else {
+        } else {
             collection.find().map((mydoc) -> new VirtualSensor(mydoc)).into(new ArrayList<>(), callback);
         }
     }
@@ -100,8 +97,7 @@ public class MongoController extends AllDirectives {
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
         if (request_id != null) {
             collection.find(eq("request_id", request_id)).map((mydoc) -> new Request(mydoc)).into(new ArrayList<>(), callback);
-        }
-        else {
+        } else {
             collection.find().map((mydoc) -> new Request(mydoc)).into(new ArrayList<>(), callback);
         }
     }
@@ -133,9 +129,10 @@ public class MongoController extends AllDirectives {
     /**
      * Method to submit a new observation Request
      * This method will:
-     *      1) Check if there is no existing method with the same parameters for the same application
-     *      2) If not, insert it into mongoDB
-     *      3) Tell APIGatewayActor that a new request should be taken into account
+     * 1) TODO: Check if there is no existing method with the same parameters for the same application
+     * 2) If not, insert it into mongoDB
+     * 3) Tell APIGatewayActor that a new request should be taken into account
+     *
      * @param request the request to insert into mongoDB
      * @return object Request with mongoDB _id to check request processing
      */
@@ -143,7 +140,7 @@ public class MongoController extends AllDirectives {
         // request_id assignment
         request.setRequest_id(new ObjectId().toString());
 
-        CompletableFuture<Request> r = new CompletableFuture<>();
+        CompletableFuture<Request> requestResultInsertion = new CompletableFuture<>();
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
 
         Document documentRequest = request.toBSON();
@@ -155,12 +152,13 @@ public class MongoController extends AllDirectives {
                     @Override
                     public void onComplete(Throwable failure, ActorRef success) throws Throwable {
                         if (failure != null) {
-                            r.completeExceptionally(new Throwable("Unable to find the APIGatewayActor: " + failure.toString()));
-                        }
-                        else {
+                            requestResultInsertion.completeExceptionally(
+                                    new Throwable("Unable to find the APIGatewayActor: " + failure.toString())
+                            );
+                        } else {
                             success.tell(request, ActorRef.noSender());
                             logger.info("Request sent to the APIGatewayActor by MongoController");
-                            r.complete(request);
+                            requestResultInsertion.complete(request);
                         }
                     }
                 }, context.dispatcher());
@@ -169,7 +167,7 @@ public class MongoController extends AllDirectives {
                 logger.info("Failed to insert request: " + t.toString());
             }
         });
-        return completeOKWithFuture(r, Jackson.marshaller());
+        return completeOKWithFuture(requestResultInsertion, Jackson.marshaller());
     }
 
     // TODO : putRequests useful ?
@@ -211,7 +209,9 @@ public class MongoController extends AllDirectives {
     public void putSensorsFromFileIntoDB(String sensorFileName) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("sensors");
         List<Document> documents = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(MainClass.class.getClassLoader().getResourceAsStream(sensorFileName), StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(MainClass.class.getClassLoader().getResourceAsStream(sensorFileName),
+                        StandardCharsets.UTF_8))) {
             String sCurrentLine;
             while ((sCurrentLine = reader.readLine()) != null) {
                 documents.add(Document.parse(sCurrentLine));

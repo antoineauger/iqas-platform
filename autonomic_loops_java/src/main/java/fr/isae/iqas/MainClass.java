@@ -1,10 +1,7 @@
 package fr.isae.iqas;
 
 import akka.NotUsed;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
+import akka.actor.*;
 import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
@@ -35,19 +32,22 @@ public class MainClass {
     public static class LocalMaster extends UntypedActor {
 
         public LocalMaster(Properties prop, ActorSystem system, Materializer materializer) throws IOException {
-            //String apiGatewayActorName =
+            // Path resolution for the APIGatewayActor
+            String pathAPIGatewayActor = getSelf().path().toString() + "/" + prop.getProperty("api_gateway_actor_name");
+
             // Database initialization
             MongoClient mongoClient = MongoClients.create(new ConnectionString("mongodb://"
                     + prop.getProperty("database_endpoint_address") + ":" + prop.getProperty("database_endpoint_port")));
 
             MongoDatabase database = mongoClient.getDatabase("iqas");
-            MongoController mongoController = new MongoController(database, getContext(), prop.getProperty("api_gateway_actor_name"));
+            MongoController mongoController = new MongoController(database, getContext(), pathAPIGatewayActor);
 
             // MongoDB initialization
             mongoController.dropIQASDatabase();
             mongoController.putSensorsFromFileIntoDB("templates/sensors.json");
 
-            final ActorRef apiGatewayActor = system.actorOf(Props.create(APIGatewayActor.class, mongoController), prop.getProperty("api_gateway_actor_name"));
+            final ActorRef apiGatewayActor = getContext().actorOf(Props.create(APIGatewayActor.class, mongoController),
+                    prop.getProperty("api_gateway_actor_name"));
 
             // REST server creation
             final RESTServer app = new RESTServer(mongoController, apiGatewayActor);
@@ -111,10 +111,11 @@ public class MainClass {
         prop.load(input);
 
         // Top-level actors creation
-        final ActorSystem system = ActorSystem.create("MySystem");
+        final ActorSystem system = ActorSystem.create("SystemActor");
         final Materializer materializer = ActorMaterializer.create(system);
 
-        final ActorRef localMaster = system.actorOf(Props.create(LocalMaster.class, prop, system, materializer), "localMaster");
+        final ActorRef localMaster = system.actorOf(
+                Props.create(LocalMaster.class, prop, system, materializer), "LocalMasterActor");
     }
 
 
