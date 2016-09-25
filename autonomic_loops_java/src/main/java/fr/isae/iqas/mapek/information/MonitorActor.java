@@ -10,7 +10,7 @@ import akka.kafka.Subscriptions;
 import akka.kafka.javadsl.Consumer;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Sink;
-import fr.isae.iqas.mapek.event.AddKafkaTopic;
+import fr.isae.iqas.model.events.AddKafkaTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
