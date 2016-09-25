@@ -23,13 +23,12 @@ public class APIGatewayActor extends UntypedActor {
 
             Request receivedRequest = (Request) message;
             log.info("Received Request: {}", message.toString());
-            mongoController.putRequest(receivedRequest);
 
             // We do not acknowledge the message since it was coming from REST server
         }
         else if (message instanceof String) {
-            log.info("Received String message: {}", message);
-            getSender().tell(message, getSelf());
+            log.error("Received String message: {}", message);
+            //getSender().tell(message, getSelf());
         }
     }
 }

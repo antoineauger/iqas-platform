@@ -49,7 +49,6 @@ public class RESTServer extends AllDirectives {
     }
 
     public CompletionStage<Route> putRequest(Executor ctx, Request req) {
-        apiGatewayActor.tell(req, ActorRef.noSender());
         return CompletableFuture.supplyAsync(() -> mongoController.putRequest(req), ctx);
     }
 

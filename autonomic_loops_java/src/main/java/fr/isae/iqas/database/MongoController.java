@@ -1,8 +1,12 @@
 package fr.isae.iqas.database;
 
+import akka.actor.ActorRef;
+import akka.actor.UntypedActorContext;
+import akka.dispatch.OnComplete;
 import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
+import akka.util.Timeout;
 import com.mongodb.async.SingleResultCallback;
 import com.mongodb.async.client.MongoCollection;
 import com.mongodb.async.client.MongoDatabase;
@@ -12,6 +16,7 @@ import fr.isae.iqas.model.virtualsensor.VirtualSensor;
 import org.apache.log4j.Logger;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import scala.concurrent.Future;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -19,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -28,10 +34,22 @@ import static com.mongodb.client.model.Filters.eq;
 public class MongoController extends AllDirectives {
     private static Logger logger = Logger.getLogger(MongoController.class);
 
+    private String apiGatewayActorName;
     private MongoDatabase mongoDatabase;
+    private UntypedActorContext context;
 
-    public MongoController(MongoDatabase mongoDatabase) {
+    public MongoController(MongoDatabase mongoDatabase, UntypedActorContext context, String apiGatewayActorName) {
+        System.out.println("========> MONGO CREATION");
+
+        this.apiGatewayActorName = apiGatewayActorName;
+
         this.mongoDatabase = mongoDatabase;
+        this.context = context;
+    }
+
+    public Future<ActorRef> getAPIGatewayActor() {
+        return context.actorSelection("/user/" + apiGatewayActorName).
+                resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
     // ######### Exposed mongoDB methods #########
@@ -112,18 +130,43 @@ public class MongoController extends AllDirectives {
         return completeOKWithFuture(requests, Jackson.marshaller());
     }
 
+    /**
+     * Method to submit a new observation Request
+     * This method will:
+     *      1) Check if there is no existing method with the same parameters for the same application
+     *      2) If not, insert it into mongoDB
+     *      3) Tell APIGatewayActor that a new request should be taken into account
+     * @param request the request to insert into mongoDB
+     * @return object Request with mongoDB _id to check request processing
+     */
     public Route putRequest(Request request) {
-        final CompletableFuture<Request> r = new CompletableFuture<>();
+        // request_id assignment
+        request.setRequest_id(new ObjectId().toString());
+
+        CompletableFuture<Request> r = new CompletableFuture<>();
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
+
         Document documentRequest = request.toBSON();
         collection.insertOne(documentRequest, (result, t) -> {
             if (t == null) {
                 logger.info("Successfully inserted Requests into requests collection!");
-                ObjectId test = (ObjectId) documentRequest.get("_id");
-                request.setRequest_id(test.toString());
-                r.complete(request);
+
+                getAPIGatewayActor().onComplete(new OnComplete<ActorRef>() {
+                    @Override
+                    public void onComplete(Throwable failure, ActorRef success) throws Throwable {
+                        if (failure != null) {
+                            r.completeExceptionally(new Throwable("Unable to find the APIGatewayActor: " + failure.toString()));
+                        }
+                        else {
+                            success.tell(request, ActorRef.noSender());
+                            logger.info("Request sent to the APIGatewayActor by MongoController");
+                            r.complete(request);
+                        }
+                    }
+                }, context.dispatcher());
+
             } else {
-                logger.info("Failed to insert Requests: " + t.toString());
+                logger.info("Failed to insert request: " + t.toString());
             }
         });
         return completeOKWithFuture(r, Jackson.marshaller());

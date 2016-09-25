@@ -30,7 +30,79 @@ import java.util.concurrent.CompletionStage;
 /**
  * Created by an.auger on 13/09/2016.
  */
-public class MainClass extends UntypedActor {
+public class MainClass {
+
+    public static class LocalMaster extends UntypedActor {
+
+        public LocalMaster(Properties prop, ActorSystem system, Materializer materializer) throws IOException {
+            //String apiGatewayActorName =
+            // Database initialization
+            MongoClient mongoClient = MongoClients.create(new ConnectionString("mongodb://"
+                    + prop.getProperty("database_endpoint_address") + ":" + prop.getProperty("database_endpoint_port")));
+
+            MongoDatabase database = mongoClient.getDatabase("iqas");
+            MongoController mongoController = new MongoController(database, getContext(), prop.getProperty("api_gateway_actor_name"));
+
+            // MongoDB initialization
+            mongoController.dropIQASDatabase();
+            mongoController.putSensorsFromFileIntoDB("templates/sensors.json");
+
+            final ActorRef apiGatewayActor = system.actorOf(Props.create(APIGatewayActor.class, mongoController), prop.getProperty("api_gateway_actor_name"));
+
+            // REST server creation
+            final RESTServer app = new RESTServer(mongoController, apiGatewayActor);
+            final Route route = app.createRoute();
+            final Flow<HttpRequest, HttpResponse, NotUsed> handler = route.flow(system, materializer);
+            final CompletionStage<ServerBinding> binding = Http.get(system).bindAndHandle(handler,
+                    ConnectHttp.toHost((String) prop.get("api_gateway_endpoint_address"),
+                            Integer.valueOf((String) prop.get("api_gateway_endpoint_port"))), materializer);
+
+            // High-level error handling
+            binding.exceptionally(failure -> {
+                System.err.println("Something very bad happened! " + failure.getMessage());
+                system.terminate();
+                return null;
+            });
+
+            // Actors for Information Layer
+            //final ActorRef infoMonitorActor = system.actorOf(Props.create(MonitorActor.class), "infoMonitorActor");
+            //final ActorRef infoAnalyzeActor = system.actorOf(Props.create(AnalyzeActor.class, infoMonitorActor), "infoAnalyzeActor");
+
+            /*infoMonitorActor.tell(new AddKafkaTopic("topic1"), infoAnalyzeActor);
+
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            infoMonitorActor.tell(new AddKafkaTopic("topic2"), infoAnalyzeActor);
+
+
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            infoMonitorActor.tell(new AddKafkaTopic("terminate"), infoAnalyzeActor);*/
+
+            // We add a shutdown hook to try gracefully to unbind server when possible
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    System.out.println("Gracefully shutting down autonomic loops and API gateway...");
+                    mongoClient.close();
+                    binding.thenCompose(ServerBinding::unbind)
+                            .thenAccept(unbound -> system.terminate());
+                }
+            });
+        }
+
+        @Override
+        public void onReceive(Object message) throws Throwable {
+
+        }
+    }
 
     public static void main(String[] args) throws IOException, InterruptedException {
         // Reading iQAS configuration
@@ -38,75 +110,11 @@ public class MainClass extends UntypedActor {
         InputStream input = MainClass.class.getClassLoader().getResourceAsStream("iqas.properties");
         prop.load(input);
 
-        // Database initialization
-        MongoClient mongoClient = MongoClients.create(new ConnectionString("mongodb://"
-                + prop.get("database_endpoint_address") + ":" + prop.get("database_endpoint_port")));
-
-        MongoDatabase database = mongoClient.getDatabase("iqas");
-        MongoController mongoController = new MongoController(database);
-
-        // MongoDB initialization
-        mongoController.dropIQASDatabase();
-        mongoController.putSensorsFromFileIntoDB("templates/sensors.json");
-
         // Top-level actors creation
         final ActorSystem system = ActorSystem.create("MySystem");
         final Materializer materializer = ActorMaterializer.create(system);
-        final ActorRef apiGatewayActor = system.actorOf(Props.create(APIGatewayActor.class, mongoController), "apiGatewayActor");
 
-        // REST server creation
-        final RESTServer app = new RESTServer(mongoController, apiGatewayActor);
-        final Route route = app.createRoute();
-        final Flow<HttpRequest, HttpResponse, NotUsed> handler = route.flow(system, materializer);
-        final CompletionStage<ServerBinding> binding = Http.get(system).bindAndHandle(handler,
-                ConnectHttp.toHost((String) prop.get("api_gateway_endpoint_address"),
-                        Integer.valueOf((String) prop.get("api_gateway_endpoint_port"))), materializer);
-
-        // High-level error handling
-        binding.exceptionally(failure -> {
-            System.err.println("Something very bad happened! " + failure.getMessage());
-            system.terminate();
-            return null;
-        });
-
-        // Actors for Information Layer
-        //final ActorRef infoMonitorActor = system.actorOf(Props.create(MonitorActor.class), "infoMonitorActor");
-        //final ActorRef infoAnalyzeActor = system.actorOf(Props.create(AnalyzeActor.class, infoMonitorActor), "infoAnalyzeActor");
-
-        /*infoMonitorActor.tell(new AddKafkaTopic("topic1"), infoAnalyzeActor);
-
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        infoMonitorActor.tell(new AddKafkaTopic("topic2"), infoAnalyzeActor);
-
-
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        infoMonitorActor.tell(new AddKafkaTopic("terminate"), infoAnalyzeActor);*/
-
-        // We add a shutdown hook to try gracefully to unbind server when possible
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                System.out.println("Gracefully shutting down autonomic loops and API gateway...");
-                mongoClient.close();
-                binding.thenCompose(ServerBinding::unbind)
-                        .thenAccept(unbound -> system.terminate());
-            }
-        });
-
-    }
-
-    @Override
-    public void onReceive(Object o) throws Throwable {
-
+        final ActorRef localMaster = system.actorOf(Props.create(LocalMaster.class, prop, system, materializer), "localMaster");
     }
 
 
