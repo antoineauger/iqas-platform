@@ -35,24 +35,15 @@ public class MonitorActor extends UntypedActor {
     private ConsumerSettings<byte[], String> consumerSettings = null;
     private ArrayList<String> watchedTopics = new ArrayList<>();
 
-    public MonitorActor() {
-        try {
-            // Reading iQAS configuration
-            Properties prop = new Properties();
-            InputStream input = getClass().getResourceAsStream("iqas.properties");
-            prop.load(input);
+    public MonitorActor(Properties prop) {
 
-            consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
-                    .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
-                    .withGroupId("group1")
-                    .withClientId("client1")
-                    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+        consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
+                .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
+                .withGroupId("group12")
+                .withClientId("client12")
+                .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
-            materializer = ActorMaterializer.create(getContext().system());
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        materializer = ActorMaterializer.create(getContext().system());
 
     }
 

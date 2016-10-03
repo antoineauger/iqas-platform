@@ -1,6 +1,5 @@
 package fr.isae.iqas.mapek.information;
 
-import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -11,17 +10,13 @@ import akka.event.LoggingAdapter;
 public class AnalyzeActor extends UntypedActor {
     LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private final ActorRef monitor;
-
-    public AnalyzeActor(ActorRef monitor) {
-        this.monitor = monitor;
+    public AnalyzeActor() {
     }
 
     @Override
     public void onReceive(Object message) throws Exception {
         if (message instanceof String) {
             log.info("Received String message: {}", message);
-            getSender().tell(message, getSelf());
         } else
             unhandled(message);
     }

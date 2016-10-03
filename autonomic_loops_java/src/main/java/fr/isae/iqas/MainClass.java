@@ -46,7 +46,8 @@ public class MainClass {
             mongoController.dropIQASDatabase();
             mongoController.putSensorsFromFileIntoDB("templates/sensors.json");
 
-            final ActorRef apiGatewayActor = getContext().actorOf(Props.create(APIGatewayActor.class, mongoController),
+            // API Gateway actor creation
+            final ActorRef apiGatewayActor = getContext().actorOf(Props.create(APIGatewayActor.class, prop, mongoController),
                     prop.getProperty("api_gateway_actor_name"));
 
             // REST server creation
