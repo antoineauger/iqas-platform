@@ -4,23 +4,30 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.kafka.ConsumerSettings;
-import akka.kafka.KafkaConsumerActor;
-import akka.kafka.Subscriptions;
+import akka.kafka.*;
 import akka.kafka.javadsl.Consumer;
+import akka.kafka.javadsl.Producer;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Sink;
 import fr.isae.iqas.model.events.AddKafkaTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import scala.concurrent.duration.Duration;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,8 +39,10 @@ public class MonitorActor extends UntypedActor {
 
     private ActorMaterializer materializer = null;
     private ActorRef kafkaActor;
+    private ProducerSettings<byte[], String> producerSettings = null;
     private ConsumerSettings<byte[], String> consumerSettings = null;
-    private ArrayList<String> watchedTopics = new ArrayList<>();
+    private Set<String> watchedTopics =  new HashSet<String>() ;
+    private ScriptEngine engine = null;
 
     public MonitorActor(Properties prop) {
 
@@ -43,8 +52,13 @@ public class MonitorActor extends UntypedActor {
                 .withClientId("client12")
                 .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
+        producerSettings = ProducerSettings
+                .create(getContext().system(), new ByteArraySerializer(), new StringSerializer())
+                .withBootstrapServers("localhost:9092");
+
         materializer = ActorMaterializer.create(getContext().system());
 
+        engine = new ScriptEngineManager().getEngineByName("nashorn");
     }
 
     @Override
@@ -108,10 +122,25 @@ public class MonitorActor extends UntypedActor {
 
         kafkaActor = getContext().system().actorOf(KafkaConsumerActor.props(consumerSettings));
 
-        for (String topic : watchedTopics) {
-            Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(new TopicPartition(topic, 0)))
-                    .runWith(Sink.foreach(a -> System.out.println(a)), materializer);
-        }
+        /*for (String topic : watchedTopics) {
+            try {
+                engine.eval("print('Hello World!');");
+            } catch (ScriptException e) {
+                e.printStackTrace();
+            }
+
+
+            /*Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(new TopicPartition(topic, 0)))
+                    .runWith(Sink.foreach(a -> System.out.println(a)), materializer);*/
+       /* }*/
+
+        Consumer.committableSource(consumerSettings, Subscriptions.topics(watchedTopics))
+                .map(msg -> {
+                    System.out.println(msg.record().value());
+                    return new ProducerMessage.Message<byte[], String, ConsumerMessage.Committable>(
+                            new ProducerRecord<>("topic2", msg.record().value()), msg.committableOffset());
+                })
+                .runWith(Producer.commitableSink(producerSettings), materializer);
 
         // Other way without sharing kafkaActor
         /*Consumer.atMostOnceSource(consumerSettings, Subscriptions.topics("topic1"))
