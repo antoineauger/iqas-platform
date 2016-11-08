@@ -35,20 +35,20 @@
     <orderEntry type="library" name="Maven: org.apache.commons:commons-compress:1.4.1" level="project" />
     <orderEntry type="library" name="Maven: org.tukaani:xz:1.0" level="project" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.17" level="project" />
-    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-actor_2.11:2.4.10" level="project" />
+    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-actor_2.11:2.4.12" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.11.8" level="project" />
     <orderEntry type="library" name="Maven: com.typesafe:config:1.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-java8-compat_2.11:0.7.0" level="project" />
-    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-stream-kafka_2.11:0.11" level="project" />
-    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-stream_2.11:2.4.10" level="project" />
+    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-stream-kafka_2.11:0.13" level="project" />
+    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-stream_2.11:2.4.11" level="project" />
     <orderEntry type="library" name="Maven: com.typesafe:ssl-config-akka_2.11:0.2.1" level="project" />
     <orderEntry type="library" name="Maven: com.typesafe:ssl-config-core_2.11:0.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4" level="project" />
     <orderEntry type="library" name="Maven: org.reactivestreams:reactive-streams:1.0.0" level="project" />
-    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-http-experimental_2.11:2.4.10" level="project" />
-    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-http-core_2.11:2.4.10" level="project" />
-    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-parsing_2.11:2.4.10" level="project" />
-    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-http-jackson-experimental_2.11:2.4.10" level="project" />
+    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-http-experimental_2.11:2.4.11" level="project" />
+    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-http-core_2.11:2.4.11" level="project" />
+    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-parsing_2.11:2.4.11" level="project" />
+    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-http-jackson-experimental_2.11:2.4.11" level="project" />
     <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-async:3.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.mongodb:bson:3.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.mongodb:mongodb-driver-core:3.3.0" level="project" />
