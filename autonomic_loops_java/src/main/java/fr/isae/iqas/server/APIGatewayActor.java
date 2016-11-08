@@ -27,7 +27,7 @@ public class APIGatewayActor extends UntypedActor {
         this.mongoController = mongoController;
 
         autoManagerRawData = getContext().actorOf(Props.create(ManagerActor.class, prop), "autoManagerRawData");
-        autoManagerInfo = getContext().actorOf(Props.create(ManagerActor.class, prop), "autoManagerInfo");
+        //autoManagerInfo = getContext().actorOf(Props.create(ManagerActor.class, prop), "autoManagerInfo");
     }
 
     @Override

@@ -1,16 +1,21 @@
 package fr.isae.iqas.mapek.information;
 
+import akka.Done;
+import akka.NotUsed;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.japi.Pair;
 import akka.kafka.*;
 import akka.kafka.javadsl.Consumer;
 import akka.kafka.javadsl.Producer;
-import akka.stream.ActorMaterializer;
-import akka.stream.javadsl.Sink;
-import fr.isae.iqas.model.events.AddKafkaTopic;
+import akka.stream.*;
+import akka.stream.javadsl.*;
+import fr.isae.iqas.model.messages.AddKafkaTopic;
+import fr.isae.iqas.model.messages.Terminated;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -18,16 +23,10 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,17 +38,16 @@ public class MonitorActor extends UntypedActor {
 
     private ActorMaterializer materializer = null;
     private ActorRef kafkaActor;
-    private ProducerSettings<byte[], String> producerSettings = null;
-    private ConsumerSettings<byte[], String> consumerSettings = null;
-    private Set<String> watchedTopics =  new HashSet<String>() ;
-    private ScriptEngine engine = null;
+    private ProducerSettings producerSettings = null;
+    private ConsumerSettings consumerSettings = null;
+    private Set<String> watchedTopics = new HashSet<>() ;
 
     public MonitorActor(Properties prop) {
 
         consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
-                .withGroupId("group12")
-                .withClientId("client12")
+                .withGroupId("group3")
+                .withClientId("client3")
                 .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
         producerSettings = ProducerSettings
@@ -58,7 +56,11 @@ public class MonitorActor extends UntypedActor {
 
         materializer = ActorMaterializer.create(getContext().system());
 
-        engine = new ScriptEngineManager().getEngineByName("nashorn");
+        // Default KafkaActor for reuse
+        //kafkaActor = getContext().system().actorOf(KafkaConsumerActor.props(consumerSettings));
+        watchedTopics.add("topic1");
+        restartKafkaActor();
+        //getContext().watch(kafkaActor);
     }
 
     @Override
@@ -66,10 +68,6 @@ public class MonitorActor extends UntypedActor {
         getContext().system().scheduler().scheduleOnce(
                 Duration.create(10, TimeUnit.MILLISECONDS),
                 getSelf(), "tick", getContext().dispatcher(), null);
-
-        // Default KafkaActor for reuse
-        kafkaActor = getContext().system().actorOf(KafkaConsumerActor.props(consumerSettings));
-        //getContext().watch(kafkaActor);
     }
 
     // override postRestart so we don't call preStart and schedule a new message
@@ -102,9 +100,10 @@ public class MonitorActor extends UntypedActor {
             log.info("Received String message: {}", message);
             getSender().tell(message, getSelf());
         }
-        /*else if (message instanceof Terminated) {
+        else if (message instanceof Terminated) {
             log.info("Received Terminated message: {}", message);
-        }*/
+            cleanShutdown();
+        }
         else {
             unhandled(message);
         }
@@ -112,39 +111,132 @@ public class MonitorActor extends UntypedActor {
 
     @Override
     public void postStop() {
-        // TODO: useful ?
-        //this.materializer.shutdown();
-        //getContext().system().stop(this.kafkaActor);
+        cleanShutdown();
     }
 
-    private void restartKafkaActor() {
-        getContext().system().stop(kafkaActor);
+    /*public interface MyComparator {
+        ProducerMessage.Message<byte[], String, ConsumerMessage.Committable> filter(ConsumerMessage.CommittableMessage<byte[], String> msg);
+    }
 
+    public interface MyComparator2 {
+        ProducerRecord<byte[], String> filter2(ConsumerRecord<byte[], String> msg);
+    }
+
+    MyComparator filter = msg -> {
+        System.out.println(msg.record().value());
+
+        Float val;
+        try {
+            val = Float.parseFloat(msg.record().value());
+        }
+        catch (NumberFormatException e) {
+            val = null;
+        }
+        if (val != null && val > 3.0) {
+            return new ProducerMessage.Message<>(
+                    new ProducerRecord<>(
+                            "topic2", msg.record().value()), msg.committableOffset());
+        }
+        else {
+            return new ProducerMessage.Message<>(
+                    new ProducerRecord<>(
+                            "topic2", msg.record().value()), msg.committableOffset());
+        }
+    };*/
+
+    /*MyComparator2 filter2 = msg -> {
+        System.out.println(msg.value());
+
+        /*Float val;
+        try {
+            val = Float.parseFloat(msg.value());
+        }
+        catch (NumberFormatException e) {
+            val = null;
+        }
+        if (val != null && val > 3.0) {
+            return new ProducerRecord<>(
+                    "topic2", "TOO HIGH");
+        }
+        else {
+            return new ProducerRecord<>(
+                    "topic2", msg.value());
+        }
+
+        return new ProducerRecord<>(
+                "topic2", msg.value());
+    };*/
+
+    private void restartKafkaActor() {
+        if (kafkaActor != null) {
+            getContext().system().stop(kafkaActor);
+        }
         kafkaActor = getContext().system().actorOf(KafkaConsumerActor.props(consumerSettings));
 
-        /*for (String topic : watchedTopics) {
-            try {
-                engine.eval("print('Hello World!');");
-            } catch (ScriptException e) {
-                e.printStackTrace();
+        // Kafka source
+        Source<ConsumerRecord<byte[], String>, Consumer.Control> tempSource = null;
+        for (String topic : watchedTopics) {
+            tempSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(new TopicPartition(topic, 0)));
+        }
+        final Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = tempSource;
+
+        // Sinks
+        Sink<ProducerRecord, CompletionStage<Done>> kafkaSink = Producer.plainSink(producerSettings);
+        Sink<ProducerRecord, CompletionStage<Done>> ignoreSink = Sink.ignore();
+
+        // Functions
+        Flow<ConsumerRecord, ProducerRecord, NotUsed> f1 = Flow.of(ConsumerRecord.class).map(r -> new ProducerRecord<byte[], String>("topic2", String.valueOf(r.value())));
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f2 = Flow.of(ProducerRecord.class).filter(r -> Float.parseFloat((String) r.value()) > 3.0);
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f3 = Flow.of(ProducerRecord.class).filterNot(r -> Float.parseFloat((String) r.value()) > 3.0);
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f4 = Flow.of(ProducerRecord.class).grouped(3).map(recordList -> {
+            double avg = 0.0;
+            for (ProducerRecord r : recordList) {
+                avg += Float.parseFloat((String) r.value());
             }
+            avg /= recordList.size();
+            return new ProducerRecord<byte[], String>("topic2", String.valueOf(avg));
+        });
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f5 = Flow.of(ProducerRecord.class).groupedWithin(Integer.MAX_VALUE, FiniteDuration.create(5, TimeUnit.SECONDS))
+                .map(recordList -> {
+            double avg = 0.0;
+            for (ProducerRecord r : recordList) {
+                avg += Float.parseFloat((String) r.value());
+            }
+            avg /= recordList.size();
+            return new ProducerRecord<byte[], String>("topic2", String.valueOf(avg));
+        });
+
+        final RunnableGraph<Pair<CompletionStage<Done>, CompletionStage<Done>>> myRunnableGraph =
+                RunnableGraph.fromGraph(
+                        GraphDSL
+                                .create(kafkaSink, ignoreSink, Keep.both(), (b, kafkaS, ignoreS) -> {
+                                    final UniformFanOutShape<ProducerRecord, ProducerRecord> bcast =
+                                            b.add(Broadcast.create(2));
+
+                                    b.from(b.add(kafkaSource)).via(b.add(f1)).viaFanOut(bcast);
+                                    b.from(bcast).via(b.add(f2)).via(b.add(f5)).to(kafkaS);
+                                    b.from(bcast).via(b.add(f3)).to(ignoreS);
+
+                                    return ClosedShape.getInstance();
+                                }));
+
+        myRunnableGraph.run(materializer);
 
 
-            /*Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(new TopicPartition(topic, 0)))
-                    .runWith(Sink.foreach(a -> System.out.println(a)), materializer);*/
-       /* }*/
+        // Other ways without sharing kafkaActor
 
-        Consumer.committableSource(consumerSettings, Subscriptions.topics(watchedTopics))
-                .map(msg -> {
-                    System.out.println(msg.record().value());
-                    return new ProducerMessage.Message<byte[], String, ConsumerMessage.Committable>(
-                            new ProducerRecord<>("topic2", msg.record().value()), msg.committableOffset());
-                })
-                .runWith(Producer.commitableSink(producerSettings), materializer);
+        /*Consumer.committableSource(consumerSettings, Subscriptions.topics(watchedTopics))
+            .map(msg -> filter.filter(msg))
+            .runWith(Producer.commitableSink(producerSettings), materializer);*/
 
-        // Other way without sharing kafkaActor
         /*Consumer.atMostOnceSource(consumerSettings, Subscriptions.topics("topic1"))
-                .runWith(Sink.foreach(a -> System.out.println(a)), materializer);*/
+            .runWith(Sink.foreach(a -> System.out.println(a)), materializer);*/
+    }
+
+    private void cleanShutdown() {
+        if (kafkaActor != null) {
+            getContext().system().stop(kafkaActor);
+        }
     }
 
 }
