@@ -5,6 +5,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import fr.isae.iqas.model.messages.AddKafkaTopic;
 
 import java.util.Properties;
 
@@ -25,7 +26,7 @@ public class ManagerActor extends UntypedActor {
     public ManagerActor(Properties prop) {
         this.prop = prop;
         monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop), "monitorInfo");
-        //monitorActor.tell(new AddKafkaTopic("topic1"), getSelf());
+        //monitorActor.tell(new AddKafkaTopic("topic3"), getSelf());
     }
 
     @Override

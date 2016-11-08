@@ -40,7 +40,7 @@ public class MonitorActor extends UntypedActor {
     private ActorRef kafkaActor;
     private ProducerSettings producerSettings = null;
     private ConsumerSettings consumerSettings = null;
-    private Set<String> watchedTopics = new HashSet<>() ;
+    private Set<TopicPartition> watchedTopics = new HashSet<>() ;
 
     public MonitorActor(Properties prop) {
 
@@ -58,7 +58,7 @@ public class MonitorActor extends UntypedActor {
 
         // Default KafkaActor for reuse
         //kafkaActor = getContext().system().actorOf(KafkaConsumerActor.props(consumerSettings));
-        watchedTopics.add("topic1");
+        watchedTopics.add(new TopicPartition("topic1", 0));
         restartKafkaActor();
         //getContext().watch(kafkaActor);
     }
@@ -92,7 +92,7 @@ public class MonitorActor extends UntypedActor {
             AddKafkaTopic addKafkaTopic = (AddKafkaTopic) message;
             String newKafkaTopicToWatch = addKafkaTopic.getTopic();
             if (!watchedTopics.contains(newKafkaTopicToWatch)) {
-                watchedTopics.add(newKafkaTopicToWatch);
+                watchedTopics.add(new TopicPartition(newKafkaTopicToWatch, 0));
                 restartKafkaActor();
             }
         }
@@ -114,37 +114,12 @@ public class MonitorActor extends UntypedActor {
         cleanShutdown();
     }
 
-    /*public interface MyComparator {
-        ProducerMessage.Message<byte[], String, ConsumerMessage.Committable> filter(ConsumerMessage.CommittableMessage<byte[], String> msg);
-    }
 
-    public interface MyComparator2 {
+    /*public interface MyComparator2 {
         ProducerRecord<byte[], String> filter2(ConsumerRecord<byte[], String> msg);
     }
 
-    MyComparator filter = msg -> {
-        System.out.println(msg.record().value());
-
-        Float val;
-        try {
-            val = Float.parseFloat(msg.record().value());
-        }
-        catch (NumberFormatException e) {
-            val = null;
-        }
-        if (val != null && val > 3.0) {
-            return new ProducerMessage.Message<>(
-                    new ProducerRecord<>(
-                            "topic2", msg.record().value()), msg.committableOffset());
-        }
-        else {
-            return new ProducerMessage.Message<>(
-                    new ProducerRecord<>(
-                            "topic2", msg.record().value()), msg.committableOffset());
-        }
-    };*/
-
-    /*MyComparator2 filter2 = msg -> {
+    MyComparator2 filter2 = msg -> {
         System.out.println(msg.value());
 
         /*Float val;
@@ -174,11 +149,7 @@ public class MonitorActor extends UntypedActor {
         kafkaActor = getContext().system().actorOf(KafkaConsumerActor.props(consumerSettings));
 
         // Kafka source
-        Source<ConsumerRecord<byte[], String>, Consumer.Control> tempSource = null;
-        for (String topic : watchedTopics) {
-            tempSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(new TopicPartition(topic, 0)));
-        }
-        final Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = tempSource;
+        final Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(watchedTopics));
 
         // Sinks
         Sink<ProducerRecord, CompletionStage<Done>> kafkaSink = Producer.plainSink(producerSettings);
