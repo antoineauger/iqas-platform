@@ -7,10 +7,15 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Pair;
-import akka.kafka.*;
+import akka.kafka.ConsumerSettings;
+import akka.kafka.KafkaConsumerActor;
+import akka.kafka.ProducerSettings;
+import akka.kafka.Subscriptions;
 import akka.kafka.javadsl.Consumer;
 import akka.kafka.javadsl.Producer;
-import akka.stream.*;
+import akka.stream.ActorMaterializer;
+import akka.stream.ClosedShape;
+import akka.stream.UniformFanOutShape;
 import akka.stream.javadsl.*;
 import fr.isae.iqas.model.messages.AddKafkaTopic;
 import fr.isae.iqas.model.messages.Terminated;
@@ -25,9 +30,13 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+
+import static fr.isae.iqas.mechanisms.AvailAdaptMechanisms.*;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -40,9 +49,9 @@ public class MonitorActor extends UntypedActor {
     private ActorRef kafkaActor;
     private ProducerSettings producerSettings = null;
     private ConsumerSettings consumerSettings = null;
-    private Set<TopicPartition> watchedTopics = new HashSet<>() ;
+    private Set<TopicPartition> watchedTopics = new HashSet<>();
 
-    public MonitorActor(Properties prop) {
+    public MonitorActor(Properties prop) throws Exception {
 
         consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
@@ -84,8 +93,7 @@ public class MonitorActor extends UntypedActor {
                     getSelf(), "tick", getContext().dispatcher(), null);
 
             System.out.println("It works!");
-        }
-        else if (message instanceof AddKafkaTopic) {
+        } else if (message instanceof AddKafkaTopic) {
             log.info("Received AddKafkaTopic message: {}", message);
             getSender().tell(message, getSelf());
 
@@ -95,16 +103,13 @@ public class MonitorActor extends UntypedActor {
                 watchedTopics.add(new TopicPartition(newKafkaTopicToWatch, 0));
                 restartKafkaActor();
             }
-        }
-        else if (message instanceof String) {
+        } else if (message instanceof String) {
             log.info("Received String message: {}", message);
             getSender().tell(message, getSelf());
-        }
-        else if (message instanceof Terminated) {
+        } else if (message instanceof Terminated) {
             log.info("Received Terminated message: {}", message);
             cleanShutdown();
-        }
-        else {
+        } else {
             unhandled(message);
         }
     }
@@ -114,35 +119,7 @@ public class MonitorActor extends UntypedActor {
         cleanShutdown();
     }
 
-
-    /*public interface MyComparator2 {
-        ProducerRecord<byte[], String> filter2(ConsumerRecord<byte[], String> msg);
-    }
-
-    MyComparator2 filter2 = msg -> {
-        System.out.println(msg.value());
-
-        /*Float val;
-        try {
-            val = Float.parseFloat(msg.value());
-        }
-        catch (NumberFormatException e) {
-            val = null;
-        }
-        if (val != null && val > 3.0) {
-            return new ProducerRecord<>(
-                    "topic2", "TOO HIGH");
-        }
-        else {
-            return new ProducerRecord<>(
-                    "topic2", msg.value());
-        }
-
-        return new ProducerRecord<>(
-                "topic2", msg.value());
-    };*/
-
-    private void restartKafkaActor() {
+    private void restartKafkaActor() throws Exception {
         if (kafkaActor != null) {
             getContext().system().stop(kafkaActor);
         }
@@ -155,27 +132,13 @@ public class MonitorActor extends UntypedActor {
         Sink<ProducerRecord, CompletionStage<Done>> kafkaSink = Producer.plainSink(producerSettings);
         Sink<ProducerRecord, CompletionStage<Done>> ignoreSink = Sink.ignore();
 
-        // Functions
-        Flow<ConsumerRecord, ProducerRecord, NotUsed> f1 = Flow.of(ConsumerRecord.class).map(r -> new ProducerRecord<byte[], String>("topic2", String.valueOf(r.value())));
-        Flow<ProducerRecord, ProducerRecord, NotUsed> f2 = Flow.of(ProducerRecord.class).filter(r -> Float.parseFloat((String) r.value()) > 3.0);
-        Flow<ProducerRecord, ProducerRecord, NotUsed> f3 = Flow.of(ProducerRecord.class).filterNot(r -> Float.parseFloat((String) r.value()) > 3.0);
-        Flow<ProducerRecord, ProducerRecord, NotUsed> f4 = Flow.of(ProducerRecord.class).grouped(3).map(recordList -> {
-            double avg = 0.0;
-            for (ProducerRecord r : recordList) {
-                avg += Float.parseFloat((String) r.value());
-            }
-            avg /= recordList.size();
-            return new ProducerRecord<byte[], String>("topic2", String.valueOf(avg));
-        });
-        Flow<ProducerRecord, ProducerRecord, NotUsed> f5 = Flow.of(ProducerRecord.class).groupedWithin(Integer.MAX_VALUE, FiniteDuration.create(5, TimeUnit.SECONDS))
-                .map(recordList -> {
-            double avg = 0.0;
-            for (ProducerRecord r : recordList) {
-                avg += Float.parseFloat((String) r.value());
-            }
-            avg /= recordList.size();
-            return new ProducerRecord<byte[], String>("topic2", String.valueOf(avg));
-        });
+        //TODO ok to test
+        Flow<ConsumerRecord, ProducerRecord, NotUsed> f1 = f_convert_ConsumerToProducer("topic2");
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f2 = f_filter_ValuesGreaterThan(3.0);
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f3 = f_filter_ValuesLesserThan(3.0);
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f4 = f_group_CountBasedMean(3, "topic2");
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f5 = f_group_TimeBasedMean(new FiniteDuration(5, TimeUnit.SECONDS), "topic2");
+
 
         final RunnableGraph<Pair<CompletionStage<Done>, CompletionStage<Done>>> myRunnableGraph =
                 RunnableGraph.fromGraph(
@@ -183,16 +146,13 @@ public class MonitorActor extends UntypedActor {
                                 .create(kafkaSink, ignoreSink, Keep.both(), (b, kafkaS, ignoreS) -> {
                                     final UniformFanOutShape<ProducerRecord, ProducerRecord> bcast =
                                             b.add(Broadcast.create(2));
-
                                     b.from(b.add(kafkaSource)).via(b.add(f1)).viaFanOut(bcast);
                                     b.from(bcast).via(b.add(f2)).via(b.add(f5)).to(kafkaS);
                                     b.from(bcast).via(b.add(f3)).to(ignoreS);
-
                                     return ClosedShape.getInstance();
                                 }));
 
         myRunnableGraph.run(materializer);
-
 
         // Other ways without sharing kafkaActor
 

@@ -32,7 +32,7 @@ import static com.mongodb.client.model.Filters.eq;
  * Created by an.auger on 20/09/2016.
  */
 public class MongoController extends AllDirectives {
-    private static Logger logger = Logger.getLogger(MongoController.class);
+    private static Logger log = Logger.getLogger(MongoController.class);
 
     private String pathAPIGatewayActor;
     private MongoDatabase mongoDatabase;
@@ -42,7 +42,7 @@ public class MongoController extends AllDirectives {
         this.pathAPIGatewayActor = pathAPIGatewayActor;
         this.mongoDatabase = mongoDatabase;
         this.context = context;
-        logger.info("MongoController successfully created!");
+        log.info("MongoController successfully created!");
     }
 
     public Future<ActorRef> getAPIGatewayActor() {
@@ -146,7 +146,7 @@ public class MongoController extends AllDirectives {
         Document documentRequest = request.toBSON();
         collection.insertOne(documentRequest, (result, t) -> {
             if (t == null) {
-                logger.info("Successfully inserted Requests into requests collection!");
+                log.info("Successfully inserted Requests into requests collection!");
 
                 getAPIGatewayActor().onComplete(new OnComplete<ActorRef>() {
                     @Override
@@ -157,14 +157,14 @@ public class MongoController extends AllDirectives {
                             );
                         } else {
                             success.tell(request, ActorRef.noSender());
-                            logger.info("Request sent to the APIGatewayActor by MongoController");
+                            log.info("Request sent to the APIGatewayActor by MongoController");
                             requestResultInsertion.complete(request);
                         }
                     }
                 }, context.dispatcher());
 
             } else {
-                logger.info("Failed to insert request: " + t.toString());
+                log.info("Failed to insert request: " + t.toString());
             }
         });
         return completeOKWithFuture(requestResultInsertion, Jackson.marshaller());
@@ -182,9 +182,9 @@ public class MongoController extends AllDirectives {
     public void dropIQASDatabase() {
         _dropIQASDatabase((result, t) -> {
             if (t == null) {
-                logger.info("Drop of the IQAS database successful!");
+                log.info("Drop of the IQAS database successful!");
             } else {
-                logger.info("Drop of the IQAS database failed: " + t.toString());
+                log.info("Drop of the IQAS database failed: " + t.toString());
             }
         });
     }
@@ -196,9 +196,9 @@ public class MongoController extends AllDirectives {
     public void dropCollection(String collectionName) {
         _dropCollection(collectionName, (result, t) -> {
             if (t == null) {
-                logger.info("Drop of the " + collectionName + " collection successful!");
+                log.info("Drop of the " + collectionName + " collection successful!");
             } else {
-                logger.info("Drop of the " + collectionName + " collection failed: " + t.toString());
+                log.info("Drop of the " + collectionName + " collection failed: " + t.toString());
             }
         });
     }
@@ -219,9 +219,9 @@ public class MongoController extends AllDirectives {
             collection.insertMany(documents, (result, t) -> {
 
                 if (t == null) {
-                    logger.info("Sensors inserted into sensors collection!");
+                    log.info("Sensors inserted into sensors collection!");
                 } else {
-                    logger.info("Failed to insert sensors");
+                    log.info("Failed to insert sensors");
                 }
             });
         } catch (Throwable throwable) {

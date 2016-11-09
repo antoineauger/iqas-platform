@@ -6,6 +6,7 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.model.messages.AddKafkaTopic;
+import fr.isae.iqas.model.messages.Terminated;
 
 import java.util.Properties;
 
@@ -31,13 +32,14 @@ public class ManagerActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        //analyzeActor = getContext().actorOf(Props.create(AnalyzeActor.class), "analyzeInfo");
-        //monitorActor = getContext().actorOf(Props.create(MonitorActor.class));
-        //monitorActor = getContext().actorOf(Props.create(MonitorActor.class));
+
     }
 
     @Override
-    public void onReceive(Object message) throws Throwable {
-
+    public void onReceive(Object message) throws Exception {
+        if (message instanceof Terminated) {
+            log.info("Received Terminated message: {}", message);
+            getContext().system().stop(self());
+        }
     }
 }

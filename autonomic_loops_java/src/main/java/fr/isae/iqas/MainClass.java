@@ -2,6 +2,8 @@ package fr.isae.iqas;
 
 import akka.NotUsed;
 import akka.actor.*;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
@@ -16,6 +18,8 @@ import com.mongodb.async.client.MongoClient;
 import com.mongodb.async.client.MongoClients;
 import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.database.MongoController;
+import fr.isae.iqas.model.messages.*;
+import fr.isae.iqas.model.messages.Terminated;
 import fr.isae.iqas.server.APIGatewayActor;
 import fr.isae.iqas.server.RESTServer;
 
@@ -30,6 +34,7 @@ import java.util.concurrent.CompletionStage;
 public class MainClass {
 
     public static class LocalMaster extends UntypedActor {
+        LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
         public LocalMaster(Properties prop, ActorSystem system, Materializer materializer) throws IOException {
             // Path resolution for the APIGatewayActor
@@ -65,28 +70,6 @@ public class MainClass {
                 return null;
             });
 
-            // Actors for Information Layer
-            //final ActorRef infoMonitorActor = system.actorOf(Props.create(MonitorActor.class), "infoMonitorActor");
-            //final ActorRef infoAnalyzeActor = system.actorOf(Props.create(AnalyzeActor.class, infoMonitorActor), "infoAnalyzeActor");
-
-            /*infoMonitorActor.tell(new AddKafkaTopic("topic1"), infoAnalyzeActor);
-
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            infoMonitorActor.tell(new AddKafkaTopic("topic2"), infoAnalyzeActor);
-
-
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            infoMonitorActor.tell(new AddKafkaTopic("terminate"), infoAnalyzeActor);*/
-
             // We add a shutdown hook to try gracefully to unbind server when possible
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
@@ -101,7 +84,10 @@ public class MainClass {
 
         @Override
         public void onReceive(Object message) throws Throwable {
-
+            if (message instanceof Terminated) {
+                log.info("Received Terminated message: {}", message);
+                getContext().system().stop(self());
+            }
         }
     }
 
