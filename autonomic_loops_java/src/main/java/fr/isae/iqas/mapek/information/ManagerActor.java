@@ -5,7 +5,9 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import fr.isae.iqas.model.Request;
 import fr.isae.iqas.model.messages.AddKafkaTopic;
+import fr.isae.iqas.model.messages.RFC;
 import fr.isae.iqas.model.messages.Terminated;
 
 import java.util.Properties;
@@ -18,16 +20,24 @@ import java.util.Properties;
 public class ManagerActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+    private boolean processingActivated;
+
     private Properties prop;
-    private ActorRef monitorActor;
-    private ActorRef analyzeActor;
-    private ActorRef planActor;
-    private ActorRef executeActor;
+    private ActorRef monitorActor = null;
+    private ActorRef analyzeActor = null;
+    private ActorRef planActor = null;
+    private ActorRef executeActor = null;
 
     public ManagerActor(Properties prop) {
         this.prop = prop;
         monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop), "monitorInfo");
+        //analyzeActor = getContext().actorOf(Props.create(AnalyzeActor.class, prop), "analyzeInfo");
+        planActor = getContext().actorOf(Props.create(PlanActor.class, prop, "topic1", "topic2"), "planInfo");
+        //executeActor = getContext().actorOf(Props.create(ExecuteActor.class, prop), "executeInfo");
+
         //monitorActor.tell(new AddKafkaTopic("topic3"), getSelf());
+
+        processingActivated = false;
     }
 
     @Override
@@ -39,7 +49,31 @@ public class ManagerActor extends UntypedActor {
     public void onReceive(Object message) throws Exception {
         if (message instanceof Terminated) {
             log.info("Received Terminated message: {}", message);
+
+            if (monitorActor != null) {
+                getContext().system().stop(monitorActor);
+            }
+            if (analyzeActor != null) {
+                getContext().system().stop(analyzeActor);
+            }
+            if (planActor != null) {
+                getContext().system().stop(planActor);
+            }
+            if (executeActor != null) {
+                getContext().system().stop(executeActor);
+            }
+
             getContext().system().stop(self());
+        }
+        else if (message instanceof Request) {
+            if(processingActivated) {
+                planActor.tell(new RFC("none"), getSelf());
+                processingActivated = false;
+            }
+            else {
+                planActor.tell(new RFC("testGraph"), getSelf());
+                processingActivated = true;
+            }
         }
     }
 }

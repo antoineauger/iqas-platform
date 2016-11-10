@@ -26,8 +26,8 @@ public class APIGatewayActor extends UntypedActor {
         this.prop = prop;
         this.mongoController = mongoController;
 
-        autoManagerRawData = getContext().actorOf(Props.create(ManagerActor.class, prop), "autoManagerRawData");
-        //autoManagerInfo = getContext().actorOf(Props.create(ManagerActor.class, prop), "autoManagerInfo");
+        //autoManagerRawData = getContext().actorOf(Props.create(ManagerActor.class, prop), "autoManagerRawData");
+        autoManagerInfo = getContext().actorOf(Props.create(ManagerActor.class, prop), "autoManagerInfo");
     }
 
     @Override
@@ -37,15 +37,13 @@ public class APIGatewayActor extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Throwable {
         if (message instanceof Request) {
-
-            Request receivedRequest = (Request) message;
             log.info("Received Request: {}", message.toString());
 
+            Request receivedRequest = (Request) message;
+            // For now, all requests are forwarded to the information AM
+            autoManagerInfo.tell(receivedRequest, getSelf());
+
             // We do not acknowledge the message since it was coming from REST server
-        }
-        else if (message instanceof String) {
-            log.error("Received String message: {}", message);
-            //getSender().tell(message, getSelf());
         }
     }
 }

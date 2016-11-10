@@ -1,7 +1,10 @@
 package fr.isae.iqas;
 
 import akka.NotUsed;
-import akka.actor.*;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.http.javadsl.ConnectHttp;
@@ -18,7 +21,6 @@ import com.mongodb.async.client.MongoClient;
 import com.mongodb.async.client.MongoClients;
 import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.database.MongoController;
-import fr.isae.iqas.model.messages.*;
 import fr.isae.iqas.model.messages.Terminated;
 import fr.isae.iqas.server.APIGatewayActor;
 import fr.isae.iqas.server.RESTServer;
@@ -65,7 +67,7 @@ public class MainClass {
 
             // High-level error handling
             binding.exceptionally(failure -> {
-                System.err.println("Something very bad happened! " + failure.getMessage());
+                log.error("Something very bad happened! " + failure.getMessage());
                 system.terminate();
                 return null;
             });
@@ -74,7 +76,7 @@ public class MainClass {
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
                 public void run() {
-                    System.out.println("Gracefully shutting down autonomic loops and API gateway...");
+                    log.info("Gracefully shutting down autonomic loops and API gateway...");
                     mongoClient.close();
                     binding.thenCompose(ServerBinding::unbind)
                             .thenAccept(unbound -> system.terminate());
