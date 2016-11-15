@@ -19,7 +19,7 @@ public class AnalyzeActor extends UntypedActor {
         if (message instanceof Terminated) {
             log.info("Received Terminated message: {}", message);
             getSender().tell(message, getSelf());
-            getContext().system().stop(self());
+            getContext().stop(self());
         }
     }
 }

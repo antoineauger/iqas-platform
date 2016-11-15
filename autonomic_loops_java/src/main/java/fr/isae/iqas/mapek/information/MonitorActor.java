@@ -107,10 +107,9 @@ public class MonitorActor extends UntypedActor {
     private void restartKafkaActor() {
         // Default KafkaActor for reuse
         if (kafkaActor != null) {
-            getContext().system().stop(kafkaActor);
+            getContext().stop(kafkaActor);
         }
         kafkaActor = getContext().actorOf(KafkaConsumerActor.props(consumerSettings));
-        //getContext().watch(kafkaActor);
 
         // Consuming messages with sharing kafka actor
 
@@ -129,7 +128,7 @@ public class MonitorActor extends UntypedActor {
 
     private void cleanShutdown() {
         if (kafkaActor != null) {
-            getContext().system().stop(kafkaActor);
+            getContext().stop(kafkaActor);
         }
     }
 

@@ -5,10 +5,15 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.kafka.ConsumerSettings;
+import akka.kafka.KafkaConsumerActor;
 import akka.pattern.AskTimeoutException;
 import akka.pattern.Patterns;
 import fr.isae.iqas.model.messages.RFC;
 import fr.isae.iqas.model.messages.Terminated;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -22,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 public class PlanActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+    private ConsumerSettings consumerSettings = null;
+    private ActorRef kafkaActor = null;
     private Properties prop = null;
     private Set<String> topicsToPullFrom = new HashSet<>();
     private String topicToPushTo = null;
@@ -33,12 +40,27 @@ public class PlanActor extends UntypedActor {
         this.topicsToPullFrom.add("topic1");
         //this.topicsToPullFrom.add("topic3");
         this.topicToPushTo = "topic2";
+
+        // We only create one KafkaConsumer actor for all executeActors. To evaluate for performances.
+        consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
+                .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
+                .withGroupId("groupInfoPlan")
+                .withClientId("clientInfoPlan")
+                .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+    }
+
+    @Override
+    public void preStart() {
+        kafkaActor = getContext().actorOf((KafkaConsumerActor.props(consumerSettings)));
     }
 
     @Override
     public void onReceive(Object message) throws Exception {
         if (message instanceof Terminated) {
             log.info("Received Terminated message: {}", message);
+            if (kafkaActor != null) {
+                getContext().stop(kafkaActor);
+            }
             getContext().stop(self());
         } else if (message instanceof RFC) {
             log.info("Received RFC message: {}", message);
@@ -56,7 +78,7 @@ public class PlanActor extends UntypedActor {
                     Await.result(stopped, Duration.create(10, TimeUnit.SECONDS));
                     log.info("Successfully stopped " + actorRefToStop.path());
 
-                    ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicsToPullFrom, topicToPushTo, remedyToPlan));
+                    ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, kafkaActor, topicsToPullFrom, topicToPushTo, remedyToPlan));
                     execActorsRefs.put(actorNameToResolve, actorRefToStart);
                     log.info("Successfully started " + actorRefToStart.path());
                 } catch (AskTimeoutException e) {
@@ -64,7 +86,7 @@ public class PlanActor extends UntypedActor {
                     log.error(e.toString());
                 }
             } else {
-                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicsToPullFrom, topicToPushTo, remedyToPlan));
+                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, kafkaActor, topicsToPullFrom, topicToPushTo, remedyToPlan));
                 execActorsRefs.put(actorNameToResolve, actorRefToStart);
                 log.info("Successfully started " + actorRefToStart.path());
             }

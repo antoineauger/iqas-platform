@@ -6,7 +6,6 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.model.Request;
-import fr.isae.iqas.model.messages.AddKafkaTopic;
 import fr.isae.iqas.model.messages.RFC;
 import fr.isae.iqas.model.messages.Terminated;
 
@@ -61,7 +60,7 @@ public class ManagerActor extends UntypedActor {
                 getContext().stop(executeActor);
             }
 
-            getContext().system().stop(self());
+            getContext().stop(self());
         }
         else if (message instanceof Request) {
             if(processingActivated) {

@@ -6,8 +6,6 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.kafka.ConsumerSettings;
-import akka.kafka.KafkaConsumerActor;
 import akka.kafka.ProducerSettings;
 import akka.kafka.Subscriptions;
 import akka.kafka.javadsl.Consumer;
@@ -15,13 +13,10 @@ import akka.kafka.javadsl.Producer;
 import akka.stream.*;
 import akka.stream.javadsl.*;
 import fr.isae.iqas.model.messages.Terminated;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -40,46 +35,27 @@ import static fr.isae.iqas.mechanisms.AvailAdaptMechanisms.*;
 public class ExecuteActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private ActorRef kafkaActor = null;
-
     private ProducerSettings producerSettings = null;
-    private ConsumerSettings consumerSettings = null;
     private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = null;
     private Sink<ProducerRecord, CompletionStage<Done>> kafkaSink = null;
     private Sink<ProducerRecord, CompletionStage<Done>> ignoreSink = null;
     private Set<TopicPartition> watchedTopics = new HashSet<>();
-    //private Set<String> watchedTopics = new HashSet<>();
 
     private String topicToPushTo = null;
 
     private ActorMaterializer materializer = null;
     private RunnableGraph myRunnableGraph = null;
 
-    public ExecuteActor(Properties prop, Set<String> topicsToPullFrom, String topicToPushTo, String remedyToPlan) throws Exception {
-        consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
-                .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
-                .withGroupId("groupInfoPlan")
-                .withClientId("clientInfoPlan")
-                .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
-
+    public ExecuteActor(Properties prop, ActorRef kafkaActor, Set<String> topicsToPullFrom, String topicToPushTo, String remedyToPlan) throws Exception {
         producerSettings = ProducerSettings
                 .create(getContext().system(), new ByteArraySerializer(), new StringSerializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"));
 
-        Set<String> topicsToPullFrom1 = topicsToPullFrom;
         this.topicToPushTo = topicToPushTo;
 
         // Kafka source
-        /**
-         * 2 different methods for consuming and publishing from/to Kafka:
-         * -reusing kafkaActor: seems to be more efficient since manual partition attachment but complex and deadletters when stopping kafka actor.
-         * -Consumer.plainSource: sometimes Error registering AppInfo mbean and complexity hidden
-         */
-        kafkaActor = getContext().actorOf((KafkaConsumerActor.props(consumerSettings)));
         watchedTopics.addAll(topicsToPullFrom.stream().map(s -> new TopicPartition(s, 0)).collect(Collectors.toList()));
         kafkaSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(watchedTopics));
-        //watchedTopics.addAll(topicsToPullFrom);
-        //kafkaSource = Consumer.plainSource(consumerSettings, Subscriptions.topics(watchedTopics));
 
         // Sinks
         kafkaSink = Producer.plainSink(producerSettings);
@@ -91,7 +67,6 @@ public class ExecuteActor extends UntypedActor {
 
     @Override
     public void preStart() {
-
         if (myRunnableGraph != null) {
             myRunnableGraph.run(materializer);
         }
@@ -101,9 +76,6 @@ public class ExecuteActor extends UntypedActor {
     public void onReceive(Object message) throws Exception {
         if (message instanceof Terminated) {
             log.info("Received Terminated message: {}", message);
-            if (kafkaActor != null) {
-                getContext().stop(kafkaActor);
-            }
             if (myRunnableGraph != null) {
                 materializer.shutdown();
             }
