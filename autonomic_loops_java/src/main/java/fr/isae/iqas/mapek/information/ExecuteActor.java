@@ -30,6 +30,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static fr.isae.iqas.mechanisms.AvailAdaptMechanisms.*;
 
@@ -49,13 +50,12 @@ public class ExecuteActor extends UntypedActor {
     private Set<TopicPartition> watchedTopics = new HashSet<>();
     //private Set<String> watchedTopics = new HashSet<>();
 
-    private String topicToPullFrom = null;
     private String topicToPushTo = null;
 
     private ActorMaterializer materializer = null;
     private RunnableGraph myRunnableGraph = null;
 
-    public ExecuteActor(Properties prop, String topicToPullFrom, String topicToPushTo, String remedyToPlan) throws Exception {
+    public ExecuteActor(Properties prop, Set<String> topicsToPullFrom, String topicToPushTo, String remedyToPlan) throws Exception {
         consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
                 .withGroupId("groupInfoPlan")
@@ -66,7 +66,7 @@ public class ExecuteActor extends UntypedActor {
                 .create(getContext().system(), new ByteArraySerializer(), new StringSerializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"));
 
-        this.topicToPullFrom = topicToPullFrom;
+        Set<String> topicsToPullFrom1 = topicsToPullFrom;
         this.topicToPushTo = topicToPushTo;
 
         // Kafka source
@@ -76,8 +76,9 @@ public class ExecuteActor extends UntypedActor {
          * -Consumer.plainSource: sometimes Error registering AppInfo mbean and complexity hidden
          */
         kafkaActor = getContext().actorOf((KafkaConsumerActor.props(consumerSettings)));
-        watchedTopics.add(new TopicPartition(this.topicToPullFrom, 0));
-        //watchedTopics.add(this.topicToPullFrom);
+        watchedTopics.addAll(topicsToPullFrom.stream().map(s -> new TopicPartition(s, 0)).collect(Collectors.toList()));
+        kafkaSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(watchedTopics));
+        //watchedTopics.addAll(topicsToPullFrom);
         //kafkaSource = Consumer.plainSource(consumerSettings, Subscriptions.topics(watchedTopics));
 
         // Sinks

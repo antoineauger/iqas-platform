@@ -13,9 +13,7 @@ import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -25,14 +23,15 @@ public class PlanActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private Properties prop = null;
-    private String topicToPullFrom = null;
+    private Set<String> topicsToPullFrom = new HashSet<>();
     private String topicToPushTo = null;
 
     private Map<String, ActorRef> execActorsRefs = new HashMap<>();
 
     public PlanActor(Properties prop) {
         this.prop = prop;
-        this.topicToPullFrom = "topic1";
+        this.topicsToPullFrom.add("topic1");
+        //this.topicsToPullFrom.add("topic3");
         this.topicToPushTo = "topic2";
     }
 
@@ -57,7 +56,7 @@ public class PlanActor extends UntypedActor {
                     Await.result(stopped, Duration.create(10, TimeUnit.SECONDS));
                     log.info("Successfully stopped " + actorRefToStop.path());
 
-                    ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicToPullFrom, topicToPushTo, remedyToPlan));
+                    ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicsToPullFrom, topicToPushTo, remedyToPlan));
                     execActorsRefs.put(actorNameToResolve, actorRefToStart);
                     log.info("Successfully started " + actorRefToStart.path());
                 } catch (AskTimeoutException e) {
@@ -65,7 +64,7 @@ public class PlanActor extends UntypedActor {
                     log.error(e.toString());
                 }
             } else {
-                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicToPullFrom, topicToPushTo, remedyToPlan));
+                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicsToPullFrom, topicToPushTo, remedyToPlan));
                 execActorsRefs.put(actorNameToResolve, actorRefToStart);
                 log.info("Successfully started " + actorRefToStart.path());
             }
