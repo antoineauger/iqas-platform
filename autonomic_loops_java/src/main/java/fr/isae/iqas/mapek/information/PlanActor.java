@@ -41,7 +41,8 @@ public class PlanActor extends UntypedActor {
         //this.topicsToPullFrom.add("topic3");
         this.topicToPushTo = "topic2";
 
-        // We only create one KafkaConsumer actor for all executeActors. To evaluate for performances.
+        // We only create one KafkaConsumer actor for all executeActors.
+        // TODO: Evaluate performance of this solution
         consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
                 .withGroupId("groupInfoPlan")
