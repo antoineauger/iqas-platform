@@ -30,12 +30,10 @@ public class ManagerActor extends UntypedActor {
 
     public ManagerActor(Properties prop) {
         this.prop = prop;
-        monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop), "monitorInfo");
+        //monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop), "monitorInfo");
         //analyzeActor = getContext().actorOf(Props.create(AnalyzeActor.class, prop), "analyzeInfo");
-        planActor = getContext().actorOf(Props.create(PlanActor.class, prop, "topic1", "topic2"), "planInfo");
+        planActor = getContext().actorOf(Props.create(PlanActor.class, prop), "planInfo");
         //executeActor = getContext().actorOf(Props.create(ExecuteActor.class, prop), "executeInfo");
-
-        //monitorActor.tell(new AddKafkaTopic("topic3"), getSelf());
 
         processingActivated = false;
     }
@@ -51,16 +49,16 @@ public class ManagerActor extends UntypedActor {
             log.info("Received Terminated message: {}", message);
 
             if (monitorActor != null) {
-                getContext().system().stop(monitorActor);
+                getContext().stop(monitorActor);
             }
             if (analyzeActor != null) {
-                getContext().system().stop(analyzeActor);
+                getContext().stop(analyzeActor);
             }
             if (planActor != null) {
-                getContext().system().stop(planActor);
+                getContext().stop(planActor);
             }
             if (executeActor != null) {
-                getContext().system().stop(executeActor);
+                getContext().stop(executeActor);
             }
 
             getContext().system().stop(self());

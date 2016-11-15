@@ -88,7 +88,7 @@ public class MainClass {
         public void onReceive(Object message) throws Throwable {
             if (message instanceof Terminated) {
                 log.info("Received Terminated message: {}", message);
-                getContext().system().stop(self());
+                getContext().stop(self());
             }
         }
     }

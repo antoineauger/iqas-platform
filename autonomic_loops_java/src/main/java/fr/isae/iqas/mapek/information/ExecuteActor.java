@@ -1,14 +1,37 @@
 package fr.isae.iqas.mapek.information;
 
+import akka.Done;
+import akka.NotUsed;
+import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.stream.ActorMaterializer;
-import akka.stream.ClosedShape;
-import akka.stream.Graph;
-import akka.stream.Materializer;
-import akka.stream.javadsl.RunnableGraph;
+import akka.kafka.ConsumerSettings;
+import akka.kafka.KafkaConsumerActor;
+import akka.kafka.ProducerSettings;
+import akka.kafka.Subscriptions;
+import akka.kafka.javadsl.Consumer;
+import akka.kafka.javadsl.Producer;
+import akka.stream.*;
+import akka.stream.javadsl.*;
 import fr.isae.iqas.model.messages.Terminated;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import scala.concurrent.duration.FiniteDuration;
+
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
+
+import static fr.isae.iqas.mechanisms.AvailAdaptMechanisms.*;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -16,16 +39,58 @@ import fr.isae.iqas.model.messages.Terminated;
 public class ExecuteActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+    private ActorRef kafkaActor = null;
+
+    private ProducerSettings producerSettings = null;
+    private ConsumerSettings consumerSettings = null;
+    private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = null;
+    private Sink<ProducerRecord, CompletionStage<Done>> kafkaSink = null;
+    private Sink<ProducerRecord, CompletionStage<Done>> ignoreSink = null;
+    private Set<TopicPartition> watchedTopics = new HashSet<>();
+    //private Set<String> watchedTopics = new HashSet<>();
+
+    private String topicToPullFrom = null;
+    private String topicToPushTo = null;
+
     private ActorMaterializer materializer = null;
     private RunnableGraph myRunnableGraph = null;
 
-    public ExecuteActor(Graph<ClosedShape, Materializer> graphToRun) {
+    public ExecuteActor(Properties prop, String topicToPullFrom, String topicToPushTo, String remedyToPlan) throws Exception {
+        consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
+                .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
+                .withGroupId("groupInfoPlan")
+                .withClientId("clientInfoPlan")
+                .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+
+        producerSettings = ProducerSettings
+                .create(getContext().system(), new ByteArraySerializer(), new StringSerializer())
+                .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"));
+
+        this.topicToPullFrom = topicToPullFrom;
+        this.topicToPushTo = topicToPushTo;
+
+        // Kafka source
+        /**
+         * 2 different methods for consuming and publishing from/to Kafka:
+         * -reusing kafkaActor: seems to be more efficient since manual partition attachment but complex and deadletters when stopping kafka actor.
+         * -Consumer.plainSource: sometimes Error registering AppInfo mbean and complexity hidden
+         */
+        kafkaActor = getContext().actorOf((KafkaConsumerActor.props(consumerSettings)));
+        watchedTopics.add(new TopicPartition(this.topicToPullFrom, 0));
+        //watchedTopics.add(this.topicToPullFrom);
+        //kafkaSource = Consumer.plainSource(consumerSettings, Subscriptions.topics(watchedTopics));
+
+        // Sinks
+        kafkaSink = Producer.plainSink(producerSettings);
+        ignoreSink = Sink.ignore();
+
         materializer = ActorMaterializer.create(getContext().system());
-        myRunnableGraph = RunnableGraph.fromGraph(graphToRun);
+        myRunnableGraph = RunnableGraph.fromGraph(buildGraph(remedyToPlan));
     }
 
     @Override
     public void preStart() {
+
         if (myRunnableGraph != null) {
             myRunnableGraph.run(materializer);
         }
@@ -35,16 +100,48 @@ public class ExecuteActor extends UntypedActor {
     public void onReceive(Object message) throws Exception {
         if (message instanceof Terminated) {
             log.info("Received Terminated message: {}", message);
+            if (kafkaActor != null) {
+                getContext().stop(kafkaActor);
+            }
             if (myRunnableGraph != null) {
                 materializer.shutdown();
             }
-            getSender().tell(message, getSelf());
-            getContext().system().stop(self());
+            getContext().stop(self());
         }
     }
 
     @Override
     public void postStop() {
         // clean up resources here ...
+    }
+
+    private Graph<ClosedShape, Materializer> buildGraph(String remedyToPlan) throws Exception {
+        Graph myRunnableGraphToReturn = null;
+
+        Flow<ConsumerRecord, ProducerRecord, NotUsed> f1 = f_convert_ConsumerToProducer(topicToPushTo);
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f2 = f_filter_ValuesGreaterThan(3.0);
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f3 = f_filter_ValuesLesserThan(3.0);
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f4 = f_group_CountBasedMean(3, topicToPushTo);
+        Flow<ProducerRecord, ProducerRecord, NotUsed> f5 = f_group_TimeBasedMean(new FiniteDuration(5, TimeUnit.SECONDS), topicToPushTo);
+
+        if (remedyToPlan.equals("testGraph")) {
+            myRunnableGraphToReturn = GraphDSL
+                    .create(builder -> {
+                        final Outlet<ConsumerRecord<byte[], String>> sourceGraph = builder.add(kafkaSource).out();
+                        final Inlet<ProducerRecord> sinkGraph = builder.add(kafkaSink).in();
+                        builder.from(sourceGraph).via(builder.add(f1)).via(builder.add(f2)).toInlet(sinkGraph);
+                        return ClosedShape.getInstance();
+                    });
+        } else if (remedyToPlan.equals("none")) {
+            myRunnableGraphToReturn = GraphDSL
+                    .create(builder -> {
+                        final Outlet<ConsumerRecord<byte[], String>> sourceGraph = builder.add(kafkaSource).out();
+                        final Inlet<ProducerRecord> sinkGraph = builder.add(ignoreSink).in();
+                        builder.from(sourceGraph).via(builder.add(f1)).toInlet(sinkGraph);
+                        return ClosedShape.getInstance();
+                    });
+        }
+
+        return myRunnableGraphToReturn;
     }
 }
