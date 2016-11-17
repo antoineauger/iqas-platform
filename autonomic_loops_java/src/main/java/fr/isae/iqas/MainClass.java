@@ -20,7 +20,7 @@ import com.mongodb.ConnectionString;
 import com.mongodb.async.client.MongoClient;
 import com.mongodb.async.client.MongoClients;
 import com.mongodb.async.client.MongoDatabase;
-import fr.isae.iqas.database.MongoController;
+import fr.isae.iqas.database.MongoRESTController;
 import fr.isae.iqas.model.messages.Terminated;
 import fr.isae.iqas.server.APIGatewayActor;
 import fr.isae.iqas.server.RESTServer;
@@ -47,18 +47,18 @@ public class MainClass {
                     + prop.getProperty("database_endpoint_address") + ":" + prop.getProperty("database_endpoint_port")));
 
             MongoDatabase database = mongoClient.getDatabase("iqas");
-            MongoController mongoController = new MongoController(database, getContext(), pathAPIGatewayActor);
+            MongoRESTController mongoRESTController = new MongoRESTController(database, getContext(), pathAPIGatewayActor);
 
             // MongoDB initialization
-            mongoController.dropIQASDatabase();
-            mongoController.putSensorsFromFileIntoDB("templates/sensors.json");
+            mongoRESTController.getController().dropIQASDatabase();
+            mongoRESTController.getController().putSensorsFromFileIntoDB("templates/sensors.json");
 
             // API Gateway actor creation
-            final ActorRef apiGatewayActor = getContext().actorOf(Props.create(APIGatewayActor.class, prop, mongoController),
+            final ActorRef apiGatewayActor = getContext().actorOf(Props.create(APIGatewayActor.class, prop, mongoRESTController.getController()),
                     prop.getProperty("api_gateway_actor_name"));
 
             // REST server creation
-            final RESTServer app = new RESTServer(mongoController, apiGatewayActor);
+            final RESTServer app = new RESTServer(mongoRESTController, apiGatewayActor);
             final Route route = app.createRoute();
             final Flow<HttpRequest, HttpResponse, NotUsed> handler = route.flow(system, materializer);
             final CompletionStage<ServerBinding> binding = Http.get(system).bindAndHandle(handler,

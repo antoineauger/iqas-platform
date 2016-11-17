@@ -1,4 +1,4 @@
-package fr.isae.iqas.model;
+package fr.isae.iqas.model.virtualsensor;
 
 /**
  * Created by an.auger on 13/09/2016.

@@ -7,6 +7,7 @@ import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 import fr.isae.iqas.database.MongoController;
+import fr.isae.iqas.database.MongoRESTController;
 import fr.isae.iqas.model.request.Request;
 
 import java.util.Optional;
@@ -22,34 +23,34 @@ import static akka.http.javadsl.server.PathMatchers.segment;
  */
 
 public class RESTServer extends AllDirectives {
-    MongoController mongoController;
-    ActorRef apiGatewayActor;
+    private MongoRESTController mongoRESTController;
+    private ActorRef apiGatewayActor;
 
-    public RESTServer(MongoController mongoController, ActorRef apiGatewayActor) {
-        this.mongoController = mongoController;
+    public RESTServer(MongoRESTController mongoRESTController, ActorRef apiGatewayActor) {
+        this.mongoRESTController = mongoRESTController;
         this.apiGatewayActor = apiGatewayActor;
     }
 
-    public CompletionStage<Route> getSensor(Executor ctx, String sensor_id) {
-        return CompletableFuture.supplyAsync(() -> mongoController.getSensor(sensor_id), ctx);
+    private CompletionStage<Route> getSensor(Executor ctx, String sensor_id) {
+        return CompletableFuture.supplyAsync(() -> mongoRESTController.getSensor(sensor_id), ctx);
     }
 
-    public CompletionStage<Route> getAllSensors(Executor ctx) {
-        return CompletableFuture.supplyAsync(() -> mongoController.getAllSensors(), ctx);
+    private CompletionStage<Route> getAllSensors(Executor ctx) {
+        return CompletableFuture.supplyAsync(() -> mongoRESTController.getAllSensors(), ctx);
     }
 
     // TODO : put sensor method here ?
 
-    public CompletionStage<Route> getRequest(Executor ctx, String request_id) {
-        return CompletableFuture.supplyAsync(() -> mongoController.getRequest(request_id), ctx);
+    private CompletionStage<Route> getRequest(Executor ctx, String request_id) {
+        return CompletableFuture.supplyAsync(() -> mongoRESTController.getRequest(request_id), ctx);
     }
 
-    public CompletionStage<Route> getAllRequests(Executor ctx) {
-        return CompletableFuture.supplyAsync(() -> mongoController.getAllRequests(), ctx);
+    private CompletionStage<Route> getAllRequests(Executor ctx) {
+        return CompletableFuture.supplyAsync(() -> mongoRESTController.getAllRequests(), ctx);
     }
 
-    public CompletionStage<Route> putRequest(Executor ctx, Request req) {
-        return CompletableFuture.supplyAsync(() -> mongoController.putRequest(req), ctx);
+    private CompletionStage<Route> putRequest(Executor ctx, Request req) {
+        return CompletableFuture.supplyAsync(() -> mongoRESTController.putRequest(req), ctx);
     }
 
     public Route createRoute() {

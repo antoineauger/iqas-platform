@@ -25,8 +25,8 @@ public class Request {
     }
 
     public Request(Document bsonDocument) {
-        this.request_id = bsonDocument.getString("request_id");
-        this.application_id = bsonDocument.getString("application_id");
+        request_id = bsonDocument.getString("request_id");
+        application_id = bsonDocument.getString("application_id");
     }
 
     public void setRequest_id(String request_id) {
@@ -52,51 +52,35 @@ public class Request {
     }
 
     public boolean isInState(Status status) {
-        if (statesList.size() < 1) {
-            return false;
-        }
-        else {
-            return statesList.get(statesList.size() - 1).getStatus().equals(status);
-        }
+        return statesList.get(statesList.size() - 1).getStatus().equals(status);
     }
 
     public boolean hasBeenInState(Status status) {
-        if (statesList.size() < 1) {
-            return false;
-        }
-        else {
-            for (State s : statesList) {
-                if (s.getStatus().equals(status)) {
-                    return true;
-                }
+        for (State s : statesList) {
+            if (s.getStatus().equals(status)) {
+                return true;
             }
-            return false;
         }
+        return false;
     }
 
     public State getStateDetails(Status status) throws Exception {
-        if (statesList.size() < 1) {
-            throw new Exception("iQAS error: Unknown status for this request.");
-        }
-        else {
-            for (State s : statesList) {
-                if (s.getStatus().equals(status)) {
-                    return s;
-                }
+        for (State s : statesList) {
+            if (s.getStatus().equals(status)) {
+                return s;
             }
-            throw new Exception("iQAS error: Unknown status for this request.");
         }
+        throw new Exception("iQAS error: Unknown status for this request.");
+    }
+
+    public Status getCurrentStatus() {
+        return statesList.get(statesList.size() - 1).getStatus();
     }
 
     public void updateState(Status newStatus) {
-        if (statesList.size() > 1) {
-            Date currentDate = new Date();
-            statesList.get(statesList.size() - 1).setEnd_date(currentDate);
-            statesList.add(new State(newStatus, currentDate));
-        }
-        else {
-            statesList.add(new State(newStatus, new Date()));
-        }
+        Date currentDate = new Date();
+        statesList.get(statesList.size() - 1).setEnd_date(currentDate);
+        statesList.add(new State(newStatus, currentDate));
     }
 
 }

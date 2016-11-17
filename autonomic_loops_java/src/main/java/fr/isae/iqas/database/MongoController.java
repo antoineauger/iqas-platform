@@ -1,30 +1,21 @@
 package fr.isae.iqas.database;
 
-import akka.actor.ActorRef;
-import akka.actor.UntypedActorContext;
-import akka.dispatch.OnComplete;
-import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.server.AllDirectives;
-import akka.http.javadsl.server.Route;
-import akka.util.Timeout;
 import com.mongodb.async.SingleResultCallback;
 import com.mongodb.async.client.MongoCollection;
 import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.MainClass;
 import fr.isae.iqas.model.request.Request;
+import fr.isae.iqas.model.request.Status;
 import fr.isae.iqas.model.virtualsensor.VirtualSensor;
 import org.apache.log4j.Logger;
 import org.bson.Document;
-import org.bson.types.ObjectId;
-import scala.concurrent.Future;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -34,140 +25,88 @@ import static com.mongodb.client.model.Filters.eq;
 public class MongoController extends AllDirectives {
     private static Logger log = Logger.getLogger(MongoController.class);
 
-    private String pathAPIGatewayActor;
     private MongoDatabase mongoDatabase;
-    private UntypedActorContext context;
 
-    public MongoController(MongoDatabase mongoDatabase, UntypedActorContext context, String pathAPIGatewayActor) {
-        this.pathAPIGatewayActor = pathAPIGatewayActor;
+    MongoController(MongoDatabase mongoDatabase) {
         this.mongoDatabase = mongoDatabase;
-        this.context = context;
         log.info("MongoController successfully created!");
     }
-
-    public Future<ActorRef> getAPIGatewayActor() {
-        return context.actorSelection(pathAPIGatewayActor).
-                resolveOne(new Timeout(5, TimeUnit.SECONDS));
-    }
-
-    // ######### Exposed mongoDB methods #########
 
     /**
      * Sensors
      */
 
-    private void _findSensors(String sensor_id, final SingleResultCallback<List<VirtualSensor>> callback) {
+    void _findSpecificSensor(String sensor_id, final SingleResultCallback<ArrayList<VirtualSensor>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("sensors");
-        if (sensor_id != null) {
-            collection.find(eq("sensor_id", sensor_id)).map((mydoc) -> new VirtualSensor(mydoc)).into(new ArrayList<>(), callback);
-        } else {
-            collection.find().map((mydoc) -> new VirtualSensor(mydoc)).into(new ArrayList<>(), callback);
-        }
+        collection.find(eq("sensor_id", sensor_id)).map(myDoc -> new VirtualSensor(myDoc)).into(new ArrayList<>(), callback);
     }
 
-    public Route getAllSensors() {
-        final CompletableFuture<List<VirtualSensor>> sensors = new CompletableFuture<>();
-        _findSensors(null, (result, t) -> {
-            if (t == null) {
-                sensors.complete(result);
-            } else {
-                sensors.completeExceptionally(t);
-            }
-        });
-        return completeOKWithFuture(sensors, Jackson.marshaller());
-    }
-
-    public Route getSensor(String sensor_id) {
-        final CompletableFuture<List<VirtualSensor>> sensor = new CompletableFuture<>();
-        _findSensors(sensor_id, (result, t) -> {
-            if (t == null) {
-                sensor.complete(result);
-            } else {
-                sensor.completeExceptionally(t);
-            }
-        });
-        return completeOKWithFuture(sensor, Jackson.marshaller());
+    void _findAllSensors(final SingleResultCallback<ArrayList<VirtualSensor>> callback) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("sensors");
+        collection.find().map(myDoc -> new VirtualSensor(myDoc)).into(new ArrayList<>(), callback);
     }
 
     /**
      * Requests
      */
 
-    private void _findRequests(String request_id, final SingleResultCallback<List<Request>> callback) {
+    void _findSpecificRequest(String field, String value, final SingleResultCallback<ArrayList<Request>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
-        if (request_id != null) {
-            collection.find(eq("request_id", request_id)).map((mydoc) -> new Request(mydoc)).into(new ArrayList<>(), callback);
-        } else {
-            collection.find().map((mydoc) -> new Request(mydoc)).into(new ArrayList<>(), callback);
-        }
+        collection.find(eq(field, value)).map((mydoc) -> new Request(mydoc)).into(new ArrayList<>(), callback);
     }
 
-    public Route getAllRequests() {
-        final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
-        _findRequests(null, (result, t) -> {
-            if (t == null) {
-                requests.complete(result);
-            } else {
-                requests.completeExceptionally(t);
-            }
-        });
-        return completeOKWithFuture(requests, Jackson.marshaller());
-    }
-
-    public Route getRequest(String request_id) {
-        final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
-        _findRequests(request_id, (result, t) -> {
-            if (t == null) {
-                requests.complete(result);
-            } else {
-                requests.completeExceptionally(t);
-            }
-        });
-        return completeOKWithFuture(requests, Jackson.marshaller());
+    void _findAllRequests(final SingleResultCallback<ArrayList<Request>> callback) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
+        collection.find().map((mydoc) -> new Request(mydoc)).into(new ArrayList<>(), callback);
     }
 
     /**
-     * Method to submit a new observation Request
-     * This method will:
-     * 1) TODO: Check if there is no existing method with the same parameters for the same application
-     * 2) If not, insert it into mongoDB
-     * 3) Tell APIGatewayActor that a new request should be taken into account
-     *
-     * @param request the request to insert into mongoDB
-     * @return object Request with mongoDB _id to check request processing
+     * Method to get all Requests for a specific application
+     * @param application_id: String, the ID of the application
+     * @return an ArrayList of Requests or an empty ArrayList
      */
-    public Route putRequest(Request request) {
-        // request_id assignment
-        request.setRequest_id(new ObjectId().toString());
-
-        CompletableFuture<Request> requestResultInsertion = new CompletableFuture<>();
-        MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
-
-        Document documentRequest = request.toBSON();
-        collection.insertOne(documentRequest, (result, t) -> {
+    public ArrayList<Request> getAllRequestsByApplication(String application_id) {
+        final ArrayList<Request> objectToReturn = new ArrayList<>();
+        _findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
-                log.info("Successfully inserted Requests into requests collection!");
-
-                getAPIGatewayActor().onComplete(new OnComplete<ActorRef>() {
-                    @Override
-                    public void onComplete(Throwable failure, ActorRef success) throws Throwable {
-                        if (failure != null) {
-                            requestResultInsertion.completeExceptionally(
-                                    new Throwable("Unable to find the APIGatewayActor: " + failure.toString())
-                            );
-                        } else {
-                            success.tell(request, ActorRef.noSender());
-                            log.info("Request sent to the APIGatewayActor by MongoController");
-                            requestResultInsertion.complete(request);
-                        }
-                    }
-                }, context.dispatcher());
-
-            } else {
-                log.info("Failed to insert request: " + t.toString());
+                objectToReturn.addAll(result);
             }
         });
-        return completeOKWithFuture(requestResultInsertion, Jackson.marshaller());
+        return objectToReturn;
+    }
+
+    /**
+     * Method to get all Requests with specific statuses and for a specific application
+     * @param application_id: String, the ID of the application
+     * @param filters: an ArrayList of Status objects. Only return Requests with one of these statuses.
+     * @return an ArrayList of Requests or an empty ArrayList
+     */
+    public ArrayList<Request> getAllRequestsWithFilterByApplication(String application_id, ArrayList<Status> filters) {
+        final ArrayList<Request> objectToReturn = new ArrayList<>();
+        _findSpecificRequest("application_id", application_id, (result, t) -> {
+            if (t == null) {
+                for (Request r : result) {
+                    if (filters.contains(r.getCurrentStatus())) {
+                        objectToReturn.add(r);
+                    }
+                }
+            }
+        });
+        return objectToReturn;
+    }
+
+    /**
+     * Method to get all Requests from database
+     * @return object Route (which contains either all Requests or an error)
+     */
+    public ArrayList<Request> getAllRequests() {
+        final ArrayList<Request> objectToReturn = new ArrayList<>();
+        _findAllRequests((result, t) -> {
+            if (t == null) {
+                objectToReturn.addAll(result);
+            }
+        });
+        return objectToReturn;
     }
 
     // TODO : putRequests useful ?
@@ -179,12 +118,15 @@ public class MongoController extends AllDirectives {
         mongoDatabase.drop(callback);
     }
 
+    /**
+     * Method to drop the whole iQAS database
+     */
     public void dropIQASDatabase() {
         _dropIQASDatabase((result, t) -> {
             if (t == null) {
-                log.info("Drop of the IQAS database successful!");
+                log.info("Drop of the iQAS database successful!");
             } else {
-                log.info("Drop of the IQAS database failed: " + t.toString());
+                log.info("Drop of the iQAS database failed: " + t.toString());
             }
         });
     }
@@ -193,6 +135,10 @@ public class MongoController extends AllDirectives {
         mongoDatabase.getCollection(collectionName).drop(callback);
     }
 
+    /**
+     * Method to drop a specific collection
+     * @param collectionName: String name of the collection to drop
+     */
     public void dropCollection(String collectionName) {
         _dropCollection(collectionName, (result, t) -> {
             if (t == null) {
