@@ -5,7 +5,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import fr.isae.iqas.model.Request;
+import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.messages.RFC;
 import fr.isae.iqas.model.messages.Terminated;
 

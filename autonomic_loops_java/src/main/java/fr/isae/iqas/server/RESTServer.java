@@ -7,7 +7,7 @@ import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 import fr.isae.iqas.database.MongoController;
-import fr.isae.iqas.model.Request;
+import fr.isae.iqas.model.request.Request;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;

@@ -11,7 +11,7 @@ import com.mongodb.async.SingleResultCallback;
 import com.mongodb.async.client.MongoCollection;
 import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.MainClass;
-import fr.isae.iqas.model.Request;
+import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.virtualsensor.VirtualSensor;
 import org.apache.log4j.Logger;
 import org.bson.Document;

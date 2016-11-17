@@ -7,7 +7,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.mapek.information.ManagerActor;
-import fr.isae.iqas.model.Request;
+import fr.isae.iqas.model.request.Request;
 
 import java.util.Properties;
 
