@@ -106,6 +106,38 @@ def set_sensor_sensing():
     return json_response
 
 
+@app.route('/' + sensor_id + '/urlPublishObs', method='GET')
+def get_sensor_url_publish():
+    json_response = generate_API_response(response,
+                                          result="OK",
+                                          details="",
+                                          capability="url_publish_obs",
+                                          old_value="",
+                                          value=sensor.url_publish_obs)
+    return json_response
+
+
+@app.route('/' + sensor_id + '/urlPublishObs', method='POST')
+def set_sensor_url_publish():
+    request_json_body = json.loads(request.body.read().decode('UTF-8'))
+    old_value = sensor.enabled
+    value = request_json_body['value']
+    if type(value) == str:
+        result, details = sensor.set_url_to_publish(value)
+        json_response = generate_API_response(response,
+                                              result=result,
+                                              details=details,
+                                              capability="url_publish_obs",
+                                              old_value=old_value,
+                                              value=value)
+    else:
+        json_response = generate_API_response(response,
+                                              result="NOK",
+                                              details="Only a well formed URL is accepted for this POST request. "
+                                                            "E.g.: {'value': 'http://localhost:8080'}")
+    return json_response
+
+
 @app.route('/' + sensor_id + '/capabilities', method='GET')
 def get_sensor_details():
     """ Return the different capabilities of the specified virtual sensor """

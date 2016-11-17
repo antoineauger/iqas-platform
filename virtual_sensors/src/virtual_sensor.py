@@ -147,6 +147,17 @@ class VirtualSensor(threading.Thread):
 			logger.error(error_message)
 			return "NOK", error_message
 
+	def set_url_to_publish(self, new_url):
+		# TODO check well formed URL
+		"""
+			Method to dynamically set the endpoint where the sensor send its observations
+			:param new_url: the new well-formed URL to publish to
+			:return: bool and str
+		"""
+		if True:
+			self.url_publish_obs = new_url
+			return "OK", ""
+
 	def recharge_battery(self):
 		self.capabilities['battery_level'] = 100.0
 
