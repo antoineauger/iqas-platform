@@ -62,7 +62,8 @@ public class MongoController extends AllDirectives {
 
     /**
      * Method to get all Requests for a specific application
-     * @param application_id: String, the ID of the application
+     *
+     * @param application_id String, the ID of the application
      * @return an ArrayList of Requests or an empty ArrayList
      */
     public ArrayList<Request> getAllRequestsByApplication(String application_id) {
@@ -77,8 +78,9 @@ public class MongoController extends AllDirectives {
 
     /**
      * Method to get all Requests with specific statuses and for a specific application
-     * @param application_id: String, the ID of the application
-     * @param filters: an ArrayList of Status objects. Only return Requests with one of these statuses.
+     *
+     * @param application_id String, the ID of the application
+     * @param filters        an ArrayList of Status objects. Only return Requests with one of these statuses.
      * @return an ArrayList of Requests or an empty ArrayList
      */
     public ArrayList<Request> getAllRequestsWithFilterByApplication(String application_id, ArrayList<Status> filters) {
@@ -97,6 +99,7 @@ public class MongoController extends AllDirectives {
 
     /**
      * Method to get all Requests from database
+     *
      * @return object Route (which contains either all Requests or an error)
      */
     public ArrayList<Request> getAllRequests() {
@@ -125,7 +128,8 @@ public class MongoController extends AllDirectives {
         _dropIQASDatabase((result, t) -> {
             if (t == null) {
                 log.info("Drop of the iQAS database successful!");
-            } else {
+            }
+            else {
                 log.info("Drop of the iQAS database failed: " + t.toString());
             }
         });
@@ -137,13 +141,15 @@ public class MongoController extends AllDirectives {
 
     /**
      * Method to drop a specific collection
-     * @param collectionName: String name of the collection to drop
+     *
+     * @param collectionName String name of the collection to drop
      */
     public void dropCollection(String collectionName) {
         _dropCollection(collectionName, (result, t) -> {
             if (t == null) {
                 log.info("Drop of the " + collectionName + " collection successful!");
-            } else {
+            }
+            else {
                 log.info("Drop of the " + collectionName + " collection failed: " + t.toString());
             }
         });
@@ -166,7 +172,8 @@ public class MongoController extends AllDirectives {
 
                 if (t == null) {
                     log.info("Sensors inserted into sensors collection!");
-                } else {
+                }
+                else {
                     log.info("Failed to insert sensors");
                 }
             });

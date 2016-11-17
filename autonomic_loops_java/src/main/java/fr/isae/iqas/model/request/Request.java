@@ -70,7 +70,7 @@ public class Request {
                 return s;
             }
         }
-        throw new Exception("iQAS error: Unknown status for this request.");
+        throw new Exception("iQAS error: No state with this status for this request.");
     }
 
     public Status getCurrentStatus() {

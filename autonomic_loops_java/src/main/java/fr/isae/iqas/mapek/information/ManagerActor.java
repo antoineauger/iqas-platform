@@ -5,10 +5,12 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.messages.RFC;
 import fr.isae.iqas.model.messages.Terminated;
 
+import java.util.ArrayList;
 import java.util.Properties;
 
 /**
@@ -19,16 +21,18 @@ import java.util.Properties;
 public class ManagerActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+    private MongoController mongoController;
+
     private boolean processingActivated;
 
-    private Properties prop;
     private ActorRef monitorActor = null;
     private ActorRef analyzeActor = null;
     private ActorRef planActor = null;
     private ActorRef executeActor = null;
 
-    public ManagerActor(Properties prop) {
-        this.prop = prop;
+    public ManagerActor(Properties prop, MongoController mongoController) {
+        this.mongoController = mongoController;
+
         //monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop), "monitorInfo");
         //analyzeActor = getContext().actorOf(Props.create(AnalyzeActor.class, prop), "analyzeInfo");
         planActor = getContext().actorOf(Props.create(PlanActor.class, prop), "planInfo");
@@ -63,7 +67,11 @@ public class ManagerActor extends UntypedActor {
             getContext().stop(self());
         }
         else if (message instanceof Request) {
-            if(processingActivated) {
+            //TODO: Build request, Possible? YES / NO, Get ticket number, Forward request to API gateway
+            Request incomingRequest = (Request) message;
+            ArrayList<Request> registeredRequestsForApp = mongoController.getAllRequestsByApplication(incomingRequest.getApplication_id());
+
+            if (processingActivated) {
                 planActor.tell(new RFC("none"), getSelf());
                 processingActivated = false;
             }

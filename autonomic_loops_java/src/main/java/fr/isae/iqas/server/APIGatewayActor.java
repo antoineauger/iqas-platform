@@ -27,7 +27,7 @@ public class APIGatewayActor extends UntypedActor {
         this.mongoController = mongoController;
 
         //autoManagerRawData = getContext().actorOf(Props.create(ManagerActor.class, prop), "autoManagerRawData");
-        autoManagerInfo = getContext().actorOf(Props.create(ManagerActor.class, prop), "autoManagerInfo");
+        autoManagerInfo = getContext().actorOf(Props.create(ManagerActor.class, this.prop, this.mongoController), "autoManagerInfo");
     }
 
     @Override
@@ -40,6 +40,7 @@ public class APIGatewayActor extends UntypedActor {
             log.info("Received Request: {}", message.toString());
 
             Request receivedRequest = (Request) message;
+            // TODO: route request to Raw Data or Info layers
             // For now, all requests are forwarded to the information AM
             autoManagerInfo.tell(receivedRequest, getSelf());
 

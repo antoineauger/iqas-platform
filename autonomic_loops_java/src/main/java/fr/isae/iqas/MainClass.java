@@ -58,7 +58,7 @@ public class MainClass {
                     prop.getProperty("api_gateway_actor_name"));
 
             // REST server creation
-            final RESTServer app = new RESTServer(mongoRESTController, apiGatewayActor);
+            final RESTServer app = new RESTServer(mongoRESTController);
             final Route route = app.createRoute();
             final Flow<HttpRequest, HttpResponse, NotUsed> handler = route.flow(system, materializer);
             final CompletionStage<ServerBinding> binding = Http.get(system).bindAndHandle(handler,

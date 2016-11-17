@@ -55,7 +55,8 @@ public class MongoRESTController extends AllDirectives {
         controller._findAllSensors((result, t) -> {
             if (t == null) {
                 sensors.complete(result);
-            } else {
+            }
+            else {
                 sensors.completeExceptionally(t);
             }
         });
@@ -67,7 +68,8 @@ public class MongoRESTController extends AllDirectives {
         controller._findSpecificSensor(sensor_id, (result, t) -> {
             if (t == null) {
                 sensor.complete(result);
-            } else {
+            }
+            else {
                 sensor.completeExceptionally(t);
             }
         });
@@ -80,7 +82,8 @@ public class MongoRESTController extends AllDirectives {
 
     /**
      * Method to get a specific Request from database
-     * @param request_id: String, the request ID to retrieve
+     *
+     * @param request_id String, the request ID to retrieve
      * @return object Route (which contains either the Request or an error)
      */
     public Route getRequest(String request_id) {
@@ -88,7 +91,8 @@ public class MongoRESTController extends AllDirectives {
         controller._findSpecificRequest("request_id", request_id, (result, t) -> {
             if (t == null) {
                 requests.complete(result);
-            } else {
+            }
+            else {
                 requests.completeExceptionally(t);
             }
         });
@@ -97,7 +101,8 @@ public class MongoRESTController extends AllDirectives {
 
     /**
      * Method to get all Requests for a specific application
-     * @param application_id: String, the ID of the application
+     *
+     * @param application_id String, the ID of the application
      * @return object Route (which contains either the app Requests or an error)
      */
     public Route getRequestsByApplication(String application_id) {
@@ -105,7 +110,8 @@ public class MongoRESTController extends AllDirectives {
         controller._findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
                 requests.complete(result);
-            } else {
+            }
+            else {
                 requests.completeExceptionally(t);
             }
         });
@@ -114,6 +120,7 @@ public class MongoRESTController extends AllDirectives {
 
     /**
      * Method to get all Requests from database
+     *
      * @return object Route (which contains either all Requests or an error)
      */
     public Route getAllRequests() {
@@ -121,7 +128,8 @@ public class MongoRESTController extends AllDirectives {
         controller._findAllRequests((result, t) -> {
             if (t == null) {
                 requests.complete(result);
-            } else {
+            }
+            else {
                 requests.completeExceptionally(t);
             }
         });
@@ -133,6 +141,7 @@ public class MongoRESTController extends AllDirectives {
      * This method will:
      * 1) Insert it into mongoDB
      * 2) Tell APIGatewayActor that a new request should be taken into account
+     *
      * @param request the Request object to insert into mongoDB
      * @return object Request with mongoDB _id to check request processing
      */
@@ -155,7 +164,8 @@ public class MongoRESTController extends AllDirectives {
                             requestResultInsertion.completeExceptionally(
                                     new Throwable("Unable to find the APIGatewayActor: " + failure.toString())
                             );
-                        } else {
+                        }
+                        else {
                             success.tell(request, ActorRef.noSender());
                             log.info("Request sent to the APIGatewayActor by MongoController");
                             requestResultInsertion.complete(request);
@@ -163,7 +173,8 @@ public class MongoRESTController extends AllDirectives {
                     }
                 }, context.dispatcher());
 
-            } else {
+            }
+            else {
                 log.info("Failed to insert request: " + t.toString());
             }
         });
