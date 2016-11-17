@@ -79,7 +79,7 @@
                 <div class="settings-right">
                     <div class="setting">
                         <div class="setting-name">
-                            Auto terminate relationships
+                            Automatically terminate relationships
                             <div class="fa fa-question-circle" alt="Info" title="Will automatically terminate FlowFiles sent to all relationships in bold."></div>
                         </div>
                         <div class="setting-field">
@@ -119,6 +119,18 @@
                             </div>
                             <div class="setting-field">
                                 <span id="read-only-scheduling-period"></span>
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+                    <div id="read-only-execution-node-options" class="setting">
+                        <div class="execution-node-setting">
+                            <div class="setting-name">
+                                Execution
+                                <div class="fa fa-question-circle" alt="Info" title="The node(s) that this processor will be scheduled to run on."></div>
+                            </div>
+                            <div class="setting-field">
+                                <span id="read-only-execution-node"></span>
                             </div>
                         </div>
                         <div class="clear"></div>

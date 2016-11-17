@@ -37,6 +37,13 @@ nf.Port = (function () {
 
     var portMap;
 
+    // -----------------------------------------------------------
+    // cache for components that are added/removed from the canvas
+    // -----------------------------------------------------------
+
+    var removedCache;
+    var addedCache;
+
     // --------------------
     // component containers
     // --------------------
@@ -206,7 +213,7 @@ nf.Port = (function () {
                             .attr({
                                 'class': 'port-transmission-icon',
                                 'x': 10,
-                                'y': 15
+                                'y': 18
                             });
 
                         // bulletin background
@@ -302,6 +309,9 @@ nf.Port = (function () {
                                 return name;
                             }
                         });
+                } else {
+                    // clear the port name
+                    port.select('text.port-name').text(null);
                 }
 
                 // remove tooltips if necessary
@@ -330,9 +340,15 @@ nf.Port = (function () {
             .attr({
                 'fill': function (d) {
                     var fill = '#728e9b';
-                    if (d.status.aggregateSnapshot.runStatus === 'Invalid') {
-                        fill = '#ba554a';
+
+                    if  (d.status.aggregateSnapshot.runStatus === 'Invalid') {
+                        fill = '#cf9f5d';
+                    } else if (d.status.aggregateSnapshot.runStatus === 'Running') {
+                        fill = '#7dc7a0';
+                    } else if (d.status.aggregateSnapshot.runStatus === 'Stopped') {
+                        fill = '#d18686';
                     }
+
                     return fill;
                 },
                 'font-family': function (d) {
@@ -407,6 +423,20 @@ nf.Port = (function () {
                 } else {
                     return '\ue80a';
                 }
+            })
+            .classed('transmitting', function (d) {
+                if (d.status.aggregateSnapshot.transmitting === true) {
+                    return true;
+                } else {
+                    return false;
+                }
+            })
+            .classed('not-transmitting', function (d) {
+                if (d.status.aggregateSnapshot.transmitting !== true) {
+                    return true;
+                } else {
+                    return false;
+                }
             });
 
         updated.each(function (d) {
@@ -467,6 +497,8 @@ nf.Port = (function () {
          */
         init: function () {
             portMap = d3.map();
+            removedCache = d3.map();
+            addedCache = d3.map();
 
             // create the port container
             portContainer = d3.select('#canvas').append('g')
@@ -494,7 +526,12 @@ nf.Port = (function () {
                 dimensions = remotePortDimensions;
             }
 
+            // get the current time
+            var now = new Date().getTime();
+
             var add = function (portEntity) {
+                addedCache.set(portEntity.id, now);
+
                 // add the port
                 portMap.set(portEntity.id, $.extend({
                     type: 'Port',
@@ -543,8 +580,8 @@ nf.Port = (function () {
             var set = function (proposedPortEntity) {
                 var currentPortEntity = portMap.get(proposedPortEntity.id);
 
-                // set the port if appropriate
-                if (nf.Client.isNewerRevision(currentPortEntity, proposedPortEntity)) {
+                // set the port if appropriate due to revision and wasn't previously removed
+                if (nf.Client.isNewerRevision(currentPortEntity, proposedPortEntity) && !removedCache.has(proposedPortEntity.id)) {
                     // add the port
                     portMap.set(proposedPortEntity.id, $.extend({
                         type: 'Port',
@@ -564,8 +601,8 @@ nf.Port = (function () {
                         return proposedPortEntity.id === currentPortEntity.id;
                     });
 
-                    // if the current port is not present, remove it
-                    if (isPresent.length === 0) {
+                    // if the current port is not present and was not recently added, remove it
+                    if (isPresent.length === 0 && !addedCache.has(key)) {
                         portMap.remove(key);
                     }
                 });
@@ -649,15 +686,19 @@ nf.Port = (function () {
         /**
          * Removes the specified port.
          *
-         * @param {string} ports      The port id(s)
+         * @param {string} portIds      The port id(s)
          */
-        remove: function (ports) {
-            if ($.isArray(ports)) {
-                $.each(ports, function (_, port) {
-                    portMap.remove(port);
+        remove: function (portIds) {
+            var now = new Date().getTime();
+
+            if ($.isArray(portIds)) {
+                $.each(portIds, function (_, portId) {
+                    removedCache.set(portId, now);
+                    portMap.remove(portId);
                 });
             } else {
-                portMap.remove(ports);
+                removedCache.set(portIds, now);
+                portMap.remove(portIds);
             }
 
             // apply the selection and handle all removed ports
@@ -669,6 +710,24 @@ nf.Port = (function () {
          */
         removeAll: function () {
             nf.Port.remove(portMap.keys());
+        },
+
+        /**
+         * Expires the caches up to the specified timestamp.
+         *
+         * @param timestamp
+         */
+        expireCaches: function (timestamp) {
+            var expire = function (cache) {
+                cache.forEach(function (id, entryTimestamp) {
+                    if (timestamp > entryTimestamp) {
+                        cache.remove(id);
+                    }
+                });
+            };
+
+            expire(addedCache);
+            expire(removedCache);
         }
     };
 }());

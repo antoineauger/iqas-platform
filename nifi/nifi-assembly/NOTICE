@@ -63,6 +63,30 @@ The following binary components are provided under the Apache Software License v
     The following NOTICE information applies:
 	Copyright (c) 2010-2013 Coda Hale, Yammer.com
 
+  (ASLv2) Apache POI
+    The following NOTICE information applies:
+
+    This product contains parts that were originally based on software from BEA.
+    Copyright (c) 2000-2003, BEA Systems, <http://www.bea.com/>.
+
+    This product contains W3C XML Schema documents. Copyright 2001-2003 (c)
+    World Wide Web Consortium (Massachusetts Institute of Technology, European
+    Research Consortium for Informatics and Mathematics, Keio University)
+
+    This product contains the Piccolo XML Parser for Java
+    (http://piccolo.sourceforge.net/). Copyright 2002 Yuval Oren.
+
+    This product contains the chunks_parse_cmds.tbl file from the vsdump program.
+    Copyright (C) 2006-2007 Valek Filippov (frob@df.ru)
+
+    This product contains parts of the eID Applet project
+    (http://eid-applet.googlecode.com). Copyright (c) 2009-2014
+    FedICT (federal ICT department of Belgium), e-Contract.be BVBA (https://www.e-contract.be),
+    Bart Hanssens from FedICT
+
+    CurvesAIP is BSD-licensed software (https://github.com/virtuald/curvesapi/)
+    Copyright (c) 2005, Graph Builder
+
   (ASLv2) Jasypt
     The following NOTICE information applies:    
 	  Copyright (c) 2007-2010, The JASYPT team (http://www.jasypt.org)
@@ -756,12 +780,6 @@ The following binary components are provided under the Apache Software License v
       Apache License Version 2.0 http://www.apache.org/licenses/.
       (c) Daniel Lemire, http://lemire.me/en/
 
-  (ASLv2) Twitter4J
-    The following NOTICE information applies:
-      Copyright 2007 Yusuke Yamamoto
-      
-      Twitter4J includes software from JSON.org to parse JSON response from the Twitter API. You can see the license term at http://www.JSON.org/license.html
-  
   (ASLv2) JOAuth
     The following NOTICE information applies:
       JOAuth
@@ -797,7 +815,6 @@ The following binary components are provided under the Apache Software License v
       **********************
       This software includes third party software subject to the following copyrights:
       - XML parsing and utility functions from JetS3t - Copyright 2006-2009 James Murty.
-      - JSON parsing and utility functions from JSON.org - Copyright 2002 JSON.org.
       - PKCS#1 PEM encoded private key parsing and utility functions from oauth.googlecode.com - Copyright 1998-2010 AOL Inc.
 
    (ASLv2) Apache Commons DBCP
@@ -890,17 +907,13 @@ The following binary components are provided under the Apache Software License v
          Java Native Access
          Copyright 2015 Java Native Access
 
-    (ASLv2) HTrace Core
+    (ASLv2) Apache HTrace Core
       The following NOTICE information applies:
-        In addition, this product includes software dependencies. See
-        the accompanying LICENSE.txt for a listing of dependencies
-        that are NOT Apache licensed (with pointers to their licensing)
+        Copyright 2016 The Apache Software Foundation
 
         Apache HTrace includes an Apache Thrift connector to Zipkin. Zipkin
         is a distributed tracing system that is Apache 2.0 Licensed.
         Copyright 2012 Twitter, Inc.
-
-
 
     (ASLv2) Groovy (org.codehaus.groovy:groovy:jar:2.4.5 - http://www.groovy-lang.org)
       The following NOTICE information applies:
@@ -1013,6 +1026,11 @@ The following binary components are provided under the Apache Software License v
           Expert Group and released to the public domain, as explained at
           http://creativecommons.org/publicdomain/zero/1.0/
 
+  (ASLv2) ParCEFone
+    The following NOTICE information applies:
+      ParCEFone
+      Copyright 2016 Fluenda
+
 This includes derived works from the Apache Software License V2 library python-evtx (https://github.com/williballenthin/python-evtx)
 Copyright 2012, 2013 Willi Ballenthin william.ballenthin@mandiant.com
 while at Mandiant http://www.mandiant.com
@@ -1102,16 +1120,12 @@ The following binary components are provided under the Eclipse Public License 1.
     (EPL 1.0)(MPL 2.0) H2 Database (com.h2database:h2:jar:1.3.176 - http://www.h2database.com/html/license.html)
     (EPL 1.0)(LGPL 2.1) Logback Classic (ch.qos.logback:logback-classic:jar:1.1.3 - http://logback.qos.ch/)
     (EPL 1.0)(LGPL 2.1) Logback Core (ch.qos.logback:logback-core:jar:1.1.3 - http://logback.qos.ch/)
-    (EPLv1.0) JRuby (org.jruby:jruby-complete:9.0.4.0 - http://jruby.org).
-
-        JRuby is licensed under three licenses - the EPL 1.0, GPL 2 and LGPL 2.1. Apache NiFi uses the EPL v1.0 license.
-
-        The following NOTICE information applies:
-            Copyright (c) 2007-2015 The JRuby project
+    (EPLv1.0)(GPL 2)(LGPL 2.1) JRuby (org.jruby:jruby-complete:9.0.4.0 - http://jruby.org).
     (EPL 1.0) Eclipse Paho MQTT Client (org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2 - https://github.com/eclipse/paho.mqtt.java)
     (EPL 1.0) Eclipse Link (org.eclipse.persistence:eclipselink:2.5.2 - http://www.eclipse.org/eclipselink/)
     (EPL 1.0) Common Service Data Objects (org.eclipse.persistence:commonj.sdo:2.1.1 - http://www.eclipse.org/eclipselink/)
     (EPL 1.0) Java Persistence API (org.eclipse.persistence:javax.persistence:2.1.0 - http://www.eclipse.org/eclipselink/)
+    (EPL 1.0) JaCoCo Java Code Coverage Library ( org.jacoco ) http://www.eclemma.org/jacoco
 
 *****************
 Mozilla Public License v2.0
@@ -1138,9 +1152,6 @@ Python Software Foundation License v2
 The following binary components are provided under the Python Software Foundation License v2
 
   (PSFLv2) Jython (org.python:jython-standalone:2.7.0 - http://www.jython.org/)
-    The following NOTICE information applies:
-        This product includes software developed by:
-            o The Apache Software Foundation (http://www.apache.org/)
 
 *****************
 Public Domain

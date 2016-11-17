@@ -33,6 +33,13 @@ nf.Label = (function () {
 
     var labelMap;
 
+    // -----------------------------------------------------------
+    // cache for components that are added/removed from the canvas
+    // -----------------------------------------------------------
+
+    var removedCache;
+    var addedCache;
+
     // --------------------
     // component containers
     // --------------------
@@ -194,6 +201,13 @@ nf.Label = (function () {
                     lines.push('');
                 }
 
+                var color = nf.Label.defaultColor();
+
+                // use the specified color if appropriate
+                if (nf.Common.isDefinedAndNotNull(d.component.style['background-color'])) {
+                    color = d.component.style['background-color'];
+                }
+
                 // add label value
                 $.each(lines, function (i, line) {
                     labelText.append('tspan')
@@ -201,6 +215,11 @@ nf.Label = (function () {
                         .attr('dy', '1.2em')
                         .text(function () {
                             return line;
+                        })
+                        .style('fill', function (d) {
+                            return nf.Common.determineContrastColor(
+                                nf.Common.substringAfterLast(
+                                    color, '#'));
                         });
                 });
 
@@ -262,6 +281,8 @@ nf.Label = (function () {
          */
         init: function () {
             labelMap = d3.map();
+            removedCache = d3.map();
+            addedCache = d3.map();
 
             // create the label container
             labelContainer = d3.select('#canvas').append('g')
@@ -363,7 +384,12 @@ nf.Label = (function () {
                 selectAll = nf.Common.isDefinedAndNotNull(options.selectAll) ? options.selectAll : selectAll;
             }
 
+            // get the current time
+            var now = new Date().getTime();
+
             var add = function (labelEntity) {
+                addedCache.set(labelEntity.id, now);
+
                 // add the label
                 labelMap.set(labelEntity.id, $.extend({
                     type: 'Label'
@@ -402,8 +428,8 @@ nf.Label = (function () {
             var set = function (proposedLabelEntity) {
                 var currentLabelEntity = labelMap.get(proposedLabelEntity.id);
 
-                // set the processor if appropriate
-                if (nf.Client.isNewerRevision(currentLabelEntity, proposedLabelEntity)) {
+                // set the processor if appropriate due to revision and wasn't previously removed
+                if (nf.Client.isNewerRevision(currentLabelEntity, proposedLabelEntity) && !removedCache.has(proposedLabelEntity.id)) {
                     labelMap.set(proposedLabelEntity.id, $.extend({
                         type: 'Label'
                     }, proposedLabelEntity));
@@ -417,8 +443,8 @@ nf.Label = (function () {
                         return proposedLabelEntity.id === currentLabelEntity.id;
                     });
 
-                    // if the current label is not present, remove it
-                    if (isPresent.length === 0) {
+                    // if the current label is not present and was not recently added, remove it
+                    if (isPresent.length === 0 && !addedCache.has(key)) {
                         labelMap.remove(key);
                     }
                 });
@@ -495,15 +521,19 @@ nf.Label = (function () {
         /**
          * Removes the specified label.
          *
-         * @param {array|string} labels      The label id(s)
+         * @param {array|string} labelIds      The label id(s)
          */
-        remove: function (labels) {
-            if ($.isArray(labels)) {
-                $.each(labels, function (_, label) {
-                    labelMap.remove(label);
+        remove: function (labelIds) {
+            var now = new Date().getTime();
+
+            if ($.isArray(labelIds)) {
+                $.each(labelIds, function (_, labelId) {
+                    removedCache.set(labelId, now);
+                    labelMap.remove(labelId);
                 });
             } else {
-                labelMap.remove(labels);
+                removedCache.set(labelIds, now);
+                labelMap.remove(labelIds);
             }
 
             // apply the selection and handle all removed labels
@@ -515,6 +545,24 @@ nf.Label = (function () {
          */
         removeAll: function () {
             nf.Label.remove(labelMap.keys());
+        },
+
+        /**
+         * Expires the caches up to the specified timestamp.
+         *
+         * @param timestamp
+         */
+        expireCaches: function (timestamp) {
+            var expire = function (cache) {
+                cache.forEach(function (id, entryTimestamp) {
+                    if (timestamp > entryTimestamp) {
+                        cache.remove(id);
+                    }
+                });
+            };
+
+            expire(addedCache);
+            expire(removedCache);
         },
 
         /**

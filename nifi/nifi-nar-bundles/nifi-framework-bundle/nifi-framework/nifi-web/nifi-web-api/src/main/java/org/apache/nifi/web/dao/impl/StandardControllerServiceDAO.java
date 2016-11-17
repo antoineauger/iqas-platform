@@ -159,7 +159,7 @@ public class StandardControllerServiceDAO extends ComponentDAO implements Contro
         // get the controller service
         final ControllerServiceNode controllerService = locateControllerService(controllerServiceId);
 
-        // this request is either acting upon referncing services or schedulable components
+        // this request is either acting upon referencing services or schedulable components
         if (controllerServiceState != null) {
             if (ControllerServiceState.ENABLED.equals(controllerServiceState)) {
                 return serviceProvider.enableReferencingServices(controllerService);
@@ -275,15 +275,7 @@ public class StandardControllerServiceDAO extends ComponentDAO implements Contro
             controllerService.setComments(comments);
         }
         if (isNotNull(properties)) {
-            for (final Map.Entry<String, String> entry : properties.entrySet()) {
-                final String propName = entry.getKey();
-                final String propVal = entry.getValue();
-                if (isNotNull(propName) && propVal == null) {
-                    controllerService.removeProperty(propName);
-                } else if (isNotNull(propName)) {
-                    controllerService.setProperty(propName, propVal);
-                }
-            }
+            controllerService.setProperties(properties);
         }
     }
 

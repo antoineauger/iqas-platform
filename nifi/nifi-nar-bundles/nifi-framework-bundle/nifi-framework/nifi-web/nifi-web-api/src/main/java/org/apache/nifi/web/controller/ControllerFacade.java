@@ -81,6 +81,7 @@ import org.apache.nifi.provenance.search.SearchableField;
 import org.apache.nifi.registry.VariableRegistry;
 import org.apache.nifi.remote.RootGroupPort;
 import org.apache.nifi.reporting.ReportingTask;
+import org.apache.nifi.scheduling.ExecutionNode;
 import org.apache.nifi.scheduling.SchedulingStrategy;
 import org.apache.nifi.search.SearchContext;
 import org.apache.nifi.search.SearchResult;
@@ -131,6 +132,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static org.apache.nifi.controller.FlowController.ROOT_GROUP_ID_ALIAS;
 
@@ -797,6 +799,12 @@ public class ControllerFacade implements Authorizable {
 
         final ProcessGroup root = flowController.getGroup(flowController.getRootGroupId());
 
+        // include the root group
+        final Resource rootResource = root.getResource();
+        resources.add(rootResource);
+        resources.add(ResourceFactory.getDataResource(rootResource));
+        resources.add(ResourceFactory.getPolicyResource(rootResource));
+
         // add each processor
         for (final ProcessorNode processor : root.findAllProcessors()) {
             final Resource processorResource = processor.getResource();
@@ -1052,7 +1060,7 @@ public class ControllerFacade implements Authorizable {
             provenanceDto.setResults(resultsDto);
             return provenanceDto;
         } catch (final IOException ioe) {
-            throw new NiFiCoreException("An error occured while searching the provenance events.", ioe);
+            throw new NiFiCoreException("An error occurred while searching the provenance events.", ioe);
         }
     }
 
@@ -1214,7 +1222,7 @@ public class ControllerFacade implements Authorizable {
             // convert the event record
             return createProvenanceEventDto(event);
         } catch (final IOException ioe) {
-            throw new NiFiCoreException("An error occured while getting the specified event.", ioe);
+            throw new NiFiCoreException("An error occurred while getting the specified event.", ioe);
         }
     }
 
@@ -1286,7 +1294,7 @@ public class ControllerFacade implements Authorizable {
             // convert the event
             return createProvenanceEventDto(event);
         } catch (final IOException ioe) {
-            throw new NiFiCoreException("An error occured while getting the specified event.", ioe);
+            throw new NiFiCoreException("An error occurred while getting the specified event.", ioe);
         }
     }
 
@@ -1427,6 +1435,21 @@ public class ControllerFacade implements Authorizable {
         if (connectable != null) {
             dto.setGroupId(connectable.getProcessGroup().getIdentifier());
             dto.setComponentName(connectable.getName());
+            return;
+        }
+
+        final Connection connection = root.findConnection(dto.getComponentId());
+        if (connection != null) {
+            dto.setGroupId(connection.getProcessGroup().getIdentifier());
+
+            String name = connection.getName();
+            final Collection<Relationship> relationships = connection.getRelationships();
+            if (StringUtils.isBlank(name) && CollectionUtils.isNotEmpty(relationships)) {
+                name = StringUtils.join(relationships.stream().map(relationship -> relationship.getName()).collect(Collectors.toSet()), ", ");
+            }
+            dto.setComponentName(name);
+
+            return;
         }
     }
 
@@ -1583,7 +1606,13 @@ public class ControllerFacade implements Authorizable {
         } else if (SchedulingStrategy.TIMER_DRIVEN.equals(procNode.getSchedulingStrategy()) && StringUtils.containsIgnoreCase("timer", searchStr)) {
             matches.add("Scheduling strategy: Timer driven");
         } else if (SchedulingStrategy.PRIMARY_NODE_ONLY.equals(procNode.getSchedulingStrategy()) && StringUtils.containsIgnoreCase("primary", searchStr)) {
+            // PRIMARY_NODE_ONLY has been deprecated as a SchedulingStrategy and replaced by PRIMARY as an ExecutionNode.
             matches.add("Scheduling strategy: On primary node");
+        }
+
+        // consider execution node
+        if (ExecutionNode.PRIMARY.equals(procNode.getExecutionNode()) && StringUtils.containsIgnoreCase("primary", searchStr)) {
+            matches.add("Execution node: primary");
         }
 
         // consider scheduled state
@@ -1641,7 +1670,7 @@ public class ControllerFacade implements Authorizable {
             final SearchContext context = new StandardSearchContext(searchStr, procNode, flowController, variableRegistry);
 
             // search the processor using the appropriate thread context classloader
-            try (final NarCloseable x = NarCloseable.withComponentNarLoader(processor.getClass())) {
+            try (final NarCloseable x = NarCloseable.withComponentNarLoader(processor.getClass(), processor.getIdentifier())) {
                 final Collection<SearchResult> searchResults = searchable.search(context);
                 if (CollectionUtils.isNotEmpty(searchResults)) {
                     for (final SearchResult searchResult : searchResults) {

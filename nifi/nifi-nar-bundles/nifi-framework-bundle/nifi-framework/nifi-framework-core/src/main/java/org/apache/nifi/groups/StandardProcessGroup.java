@@ -39,6 +39,7 @@ import org.apache.nifi.connectable.Port;
 import org.apache.nifi.connectable.Position;
 import org.apache.nifi.connectable.Positionable;
 import org.apache.nifi.controller.ConfigurationContext;
+import org.apache.nifi.controller.ControllerService;
 import org.apache.nifi.controller.FlowController;
 import org.apache.nifi.controller.ProcessorNode;
 import org.apache.nifi.controller.ScheduledState;
@@ -52,6 +53,7 @@ import org.apache.nifi.controller.service.ControllerServiceProvider;
 import org.apache.nifi.controller.service.StandardConfigurationContext;
 import org.apache.nifi.encrypt.StringEncryptor;
 import org.apache.nifi.logging.LogRepositoryFactory;
+import org.apache.nifi.nar.ExtensionManager;
 import org.apache.nifi.nar.NarCloseable;
 import org.apache.nifi.processor.StandardProcessContext;
 import org.apache.nifi.registry.VariableRegistry;
@@ -157,6 +159,16 @@ public final class StandardProcessGroup implements ProcessGroup {
     @Override
     public String getIdentifier() {
         return id;
+    }
+
+    @Override
+    public String getProcessGroupIdentifier() {
+        final ProcessGroup parentProcessGroup = getParent();
+        if (parentProcessGroup == null) {
+            return null;
+        } else {
+            return parentProcessGroup.getIdentifier();
+        }
     }
 
     @Override
@@ -348,7 +360,7 @@ public final class StandardProcessGroup implements ProcessGroup {
 
     private void shutdown(final ProcessGroup procGroup) {
         for (final ProcessorNode node : procGroup.getProcessors()) {
-            try (final NarCloseable x = NarCloseable.withComponentNarLoader(node.getProcessor().getClass())) {
+            try (final NarCloseable x = NarCloseable.withComponentNarLoader(node.getProcessor().getClass(), node.getIdentifier())) {
                 final StandardProcessContext processContext = new StandardProcessContext(node, controllerServiceProvider, encryptor, getStateManager(node.getIdentifier()), variableRegistry);
                 ReflectionUtils.quietlyInvokeMethodsWithAnnotation(OnShutdown.class, node.getProcessor(), processContext);
             }
@@ -695,6 +707,7 @@ public final class StandardProcessGroup implements ProcessGroup {
 
     @Override
     public void removeProcessor(final ProcessorNode processor) {
+        boolean removed = false;
         final String id = requireNonNull(processor).getIdentifier();
         writeLock.lock();
         try {
@@ -707,7 +720,7 @@ public final class StandardProcessGroup implements ProcessGroup {
                 conn.verifyCanDelete();
             }
 
-            try (final NarCloseable x = NarCloseable.withComponentNarLoader(processor.getProcessor().getClass())) {
+            try (final NarCloseable x = NarCloseable.withComponentNarLoader(processor.getProcessor().getClass(), processor.getIdentifier())) {
                 final StandardProcessContext processContext = new StandardProcessContext(processor, controllerServiceProvider, encryptor, getStateManager(processor.getIdentifier()), variableRegistry);
                 ReflectionUtils.quietlyInvokeMethodsWithAnnotation(OnRemoved.class, processor.getProcessor(), processContext);
             } catch (final Exception e) {
@@ -744,8 +757,16 @@ public final class StandardProcessGroup implements ProcessGroup {
                 removeConnection(conn);
             }
 
+            removed = true;
             LOG.info("{} removed from flow", processor);
+
         } finally {
+            if (removed) {
+                try {
+                    ExtensionManager.removeInstanceClassLoaderIfExists(id);
+                } catch (Throwable t) {
+                }
+            }
             writeLock.unlock();
         }
     }
@@ -1837,6 +1858,7 @@ public final class StandardProcessGroup implements ProcessGroup {
 
     @Override
     public void removeControllerService(final ControllerServiceNode service) {
+        boolean removed = false;
         writeLock.lock();
         try {
             final ControllerServiceNode existing = controllerServices.get(requireNonNull(service).getIdentifier());
@@ -1846,7 +1868,7 @@ public final class StandardProcessGroup implements ProcessGroup {
 
             service.verifyCanDelete();
 
-            try (final NarCloseable x = NarCloseable.withComponentNarLoader(service.getControllerServiceImplementation().getClass())) {
+            try (final NarCloseable x = NarCloseable.withComponentNarLoader(service.getControllerServiceImplementation().getClass(), service.getIdentifier())) {
                 final ConfigurationContext configurationContext = new StandardConfigurationContext(service, controllerServiceProvider, null, variableRegistry);
                 ReflectionUtils.quietlyInvokeMethodsWithAnnotation(OnRemoved.class, service.getControllerServiceImplementation(), configurationContext);
             }
@@ -1867,8 +1889,16 @@ public final class StandardProcessGroup implements ProcessGroup {
             controllerServices.remove(service.getIdentifier());
             flowController.getStateManagerProvider().onComponentRemoved(service.getIdentifier());
 
+            removed = true;
             LOG.info("{} removed from {}", service, this);
+
         } finally {
+            if (removed) {
+                try {
+                    ExtensionManager.removeInstanceClassLoaderIfExists(service.getIdentifier());
+                } catch (Throwable t) {
+                }
+            }
             writeLock.unlock();
         }
     }
@@ -2468,6 +2498,30 @@ public final class StandardProcessGroup implements ProcessGroup {
 
                 if (newProcessGroup.getOutputPortByName(portName) != null) {
                     throw new IllegalStateException("Cannot perform Move Operation because of a naming conflict with another port in the destination Process Group");
+                }
+            }
+
+            for (final String id : snippet.getProcessors().keySet()) {
+                final ProcessorNode processorNode = getProcessor(id);
+                for (final PropertyDescriptor descriptor : processorNode.getProperties().keySet()) {
+                    final Class<? extends ControllerService> serviceDefinition = descriptor.getControllerServiceDefinition();
+
+                    // if this descriptor identifies a controller service
+                    if (serviceDefinition != null) {
+                        final String serviceId = processorNode.getProperty(descriptor);
+
+                        // if the processor is configured with a service
+                        if (serviceId != null) {
+                            // get all the available services
+                            final Set<String> currentControllerServiceIds = controllerServiceProvider.getControllerServiceIdentifiers(serviceDefinition, getIdentifier());
+                            final Set<String> proposedControllerServiceIds = controllerServiceProvider.getControllerServiceIdentifiers(serviceDefinition, newProcessGroup.getIdentifier());
+
+                            // ensure the configured service is an allowed service if it's still a valid service
+                            if (currentControllerServiceIds.contains(serviceId) && !proposedControllerServiceIds.contains(serviceId)) {
+                                throw new IllegalStateException("Cannot perform Move Operation because a Processor references a service that is not available in the destination Process Group");
+                            }
+                        }
+                    }
                 }
             }
         } finally {

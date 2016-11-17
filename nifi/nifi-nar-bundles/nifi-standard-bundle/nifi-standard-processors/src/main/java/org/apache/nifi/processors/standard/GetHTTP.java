@@ -39,9 +39,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
-
 import javax.net.ssl.SSLContext;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -91,6 +89,7 @@ import org.apache.nifi.processor.ProcessorInitializationContext;
 import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
+import org.apache.nifi.security.util.KeyStoreUtils;
 import org.apache.nifi.ssl.SSLContextService;
 import org.apache.nifi.ssl.SSLContextService.ClientAuth;
 import org.apache.nifi.util.StopWatch;
@@ -313,7 +312,7 @@ public class GetHTTP extends AbstractSessionFactoryProcessor {
         final SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
 
         if (StringUtils.isNotBlank(service.getTrustStoreFile())) {
-            final KeyStore truststore = KeyStore.getInstance(service.getTrustStoreType());
+            final KeyStore truststore = KeyStoreUtils.getTrustStore(service.getTrustStoreType());
             try (final InputStream in = new FileInputStream(new File(service.getTrustStoreFile()))) {
                 truststore.load(in, service.getTrustStorePassword().toCharArray());
             }
@@ -321,12 +320,14 @@ public class GetHTTP extends AbstractSessionFactoryProcessor {
         }
 
         if (StringUtils.isNotBlank(service.getKeyStoreFile())){
-            final KeyStore keystore = KeyStore.getInstance(service.getKeyStoreType());
+            final KeyStore keystore = KeyStoreUtils.getKeyStore(service.getKeyStoreType());
             try (final InputStream in = new FileInputStream(new File(service.getKeyStoreFile()))) {
                 keystore.load(in, service.getKeyStorePassword().toCharArray());
             }
             sslContextBuilder.loadKeyMaterial(keystore, service.getKeyStorePassword().toCharArray());
         }
+
+        sslContextBuilder.useProtocol(service.getSslAlgorithm());
 
         return sslContextBuilder.build();
     }
@@ -368,7 +369,7 @@ public class GetHTTP extends AbstractSessionFactoryProcessor {
                 throw new ProcessException(e);
             }
 
-            final SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, new String[]{"TLSv1"}, null, SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+            final SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
 
             // Also include a plain socket factory for regular http connections (especially proxies)
             final Registry<ConnectionSocketFactory> socketFactoryRegistry =

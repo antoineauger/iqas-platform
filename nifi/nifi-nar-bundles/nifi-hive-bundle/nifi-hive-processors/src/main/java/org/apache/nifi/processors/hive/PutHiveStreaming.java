@@ -238,8 +238,8 @@ public class PutHiveStreaming extends AbstractProcessor {
                     + "can be used to provide a retry capability since full rollback is not possible.")
             .build();
 
-    private final static List<PropertyDescriptor> propertyDescriptors;
-    private final static Set<Relationship> relationships;
+    private List<PropertyDescriptor> propertyDescriptors;
+    private Set<Relationship> relationships;
 
     private static final long TICKET_RENEWAL_PERIOD = 60000;
 
@@ -258,35 +258,30 @@ public class PutHiveStreaming extends AbstractProcessor {
     protected Map<HiveEndPoint, HiveWriter> allWriters;
 
 
-    /*
-     * Will ensure that the list of property descriptors is build only once.
-     * Will also create a Set of relationships
-     */
-    static {
-        propertyDescriptors = new ArrayList<>();
-        propertyDescriptors.add(METASTORE_URI);
-        propertyDescriptors.add(HIVE_CONFIGURATION_RESOURCES);
-        propertyDescriptors.add(DB_NAME);
-        propertyDescriptors.add(TABLE_NAME);
-        propertyDescriptors.add(PARTITION_COLUMNS);
-        propertyDescriptors.add(AUTOCREATE_PARTITIONS);
-        propertyDescriptors.add(MAX_OPEN_CONNECTIONS);
-        propertyDescriptors.add(HEARTBEAT_INTERVAL);
-        propertyDescriptors.add(TXNS_PER_BATCH);
+    @Override
+    protected void init(ProcessorInitializationContext context) {
+        List<PropertyDescriptor> props = new ArrayList<>();
+        props.add(METASTORE_URI);
+        props.add(HIVE_CONFIGURATION_RESOURCES);
+        props.add(DB_NAME);
+        props.add(TABLE_NAME);
+        props.add(PARTITION_COLUMNS);
+        props.add(AUTOCREATE_PARTITIONS);
+        props.add(MAX_OPEN_CONNECTIONS);
+        props.add(HEARTBEAT_INTERVAL);
+        props.add(TXNS_PER_BATCH);
+
+        kerberosConfigFile = context.getKerberosConfigurationFile();
+        kerberosProperties = new KerberosProperties(kerberosConfigFile);
+        props.add(kerberosProperties.getKerberosPrincipal());
+        props.add(kerberosProperties.getKerberosKeytab());
+        propertyDescriptors = Collections.unmodifiableList(props);
 
         Set<Relationship> _relationships = new HashSet<>();
         _relationships.add(REL_SUCCESS);
         _relationships.add(REL_FAILURE);
         _relationships.add(REL_RETRY);
         relationships = Collections.unmodifiableSet(_relationships);
-    }
-
-    @Override
-    protected void init(ProcessorInitializationContext context) {
-        kerberosConfigFile = context.getKerberosConfigurationFile();
-        kerberosProperties = new KerberosProperties(kerberosConfigFile);
-        propertyDescriptors.add(kerberosProperties.getKerberosPrincipal());
-        propertyDescriptors.add(kerberosProperties.getKerberosKeytab());
     }
 
     @Override
@@ -327,6 +322,8 @@ public class PutHiveStreaming extends AbstractProcessor {
                 .withAutoCreatePartitions(autoCreatePartitions)
                 .withMaxOpenConnections(maxConnections)
                 .withHeartBeatInterval(heartbeatInterval);
+
+        hiveConfigurator.preload(hiveConfig);
 
         if (SecurityUtil.isSecurityEnabled(hiveConfig)) {
             final String principal = context.getProperty(kerberosProperties.getKerberosPrincipal()).getValue();
@@ -382,7 +379,7 @@ public class PutHiveStreaming extends AbstractProcessor {
         final AtomicInteger successfulRecordCount = new AtomicInteger(0);
         List<HiveStreamingRecord> successfulRecords = new LinkedList<>();
         final FlowFile inputFlowFile = flowFile;
-        final AtomicBoolean incomingFlowFileTransferred = new AtomicBoolean(false);
+        final AtomicBoolean processingFailure = new AtomicBoolean(false);
 
         // Create output flow files and their Avro writers
         AtomicReference<FlowFile> successFlowFile = new AtomicReference<>(session.create(inputFlowFile));
@@ -546,11 +543,9 @@ public class PutHiveStreaming extends AbstractProcessor {
                 } catch (IOException ioe) {
                     // The Avro file is invalid (or may not be an Avro file at all), send it to failure
                     log.error("The incoming flow file can not be read as an Avro file, routing to failure", ioe);
-                    session.transfer(inputFlowFile, REL_FAILURE);
-                    incomingFlowFileTransferred.set(true);
+                    processingFailure.set(true);
                 }
             });
-
 
             if (recordCount.get() > 0) {
                 if (successfulRecordCount.get() > 0) {
@@ -581,7 +576,9 @@ public class PutHiveStreaming extends AbstractProcessor {
             failureFlowFile.set(null);
 
             // If we got here, we've processed the outgoing flow files correctly, so remove the incoming one if necessary
-            if (!incomingFlowFileTransferred.get()) {
+            if (processingFailure.get()) {
+                session.transfer(inputFlowFile, REL_FAILURE);
+            } else {
                 session.remove(flowFile);
             }
 

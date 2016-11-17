@@ -305,9 +305,14 @@ nf.ng.ProcessorComponent = function (serviceProvider) {
                             // set the processor type description
                             if (nf.Common.isDefinedAndNotNull(processorType)) {
                                 if (nf.Common.isBlank(processorType.description)) {
-                                    $('#processor-type-description').attr('title', '').html('<span class="unset">No description specified</span>');
+                                    $('#processor-type-description')
+                                        .attr('title', '')
+                                        .html('<span class="unset">No description specified</span>');
                                 } else {
-                                    $('#processor-type-description').html(processorType.description).ellipsis();
+                                    $('#processor-type-description')
+                                        .width($('#processor-description-container').innerWidth() - 1)
+                                        .html(processorType.description)
+                                        .ellipsis();
                                 }
 
                                 // populate the dom
@@ -402,7 +407,15 @@ nf.ng.ProcessorComponent = function (serviceProvider) {
                 // configure the new processor dialog
                 this.getElement().modal({
                     scrollableContentStyle: 'scrollable',
-                    headerText: 'Add Processor'
+                    headerText: 'Add Processor',
+                    handler: {
+                        resize: function () {
+                            $('#processor-type-description')
+                                .width($('#processor-description-container').innerWidth() - 1)
+                                .text($('#processor-type-description').attr('title'))
+                                .ellipsis();
+                        }
+                    }
                 });
             },
 

@@ -759,9 +759,9 @@ public class FlowResource extends ApplicationResource {
     }
 
     /**
-     * Retrieves the status for this NiFi.
+     * Retrieves the cluster summary for this NiFi.
      *
-     * @return A controllerStatusEntity.
+     * @return A clusterSummaryEntity.
      * @throws InterruptedException if interrupted
      */
     @GET
@@ -769,8 +769,8 @@ public class FlowResource extends ApplicationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("cluster/summary")
     @ApiOperation(
-            value = "Gets the current status of this NiFi",
-            response = ControllerStatusEntity.class,
+            value = "The cluster summary for this NiFi",
+            response = ClusteSummaryEntity.class,
             authorizations = {
                     @Authorization(value = "Read - /flow", type = "")
             }
@@ -1089,7 +1089,14 @@ public class FlowResource extends ApplicationResource {
         aboutDTO.setTimezone(new Date());
 
         // get the content viewer url
-        aboutDTO.setContentViewerUrl(getProperties().getProperty(NiFiProperties.CONTENT_VIEWER_URL));
+        final NiFiProperties properties = getProperties();
+        aboutDTO.setContentViewerUrl(properties.getProperty(NiFiProperties.CONTENT_VIEWER_URL));
+
+        // Get build info
+        aboutDTO.setBuildTag(properties.getProperty(NiFiProperties.BUILD_TAG));
+        aboutDTO.setBuildRevision(properties.getProperty(NiFiProperties.BUILD_REVISION));
+        aboutDTO.setBuildBranch(properties.getProperty(NiFiProperties.BUILD_BRANCH));
+        aboutDTO.setBuildTimestamp(properties.getBuildTimestamp());
 
         // create the response entity
         final AboutEntity entity = new AboutEntity();

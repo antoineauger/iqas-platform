@@ -55,6 +55,7 @@ import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -75,6 +76,10 @@ public final class CertificateUtils {
     private static final Logger logger = LoggerFactory.getLogger(CertificateUtils.class);
     private static final String PEER_NOT_AUTHENTICATED_MSG = "peer not authenticated";
     private static final Map<ASN1ObjectIdentifier, Integer> dnOrderMap = createDnOrderMap();
+
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
 
     /**
      * The time in milliseconds that the last unique serial number was generated
@@ -148,7 +153,7 @@ public final class CertificateUtils {
 
             // load the keystore
             bis = new BufferedInputStream(keystore.openStream());
-            ks = KeyStore.getInstance(keystoreType.name());
+            ks = KeyStoreUtils.getKeyStore(keystoreType.name());
             ks.load(bis, password);
 
             return true;
@@ -532,7 +537,7 @@ public final class CertificateUtils {
      * @param signingAlgorithm the signing algorithm to use
      * @param days the number of days it should be valid for
      * @return an issued {@link X509Certificate} from the given issuer certificate and {@link KeyPair}
-     * @throws CertificateException if there is an error issueing the certificate
+     * @throws CertificateException if there is an error issuing the certificate
      */
     public static X509Certificate generateIssuedCertificate(String dn, PublicKey publicKey, X509Certificate issuer, KeyPair issuerKeyPair, String signingAlgorithm, int days)
             throws CertificateException {

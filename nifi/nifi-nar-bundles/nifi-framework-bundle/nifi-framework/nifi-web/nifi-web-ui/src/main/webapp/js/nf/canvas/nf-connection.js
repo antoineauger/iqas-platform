@@ -24,6 +24,9 @@ nf.Connection = (function () {
         width: 200
     };
 
+    // width of a backpressure indicator - half of width, left/right padding, left/right border
+    var backpressureBarWidth = (dimensions.width / 2) - 15 - 2;
+
     /**
      * Gets the position of the label for the specified connection.
      *
@@ -57,6 +60,13 @@ nf.Connection = (function () {
     // ----------------------------------
 
     var connectionMap;
+
+    // -----------------------------------------------------------
+    // cache for components that are added/removed from the canvas
+    // -----------------------------------------------------------
+
+    var removedCache;
+    var addedCache;
 
     // ---------------------
     // connection containers
@@ -286,6 +296,83 @@ nf.Connection = (function () {
         return unavailable;
     };
 
+    // gets the appropriate end marker
+    var getEndMarker = function (d) {
+        var marker = 'normal';
+
+        if (d.permissions.canRead) {
+            // if the connection has a relationship that is unavailable, mark it a ghost relationship
+            if (isFullBytes(d) || isFullCount(d)) {
+                marker = 'full';
+            } else if (hasUnavailableRelationship(d)) {
+                marker = 'ghost';
+            }
+        } else {
+            marker = 'unauthorized';
+        }
+
+        return 'url(#' + marker + ')';
+    };
+
+    // gets the appropriate drop shadow
+    var getDropShadow = function (d) {
+        if (isFullCount(d) || isFullBytes(d)) {
+            return 'url(#connection-full-drop-shadow)';
+        } else {
+            return 'url(#component-drop-shadow)';
+        }
+    };
+
+    // determines whether the connection is full based on the object count threshold
+    var isFullCount = function (d) {
+        return d.status.aggregateSnapshot.percentUseCount === 100;
+    };
+
+    // determines whether the connection is in warning based on the object count threshold
+    var isWarningCount = function (d) {
+        var percentUseCount = d.status.aggregateSnapshot.percentUseCount;
+        if (nf.Common.isDefinedAndNotNull(percentUseCount)) {
+            return percentUseCount >= 61 && percentUseCount <= 85;
+        }
+
+        return false;
+    };
+
+    // determines whether the connection is in error based on the object count threshold
+    var isErrorCount = function (d) {
+        var percentUseCount = d.status.aggregateSnapshot.percentUseCount;
+        if (nf.Common.isDefinedAndNotNull(percentUseCount)) {
+            return percentUseCount > 85;
+        }
+
+        return false;
+    };
+
+    // determines whether the connection is full based on the data size threshold
+    var isFullBytes = function (d) {
+        return d.status.aggregateSnapshot.percentUseBytes === 100
+    };
+
+    // determines whether the connection is in warning based on the data size threshold
+    var isWarningBytes = function (d) {
+        var percentUseBytes = d.status.aggregateSnapshot.percentUseBytes;
+        if (nf.Common.isDefinedAndNotNull(percentUseBytes)) {
+            return percentUseBytes >= 61 && percentUseBytes <= 85;
+        }
+
+        return false;
+    };
+
+    // determines whether the connection is in error based on the data size threshold
+    var isErrorBytes = function (d) {
+        var percentUseBytes = d.status.aggregateSnapshot.percentUseBytes;
+        if (nf.Common.isDefinedAndNotNull(percentUseBytes)) {
+            return percentUseBytes > 85;
+        }
+
+        return false;
+    };
+
     // updates the specified connections
     var updateConnections = function (updated, options) {
         if (updated.empty()) {
@@ -462,20 +549,6 @@ nf.Connection = (function () {
                         'd': function () {
                             var datum = [d.start].concat(d.bends, [d.end]);
                             return lineGenerator(datum);
-                        },
-                        'marker-end': function () {
-                            var marker = 'normal';
-
-                            if (d.permissions.canRead) {
-                                // if the connection has a relationship that is unavailable, mark it a ghost relationship
-                                if (hasUnavailableRelationship(d)) {
-                                    marker = 'ghost';
-                                }
-                            } else {
-                                marker = 'unauthorized';
-                            }
-
-                            return 'url(#' + marker + ')';
                         }
                     });
                 nf.CanvasUtils.transition(connection.select('path.connection-selection-path'), transition)
@@ -678,8 +751,7 @@ nf.Connection = (function () {
                                 'class': 'body',
                                 'width': dimensions.width,
                                 'x': 0,
-                                'y': 0,
-                                'filter': 'url(#component-drop-shadow)'
+                                'y': 0
                             });
 
                         // processor border
@@ -790,6 +862,20 @@ nf.Connection = (function () {
                                         return '\uf04d';
                                     }
                                 })
+                                .classed('running', function () {
+                                    if (d.component.source.exists === false) {
+                                        return false;
+                                    } else {
+                                        return d.component.source.running;
+                                    }
+                                })
+                                .classed('stopped', function () {
+                                    if (d.component.source.exists === false) {
+                                        return false;
+                                    } else {
+                                        return !d.component.source.running;
+                                    }
+                                })
                                 .classed('is-missing-port', function () {
                                     return d.component.source.exists === false;
                                 });
@@ -883,6 +969,20 @@ nf.Connection = (function () {
                                         return '\uf04b';
                                     } else {
                                         return '\uf04d';
+                                    }
+                                })
+                                .classed('running', function () {
+                                    if (d.component.destination.exists === false) {
+                                        return false;
+                                    } else {
+                                        return d.component.destination.running;
+                                    }
+                                })
+                                .classed('stopped', function () {
+                                    if (d.component.destination.exists === false) {
+                                        return false;
+                                    } else {
+                                        return !d.component.destination.running;
                                     }
                                 })
                                 .classed('is-missing-port', function () {
@@ -979,6 +1079,8 @@ nf.Connection = (function () {
                     // connection label - queued
                     // -------------------------
 
+                    var HEIGHT_FOR_BACKPRESSURE = 3;
+
                     // see if the queue label is already rendered
                     var queued = connectionLabelContainer.select('g.queued-container');
                     if (queued.empty()) {
@@ -992,7 +1094,7 @@ nf.Connection = (function () {
                             .attr({
                                 'class': 'connection-label-background',
                                 'width': dimensions.width,
-                                'height': rowHeight
+                                'height': rowHeight + HEIGHT_FOR_BACKPRESSURE
                             }));
 
                         // border
@@ -1030,12 +1132,107 @@ nf.Connection = (function () {
                                 'class': 'size'
                             });
 
+                        // expiration icon
                         queued.append('text')
                             .attr({
                                 'class': 'expiration-icon',
                                 'x': 185,
                                 'y': 14
-                            }).append('title');
+                            })
+                            .text(function () {
+                                return '\uf017';
+                            })
+                            .append('title');
+
+                        var yBackpressureOffset = rowHeight + HEIGHT_FOR_BACKPRESSURE - 4;
+
+                        // backpressure object threshold
+
+                        // start
+                        queued.append('rect')
+                            .attr({
+                                'class': 'backpressure-tick object',
+                                'width': 1,
+                                'height': 3,
+                                'x': 5,
+                                'y': yBackpressureOffset
+                            });
+
+                        // bar
+                        var backpressureCountOffset = 6;
+                        queued.append('rect')
+                            .attr({
+                                'class': 'backpressure-object',
+                                'width': backpressureBarWidth,
+                                'height': 3,
+                                'x': backpressureCountOffset,
+                                'y': yBackpressureOffset
+                            })
+                            .append('title');
+
+                        // end
+                        queued.append('rect')
+                            .attr({
+                                'class': 'backpressure-tick object',
+                                'width': 1,
+                                'height': 3,
+                                'x': backpressureCountOffset + backpressureBarWidth,
+                                'y': yBackpressureOffset
+                            });
+
+                        // percent full
+                        queued.append('rect')
+                            .attr({
+                                'class': 'backpressure-percent object',
+                                'width': 0,
+                                'height': 3,
+                                'x': backpressureCountOffset,
+                                'y': yBackpressureOffset
+                            });
+
+                        // backpressure data size threshold
+
+                        // start
+                        queued.append('rect')
+                            .attr({
+                                'class': 'backpressure-tick data-size',
+                                'width': 1,
+                                'height': 3,
+                                'x': (dimensions.width / 2) + 10,
+                                'y': yBackpressureOffset
+                            });
+
+                        // bar
+                        var backpressureDataSizeOffset = (dimensions.width / 2) + 10 + 1;
+                        queued.append('rect')
+                            .attr({
+                                'class': 'backpressure-data-size',
+                                'width': backpressureBarWidth,
+                                'height': 3,
+                                'x': backpressureDataSizeOffset,
+                                'y': yBackpressureOffset
+                            })
+                            .append('title');
+
+                        // end
+                        queued.append('rect')
+                            .attr({
+                                'class': 'backpressure-tick data-size',
+                                'width': 1,
+                                'height': 3,
+                                'x': backpressureDataSizeOffset + backpressureBarWidth,
+                                'y': yBackpressureOffset
+                            });
+
+                        // percent full
+                        queued.append('rect')
+                            .attr({
+                                'class': 'backpressure-percent data-size',
+                                'width': 0,
+                                'height': 3,
+                                'x': backpressureDataSizeOffset,
+                                'y': yBackpressureOffset
+                            });
                     } else {
                         backgrounds.push(queued.select('rect.connection-label-background'));
                         borders.push(queued.select('rect.connection-label-border'));
@@ -1050,14 +1247,14 @@ nf.Connection = (function () {
                     // update the height based on the labels being rendered
                     connectionLabelContainer.select('rect.body')
                         .attr('height', function () {
-                            return (rowHeight * labelCount);
+                            return (rowHeight * labelCount) + HEIGHT_FOR_BACKPRESSURE;
                         })
                         .classed('unauthorized', function () {
                             return d.permissions.canRead === false;
                         });
                     connectionLabelContainer.select('rect.border')
                         .attr('height', function () {
-                            return (rowHeight * labelCount);
+                            return (rowHeight * labelCount) + HEIGHT_FOR_BACKPRESSURE;
                         })
                         .classed('unauthorized', function () {
                             return d.permissions.canRead === false;
@@ -1090,15 +1287,32 @@ nf.Connection = (function () {
                                 return true;
                             }
                         })
-                        .text(function () {
-                            return '\uf017';
-                        })
-                        .select('title', function () {
+                        .select('title').text(function () {
                             if (d.permissions.canRead) {
                                 return 'Expires FlowFiles older than ' + d.component.flowFileExpiration;
                             } else {
                                 return '';
                             }
+                        });
+
+                    // update backpressure object fill
+                    connectionLabelContainer.select('rect.backpressure-object')
+                        .classed('not-configured', function () {
+                            return nf.Common.isUndefinedOrNull(d.status.aggregateSnapshot.percentUseCount);
+                        });
+                    connectionLabelContainer.selectAll('rect.backpressure-tick.object')
+                        .classed('not-configured', function () {
+                            return nf.Common.isUndefinedOrNull(d.status.aggregateSnapshot.percentUseCount);
+                        });
+
+                    // update backpressure data size fill
+                    connectionLabelContainer.select('rect.backpressure-data-size')
+                        .classed('not-configured', function () {
+                            return nf.Common.isUndefinedOrNull(d.status.aggregateSnapshot.percentUseBytes);
+                        });
+                    connectionLabelContainer.selectAll('rect.backpressure-tick.data-size')
+                        .classed('not-configured', function () {
+                            return nf.Common.isUndefinedOrNull(d.status.aggregateSnapshot.percentUseBytes);
                         });
 
                     if (d.permissions.canWrite) {
@@ -1135,17 +1349,109 @@ nf.Connection = (function () {
             return;
         }
 
-        // queued count value
-        updated.select('text.queued tspan.count')
-            .text(function (d) {
-                return nf.Common.substringBeforeFirst(d.status.aggregateSnapshot.queued, ' ');
-            });
+        // update data size
+        var dataSizeDeferred = $.Deferred(function (deferred) {
+            // queued count value
+            updated.select('text.queued tspan.count')
+                .text(function (d) {
+                    return nf.Common.substringBeforeFirst(d.status.aggregateSnapshot.queued, ' ');
+                });
 
-        // queued size value
-        updated.select('text.queued tspan.size')
-            .text(function (d) {
-                return ' ' + nf.Common.substringAfterFirst(d.status.aggregateSnapshot.queued, ' ');
+            var backpressurePercentDataSize = updated.select('rect.backpressure-percent.data-size');
+            backpressurePercentDataSize.transition()
+                .duration(400)
+                .attr({
+                    'width': function (d) {
+                        if (nf.Common.isDefinedAndNotNull(d.status.aggregateSnapshot.percentUseBytes)) {
+                            return (backpressureBarWidth * d.status.aggregateSnapshot.percentUseBytes) / 100;
+                        } else {
+                            return 0;
+                        }
+                    }
+                }).each('end', function () {
+                    backpressurePercentDataSize
+                        .classed('warning', function (d) {
+                            return isWarningBytes(d);
+                        })
+                        .classed('error', function (d) {
+                            return isErrorBytes(d);
+                        });
+
+                    deferred.resolve();
+                });
+
+            updated.select('rect.backpressure-data-size').select('title').text(function (d) {
+                if (nf.Common.isDefinedAndNotNull(d.status.aggregateSnapshot.percentUseBytes)) {
+                    return 'Queue is ' + d.status.aggregateSnapshot.percentUseBytes + '% full based on Back Pressure Data Size Threshold';
+                } else {
+                    return 'Back Pressure Data Size Threshold is not configured';
+                }
             });
+        }).promise();
+
+        // update object count
+        var objectCountDeferred = $.Deferred(function (deferred) {
+            // queued size value
+            updated.select('text.queued tspan.size')
+                .text(function (d) {
+                    return ' ' + nf.Common.substringAfterFirst(d.status.aggregateSnapshot.queued, ' ');
+                });
+
+            var backpressurePercentObject = updated.select('rect.backpressure-percent.object');
+            backpressurePercentObject.transition()
+                .duration(400)
+                .attr({
+                    'width': function (d) {
+                        if (nf.Common.isDefinedAndNotNull(d.status.aggregateSnapshot.percentUseCount)) {
+                            return (backpressureBarWidth * d.status.aggregateSnapshot.percentUseCount) / 100;
+                        } else {
+                            return 0;
+                        }
+                    }
+                }).each('end', function () {
+                    backpressurePercentObject
+                        .classed('warning', function (d) {
+                            return isWarningCount(d);
+                        })
+                        .classed('error', function (d) {
+                            return isErrorCount(d);
+                        });
+
+                    deferred.resolve();
+                });
+
+            updated.select('rect.backpressure-object').select('title').text(function (d) {
+                if (nf.Common.isDefinedAndNotNull(d.status.aggregateSnapshot.percentUseCount)) {
+                    return 'Queue is ' + d.status.aggregateSnapshot.percentUseCount + '% full based on Back Pressure Object Threshold';
+                } else {
+                    return 'Back Pressure Object Threshold is not configured';
+                }
+            });
+        }).promise();
+
+        // update connection once progress bars have transitioned
+        $.when(dataSizeDeferred, objectCountDeferred).done(function () {
+            // connection stroke
+            updated.select('path.connection-path')
+                .classed('full', function (d) {
+                    return isFullCount(d) || isFullBytes(d);
+                })
+                .attr({
+                    'marker-end': getEndMarker
+                });
+
+            // border
+            updated.select('rect.border')
+                .classed('full', function (d) {
+                    return isFullCount(d) || isFullBytes(d);
+                });
+
+            // drop shadow
+            updated.select('rect.body')
+                .attr({
+                    'filter': getDropShadow
+                });
+        });
     };
 
     /**
@@ -1201,6 +1507,8 @@ nf.Connection = (function () {
 
         init: function () {
             connectionMap = d3.map();
+            removedCache = d3.map();
+            addedCache = d3.map();
 
             // create the connection container
             connectionContainer = d3.select('#canvas').append('g')
@@ -1386,7 +1694,7 @@ nf.Connection = (function () {
                                 nf.CanvasUtils.reloadConnectionSourceAndDestination(null, previousDestinationId);
                                 nf.CanvasUtils.reloadConnectionSourceAndDestination(response.sourceId, response.destinationId);
                             }).fail(function (xhr, status, error) {
-                                if (xhr.status === 400 || xhr.status === 404 || xhr.status === 409) {
+                                if (xhr.status === 400 || xhr.status === 401 || xhr.status === 403 || xhr.status === 404 || xhr.status === 409) {
                                     nf.Dialog.showOkDialog({
                                         headerText: 'Connection',
                                         dialogContent: nf.Common.escapeHtml(xhr.responseText)
@@ -1543,7 +1851,12 @@ nf.Connection = (function () {
                 selectAll = nf.Common.isDefinedAndNotNull(options.selectAll) ? options.selectAll : selectAll;
             }
 
+            // get the current time
+            var now = new Date().getTime();
+
             var add = function (connectionEntity) {
+                addedCache.set(connectionEntity.id, now);
+
                 // add the connection
                 connectionMap.set(connectionEntity.id, $.extend({
                     type: 'Connection'
@@ -1565,7 +1878,7 @@ nf.Connection = (function () {
             selection.call(updateConnections, {
                 'updatePath': true,
                 'updateLabel': false
-            });
+            }).call(sort);
         },
 
         /**
@@ -1585,8 +1898,8 @@ nf.Connection = (function () {
             var set = function (proposedConnectionEntity) {
                 var currentConnectionEntity = connectionMap.get(proposedConnectionEntity.id);
 
-                // set the connection if appropriate
-                if (nf.Client.isNewerRevision(currentConnectionEntity, proposedConnectionEntity)) {
+                // set the connection if appropriate due to revision and wasn't previously removed
+                if (nf.Client.isNewerRevision(currentConnectionEntity, proposedConnectionEntity) && !removedCache.has(proposedConnectionEntity.id)) {
                     connectionMap.set(proposedConnectionEntity.id, $.extend({
                         type: 'Connection'
                     }, proposedConnectionEntity));
@@ -1601,8 +1914,8 @@ nf.Connection = (function () {
                         return proposedConnectionEntity.id === currentConnectionEntity.id;
                     });
 
-                    // if the current connection is not present, remove it
-                    if (isPresent.length === 0) {
+                    // if the current connection is not present and was not recently added, remove it
+                    if (isPresent.length === 0 && !addedCache.has(key)) {
                         connectionMap.remove(key);
                     }
                 });
@@ -1620,15 +1933,8 @@ nf.Connection = (function () {
                 'updatePath': true,
                 'updateLabel': true,
                 'transition': transition
-            });
+            }).call(sort);
             selection.exit().call(removeConnections);
-        },
-
-        /**
-         * Reorders the connections based on their current z index.
-         */
-        reorder: function () {
-            d3.selectAll('g.connection').call(sort);
         },
 
         /**
@@ -1663,15 +1969,19 @@ nf.Connection = (function () {
         /**
          * Removes the specified connection.
          *
-         * @param {array|string} connections      The connection id
+         * @param {array|string} connectionIds      The connection id
          */
-        remove: function (connections) {
-            if ($.isArray(connections)) {
-                $.each(connections, function (_, connection) {
-                    connectionMap.remove(connection);
+        remove: function (connectionIds) {
+            var now = new Date().getTime();
+
+            if ($.isArray(connectionIds)) {
+                $.each(connectionIds, function (_, connectionId) {
+                    removedCache.set(connectionId, now);
+                    connectionMap.remove(connectionId);
                 });
             } else {
-                connectionMap.remove(connections);
+                removedCache.set(connectionIds, now);
+                connectionMap.remove(connectionIds);
             }
 
             // apply the selection and handle all removed connections
@@ -1699,6 +2009,29 @@ nf.Connection = (function () {
                     dataType: 'json'
                 }).done(function (response) {
                     nf.Connection.set(response);
+                });
+            }
+        },
+
+        /**
+         * Reloads the connection status from the server and refreshes the UI.
+         *
+         * @param {string} id       The connection id
+         */
+        reloadStatus: function (id) {
+            if (connectionMap.has(id)) {
+                return $.ajax({
+                    type: 'GET',
+                    url: '../nifi-api/flow/connections/' + encodeURIComponent(id) + '/status',
+                    dataType: 'json'
+                }).done(function (response) {
+                    // update the existing connection
+                    var connectionEntity = connectionMap.get(id);
+                    connectionEntity.status = response.connectionStatus;
+                    connectionMap.set(id, connectionEntity);
+
+                    // update the UI
+                    select().call(updateConnectionStatus);
                 });
             }
         },
@@ -1732,6 +2065,24 @@ nf.Connection = (function () {
             } else {
                 return connectionMap.get(id);
             }
+        },
+
+        /**
+         * Expires the caches up to the specified timestamp.
+         *
+         * @param timestamp
+         */
+        expireCaches: function (timestamp) {
+            var expire = function (cache) {
+                cache.forEach(function (id, entryTimestamp) {
+                    if (timestamp > entryTimestamp) {
+                        cache.remove(id);
+                    }
+                });
+            };
+
+            expire(addedCache);
+            expire(removedCache);
         }
     };
 }());

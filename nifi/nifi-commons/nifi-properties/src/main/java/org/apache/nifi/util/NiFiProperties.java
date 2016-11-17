@@ -24,9 +24,12 @@ import java.net.InetSocketAddress;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -147,8 +150,10 @@ public abstract class NiFiProperties {
     // web properties
     public static final String WEB_WAR_DIR = "nifi.web.war.directory";
     public static final String WEB_HTTP_PORT = "nifi.web.http.port";
+    public static final String WEB_HTTP_PORT_FORWARDING = "nifi.web.http.port.forwarding";
     public static final String WEB_HTTP_HOST = "nifi.web.http.host";
     public static final String WEB_HTTPS_PORT = "nifi.web.https.port";
+    public static final String WEB_HTTPS_PORT_FORWARDING = "nifi.web.https.port.forwarding";
     public static final String WEB_HTTPS_HOST = "nifi.web.https.host";
     public static final String WEB_WORKING_DIR = "nifi.web.jetty.working.directory";
     public static final String WEB_THREADS = "nifi.web.jetty.threads";
@@ -195,6 +200,12 @@ public abstract class NiFiProperties {
 
     // expression language properties
     public static final String VARIABLE_REGISTRY_PROPERTIES = "nifi.variable.registry.properties";
+
+    // build info
+    public static final String BUILD_TAG = "nifi.build.tag";
+    public static final String BUILD_BRANCH = "nifi.build.branch";
+    public static final String BUILD_REVISION = "nifi.build.revision";
+    public static final String BUILD_TIMESTAMP = "nifi.build.timestamp";
 
     // defaults
     public static final String DEFAULT_TITLE = "NiFi";
@@ -403,9 +414,23 @@ public abstract class NiFiProperties {
             return null;
         }
 
-        String propertyKey = isSiteToSiteSecure() ? NiFiProperties.WEB_HTTPS_PORT : NiFiProperties.WEB_HTTP_PORT;
-        Integer port = getIntegerProperty(propertyKey, 0);
-        if (port == 0) {
+        final String propertyKey;
+        if (isSiteToSiteSecure()) {
+            if (StringUtils.isBlank(getProperty(NiFiProperties.WEB_HTTPS_PORT_FORWARDING))) {
+                propertyKey = WEB_HTTPS_PORT;
+            } else {
+                propertyKey = WEB_HTTPS_PORT_FORWARDING;
+            }
+        } else {
+            if (StringUtils.isBlank(getProperty(NiFiProperties.WEB_HTTP_PORT_FORWARDING))) {
+                propertyKey = WEB_HTTP_PORT;
+            } else {
+                propertyKey = WEB_HTTP_PORT_FORWARDING;
+            }
+        }
+
+        final Integer port = getIntegerProperty(propertyKey, null);
+        if (port == null) {
             throw new RuntimeException("Remote input HTTP" + (isSiteToSiteSecure() ? "S" : "")
                     + " is enabled but " + propertyKey + " is not specified.");
         }
@@ -973,6 +998,21 @@ public abstract class NiFiProperties {
             return vrPropertiesPaths.toArray(new Path[vrPropertiesPaths.size()]);
         } else {
             return new Path[]{};
+        }
+    }
+
+    public Date getBuildTimestamp() {
+        String buildTimestampString = getProperty(NiFiProperties.BUILD_TIMESTAMP);
+        if (!StringUtils.isEmpty(buildTimestampString)) {
+            try {
+                SimpleDateFormat buildTimestampFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                Date buildTimestampDate = buildTimestampFormat.parse(buildTimestampString);
+                return buildTimestampDate;
+            } catch (ParseException parseEx) {
+                return null;
+            }
+        } else {
+            return null;
         }
     }
 

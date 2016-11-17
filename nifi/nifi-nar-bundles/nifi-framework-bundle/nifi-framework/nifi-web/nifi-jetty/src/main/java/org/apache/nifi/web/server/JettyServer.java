@@ -16,6 +16,56 @@
  */
 package org.apache.nifi.web.server;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.nifi.NiFiServer;
+import org.apache.nifi.controller.UninheritableFlowException;
+import org.apache.nifi.controller.serialization.FlowSerializationException;
+import org.apache.nifi.controller.serialization.FlowSynchronizationException;
+import org.apache.nifi.lifecycle.LifeCycleStartException;
+import org.apache.nifi.nar.ExtensionMapping;
+import org.apache.nifi.nar.NarClassLoaders;
+import org.apache.nifi.security.util.KeyStoreUtils;
+import org.apache.nifi.services.FlowService;
+import org.apache.nifi.ui.extension.UiExtension;
+import org.apache.nifi.ui.extension.UiExtensionMapping;
+import org.apache.nifi.util.NiFiProperties;
+import org.apache.nifi.web.ContentAccess;
+import org.apache.nifi.web.NiFiWebConfigurationContext;
+import org.apache.nifi.web.UiExtensionType;
+import org.eclipse.jetty.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.server.handler.gzip.GzipHandler;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceCollection;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.eclipse.jetty.webapp.Configuration;
+import org.eclipse.jetty.webapp.JettyWebXmlConfiguration;
+import org.eclipse.jetty.webapp.WebAppClassLoader;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.ServletContext;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
@@ -38,55 +88,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-
-import javax.servlet.DispatcherType;
-import javax.servlet.ServletContext;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.nifi.NiFiServer;
-import org.apache.nifi.controller.UninheritableFlowException;
-import org.apache.nifi.controller.serialization.FlowSerializationException;
-import org.apache.nifi.controller.serialization.FlowSynchronizationException;
-import org.apache.nifi.lifecycle.LifeCycleStartException;
-import org.apache.nifi.nar.ExtensionMapping;
-import org.apache.nifi.nar.NarClassLoaders;
-import org.apache.nifi.services.FlowService;
-import org.apache.nifi.ui.extension.UiExtension;
-import org.apache.nifi.ui.extension.UiExtensionMapping;
-import org.apache.nifi.util.NiFiProperties;
-import org.apache.nifi.web.ContentAccess;
-import org.apache.nifi.web.NiFiWebConfigurationContext;
-import org.apache.nifi.web.UiExtensionType;
-import org.eclipse.jetty.annotations.AnnotationConfiguration;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.SecureRequestCustomizer;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SslConnectionFactory;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.server.handler.ResourceHandler;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.util.resource.ResourceCollection;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
-import org.eclipse.jetty.webapp.Configuration;
-import org.eclipse.jetty.webapp.JettyWebXmlConfiguration;
-import org.eclipse.jetty.webapp.WebAppClassLoader;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
  * Encapsulates the Jetty instance.
@@ -326,7 +327,20 @@ public class JettyServer implements NiFiServer {
         handlers.addHandler(loadWar(webErrorWar, "/", frameworkClassLoader));
 
         // deploy the web apps
-        server.setHandler(handlers);
+        server.setHandler(gzip(handlers));
+    }
+
+    /**
+     * Enables compression for the specified handler.
+     *
+     * @param handler handler to enable compression for
+     * @return compression enabled handler
+     */
+    private Handler gzip(final Handler handler) {
+        final GzipHandler gzip = new GzipHandler();
+        gzip.setIncludedMethods("GET", "POST", "PUT", "DELETE");
+        gzip.setHandler(handler);
+        return gzip;
     }
 
     private Map<File, File> findWars(final Set<File> narWorkingDirectories) {
@@ -617,8 +631,13 @@ public class JettyServer implements NiFiServer {
         if (StringUtils.isNotBlank(props.getProperty(NiFiProperties.SECURITY_KEYSTORE))) {
             contextFactory.setKeyStorePath(props.getProperty(NiFiProperties.SECURITY_KEYSTORE));
         }
-        if (StringUtils.isNotBlank(props.getProperty(NiFiProperties.SECURITY_KEYSTORE_TYPE))) {
-            contextFactory.setKeyStoreType(props.getProperty(NiFiProperties.SECURITY_KEYSTORE_TYPE));
+        String keyStoreType = props.getProperty(NiFiProperties.SECURITY_KEYSTORE_TYPE);
+        if (StringUtils.isNotBlank(keyStoreType)) {
+            contextFactory.setKeyStoreType(keyStoreType);
+            String keyStoreProvider = KeyStoreUtils.getKeyStoreProvider(keyStoreType);
+            if (StringUtils.isNoneEmpty(keyStoreProvider)) {
+                contextFactory.setKeyStoreProvider(keyStoreProvider);
+            }
         }
         final String keystorePassword = props.getProperty(NiFiProperties.SECURITY_KEYSTORE_PASSWD);
         final String keyPassword = props.getProperty(NiFiProperties.SECURITY_KEY_PASSWD);
@@ -636,8 +655,13 @@ public class JettyServer implements NiFiServer {
         if (StringUtils.isNotBlank(props.getProperty(NiFiProperties.SECURITY_TRUSTSTORE))) {
             contextFactory.setTrustStorePath(props.getProperty(NiFiProperties.SECURITY_TRUSTSTORE));
         }
-        if (StringUtils.isNotBlank(props.getProperty(NiFiProperties.SECURITY_TRUSTSTORE_TYPE))) {
-            contextFactory.setTrustStoreType(props.getProperty(NiFiProperties.SECURITY_TRUSTSTORE_TYPE));
+        String trustStoreType = props.getProperty(NiFiProperties.SECURITY_TRUSTSTORE_TYPE);
+        if (StringUtils.isNotBlank(trustStoreType)) {
+            contextFactory.setTrustStoreType(trustStoreType);
+            String trustStoreProvider = KeyStoreUtils.getKeyStoreProvider(trustStoreType);
+            if (StringUtils.isNoneEmpty(trustStoreProvider)) {
+                contextFactory.setTrustStoreProvider(trustStoreProvider);
+            }
         }
         if (StringUtils.isNotBlank(props.getProperty(NiFiProperties.SECURITY_TRUSTSTORE_PASSWD))) {
             contextFactory.setTrustStorePassword(props.getProperty(NiFiProperties.SECURITY_TRUSTSTORE_PASSWD));

@@ -440,19 +440,24 @@ nf.Settings = (function () {
 
                 // set the reporting task type description
                 if (nf.Common.isDefinedAndNotNull(reportingTaskType)) {
+                    // show the selected reporting task
+                    $('#reporting-task-description-container').show();
+
                     if (nf.Common.isBlank(reportingTaskType.description)) {
-                        $('#reporting-task-type-description').attr('title', '').html('<span class="unset">No description specified</span>');
+                        $('#reporting-task-type-description')
+                            .attr('title', '')
+                            .html('<span class="unset">No description specified</span>');
                     } else {
-                        $('#reporting-task-type-description').html(reportingTaskType.description).ellipsis();
+                        $('#reporting-task-type-description')
+                            .width($('#reporting-task-description-container').innerWidth() - 1)
+                            .html(reportingTaskType.description)
+                            .ellipsis();
                     }
 
                     // populate the dom
                     $('#reporting-task-type-name').text(reportingTaskType.label).ellipsis();
                     $('#selected-reporting-task-name').text(reportingTaskType.label);
                     $('#selected-reporting-task-type').text(reportingTaskType.type);
-
-                    // show the selected reporting task
-                    $('#reporting-task-description-container').show();
                 }
             }
         });
@@ -569,6 +574,12 @@ nf.Settings = (function () {
                     var reportingTaskTypesGrid = $('#reporting-task-types-table').data('gridInstance');
                     reportingTaskTypesGrid.setSelectedRows([]);
                     reportingTaskTypesGrid.resetActiveCell();
+                },
+                resize: function () {
+                    $('#reporting-task-type-description')
+                        .width($('#reporting-task-description-container').innerWidth() - 1)
+                        .text($('#reporting-task-type-description').attr('title'))
+                        .ellipsis();
                 }
             }
         });
@@ -586,20 +597,20 @@ nf.Settings = (function () {
                 return '';
             }
 
-            var markup = '<div title="View Details" class="pointer view-reporting-task fa fa-info-circle" style="margin-top: 5px; float: left;" ></div>';
+            var markup = '<div title="View Details" class="pointer view-reporting-task fa fa-info-circle"></div>';
 
             // always include a button to view the usage
-            markup += '<div title="Usage" class="pointer reporting-task-usage fa fa-book" style="margin-left: 6px; margin-top: 5px; float: left;"></div>';
+            markup += '<div title="Usage" class="pointer reporting-task-usage fa fa-book"></div>';
 
             var hasErrors = !nf.Common.isEmpty(dataContext.component.validationErrors);
             var hasBulletins = !nf.Common.isEmpty(dataContext.bulletins);
 
             if (hasErrors) {
-                markup += '<div class="pointer has-errors fa fa-warning" style="margin-top: 4px; margin-left: 3px; float: left;" ></div>';
+                markup += '<div class="pointer has-errors fa fa-warning" ></div>';
             }
 
             if (hasBulletins) {
-                markup += '<div class="has-bulletins fa fa-sticky-note-o" style="margin-top: 5px; margin-left: 5px; float: left;"></div>';
+                markup += '<div class="has-bulletins fa fa-sticky-note-o"></div>';
             }
 
             if (hasErrors || hasBulletins) {
@@ -622,13 +633,13 @@ nf.Settings = (function () {
             } else {
                 if (dataContext.component.state === 'STOPPED') {
                     label = 'Stopped';
-                    icon = 'fa fa-stop';
+                    icon = 'fa fa-stop stopped';
                 } else if (dataContext.component.state === 'RUNNING') {
                     label = 'Running';
-                    icon = 'fa fa-play';
+                    icon = 'fa fa-play running';
                 } else {
                     label = 'Disabled';
-                    icon = 'icon icon-enable-false';
+                    icon = 'icon icon-enable-false disabled';
                 }
             }
 

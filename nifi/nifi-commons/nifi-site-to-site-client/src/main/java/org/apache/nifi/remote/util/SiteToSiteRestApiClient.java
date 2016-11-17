@@ -59,6 +59,7 @@ import org.apache.nifi.events.EventReporter;
 import org.apache.nifi.remote.Peer;
 import org.apache.nifi.remote.TransferDirection;
 import org.apache.nifi.remote.client.http.TransportProtocolVersionNegotiator;
+import org.apache.nifi.remote.exception.HandshakeException;
 import org.apache.nifi.remote.exception.PortNotRunningException;
 import org.apache.nifi.remote.exception.ProtocolException;
 import org.apache.nifi.remote.exception.UnknownPortException;
@@ -106,6 +107,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -137,6 +139,7 @@ public class SiteToSiteRestApiClient implements Closeable {
     private static final int RESPONSE_CODE_CREATED = 201;
     private static final int RESPONSE_CODE_ACCEPTED = 202;
     private static final int RESPONSE_CODE_BAD_REQUEST = 400;
+    private static final int RESPONSE_CODE_FORBIDDEN = 403;
     private static final int RESPONSE_CODE_NOT_FOUND = 404;
 
     private static final Logger logger = LoggerFactory.getLogger(SiteToSiteRestApiClient.class);
@@ -500,7 +503,7 @@ public class SiteToSiteRestApiClient implements Closeable {
 
             @Override
             public void failed(Exception ex) {
-                final String msg = String.format("Failed to create transactino for %s", post.getURI());
+                final String msg = String.format("Failed to create transaction for %s", post.getURI());
                 logger.error(msg, ex);
                 eventReporter.reportEvent(Severity.WARNING, EVENT_CATEGORY, msg);
             }
@@ -953,7 +956,12 @@ public class SiteToSiteRestApiClient implements Closeable {
             case PORT_NOT_IN_VALID_STATE:
                 return new PortNotRunningException(errEntity.getMessage());
             default:
-                return new IOException("Unexpected response code: " + responseCode + " errCode:" + errCode + " errMessage:" + errEntity.getMessage());
+                switch (responseCode) {
+                    case RESPONSE_CODE_FORBIDDEN :
+                        return new HandshakeException(errEntity.getMessage());
+                    default:
+                        return new IOException("Unexpected response code: " + responseCode + " errCode:" + errCode + " errMessage:" + errEntity.getMessage());
+                }
         }
     }
 
@@ -1122,8 +1130,9 @@ public class SiteToSiteRestApiClient implements Closeable {
         try {
             return mapper.readValue(responseMessage, entityClass);
         } catch (JsonParseException e) {
-            logger.warn("Failed to parse Json, response={}", responseMessage);
-            throw e;
+            final String msg = "Failed to parse Json. The specified URL " + baseUrl + " is not a proper remote NiFi endpoint for Site-to-Site communication.";
+            logger.warn("{} requestedUrl={}, response={}", msg, get.getURI(), responseMessage);
+            throw new IOException(msg, e);
         }
     }
 
@@ -1131,6 +1140,12 @@ public class SiteToSiteRestApiClient implements Closeable {
         return baseUrl;
     }
 
+    /**
+     * Set the baseUrl as it is, without altering or adjusting the specified url string.
+     * If the url is specified by user input, and if it needs to be resolved with leniency,
+     * then use {@link #resolveBaseUrl(String)} method before passing it to this method.
+     * @param baseUrl url to set
+     */
     public void setBaseUrl(final String baseUrl) {
         this.baseUrl = baseUrl;
     }
@@ -1143,29 +1158,54 @@ public class SiteToSiteRestApiClient implements Closeable {
         this.readTimeoutMillis = readTimeoutMillis;
     }
 
-    public String resolveBaseUrl(final String clusterUrl) {
+    public static String resolveBaseUrl(final String clusterUrl) {
+        Objects.requireNonNull(clusterUrl, "clusterUrl cannot be null.");
         URI clusterUri;
         try {
-            clusterUri = new URI(clusterUrl);
+            clusterUri = new URI(clusterUrl.trim());
         } catch (final URISyntaxException e) {
             throw new IllegalArgumentException("Specified clusterUrl was: " + clusterUrl, e);
         }
-        return this.resolveBaseUrl(clusterUri);
+        return resolveBaseUrl(clusterUri);
     }
 
-    public String resolveBaseUrl(final URI clusterUrl) {
-        String urlPath = clusterUrl.getPath();
-        if (urlPath.endsWith("/")) {
-            urlPath = urlPath.substring(0, urlPath.length() - 1);
+    /**
+     * Resolve NiFi API url with leniency. This method does following conversion on uri path:
+     * <ul>
+     * <li>/ to /nifi-api</li>
+     * <li>/nifi to /nifi-api</li>
+     * <li>/some/path/ to /some/path/nifi-api</li>
+     * </ul>
+     * @param clusterUrl url to be resolved
+     * @return resolved url
+     */
+    public static String resolveBaseUrl(final URI clusterUrl) {
+        String uriPath = clusterUrl.getPath().trim();
+
+        if (StringUtils.isEmpty(uriPath) || uriPath.equals("/")) {
+            uriPath = "/nifi";
+        } else if (uriPath.endsWith("/")) {
+            uriPath = uriPath.substring(0, uriPath.length() - 1);
         }
-        return resolveBaseUrl(clusterUrl.getScheme(), clusterUrl.getHost(), clusterUrl.getPort(), urlPath + "-api");
+
+        if (uriPath.endsWith("/nifi")) {
+            uriPath += "-api";
+        } else if (!uriPath.endsWith("/nifi-api")) {
+            uriPath += "/nifi-api";
+        }
+
+        try {
+            return new URL(clusterUrl.getScheme(), clusterUrl.getHost(), clusterUrl.getPort(), uriPath).toURI().toString();
+        } catch (MalformedURLException|URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
-    public String resolveBaseUrl(final String scheme, final String host, final int port) {
-        return resolveBaseUrl(scheme, host, port, "/nifi-api");
+    public void setBaseUrl(final String scheme, final String host, final int port) {
+        setBaseUrl(scheme, host, port, "/nifi-api");
     }
 
-    private String resolveBaseUrl(final String scheme, final String host, final int port, final String path) {
+    private void setBaseUrl(final String scheme, final String host, final int port, final String path) {
         final String baseUri;
         try {
             baseUri = new URL(scheme, host, port, path).toURI().toString();
@@ -1173,7 +1213,6 @@ public class SiteToSiteRestApiClient implements Closeable {
             throw new IllegalArgumentException(e);
         }
         this.setBaseUrl(baseUri);
-        return baseUri;
     }
 
     public void setCompress(final boolean compress) {

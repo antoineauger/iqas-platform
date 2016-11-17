@@ -32,6 +32,13 @@ nf.RemoteProcessGroup = (function () {
 
     var remoteProcessGroupMap;
 
+    // -----------------------------------------------------------
+    // cache for components that are added/removed from the canvas
+    // -----------------------------------------------------------
+
+    var removedCache;
+    var addedCache;
+
     // --------------------
     // component containers
     // --------------------
@@ -135,17 +142,6 @@ nf.RemoteProcessGroup = (function () {
                 'width': 305,
                 'height': 16,
                 'class': 'remote-process-group-name'
-            });
-
-        // remote process group icon
-        remoteProcessGroup.append('image')
-            .call(nf.CanvasUtils.disableImageHref)
-            .attr({
-                'width': 352,
-                'height': 89,
-                'x': 6,
-                'y': 38,
-                'class': 'remote-process-group-preview'
             });
 
         // always support selection
@@ -608,9 +604,6 @@ nf.RemoteProcessGroup = (function () {
                     remoteProcessGroup.select('text.remote-process-group-name').text(null);
                 }
 
-                // show the preview
-                remoteProcessGroup.select('image.remote-process-group-preview').style('display', 'none');
-
                 // populate the stats
                 remoteProcessGroup.call(updateProcessGroupStatus);
             } else {
@@ -625,10 +618,10 @@ nf.RemoteProcessGroup = (function () {
                                 return name;
                             }
                         });
+                } else {
+                    // clear the name
+                    remoteProcessGroup.select('text.remote-process-group-name').text(null);
                 }
-
-                // show the preview
-                remoteProcessGroup.select('image.remote-process-group-preview').style('display', 'block');
 
                 // remove the tooltips
                 remoteProcessGroup.call(removeTooltips);
@@ -718,8 +711,14 @@ nf.RemoteProcessGroup = (function () {
                 }
                 return family;
             })
-            .classed('has-authorization-errors', function (d) {
+            .classed('invalid', function (d) {
                 return d.permissions.canRead && !nf.Common.isEmpty(d.component.authorizationIssues);
+            })
+            .classed('transmitting', function (d) {
+                return d.permissions.canRead && nf.Common.isEmpty(d.component.authorizationIssues) && d.component.transmitting === true;
+            })
+            .classed('not-transmitting', function (d) {
+                return d.permissions.canRead && nf.Common.isEmpty(d.component.authorizationIssues) && d.component.transmitting === false;
             })
             .each(function (d) {
                 // get the tip
@@ -814,6 +813,8 @@ nf.RemoteProcessGroup = (function () {
          */
         init: function () {
             remoteProcessGroupMap = d3.map();
+            removedCache = d3.map();
+            addedCache = d3.map();
 
             // create the process group container
             remoteProcessGroupContainer = d3.select('#canvas').append('g')
@@ -835,7 +836,12 @@ nf.RemoteProcessGroup = (function () {
                 selectAll = nf.Common.isDefinedAndNotNull(options.selectAll) ? options.selectAll : selectAll;
             }
 
+            // get the current time
+            var now = new Date().getTime();
+
             var add = function (remoteProcessGroupEntity) {
+                addedCache.set(remoteProcessGroupEntity.id, now);
+
                 // add the remote process group
                 remoteProcessGroupMap.set(remoteProcessGroupEntity.id, $.extend({
                     type: 'RemoteProcessGroup',
@@ -875,8 +881,8 @@ nf.RemoteProcessGroup = (function () {
             var set = function (proposedRemoteProcessGroupEntity) {
                 var currentRemoteProcessGroupEntity = remoteProcessGroupMap.get(proposedRemoteProcessGroupEntity.id);
 
-                // set the remote process group if appropriate
-                if (nf.Client.isNewerRevision(currentRemoteProcessGroupEntity, proposedRemoteProcessGroupEntity)) {
+                // set the remote process group if appropriate due to revision and wasn't previously removed
+                if (nf.Client.isNewerRevision(currentRemoteProcessGroupEntity, proposedRemoteProcessGroupEntity) && !removedCache.has(proposedRemoteProcessGroupEntity.id)) {
                     remoteProcessGroupMap.set(proposedRemoteProcessGroupEntity.id, $.extend({
                         type: 'RemoteProcessGroup',
                         dimensions: dimensions
@@ -892,8 +898,8 @@ nf.RemoteProcessGroup = (function () {
                         return proposedRemoteProcessGroupEntity.id === currentRemoteProcessGroupEntity.id;
                     });
 
-                    // if the current remote process group is not present, remove it
-                    if (isPresent.length === 0) {
+                    // if the current remote process group is not present and was not recently added, remove it
+                    if (isPresent.length === 0 && !addedCache.has(key)) {
                         remoteProcessGroupMap.remove(key);
                     }
                 });
@@ -985,15 +991,19 @@ nf.RemoteProcessGroup = (function () {
         /**
          * Removes the specified process group.
          *
-         * @param {array|string} remoteProcessGroups      The remote process group id(s)
+         * @param {array|string} remoteProcessGroupIds      The remote process group id(s)
          */
-        remove: function (remoteProcessGroups) {
-            if ($.isArray(remoteProcessGroups)) {
-                $.each(remoteProcessGroups, function (_, remoteProcessGroup) {
-                    remoteProcessGroupMap.remove(remoteProcessGroup);
+        remove: function (remoteProcessGroupIds) {
+            var now = new Date().getTime();
+
+            if ($.isArray(remoteProcessGroupIds)) {
+                $.each(remoteProcessGroupIds, function (_, remoteProcessGroupId) {
+                    removedCache.set(remoteProcessGroupId, now);
+                    remoteProcessGroupMap.remove(remoteProcessGroupId);
                 });
             } else {
-                remoteProcessGroupMap.remove(remoteProcessGroups);
+                removedCache.set(remoteProcessGroupIds, now);
+                remoteProcessGroupMap.remove(remoteProcessGroupIds);
             }
 
             // apply the selection and handle all removed remote process groups
@@ -1005,6 +1015,24 @@ nf.RemoteProcessGroup = (function () {
          */
         removeAll: function () {
             nf.RemoteProcessGroup.remove(remoteProcessGroupMap.keys());
+        },
+
+        /**
+         * Expires the caches up to the specified timestamp.
+         *
+         * @param timestamp
+         */
+        expireCaches: function (timestamp) {
+            var expire = function (cache) {
+                cache.forEach(function (id, entryTimestamp) {
+                    if (timestamp > entryTimestamp) {
+                        cache.remove(id);
+                    }
+                });
+            };
+
+            expire(addedCache);
+            expire(removedCache);
         }
     };
 }());
