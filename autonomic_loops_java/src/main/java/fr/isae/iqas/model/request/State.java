@@ -13,6 +13,12 @@ public class State {
         this.end_date = start_date;
     }
 
+    public State(Status status, Date start_date, Date end_date) {
+        this.status = status;
+        this.start_date = start_date;
+        this.end_date = end_date;
+    }
+
     public Status getStatus() {
         return status;
     }

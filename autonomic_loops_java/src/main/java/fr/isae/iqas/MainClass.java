@@ -24,8 +24,8 @@ import fr.isae.iqas.database.MongoRESTController;
 import fr.isae.iqas.model.messages.Terminated;
 import fr.isae.iqas.server.APIGatewayActor;
 import fr.isae.iqas.server.RESTServer;
+import org.apache.log4j.Logger;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.concurrent.CompletionStage;
@@ -34,11 +34,12 @@ import java.util.concurrent.CompletionStage;
  * Created by an.auger on 13/09/2016.
  */
 public class MainClass {
+    private static Logger logger = Logger.getLogger(MainClass.class);
 
-    public static class LocalMaster extends UntypedActor {
+    private static class LocalMaster extends UntypedActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-        public LocalMaster(Properties prop, ActorSystem system, Materializer materializer) throws IOException {
+        public LocalMaster(Properties prop, ActorSystem system, Materializer materializer) {
             // Path resolution for the APIGatewayActor
             String pathAPIGatewayActor = getSelf().path().toString() + "/" + prop.getProperty("api_gateway_actor_name");
 
@@ -82,6 +83,7 @@ public class MainClass {
                             .thenAccept(unbound -> system.terminate());
                 }
             });
+
         }
 
         @Override
@@ -93,19 +95,22 @@ public class MainClass {
         }
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws Exception {
         // Reading iQAS configuration
+        String iqasConfFileName = "iqas.properties";
         Properties prop = new Properties();
-        InputStream input = MainClass.class.getClassLoader().getResourceAsStream("iqas.properties");
-        prop.load(input);
+        try {
+            InputStream input = MainClass.class.getClassLoader().getResourceAsStream(iqasConfFileName);
+            prop.load(input);
+        } catch (NullPointerException e) {
+            logger.error("Unable to find the configuration file '" + iqasConfFileName + "'.");
+            System.exit(1);
+        }
 
         // Top-level actors creation
         final ActorSystem system = ActorSystem.create("SystemActor");
         final Materializer materializer = ActorMaterializer.create(system);
-
-        final ActorRef localMaster = system.actorOf(
-                Props.create(LocalMaster.class, prop, system, materializer), "LocalMasterActor");
+        final ActorRef localMaster = system.actorOf(Props.create(LocalMaster.class, prop, system, materializer), "LocalMasterActor");
     }
-
 
 }

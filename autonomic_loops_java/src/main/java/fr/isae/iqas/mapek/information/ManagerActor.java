@@ -6,11 +6,10 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.database.MongoController;
-import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.messages.RFC;
 import fr.isae.iqas.model.messages.Terminated;
+import fr.isae.iqas.model.request.Request;
 
-import java.util.ArrayList;
 import java.util.Properties;
 
 /**
@@ -67,10 +66,6 @@ public class ManagerActor extends UntypedActor {
             getContext().stop(self());
         }
         else if (message instanceof Request) {
-            //TODO: Build request, Possible? YES / NO, Get ticket number, Forward request to API gateway
-            Request incomingRequest = (Request) message;
-            ArrayList<Request> registeredRequestsForApp = mongoController.getAllRequestsByApplication(incomingRequest.getApplication_id());
-
             if (processingActivated) {
                 planActor.tell(new RFC("none"), getSelf());
                 processingActivated = false;

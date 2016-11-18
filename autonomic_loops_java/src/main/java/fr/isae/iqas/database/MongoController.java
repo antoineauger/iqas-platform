@@ -16,6 +16,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -25,7 +27,7 @@ import static com.mongodb.client.model.Filters.eq;
 public class MongoController extends AllDirectives {
     private static Logger log = Logger.getLogger(MongoController.class);
 
-    private MongoDatabase mongoDatabase;
+    private MongoDatabase mongoDatabase = null;
 
     MongoController(MongoDatabase mongoDatabase) {
         this.mongoDatabase = mongoDatabase;
@@ -38,7 +40,8 @@ public class MongoController extends AllDirectives {
 
     void _findSpecificSensor(String sensor_id, final SingleResultCallback<ArrayList<VirtualSensor>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("sensors");
-        collection.find(eq("sensor_id", sensor_id)).map(myDoc -> new VirtualSensor(myDoc)).into(new ArrayList<>(), callback);
+        collection.find(eq("sensor_id", sensor_id))
+                .map(myDoc -> new VirtualSensor(myDoc)).into(new ArrayList<>(), callback);
     }
 
     void _findAllSensors(final SingleResultCallback<ArrayList<VirtualSensor>> callback) {
@@ -52,28 +55,36 @@ public class MongoController extends AllDirectives {
 
     void _findSpecificRequest(String field, String value, final SingleResultCallback<ArrayList<Request>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
-        collection.find(eq(field, value)).map((mydoc) -> new Request(mydoc)).into(new ArrayList<>(), callback);
+        collection.find(eq(field, value)).map(myDoc -> new Request(myDoc)).into(new ArrayList<>(), callback);
     }
 
     void _findAllRequests(final SingleResultCallback<ArrayList<Request>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
-        collection.find().map((mydoc) -> new Request(mydoc)).into(new ArrayList<>(), callback);
+        collection.find().map(myDoc -> new Request(myDoc)).into(new ArrayList<>(), callback);
+    }
+
+    private void _putRequest(Document req, final SingleResultCallback<Void> callback) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
+        collection.insertOne(req, callback);
     }
 
     /**
      * Method to get all Requests for a specific application
      *
      * @param application_id String, the ID of the application
-     * @return an ArrayList of Requests or an empty ArrayList
+     * @return a CompletableFuture that will be completed with either an ArrayList of Requests or a Throwable
      */
-    public ArrayList<Request> getAllRequestsByApplication(String application_id) {
-        final ArrayList<Request> objectToReturn = new ArrayList<>();
+    public CompletableFuture<ArrayList<Request>> getAllRequestsByApp(String application_id) {
+        final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
         _findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
-                objectToReturn.addAll(result);
+                requests.complete(result);
+            }
+            else {
+                requests.completeExceptionally(t);
             }
         });
-        return objectToReturn;
+        return requests;
     }
 
     /**
@@ -81,35 +92,62 @@ public class MongoController extends AllDirectives {
      *
      * @param application_id String, the ID of the application
      * @param filters        an ArrayList of Status objects. Only return Requests with one of these statuses.
-     * @return an ArrayList of Requests or an empty ArrayList
+     * @return a CompletableFuture that will be completed with either an ArrayList of Requests or a Throwable
      */
-    public ArrayList<Request> getAllRequestsWithFilterByApplication(String application_id, ArrayList<Status> filters) {
-        final ArrayList<Request> objectToReturn = new ArrayList<>();
+    public CompletableFuture<ArrayList<Request>> getFilteredRequestsByApp(String application_id, ArrayList<Status> filters) {
+        final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
         _findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
-                for (Request r : result) {
-                    if (filters.contains(r.getCurrentStatus())) {
-                        objectToReturn.add(r);
-                    }
-                }
+                ArrayList<Request> requestTempList = result.stream()
+                        .filter(r -> filters.contains(r.getCurrentStatus()))
+                        .collect(Collectors.toCollection(ArrayList::new));
+                requests.complete(requestTempList);
+            }
+            else {
+                requests.completeExceptionally(t);
             }
         });
-        return objectToReturn;
+        return requests;
     }
 
     /**
      * Method to get all Requests from database
      *
-     * @return object Route (which contains either all Requests or an error)
+     * @return a CompletableFuture that will be completed with either an ArrayList of Requests or a Throwable
      */
-    public ArrayList<Request> getAllRequests() {
-        final ArrayList<Request> objectToReturn = new ArrayList<>();
+    public CompletableFuture<ArrayList<Request>> getAllRequests() {
+        final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
         _findAllRequests((result, t) -> {
             if (t == null) {
-                objectToReturn.addAll(result);
+                requests.complete(result);
+            }
+            else {
+                requests.completeExceptionally(t);
             }
         });
-        return objectToReturn;
+        return requests;
+    }
+
+
+    /**
+     * Method to insert a Request into database
+     *
+     * @param request the Request object to insert
+     * @return a CompletableFuture that will be completed with a boolean denoting the success of the operation
+     */
+    public CompletableFuture<Boolean> putRequest(Request request) {
+        final CompletableFuture<Boolean> insertedRequest = new CompletableFuture<>();
+        _putRequest(request.toBSON(), (result, t) -> {
+            if (t == null) {
+                log.info("Successfully inserted Request " + request.getRequest_id() + " into requests collection!");
+                insertedRequest.complete(true);
+            }
+            else {
+                log.error("Unable to insert Request " + request.getRequest_id() + " into requests collection!");
+                insertedRequest.complete(false);
+            }
+        });
+        return insertedRequest;
     }
 
     // TODO : putRequests useful ?
@@ -130,7 +168,7 @@ public class MongoController extends AllDirectives {
                 log.info("Drop of the iQAS database successful!");
             }
             else {
-                log.info("Drop of the iQAS database failed: " + t.toString());
+                log.error("Drop of the iQAS database failed: " + t.toString());
             }
         });
     }
@@ -150,7 +188,7 @@ public class MongoController extends AllDirectives {
                 log.info("Drop of the " + collectionName + " collection successful!");
             }
             else {
-                log.info("Drop of the " + collectionName + " collection failed: " + t.toString());
+                log.error("Drop of the " + collectionName + " collection failed: " + t.toString());
             }
         });
     }
@@ -174,11 +212,11 @@ public class MongoController extends AllDirectives {
                     log.info("Sensors inserted into sensors collection!");
                 }
                 else {
-                    log.info("Failed to insert sensors");
+                    log.error("Failed to insert sensors");
                 }
             });
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
+        } catch (Throwable t) {
+            log.error("Unable to insert sensors into iQAS database: " + t.toString());
         }
     }
 }

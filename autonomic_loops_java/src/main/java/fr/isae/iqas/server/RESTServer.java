@@ -44,21 +44,21 @@ public class RESTServer extends AllDirectives {
         return CompletableFuture.supplyAsync(() -> mongoRESTController.getAllRequests(), ctx);
     }
 
-    private CompletionStage<Route> putRequest(Executor ctx, Request req) {
-        return CompletableFuture.supplyAsync(() -> mongoRESTController.putRequest(req), ctx);
+    private CompletionStage<Route> putRequest(Executor ctx, Request request) {
+        return CompletableFuture.supplyAsync(() -> mongoRESTController.forwardRequestToAPIGateway(request), ctx);
     }
 
     public Route createRoute() {
 
-        // TODO: to keep?
-        Route iqasRequest =
+        // TODO: somehow useful?
+        /*Route iqasRequest =
                 parameterOptional("name", optName -> {
                     String name = optName.orElse("Mister X");
                     //return extractExecutionContext(ctx -> onSuccess(() -> mongoController.getSensor(), Function.identity()));
                     //CompletionStage<List<VirtualSensor>> result = mongoController.getSensor();
                     //return completeOKWithFuture(result, Jackson.<List<VirtualSensor>>marshaller());
                     return null;
-                });
+                });*/
 
         return
                 route(
