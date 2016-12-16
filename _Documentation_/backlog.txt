@@ -1,0 +1,26 @@
+Implementation
+
++++ Virtual Sensors +++
+-Add hazard events
+-Improve obs generation (real/adapted timestamp)
+
++++ iQAS platform +++
+-Class for Symptoms > Plans
+-Class for Executions (according to the MAPE-K loop RD / Info)
+-Define RFC for each MAPE-K loop
+-Notification Service (actor)
+-iQAS monitoring service (pour MAPE-K, Kafka and cluster metrics only)
+-Add Knowledge layer
+
++++ Consumers +++
+-Real-time consuming (graph, pie charts?)
+
+Evaluation
+
+-Duration of service interruption in case of a sensor failure and available candidate
+-Number of satisfied requests
+-Number of obs/sec delivered
+-Number of obs/s processed
+-Sensor battery with/without specific adaptation strategies
+-obs latency (mean/max/min/std)
+-Time to take into account new symptom, remedy (if class loader)
