@@ -2,32 +2,16 @@ package fr.isae.iqas;
 
 import org.apache.jena.ontology.*;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.reasoner.Reasoner;
-import org.apache.jena.reasoner.ReasonerRegistry;
-import org.apache.jena.reasoner.ValidityReport;
-import org.apache.jena.util.FileManager;
 import org.apache.jena.util.PrintUtil;
-import org.apache.jena.util.iterator.ExtendedIterator;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDFS;
-import org.apache.log4j.Logger;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.Iterator;
-import java.util.Properties;
-import java.util.concurrent.CompletionStage;
-import java.util.logging.Level;
 
-import static org.apache.jena.ontology.OntModelSpec.*;
+import static org.apache.jena.ontology.OntModelSpec.OWL_MEM_MICRO_RULE_INF;
 
 /**
  * Created by an.auger on 17/01/2017.
  */
 public class MainClass {
-    private static Logger logger = Logger.getLogger(MainClass.class);
-
     static void printStatements(Model m, Resource s, Property p, Resource o) {
         for (StmtIterator i = m.listStatements(s, p, o); i.hasNext(); ) {
             Statement stmt = i.nextStatement();
@@ -36,87 +20,97 @@ public class MainClass {
     }
 
     public static void main(String[] args) throws Exception {
+        String schemaLocation = "file:/Users/an.auger/Desktop/iQAS_ontology/qoo-ontology.rdf";
+        String qooIRI = "http://isae.fr/iqas/qoo-ontology#";
+        String ssnIRI = "http://purl.oclc.org/NET/ssnx/ssn#";
+        String iotliteIRI = "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#";
+        String geoIRI = "http://www.w3.org/2003/01/geo/wgs84_pos#";
 
-        // Make a TDB-backed dataset
-        String schemaLocation = "/Users/an.auger/Desktop/pizza_clean.owl";
-        String directory = "/Users/an.auger/Software/TDB_store";
-        String ontologyIRI = "http://www.co-ode.org/ontologies/pizza/pizza.owl";
-        String NS = ontologyIRI + "#";
+        OntDocumentManager mgr = new OntDocumentManager();
+        //mgr.setProcessImports(false);
+        OntModelSpec s = new OntModelSpec( OntModelSpec.OWL_MEM);
+        s.setDocumentManager(mgr);
+        OntModel ontModelBase = ModelFactory.createOntologyModel(s);
+        ontModelBase.read(schemaLocation, "RDF/XML");
 
-        OntModel base = ModelFactory.createOntologyModel( OntModelSpec.OWL_MEM );
+        Model otherModel = ontModelBase.read("file:/Users/an.auger/Desktop/iQAS_ontology/sensors.jsonld", "JSON-LD");
 
-        OntModel ontModel = ModelFactory.createOntologyModel( OntModelSpec.OWL_MEM_RULE_INF );
-        ontModel.read( schemaLocation );
-        OntClass a = ontModel.getOntClass( NS + "Giardiniera" );
-        OntClass c = ontModel.getOntClass(NS + "CheeseyPizza");
+        ontModelBase.add(otherModel);
 
-        Reasoner reasoner = ReasonerRegistry.getOWLReasoner();
-        reasoner = reasoner.bindSchema(ontModel);
-        reasoner.setDerivationLogging(true);
+        // create the reasoning model using the base
+        OntModel inf = ModelFactory.createOntologyModel( OWL_MEM_MICRO_RULE_INF, ontModelBase );
 
-        InfModel infModel = ModelFactory.createInfModel (reasoner, ontModel);
+        //Properties
+        Property onPlatform = inf.getProperty( ssnIRI + "onPlatform" );
+        Property provides = inf.getProperty( qooIRI + "provides" );
+        Property supports = inf.getProperty( qooIRI + "supports" );
+        Property isSupportedBy = inf.getProperty( qooIRI + "isSupportedBy" );
 
-        StmtIterator i = infModel.listStatements(a, null, (RDFNode) null);
-        while(i.hasNext()){
-            Statement s = i.nextStatement();
-            System.out.println("Statement: \n" + s.asTriple()); //turtle format
+
+        Individual iqas = inf.getIndividual( qooIRI + "iQAS" );
+        Property attachedSystem = inf.getProperty(ssnIRI + "attachedSystem");
+        NodeIterator attachedToIQAS = iqas.listPropertyValues(attachedSystem);
+        for (NodeIterator i = attachedToIQAS; i.hasNext(); ) {
+            System.out.println( "Attached: " + i.next() );
         }
 
-        FileManager.get().addLocatorClassLoader(MainClass.class.getClassLoader());
 
-        //Model tbox = FileManager.get().loadModel("/Users/an.auger/Desktop/pizza_clean.owl", null, "RDF/XML"); // http://en.wikipedia.org/wiki/Tbox
-        OntModel base2 = ModelFactory.createOntologyModel(OWL_MEM);
-        FileInputStream in = null;
-        try {
-            in = new FileInputStream("/Users/an.auger/Desktop/pizza_clean.owl");
-        } catch(FileNotFoundException ex)
-        {
-            logger.error(ex);
+        //TODO replace
+        OntClass sensingDevice = inf.getOntClass( qooIRI + "visibility" );
+        Individual sensor01 = inf.getIndividual( qooIRI + "visibility" );
+
+
+        /*List<RDFNode> r = sensor01.listPropertyValues(hasMeasurementCapability).toList();
+        Individual o = inf.getIndividual(r.get(0).toString());
+
+        RDFNode q = o.getPropertyValue(hasMeasurementProperty);
+        Individual p = inf.getIndividual(q.toString());*/
+
+
+        // list the asserted types
+        for (Iterator<Resource> i = sensor01.listRDFTypes(false); i.hasNext(); ) {
+            System.out.println( iqas.getURI() + " is asserted in class " + i.next() );
         }
-        base2.read(in,null,null);
-
-        OntModel inf = ModelFactory.createOntologyModel(OWL_MEM_MICRO_RULE_INF, base2);
-        OntClass paper = base2.getOntClass(NS + "FourSeasons");
-        Individual p1 = base2.createIndividual(NS + "paper1", paper);
-
-        /*Reasoner reasoner = ReasonerRegistry.getOWLMicroReasoner();
-        reasoner.bindSchema(ontModel);
-
-        InfModel infModel = ModelFactory.createInfModel(reasoner, ontModel);
-        Resource a = infModel.getResource( NS + "FourSeasons" );
-        Resource b = infModel.getResource( NS + "CheeseyPizza" );
-
-        if (infModel.contains(a, RDFS.subClassOf, b)) {
-            System.out.println("OK");
-        }
-        else {
-            System.out.println("NOK");
-        }*/
 
         // list the inferred types
-        p1 =inf.getIndividual(NS +"paper1");
-        for(Iterator<Resource> j = p1.listRDFTypes(true); i.hasNext(); )
-        {
-            System.out.println(p1.getURI() + " is inferred to be in class " + j.next());
+        for (Iterator<Resource> i = sensor01.listRDFTypes(false); i.hasNext(); ) {
+            System.out.println( iqas.getURI() + " is inferred to be in class " + i.next() );
         }
 
-        OntClass artefact = inf.getOntClass(NS + "FourSeasons");
-        for(Iterator<OntClass> k = artefact.listSubClasses(); i.hasNext(); )
-        {
-            OntClass d = k.next();
-            System.out.println(d.getURI());
+        // list the individuals
+        /*for (ExtendedIterator<? extends OntResource> i = sensor01.listInstances(); i.hasNext(); ) {
+            System.out.println( i.next() );
+        }*/
+
+        // list the properties
+        for (StmtIterator i = sensor01.listProperties(); i.hasNext(); ) {
+            System.out.println( i.next() );
         }
 
-        /*StmtIterator i = infModel.listStatements(a, null, (RDFNode) null);
-        while(i.hasNext()){
-            Statement s = i.nextStatement();
-            System.out.println("Statement: \n" + s.asTriple()); //turtle format
+
+
+
+        //Tests
+
+        /*if (inf.contains(node1, onPlatform, iqas)) {
+            System.out.println("Node1 is on platform iQAS");
+        } else {
+            System.out.println("Node1 IS NOT on platform iQAS");
         }
 
-        StmtIterator j = infModel.listStatements(b, null, (RDFNode) null);
-        while(j.hasNext()){
-            Statement s = j.nextStatement();
-            System.out.println("Statement: \n" + s.asTriple()); //turtle format
+        if (inf.contains(iqas, provides, filteringMech)) {
+            System.out.println("iQAS provides Filtering mechanism");
+        } else {
+            System.out.println("iQAS DOES NOT provide Filtering mechanism");
+        }
+
+        for (ExtendedIterator<Individual> i = inf.listIndividuals(operators); i.hasNext(); ) {
+            Individual curr = i.next();
+            if (inf.contains(curr, isSupportedBy, filteringMech)) {
+                System.out.println("FilteringMech supports " + curr.getLocalName() + " operator");
+            } else {
+                System.out.println("FilteringMech DOES NOT support " + curr.getLocalName() + " operator");
+            }
         }*/
 }
 
