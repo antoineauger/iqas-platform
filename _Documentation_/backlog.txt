@@ -5,12 +5,12 @@ Implementation
 -Improve obs generation (real/adapted timestamp)
 
 +++ iQAS platform +++
+-Add Knowledge layer
 -Class for Symptoms > Plans
 -Class for Executions (according to the MAPE-K loop RD / Info)
 -Define RFC for each MAPE-K loop
 -Notification Service (actor)
 -iQAS monitoring service (pour MAPE-K, Kafka and cluster metrics only)
--Add Knowledge layer
 
 +++ Consumers +++
 -Real-time consuming (graph, pie charts?)
@@ -24,3 +24,4 @@ Evaluation
 -Sensor battery with/without specific adaptation strategies
 -obs latency (mean/max/min/std)
 -Time to take into account new symptom, remedy (if class loader)
+-Time vs ontology complexity
