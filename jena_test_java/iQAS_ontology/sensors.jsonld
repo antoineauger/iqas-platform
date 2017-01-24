@@ -1,0 +1,51 @@
+{
+  "@context": {
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "iot-lite": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#",
+    "ssn": "http://purl.oclc.org/NET/ssnx/ssn#",
+    "qoo": "http://isae.fr/iqas/qoo-ontology#",
+    "geo": "http://www.w3.org/2003/01/geo/wgs84_pos#"
+  },
+  "@graph": 
+  [
+    {
+      "@id": "ssn:iQAS",
+      "@type": "ssn:Platform",
+      "ssn:provides": {
+        "@id": "ssn:MAX",
+        "@type": "qoo:Mechanisms"
+      }
+    },
+    {
+      "@id": "ssn:sensor123",
+      "@type": "ssn:SensingDevice",
+      "iot-lite:id": "TestID",
+      "geo:location": {
+        "@id": "qoo:loc_sensor123",
+        "@type": "geo:Point",
+        "geo:lat": "5.45",
+        "geo:long": "5.45",
+        "geo:alt": "2",
+        "iot-lite:relativeLocation": "TestLocation",
+        "iot-lite:altRelative": "1"
+      },
+      "iot-lite:exposes": 
+      [
+        {
+          "@id": "iot-lite:serv1_sensor123",
+          "@type": "iot-lite:Service",
+          "iot-lite:interfaceType": 1.0,
+          "iot-lite:endpoint": "http://www.test.fr",
+          "iot-lite:interfaceDescription": "http://www.test.fr"
+        },
+        {
+          "@id": "iot-lite:serv2_sensor123",
+          "@type": "iot-lite:Service",
+          "iot-lite:interfaceType": 2.0,
+          "iot-lite:endpoint": "http://www.test2.fr",
+          "iot-lite:interfaceDescription": "http://www.test2.fr"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:qu="http://purl.org/NET/ssnx/qu/qu#"
+    xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
+    xmlns:qoo="http://isae.fr/iqas/qoo-ontology#"
+    xmlns:ssn="http://purl.oclc.org/NET/ssnx/ssn#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:terms="http://purl.org/dc/terms/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:iot-lite="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#"
+    xmlns:time="http://www.w3.org/2006/time#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:m3-lite="http://purl.org/iot/vocab/m3-lite#"
+    xmlns:qu-rec20="http://purl.org/NET/ssnx/qu/qu-rec20#"
+    xmlns:ns="http://creativecommons.org/ns#"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+
+    <qoo:Mechanisms rdf:about="qoo:mechanism1"/>
+
+</rdf:RDF>

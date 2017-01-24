@@ -1,15 +1,16 @@
 <?xml version="1.0"?>
 <Ontology xmlns="http://www.w3.org/2002/07/owl#"
-     xml:base="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#"
+     xml:base="http://isae.fr/iqas/qoo-ontology#"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:xml="http://www.w3.org/XML/1998/namespace"
      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-     ontologyIRI="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#">
-    <Prefix name="" IRI="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#"/>
+     ontologyIRI="http://isae.fr/iqas/qoo-ontology#">
+    <Prefix name="" IRI="http://isae.fr/iqas/qoo-ontology#"/>
     <Prefix name="qu" IRI="http://purl.org/NET/ssnx/qu/qu#"/>
     <Prefix name="geo" IRI="http://www.w3.org/2003/01/geo/wgs84_pos#"/>
     <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="qoo" IRI="http://isae.fr/iqas/qoo-ontology#"/>
     <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
     <Prefix name="ssn" IRI="http://purl.oclc.org/NET/ssnx/ssn#"/>
     <Prefix name="xml" IRI="http://www.w3.org/XML/1998/namespace"/>
@@ -21,68 +22,96 @@
     <Prefix name="qu-rec20" IRI="http://purl.org/NET/ssnx/qu/qu-rec20#"/>
     <Annotation>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">iot-lite</Literal>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">qoo-ontology</Literal>
     </Annotation>
     <Annotation>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">iot-lite is a lightweight ontology based on SSN to describe Internet of Things (IoT) concepts and relationships.</Literal>
+        <AnnotationProperty IRI="http://purl.org/dc/elements/1.1/description"/>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">The qoo-ontology is a lightweight ontology based on IoT-Lite and SSN to describe and characterized sensors, observations and Quality of Observation (QoO).</Literal>
+    </Annotation>
+    <Annotation>
+        <AnnotationProperty abbreviatedIRI="owl:versionInfo"/>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">1.0.0</Literal>
+    </Annotation>
+    <Annotation>
+        <AnnotationProperty IRI="http://purl.org/dc/elements/1.1/creator"/>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Antoine Auger</Literal>
+    </Annotation>
+    <Annotation>
+        <AnnotationProperty IRI="http://purl.org/dc/elements/1.1/title"/>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">The QoO Ontology (QoOnto)</Literal>
+    </Annotation>
+    <Annotation>
+        <AnnotationProperty IRI="http://purl.org/dc/elements/1.1/date"/>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">January 2017</Literal>
     </Annotation>
     <Declaration>
-        <ObjectProperty IRI="isProvidedBy"/>
+        <ObjectProperty abbreviatedIRI="iot-lite:isAssociatedWith"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Mechanisms"/>
+        <DataProperty IRI="obsLifetimeValue"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="isAssociatedWith"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="VirtualEntity"/>
+        <Class abbreviatedIRI="iot-lite:VirtualEntity"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="geo:alt"/>
     </Declaration>
     <Declaration>
-        <Class IRI="QualityofObservation"/>
+        <DataProperty abbreviatedIRI="iot-lite:endpoint"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="endpoint"/>
+        <DataProperty IRI="batteryLifetimeValue"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Aggregation"/>
+        <Class IRI="ObsMetadata"/>
     </Declaration>
     <Declaration>
-        <Class IRI="&apos;BatteryLifetime&apos;"/>
+        <DataProperty IRI="metadataType"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="sensingRateValue"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
     </Declaration>
     <Declaration>
+        <DataProperty abbreviatedIRI="iot-lite:radius"/>
+    </Declaration>
+    <Declaration>
         <Class abbreviatedIRI="ssn:Sensor"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="radius"/>
+        <Class abbreviatedIRI="iot-lite:Polygon"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Polygon"/>
+        <NamedIndividual IRI="AGGREGATION"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Fusion"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="Freshness"/>
+        <Class IRI="ObsFreshness"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="geo:long"/>
     </Declaration>
     <Declaration>
+        <Class IRI="&apos;BatteryLifetime&apos;"/>
+    </Declaration>
+    <Declaration>
         <Class abbreviatedIRI="qu:QuantityKind"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="obsLevelValue"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="MEAN"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="usedToCharacterized"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Lifetime"/>
+        <DataProperty IRI="obsAccuracyValue"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="Mechanisms"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="geo:Point"/>
@@ -91,40 +120,58 @@
         <Class abbreviatedIRI="ssn:Device"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="qu:Unit"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="ssn:Property"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="CurrentSettings"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="hasMetadata"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="interfaceType"/>
+        <Class IRI="Attributes"/>
     </Declaration>
     <Declaration>
         <Class IRI="SensingRate"/>
     </Declaration>
     <Declaration>
+        <Class IRI="State"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="qu:Unit"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="MACHINELEARNING"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:Property"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty abbreviatedIRI="iot-lite:interfaceType"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="isProvidedBy"/>
+    </Declaration>
+    <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="hasQuantityKind"/>
+        <Class IRI="CurrentSettings"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Circle"/>
+        <AnnotationProperty IRI="http://purl.org/dc/elements/1.1/description"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Coverage"/>
+        <NamedIndividual IRI="FILTERING"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasQuantityKind"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="iot-lite:Circle"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="iot-lite:Coverage"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="iot-lite:isSubSystemOf"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="MAX"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasValue"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="isSubSystemOf"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:SensingDevice"/>
@@ -133,226 +180,177 @@
         <ObjectProperty IRI="isRelatedTo"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="state"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="hasSensingDevice"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="Entity"/>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasSensingDevice"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:System"/>
     </Declaration>
     <Declaration>
+        <Class abbreviatedIRI="iot-lite:Entity"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty abbreviatedIRI="iot-lite:interfaceDescription"/>
+    </Declaration>
+    <Declaration>
         <AnnotationProperty abbreviatedIRI="geo:lat"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="interfaceDescription"/>
+        <Class IRI="Operators"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty IRI="relativeLocation"/>
+        <AnnotationProperty abbreviatedIRI="iot-lite:relativeLocation"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Service"/>
+        <Class abbreviatedIRI="iot-lite:Service"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:onPlatform"/>
     </Declaration>
     <Declaration>
-        <Class IRI="State"/>
+        <ObjectProperty IRI="isSupportedBy"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="FUSION"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:Platform"/>
     </Declaration>
     <Declaration>
-        <Class IRI="ObservationLevel"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="isMobile"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="Attributes"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="exposedBy"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="ssn:ObservationValue"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="Metadata"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="MachineLearning"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="id"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="hasCoverage"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:observedBy"/>
-    </Declaration>
-    <Declaration>
-        <AnnotationProperty IRI="altRelative"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="provides"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="exposes"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="metadataValue"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="geo:location"/>
+        <ObjectProperty IRI="hasMetadata"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="hasQuality"/>
     </Declaration>
     <Declaration>
+        <Class IRI="ObsLifetime"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="iot-lite:exposedBy"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="metadataValue"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:ObservationValue"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="ssn:observedBy"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty abbreviatedIRI="iot-lite:id"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="sensorStateValue"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty abbreviatedIRI="iot-lite:altRelative"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="provides"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="iot-lite:exposes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="geo:location"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
+    </Declaration>
+    <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasProperty"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="metadataType"/>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasCurrently"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="hasCurrently"/>
+        <NamedIndividual IRI="MIN"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Accuracy"/>
+        <Class IRI="QualityofObservation"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Filtering"/>
+        <Class abbreviatedIRI="iot-lite:Rectangle"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Rectangle"/>
+        <Class IRI="ObsAccuracy"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="hasUnit"/>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasUnit"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="ObsLevel"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:Observation"/>
     </Declaration>
-    <SubClassOf>
-        <Class IRI="Accuracy"/>
-        <Class IRI="Attributes"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="Aggregation"/>
-        <Class IRI="Mechanisms"/>
-    </SubClassOf>
+    <Declaration>
+        <DataProperty IRI="freshnessValue"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="supports"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty abbreviatedIRI="iot-lite:observationValue"/>
+    </Declaration>
     <SubClassOf>
         <Class IRI="Attributes"/>
         <Class IRI="QualityofObservation"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="Attributes"/>
-        <ObjectAllValuesFrom>
-            <ObjectProperty IRI="usedToCharacterized"/>
-            <Class abbreviatedIRI="ssn:ObservationValue"/>
-        </ObjectAllValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="Attributes"/>
-        <ObjectExactCardinality cardinality="1">
-            <ObjectProperty IRI="usedToCharacterized"/>
-            <Class abbreviatedIRI="ssn:ObservationValue"/>
-        </ObjectExactCardinality>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="Circle"/>
-        <Class IRI="Coverage"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="Filtering"/>
-        <Class IRI="Mechanisms"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="Freshness"/>
-        <Class IRI="Attributes"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="Fusion"/>
-        <Class IRI="Mechanisms"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="Lifetime"/>
-        <Class IRI="Attributes"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="MachineLearning"/>
-        <Class IRI="Mechanisms"/>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="Mechanisms"/>
         <Class IRI="QualityofObservation"/>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="Mechanisms"/>
-        <ObjectAllValuesFrom>
-            <ObjectProperty IRI="isProvidedBy"/>
-            <Class abbreviatedIRI="ssn:Platform"/>
-        </ObjectAllValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="Mechanisms"/>
-        <ObjectExactCardinality cardinality="1">
-            <ObjectProperty IRI="isProvidedBy"/>
-            <Class abbreviatedIRI="ssn:Platform"/>
-        </ObjectExactCardinality>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="Metadata"/>
+        <Class IRI="ObsAccuracy"/>
         <Class IRI="Attributes"/>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="ObservationLevel"/>
+        <Class IRI="ObsFreshness"/>
         <Class IRI="Attributes"/>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="Polygon"/>
-        <Class IRI="Coverage"/>
+        <Class IRI="ObsLevel"/>
+        <Class IRI="Attributes"/>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="Rectangle"/>
-        <Class IRI="Coverage"/>
+        <Class IRI="ObsLifetime"/>
+        <Class IRI="Attributes"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="ObsMetadata"/>
+        <Class IRI="Attributes"/>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="SensingRate"/>
         <Class IRI="CurrentSettings"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="SensingRate"/>
-        <ObjectAllValuesFrom>
-            <ObjectProperty IRI="isRelatedTo"/>
-            <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
-        </ObjectAllValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="SensingRate"/>
-        <ObjectExactCardinality cardinality="1">
-            <ObjectProperty IRI="isRelatedTo"/>
-            <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
-        </ObjectExactCardinality>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="State"/>
         <Class IRI="CurrentSettings"/>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="VirtualEntity"/>
-        <Class IRI="Entity"/>
-    </SubClassOf>
-    <SubClassOf>
         <Class IRI="&apos;BatteryLifetime&apos;"/>
         <Class IRI="CurrentSettings"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="iot-lite:Circle"/>
+        <Class abbreviatedIRI="iot-lite:Coverage"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="iot-lite:Polygon"/>
+        <Class abbreviatedIRI="iot-lite:Coverage"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="iot-lite:Rectangle"/>
+        <Class abbreviatedIRI="iot-lite:Coverage"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="iot-lite:VirtualEntity"/>
+        <Class abbreviatedIRI="iot-lite:Entity"/>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Accuracy"/>
@@ -468,27 +466,6 @@
         </ObjectExactCardinality>
     </SubClassOf>
     <SubClassOf>
-        <Class abbreviatedIRI="ssn:ObservationValue"/>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="hasQuality"/>
-            <Class IRI="Attributes"/>
-        </ObjectSomeValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class abbreviatedIRI="ssn:ObservationValue"/>
-        <ObjectAllValuesFrom>
-            <ObjectProperty IRI="hasQuality"/>
-            <Class IRI="Attributes"/>
-        </ObjectAllValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class abbreviatedIRI="ssn:Platform"/>
-        <ObjectAllValuesFrom>
-            <ObjectProperty IRI="provides"/>
-            <Class IRI="Mechanisms"/>
-        </ObjectAllValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
         <Class abbreviatedIRI="ssn:Precision"/>
         <Class abbreviatedIRI="ssn:MeasurementProperty"/>
     </SubClassOf>
@@ -533,31 +510,49 @@
         </ObjectSomeValuesFrom>
     </SubClassOf>
     <DisjointClasses>
-        <Class IRI="Accuracy"/>
-        <Class IRI="Freshness"/>
-        <Class IRI="Lifetime"/>
-        <Class IRI="Metadata"/>
-        <Class IRI="ObservationLevel"/>
-    </DisjointClasses>
-    <DisjointClasses>
-        <Class IRI="Aggregation"/>
-        <Class IRI="Filtering"/>
-        <Class IRI="Fusion"/>
-        <Class IRI="MachineLearning"/>
-    </DisjointClasses>
-    <DisjointClasses>
         <Class IRI="Attributes"/>
         <Class IRI="Mechanisms"/>
+    </DisjointClasses>
+    <DisjointClasses>
+        <Class IRI="ObsAccuracy"/>
+        <Class IRI="ObsFreshness"/>
+        <Class IRI="ObsLevel"/>
+        <Class IRI="ObsLifetime"/>
+        <Class IRI="ObsMetadata"/>
     </DisjointClasses>
     <DisjointClasses>
         <Class IRI="SensingRate"/>
         <Class IRI="State"/>
         <Class IRI="&apos;BatteryLifetime&apos;"/>
     </DisjointClasses>
-    <InverseObjectProperties>
-        <ObjectProperty IRI="exposedBy"/>
-        <ObjectProperty IRI="exposes"/>
-    </InverseObjectProperties>
+    <ClassAssertion>
+        <Class IRI="Mechanisms"/>
+        <NamedIndividual IRI="AGGREGATION"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="Mechanisms"/>
+        <NamedIndividual IRI="FILTERING"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="Mechanisms"/>
+        <NamedIndividual IRI="FUSION"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="Mechanisms"/>
+        <NamedIndividual IRI="MACHINELEARNING"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="Operators"/>
+        <NamedIndividual IRI="MAX"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="Operators"/>
+        <NamedIndividual IRI="MEAN"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="Operators"/>
+        <NamedIndividual IRI="MIN"/>
+    </ClassAssertion>
     <InverseObjectProperties>
         <ObjectProperty IRI="hasQuality"/>
         <ObjectProperty IRI="usedToCharacterized"/>
@@ -567,7 +562,15 @@
         <ObjectProperty IRI="provides"/>
     </InverseObjectProperties>
     <InverseObjectProperties>
-        <ObjectProperty IRI="isSubSystemOf"/>
+        <ObjectProperty IRI="isSupportedBy"/>
+        <ObjectProperty IRI="supports"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty abbreviatedIRI="iot-lite:exposedBy"/>
+        <ObjectProperty abbreviatedIRI="iot-lite:exposes"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty abbreviatedIRI="iot-lite:isSubSystemOf"/>
         <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
     </InverseObjectProperties>
     <InverseObjectProperties>
@@ -575,40 +578,12 @@
         <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
     </InverseObjectProperties>
     <ObjectPropertyDomain>
-        <ObjectProperty IRI="exposedBy"/>
-        <Class abbreviatedIRI="ssn:Device"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="exposes"/>
-        <Class IRI="Service"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="hasCoverage"/>
-        <Class abbreviatedIRI="ssn:Device"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="hasCurrently"/>
-        <Class abbreviatedIRI="ssn:Sensor"/>
+        <ObjectProperty IRI="hasMetadata"/>
+        <Class IRI="Attributes"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="hasQuality"/>
         <Class abbreviatedIRI="ssn:ObservationValue"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="hasQuantityKind"/>
-        <Class abbreviatedIRI="ssn:ObservationValue"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="hasSensingDevice"/>
-        <Class abbreviatedIRI="ssn:Sensor"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="hasUnit"/>
-        <Class abbreviatedIRI="ssn:ObservationValue"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="isAssociatedWith"/>
-        <Class IRI="Entity"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="isProvidedBy"/>
@@ -619,16 +594,56 @@
         <Class IRI="SensingRate"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
-        <ObjectProperty IRI="isSubSystemOf"/>
-        <Class abbreviatedIRI="ssn:System"/>
+        <ObjectProperty IRI="isSupportedBy"/>
+        <Class IRI="Operators"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="provides"/>
         <Class abbreviatedIRI="ssn:Platform"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
+        <ObjectProperty IRI="supports"/>
+        <Class IRI="Mechanisms"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
         <ObjectProperty IRI="usedToCharacterized"/>
         <Class IRI="Attributes"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="iot-lite:exposedBy"/>
+        <Class abbreviatedIRI="ssn:Device"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="iot-lite:exposes"/>
+        <Class abbreviatedIRI="iot-lite:Service"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
+        <Class abbreviatedIRI="ssn:Device"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasCurrently"/>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasQuantityKind"/>
+        <Class abbreviatedIRI="ssn:ObservationValue"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasSensingDevice"/>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasUnit"/>
+        <Class abbreviatedIRI="ssn:ObservationValue"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="iot-lite:isAssociatedWith"/>
+        <Class abbreviatedIRI="iot-lite:Entity"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="iot-lite:isSubSystemOf"/>
+        <Class abbreviatedIRI="ssn:System"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty abbreviatedIRI="ssn:featureOfInterest"/>
@@ -691,44 +706,12 @@
         <Class abbreviatedIRI="ssn:SensingDevice"/>
     </ObjectPropertyDomain>
     <ObjectPropertyRange>
-        <ObjectProperty IRI="exposedBy"/>
-        <Class IRI="Service"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="exposes"/>
-        <Class abbreviatedIRI="ssn:Device"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="hasCoverage"/>
-        <Class IRI="Coverage"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="hasCurrently"/>
-        <Class IRI="CurrentSettings"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
         <ObjectProperty IRI="hasMetadata"/>
-        <Class IRI="Metadata"/>
+        <Class IRI="ObsMetadata"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty IRI="hasQuality"/>
         <Class IRI="Attributes"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="hasQuantityKind"/>
-        <Class abbreviatedIRI="qu:QuantityKind"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="hasSensingDevice"/>
-        <Class abbreviatedIRI="ssn:SensingDevice"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="hasUnit"/>
-        <Class abbreviatedIRI="qu:Unit"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="isAssociatedWith"/>
-        <Class IRI="Service"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty IRI="isProvidedBy"/>
@@ -739,16 +722,56 @@
         <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
-        <ObjectProperty IRI="isSubSystemOf"/>
-        <Class abbreviatedIRI="ssn:System"/>
+        <ObjectProperty IRI="isSupportedBy"/>
+        <Class IRI="Mechanisms"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty IRI="provides"/>
         <Class IRI="Mechanisms"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
+        <ObjectProperty IRI="supports"/>
+        <Class IRI="Operators"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
         <ObjectProperty IRI="usedToCharacterized"/>
         <Class abbreviatedIRI="ssn:ObservationValue"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="iot-lite:exposedBy"/>
+        <Class abbreviatedIRI="iot-lite:Service"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="iot-lite:exposes"/>
+        <Class abbreviatedIRI="ssn:Device"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
+        <Class abbreviatedIRI="iot-lite:Coverage"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasCurrently"/>
+        <Class IRI="CurrentSettings"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasQuantityKind"/>
+        <Class abbreviatedIRI="qu:QuantityKind"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasSensingDevice"/>
+        <Class abbreviatedIRI="ssn:SensingDevice"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasUnit"/>
+        <Class abbreviatedIRI="qu:Unit"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="iot-lite:isAssociatedWith"/>
+        <Class abbreviatedIRI="iot-lite:Service"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="iot-lite:isSubSystemOf"/>
+        <Class abbreviatedIRI="ssn:System"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty abbreviatedIRI="ssn:featureOfInterest"/>
@@ -811,60 +834,72 @@
         <Class abbreviatedIRI="geo:Point"/>
     </ObjectPropertyRange>
     <DataPropertyDomain>
-        <DataProperty IRI="endpoint"/>
-        <Class IRI="Service"/>
+        <DataProperty IRI="batteryLifetimeValue"/>
+        <Class IRI="&apos;BatteryLifetime&apos;"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
-        <DataProperty IRI="id"/>
+        <DataProperty IRI="freshnessValue"/>
+        <Class IRI="ObsFreshness"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="metadataType"/>
+        <Class IRI="ObsMetadata"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="metadataValue"/>
+        <Class IRI="ObsMetadata"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="obsAccuracyValue"/>
+        <Class IRI="ObsAccuracy"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="obsLevelValue"/>
+        <Class IRI="ObsLevel"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="obsLifetimeValue"/>
+        <Class IRI="ObsLifetime"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="sensingRateValue"/>
+        <Class IRI="SensingRate"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="sensorStateValue"/>
+        <Class IRI="State"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty abbreviatedIRI="iot-lite:endpoint"/>
+        <Class abbreviatedIRI="iot-lite:Service"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty abbreviatedIRI="iot-lite:id"/>
         <Class abbreviatedIRI="ssn:Device"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
-        <DataProperty IRI="interfaceDescription"/>
-        <Class IRI="Service"/>
+        <DataProperty abbreviatedIRI="iot-lite:interfaceDescription"/>
+        <Class abbreviatedIRI="iot-lite:Service"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
-        <DataProperty IRI="interfaceType"/>
-        <Class IRI="Service"/>
+        <DataProperty abbreviatedIRI="iot-lite:interfaceType"/>
+        <Class abbreviatedIRI="iot-lite:Service"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
-        <DataProperty IRI="isMobile"/>
-        <Class abbreviatedIRI="ssn:Platform"/>
+        <DataProperty abbreviatedIRI="iot-lite:observationValue"/>
+        <Class abbreviatedIRI="ssn:ObservationValue"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
-        <DataProperty IRI="metadataType"/>
-        <Class IRI="Metadata"/>
-    </DataPropertyDomain>
-    <DataPropertyDomain>
-        <DataProperty IRI="metadataValue"/>
-        <Class IRI="Metadata"/>
-    </DataPropertyDomain>
-    <DataPropertyDomain>
-        <DataProperty IRI="radius"/>
-        <Class IRI="Circle"/>
-    </DataPropertyDomain>
-    <DataPropertyDomain>
-        <DataProperty IRI="state"/>
-        <Class IRI="State"/>
+        <DataProperty abbreviatedIRI="iot-lite:radius"/>
+        <Class abbreviatedIRI="iot-lite:Circle"/>
     </DataPropertyDomain>
     <DataPropertyRange>
-        <DataProperty IRI="endpoint"/>
-        <Datatype abbreviatedIRI="xsd:anyURI"/>
-    </DataPropertyRange>
-    <DataPropertyRange>
-        <DataProperty IRI="id"/>
+        <DataProperty IRI="batteryLifetimeValue"/>
         <Datatype abbreviatedIRI="xsd:string"/>
     </DataPropertyRange>
     <DataPropertyRange>
-        <DataProperty IRI="interfaceDescription"/>
-        <Datatype abbreviatedIRI="xsd:anyURI"/>
-    </DataPropertyRange>
-    <DataPropertyRange>
-        <DataProperty IRI="interfaceType"/>
+        <DataProperty IRI="freshnessValue"/>
         <Datatype abbreviatedIRI="xsd:string"/>
-    </DataPropertyRange>
-    <DataPropertyRange>
-        <DataProperty IRI="isMobile"/>
-        <Datatype abbreviatedIRI="xsd:boolean"/>
     </DataPropertyRange>
     <DataPropertyRange>
         <DataProperty IRI="metadataType"/>
@@ -875,42 +910,53 @@
         <Datatype abbreviatedIRI="xsd:string"/>
     </DataPropertyRange>
     <DataPropertyRange>
-        <DataProperty IRI="radius"/>
+        <DataProperty IRI="obsAccuracyValue"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="obsLevelValue"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="obsLifetimeValue"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="sensingRateValue"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="sensorStateValue"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty abbreviatedIRI="iot-lite:endpoint"/>
+        <Datatype abbreviatedIRI="xsd:anyURI"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty abbreviatedIRI="iot-lite:id"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty abbreviatedIRI="iot-lite:interfaceDescription"/>
+        <Datatype abbreviatedIRI="xsd:anyURI"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty abbreviatedIRI="iot-lite:interfaceType"/>
         <Datatype abbreviatedIRI="xsd:double"/>
     </DataPropertyRange>
     <DataPropertyRange>
-        <DataProperty IRI="state"/>
+        <DataProperty abbreviatedIRI="iot-lite:observationValue"/>
         <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty abbreviatedIRI="iot-lite:radius"/>
+        <Datatype abbreviatedIRI="xsd:double"/>
     </DataPropertyRange>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>Circle</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Circle coverage it needs the location of the sensor as the centre of the circle and the radius as a DataProperty.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>Coverage</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">The coverage of an IoT device (i.e. a temperature sensor inside a room has a coverage of that room).</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>Entity</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">IoT entity</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>Metadata</IRI>
+        <IRI>ObsMetadata</IRI>
         <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Class used to describe other QoO attributes in a more generic way.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>Polygon</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">The coverage is made up by linking several points by strait lines.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>Rectangle</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Teh coverage is made up by giving two points which are the oposite corners of a rentangle.</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
@@ -919,68 +965,13 @@
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>Service</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Service provided by an IoT Device</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
         <IRI>State</IRI>
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Current state of a sensor (connected, disconnected, idle, sensing)</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>endpoint</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Endpoint of the service. It is usually a URL where the service is available.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>exposedBy</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">A device is exposed by a service.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>exposes</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">For service-oriented queries. The inverse of exposedBy.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>hasCoverage</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Links the devices with their coverages.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
         <IRI>hasMetadata</IRI>
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Links any concept with metadata about that concept.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>hasQuantityKind</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Links a sensor or an attribute with the quantity  kind it measures (e.g. A sensor -sensor1- measures temperature: sensor1 hasQuantityKind temperature).</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>hasSensingDevice</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Links a sensor with a sensing device the same way as SSN.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>hasUnit</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Links the sensor with the units of the quantity kind it measures (e.g. A sensor -sensor1- measures temperature in Celsius: senso1 hasUnit celsius).</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>interfaceDescription</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Description of the service.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>interfaceType</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Defines the type of interface of the service endpoint.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>isAssociatedWith</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Defines the associations between objects and sensors (e.g. A table (object) has an attribute (temperature at the table) which is associated with a sensor (the temperature sensor of the room). </Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
@@ -994,16 +985,96 @@
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>radius</IRI>
+        <AbbreviatedIRI>iot-lite:Circle</AbbreviatedIRI>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Circle coverage it needs the location of the sensor as the centre of the circle and the radius as a DataProperty.</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:Coverage</AbbreviatedIRI>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">The coverage of an IoT device (i.e. a temperature sensor inside a room has a coverage of that room).</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:Entity</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">IoT entity</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:Polygon</AbbreviatedIRI>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">The coverage is made up by linking several points by strait lines.</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:Rectangle</AbbreviatedIRI>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Teh coverage is made up by giving two points which are the oposite corners of a rentangle.</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:Service</AbbreviatedIRI>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Service provided by an IoT Device</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:endpoint</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Endpoint of the service. It is usually a URL where the service is available.</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:exposedBy</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">A device is exposed by a service.</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:exposes</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">For service-oriented queries. The inverse of exposedBy.</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:hasCoverage</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Links the devices with their coverages.</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:hasQuantityKind</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Links a sensor or an attribute with the quantity  kind it measures (e.g. A sensor -sensor1- measures temperature: sensor1 hasQuantityKind temperature).</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:hasSensingDevice</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Links a sensor with a sensing device the same way as SSN.</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:hasUnit</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Links the sensor with the units of the quantity kind it measures (e.g. A sensor -sensor1- measures temperature in Celsius: senso1 hasUnit celsius).</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:interfaceDescription</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Description of the service.</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:interfaceType</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Defines the type of interface of the service endpoint.</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:isAssociatedWith</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Defines the associations between objects and sensors (e.g. A table (object) has an attribute (temperature at the table) which is associated with a sensor (the temperature sensor of the room). </Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <AbbreviatedIRI>iot-lite:radius</AbbreviatedIRI>
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Specifies the radius of a circle coverage defined by a point -the center of the circle- and its radius.</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
-        <AnnotationProperty IRI="altRelative"/>
+        <AnnotationProperty abbreviatedIRI="iot-lite:altRelative"/>
         <AbbreviatedIRI>geo:Point</AbbreviatedIRI>
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral"></Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
-        <AnnotationProperty IRI="relativeLocation"/>
+        <AnnotationProperty abbreviatedIRI="iot-lite:relativeLocation"/>
         <AbbreviatedIRI>geo:Point</AbbreviatedIRI>
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral"></Literal>
     </AnnotationAssertion>
@@ -1023,19 +1094,19 @@
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral"></Literal>
     </AnnotationAssertion>
     <AnnotationPropertyRange>
-        <AnnotationProperty IRI="altRelative"/>
+        <AnnotationProperty abbreviatedIRI="iot-lite:altRelative"/>
         <AbbreviatedIRI>xsd:string</AbbreviatedIRI>
     </AnnotationPropertyRange>
     <AnnotationPropertyRange>
-        <AnnotationProperty IRI="relativeLocation"/>
+        <AnnotationProperty abbreviatedIRI="iot-lite:relativeLocation"/>
         <AbbreviatedIRI>xsd:string</AbbreviatedIRI>
     </AnnotationPropertyRange>
     <AnnotationPropertyDomain>
-        <AnnotationProperty IRI="altRelative"/>
+        <AnnotationProperty abbreviatedIRI="iot-lite:altRelative"/>
         <AbbreviatedIRI>geo:Point</AbbreviatedIRI>
     </AnnotationPropertyDomain>
     <AnnotationPropertyDomain>
-        <AnnotationProperty IRI="relativeLocation"/>
+        <AnnotationProperty abbreviatedIRI="iot-lite:relativeLocation"/>
         <AbbreviatedIRI>geo:Point</AbbreviatedIRI>
     </AnnotationPropertyDomain>
     <AnnotationPropertyDomain>
