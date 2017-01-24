@@ -20,7 +20,7 @@ public class MainClass {
     }
 
     public static void main(String[] args) throws Exception {
-        String schemaLocation = "file:/Users/an.auger/Desktop/iQAS_ontology/qoo-ontology.rdf";
+        String schemaLocation = "file:/Users/an.auger/Documents/GIT/iQAS_platform/jena_test_java/iQAS_ontology/qoo-ontology.rdf";
         String qooIRI = "http://isae.fr/iqas/qoo-ontology#";
         String ssnIRI = "http://purl.oclc.org/NET/ssnx/ssn#";
         String iotliteIRI = "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#";
@@ -33,7 +33,7 @@ public class MainClass {
         OntModel ontModelBase = ModelFactory.createOntologyModel(s);
         ontModelBase.read(schemaLocation, "RDF/XML");
 
-        Model otherModel = ontModelBase.read("file:/Users/an.auger/Desktop/iQAS_ontology/sensors.jsonld", "JSON-LD");
+        Model otherModel = ontModelBase.read("file:/Users/an.auger/Documents/GIT/iQAS_platform/jena_test_java/iQAS_ontology/sensors.jsonld", "JSON-LD");
 
         ontModelBase.add(otherModel);
 
