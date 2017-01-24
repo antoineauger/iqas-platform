@@ -19,8 +19,6 @@
     <Prefix name="m3-lite" IRI="http://purl.org/iot/vocab/m3-lite#"/>
     <Prefix name="iot-lite" IRI="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#"/>
     <Prefix name="qu-rec20" IRI="http://purl.org/NET/ssnx/qu/qu-rec20#"/>
-    <Import>http://purl.oclc.org/NET/ssnx/ssn</Import>
-    <Import>http://www.w3.org/2003/01/geo/wgs84_pos#Point</Import>
     <Annotation>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">iot-lite</Literal>

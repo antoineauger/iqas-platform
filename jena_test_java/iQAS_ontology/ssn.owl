@@ -256,10 +256,10 @@
         <AnnotationProperty abbreviatedIRI="dc:identifier"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#Stimulus"/>
+        <ObjectProperty abbreviatedIRI="DUL:describes"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:describes"/>
+        <Class IRI="#Stimulus"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="DUL:isParticipantIn"/>
@@ -277,10 +277,10 @@
         <ObjectProperty abbreviatedIRI="DUL:hasLocation"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#OperatingProperty"/>
+        <ObjectProperty IRI="#hasMeasurementProperty"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="#hasMeasurementProperty"/>
+        <Class IRI="#OperatingProperty"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#isProducedBy"/>
@@ -301,10 +301,10 @@
         <AnnotationProperty abbreviatedIRI="rdfs:seeAlso"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#Sensing"/>
+        <Class IRI="#SensorInput"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#SensorInput"/>
+        <Class IRI="#Sensing"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#implementedBy"/>
@@ -346,10 +346,10 @@
         <ObjectProperty abbreviatedIRI="DUL:isObjectIncludedIn"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="#inDeployment"/>
+        <Class IRI="#MeasurementProperty"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#MeasurementProperty"/>
+        <ObjectProperty IRI="#inDeployment"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="dc:title"/>
@@ -1069,6 +1069,21 @@
         </ObjectPropertyChain>
         <ObjectProperty IRI="#observes"/>
     </SubObjectPropertyOf>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
+        <IRI>http://purl.oclc.org/NET/UNIS/fiware/iot-lite#&apos;BatteryLifetime&apos;</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Remaining life of the battery.</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:isDefinedBy"/>
+        <IRI>http://purl.oclc.org/NET/UNIS/fiware/iot-lite#&apos;BatteryLifetime&apos;</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">http://purl.oclc.org/NET/ssnx/ssn</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:seeAlso"/>
+        <IRI>http://purl.oclc.org/NET/UNIS/fiware/iot-lite#&apos;BatteryLifetime&apos;</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">http://www.w3.org/2005/Incubator/ssn/wiki/SSN_Energy#EnergyRestriction</Literal>
+    </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="dc:source"/>
         <IRI>#Accuracy</IRI>
