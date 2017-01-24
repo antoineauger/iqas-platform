@@ -6,10 +6,10 @@
      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
      ontologyIRI="http://purl.oclc.org/NET/ssnx/ssn">
-    <Prefix name="" IRI="http://purl.oclc.org/NET/ssnx/ssn#"/>
+    <Prefix name="" IRI="http://purl.oclc.org/NET/ssnx/ssn"/>
     <Prefix name="cc" IRI="http://creativecommons.org/ns#"/>
     <Prefix name="dc" IRI="http://purl.org/dc/elements/1.1/"/>
-    <Prefix name="DUL" IRI="http://www.loa-cnr.it/ontologies/DUL.owl#"/>
+    <Prefix name="DUL" IRI="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#"/>
     <Prefix name="dct" IRI="http://purl.org/dc/terms/"/>
     <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
     <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
@@ -18,7 +18,7 @@
     <Prefix name="xsd" IRI="http://www.w3.org/2001/XMLSchema#"/>
     <Prefix name="rdfs" IRI="http://www.w3.org/2000/01/rdf-schema#"/>
     <Prefix name="skos" IRI="http://www.w3.org/2004/02/skos/core#"/>
-    <Import>http://www.loa-cnr.it/ontologies/DUL.owl</Import>
+    <Import>http://www.ontologydesignpatterns.org/ont/dul/DUL.owl</Import>
     <Annotation>
         <AnnotationProperty abbreviatedIRI="dc:creator"/>
         <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">W3C Semantic Sensor Network Incubator Group</Literal>
@@ -67,16 +67,7 @@
         <Class IRI="#DetectionLimit"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:describes"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:isSettingFor"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty IRI="#forProperty"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="DUL:InformationObject"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="rdfs:isDefinedBy"/>
@@ -97,6 +88,9 @@
         <Class IRI="#Sensor"/>
     </Declaration>
     <Declaration>
+        <Class abbreviatedIRI="DUL:Object"/>
+    </Declaration>
+    <Declaration>
         <AnnotationProperty abbreviatedIRI="cc:license"/>
     </Declaration>
     <Declaration>
@@ -106,19 +100,10 @@
         <ObjectProperty IRI="#observationResult"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:isLocationOf"/>
-    </Declaration>
-    <Declaration>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
     </Declaration>
     <Declaration>
         <Class IRI="#Condition"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:hasRegion"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="DUL:DesignedArtifact"/>
     </Declaration>
     <Declaration>
         <Class IRI="#Device"/>
@@ -130,16 +115,10 @@
         <ObjectProperty IRI="#hasMeasurementCapability"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="DUL:Process"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:isRegionFor"/>
-    </Declaration>
-    <Declaration>
         <Class IRI="#MeasurementCapability"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:isDescribedBy"/>
+        <Class abbreviatedIRI="DUL:Event"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#observes"/>
@@ -148,13 +127,13 @@
         <Class IRI="#Property"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="DUL:PhysicalObject"/>
+        <ObjectProperty abbreviatedIRI="DUL:isQualityOf"/>
     </Declaration>
     <Declaration>
         <Class IRI="#Drift"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:isParticipantIn"/>
+        <ObjectProperty abbreviatedIRI="DUL:hasQuality"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#inCondition"/>
@@ -166,7 +145,16 @@
         <Class IRI="#SensingDevice"/>
     </Declaration>
     <Declaration>
+        <ObjectProperty abbreviatedIRI="DUL:includesEvent"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="DUL:hasParticipant"/>
+    </Declaration>
+    <Declaration>
         <ObjectProperty IRI="#qualityOfObservation"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="DUL:Region"/>
     </Declaration>
     <Declaration>
         <Class IRI="#System"/>
@@ -181,28 +169,28 @@
         <ObjectProperty IRI="#hasOperatingProperty"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="#onPlatform"/>
+        <ObjectProperty abbreviatedIRI="DUL:includesObject"/>
     </Declaration>
     <Declaration>
         <Class IRI="#DeploymentRelatedProcess"/>
     </Declaration>
     <Declaration>
+        <ObjectProperty IRI="#onPlatform"/>
+    </Declaration>
+    <Declaration>
         <Class IRI="#Platform"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:isObjectIncludedIn"/>
+        <ObjectProperty IRI="#featureOfInterest"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="#featureOfInterest"/>
+        <Class abbreviatedIRI="DUL:Method"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#implements"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#hasInput"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:hasPart"/>
     </Declaration>
     <Declaration>
         <Class IRI="#ObservationValue"/>
@@ -217,7 +205,7 @@
         <AnnotationProperty abbreviatedIRI="dct:created"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:hasQuality"/>
+        <ObjectProperty abbreviatedIRI="DUL:isRegionFor"/>
     </Declaration>
     <Declaration>
         <Class IRI="#SurvivalRange"/>
@@ -238,12 +226,6 @@
         <ObjectProperty IRI="#deployedSystem"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:hasLocation"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:satisfies"/>
-    </Declaration>
-    <Declaration>
         <Class IRI="#SurvivalProperty"/>
     </Declaration>
     <Declaration>
@@ -254,9 +236,6 @@
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#hasOperatingRange"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:hasParticipant"/>
     </Declaration>
     <Declaration>
         <Class IRI="#MeasurementRange"/>
@@ -280,13 +259,25 @@
         <Class IRI="#Stimulus"/>
     </Declaration>
     <Declaration>
+        <ObjectProperty abbreviatedIRI="DUL:describes"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="DUL:isParticipantIn"/>
+    </Declaration>
+    <Declaration>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#OperatingProperty"/>
+        <ObjectProperty abbreviatedIRI="DUL:isSettingFor"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="DUL:Object"/>
+        <Class abbreviatedIRI="DUL:Process"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="DUL:hasLocation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#OperatingProperty"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#hasMeasurementProperty"/>
@@ -298,13 +289,13 @@
         <ObjectProperty IRI="#hasSurvivalProperty"/>
     </Declaration>
     <Declaration>
+        <Class abbreviatedIRI="DUL:PhysicalObject"/>
+    </Declaration>
+    <Declaration>
         <ObjectProperty IRI="#deployedOnPlatform"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#observationResultTime"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:isQualityOf"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="rdfs:seeAlso"/>
@@ -319,7 +310,13 @@
         <ObjectProperty IRI="#implementedBy"/>
     </Declaration>
     <Declaration>
+        <ObjectProperty abbreviatedIRI="DUL:satisfies"/>
+    </Declaration>
+    <Declaration>
         <Class IRI="#Resolution"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="DUL:DesignedArtifact"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#detects"/>
@@ -331,28 +328,34 @@
         <ObjectProperty IRI="#hasSubSystem"/>
     </Declaration>
     <Declaration>
+        <Class abbreviatedIRI="DUL:Situation"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="DUL:InformationObject"/>
+    </Declaration>
+    <Declaration>
         <Class IRI="#Accuracy"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="DUL:Quality"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#sensingMethodUsed"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#MeasurementProperty"/>
+        <ObjectProperty abbreviatedIRI="DUL:isObjectIncludedIn"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#inDeployment"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#MeasurementProperty"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="dc:title"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#attachedSystem"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:includesEvent"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="DUL:Region"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="dc:source"/>
@@ -365,12 +368,6 @@
     </Declaration>
     <Declaration>
         <Class IRI="#SensorOutput"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="DUL:Method"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="DUL:includesObject"/>
     </Declaration>
     <Declaration>
         <Class IRI="#Frequency"/>
@@ -388,13 +385,13 @@
         <ObjectProperty IRI="#ofFeature"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="DUL:Quality"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty IRI="#madeObservation"/>
     </Declaration>
     <Declaration>
         <Class IRI="#Selectivity"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="DUL:hasRegion"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#hasProperty"/>
@@ -406,7 +403,7 @@
         <AnnotationProperty abbreviatedIRI="dc:date"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="DUL:Situation"/>
+        <ObjectProperty abbreviatedIRI="DUL:isLocationOf"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="dct:modified"/>
@@ -415,10 +412,13 @@
         <Class IRI="#Deployment"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="DUL:Event"/>
+        <Class IRI="#MaintenanceSchedule"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#MaintenanceSchedule"/>
+        <ObjectProperty abbreviatedIRI="DUL:isDescribedBy"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="DUL:hasPart"/>
     </Declaration>
     <EquivalentClasses>
         <Class IRI="#SensorInput"/>

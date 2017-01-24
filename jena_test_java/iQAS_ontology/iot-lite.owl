@@ -19,6 +19,8 @@
     <Prefix name="m3-lite" IRI="http://purl.org/iot/vocab/m3-lite#"/>
     <Prefix name="iot-lite" IRI="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#"/>
     <Prefix name="qu-rec20" IRI="http://purl.org/NET/ssnx/qu/qu-rec20#"/>
+    <Import>http://purl.oclc.org/NET/ssnx/ssn</Import>
+    <Import>http://www.w3.org/2003/01/geo/wgs84_pos#Point</Import>
     <Annotation>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">iot-lite</Literal>
@@ -27,30 +29,8 @@
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
         <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">iot-lite is a lightweight ontology based on SSN to describe Internet of Things (IoT) concepts and relationships.</Literal>
     </Annotation>
-    <Annotation>
-        <AnnotationProperty abbreviatedIRI="owl:versionInfo"/>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">0.3 fiesta</Literal>
-    </Annotation>
-    <Declaration>
-        <Class abbreviatedIRI="ssn:System"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="Entity"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="Attribute"/>
-    </Declaration>
     <Declaration>
         <ObjectProperty IRI="isAssociatedWith"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="hasAttribute"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="interfaceDescription"/>
-    </Declaration>
-    <Declaration>
-        <AnnotationProperty abbreviatedIRI="geo:lat"/>
     </Declaration>
     <Declaration>
         <Class IRI="VirtualEntity"/>
@@ -59,10 +39,82 @@
         <AnnotationProperty abbreviatedIRI="geo:alt"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty IRI="relativeLocation"/>
+        <DataProperty IRI="endpoint"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="endpoint"/>
+        <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="radius"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="Polygon"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty abbreviatedIRI="geo:long"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="qu:QuantityKind"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="geo:Point"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:Device"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="qu:Unit"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:Property"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="hasMetadata"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="interfaceType"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="hasQuantityKind"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="Circle"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="Coverage"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="isSubSystemOf"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="ssn:hasValue"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:SensingDevice"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="hasSensingDevice"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:System"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="Entity"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="interfaceDescription"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty abbreviatedIRI="geo:lat"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty IRI="relativeLocation"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:onPlatform"/>
@@ -74,31 +126,19 @@
         <Class abbreviatedIRI="ssn:Platform"/>
     </Declaration>
     <Declaration>
-        <Class IRI="TagDevice"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="ssn:Sensor"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="radius"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="Polygon"/>
-    </Declaration>
-    <Declaration>
         <DataProperty IRI="isMobile"/>
-    </Declaration>
-    <Declaration>
-        <AnnotationProperty abbreviatedIRI="geo:long"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="exposedBy"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="qu:QuantityKind"/>
+        <Class abbreviatedIRI="ssn:ObservationValue"/>
     </Declaration>
     <Declaration>
         <Class IRI="Metadata"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="ssn:observedBy"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="id"/>
@@ -110,25 +150,19 @@
         <AnnotationProperty IRI="altRelative"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="geo:Point"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="ssn:Device"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="Object"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty IRI="exposes"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="metadataValue"/>
     </Declaration>
     <Declaration>
+        <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
+    </Declaration>
+    <Declaration>
         <ObjectProperty abbreviatedIRI="geo:location"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="qu:Unit"/>
+        <ObjectProperty abbreviatedIRI="ssn:hasProperty"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="metadataType"/>
@@ -137,46 +171,11 @@
         <Class IRI="Rectangle"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="hasMetadata"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="interfaceType"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty IRI="hasUnit"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
+        <Class abbreviatedIRI="ssn:Observation"/>
     </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="hasQuantityKind"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="ActuatingDevice"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="Circle"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="Coverage"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="isSubSystemOf"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="ssn:SensingDevice"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="hasSensingDevice"/>
-    </Declaration>
-    <EquivalentClasses>
-        <Class IRI="Entity"/>
-        <Class IRI="Object"/>
-    </EquivalentClasses>
-    <SubClassOf>
-        <Class IRI="ActuatingDevice"/>
-        <Class abbreviatedIRI="ssn:Device"/>
-    </SubClassOf>
     <SubClassOf>
         <Class IRI="Circle"/>
         <Class IRI="Coverage"/>
@@ -190,16 +189,88 @@
         <Class IRI="Coverage"/>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="TagDevice"/>
-        <Class abbreviatedIRI="ssn:Device"/>
-    </SubClassOf>
-    <SubClassOf>
         <Class IRI="VirtualEntity"/>
         <Class IRI="Entity"/>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Device"/>
         <Class abbreviatedIRI="ssn:System"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:hasProperty"/>
+            <Class abbreviatedIRI="ssn:Property"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:hasProperty"/>
+            <Class abbreviatedIRI="ssn:Property"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Observation"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:featureOfInterest"/>
+            <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Observation"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:observationResult"/>
+            <Class abbreviatedIRI="ssn:SensorOutput"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Observation"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:observedBy"/>
+            <Class abbreviatedIRI="ssn:Sensor"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Observation"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:observedProperty"/>
+            <Class abbreviatedIRI="ssn:Property"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Observation"/>
+        <ObjectMinCardinality cardinality="0">
+            <ObjectProperty abbreviatedIRI="ssn:qualityOfObservation"/>
+        </ObjectMinCardinality>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Observation"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty abbreviatedIRI="ssn:featureOfInterest"/>
+            <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
+        </ObjectExactCardinality>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Observation"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty abbreviatedIRI="ssn:observedBy"/>
+            <Class abbreviatedIRI="ssn:Sensor"/>
+        </ObjectExactCardinality>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Observation"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty abbreviatedIRI="ssn:observedProperty"/>
+            <Class abbreviatedIRI="ssn:Property"/>
+        </ObjectExactCardinality>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Property"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
+            <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
+        </ObjectSomeValuesFrom>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:SensingDevice"/>
@@ -209,6 +280,20 @@
         <Class abbreviatedIRI="ssn:SensingDevice"/>
         <Class abbreviatedIRI="ssn:Sensor"/>
     </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:SensorOutput"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:hasValue"/>
+            <Class abbreviatedIRI="ssn:ObservationValue"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:SensorOutput"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:isProducedBy"/>
+            <Class abbreviatedIRI="ssn:Sensor"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
     <InverseObjectProperties>
         <ObjectProperty IRI="exposedBy"/>
         <ObjectProperty IRI="exposes"/>
@@ -216,6 +301,10 @@
     <InverseObjectProperties>
         <ObjectProperty IRI="isSubSystemOf"/>
         <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty abbreviatedIRI="ssn:hasProperty"/>
+        <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
     </InverseObjectProperties>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="exposedBy"/>
@@ -226,20 +315,8 @@
         <Class IRI="Service"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
-        <ObjectProperty IRI="hasAttribute"/>
-        <Class IRI="Entity"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="hasAttribute"/>
-        <Class IRI="Object"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
         <ObjectProperty IRI="hasCoverage"/>
         <Class abbreviatedIRI="ssn:Device"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="hasQuantityKind"/>
-        <Class IRI="Attribute"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="hasQuantityKind"/>
@@ -258,20 +335,56 @@
         <Class IRI="Entity"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
-        <ObjectProperty IRI="isAssociatedWith"/>
-        <Class IRI="Object"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
         <ObjectProperty IRI="isSubSystemOf"/>
         <Class abbreviatedIRI="ssn:System"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="ssn:featureOfInterest"/>
+        <Class abbreviatedIRI="ssn:Observation"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="ssn:hasProperty"/>
+        <Class abbreviatedIRI="ssn:Property"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
         <Class abbreviatedIRI="ssn:System"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="ssn:hasValue"/>
+        <Class abbreviatedIRI="ssn:SensorOutput"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="ssn:isProducedBy"/>
+        <Class abbreviatedIRI="ssn:SensorOutput"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
+        <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="ssn:observationResult"/>
+        <Class abbreviatedIRI="ssn:Observation"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="ssn:observedBy"/>
+        <Class abbreviatedIRI="ssn:Observation"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="ssn:observedProperty"/>
+        <Class abbreviatedIRI="ssn:Observation"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
         <ObjectProperty abbreviatedIRI="ssn:onPlatform"/>
         <Class abbreviatedIRI="ssn:System"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty abbreviatedIRI="geo:location"/>
+        <Class abbreviatedIRI="ssn:SensingDevice"/>
     </ObjectPropertyDomain>
     <ObjectPropertyRange>
         <ObjectProperty IRI="exposedBy"/>
@@ -280,10 +393,6 @@
     <ObjectPropertyRange>
         <ObjectProperty IRI="exposes"/>
         <Class abbreviatedIRI="ssn:Device"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="hasAttribute"/>
-        <Class IRI="Attribute"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty IRI="hasCoverage"/>
@@ -314,8 +423,44 @@
         <Class abbreviatedIRI="ssn:System"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="ssn:featureOfInterest"/>
+        <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="ssn:hasProperty"/>
+        <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
         <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
         <Class abbreviatedIRI="ssn:System"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="ssn:hasValue"/>
+        <Class abbreviatedIRI="ssn:ObservationValue"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="ssn:isProducedBy"/>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
+        <Class abbreviatedIRI="ssn:Property"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
+        <Class abbreviatedIRI="ssn:Observation"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="ssn:observationResult"/>
+        <Class abbreviatedIRI="ssn:SensorOutput"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="ssn:observedBy"/>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty abbreviatedIRI="ssn:observedProperty"/>
+        <Class abbreviatedIRI="ssn:Property"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty abbreviatedIRI="ssn:onPlatform"/>
@@ -391,16 +536,6 @@
     </DataPropertyRange>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>ActuatingDevice</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Device that can actuate over an object or QuantityKind.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>Attribute</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">An attribute of an IoT object that can be exposed by an IoT service (i.e. a room (IoT Object) has a temperature (Attribute), that can be exposed by a temperature sensor (IoT device).</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
         <IRI>Circle</IRI>
         <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Circle coverage it needs the location of the sensor as the centre of the circle and the radius as a DataProperty.</Literal>
     </AnnotationAssertion>
@@ -411,13 +546,13 @@
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>Metadata</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Class used to describe properties that cannot be described by QuantityKind and Units. i.e. the resolution of a sensor.</Literal>
+        <IRI>Entity</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">IoT entity</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>Object</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">IoT entity</Literal>
+        <IRI>Metadata</IRI>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Class used to describe properties that cannot be described by QuantityKind and Units. i.e. the resolution of a sensor.</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
@@ -436,11 +571,6 @@
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>TagDevice</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Tag Device such as QR code or bar code.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
         <IRI>endpoint</IRI>
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Endpoint of the service. It is usually a URL where the service is available.</Literal>
     </AnnotationAssertion>
@@ -453,11 +583,6 @@
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
         <IRI>exposes</IRI>
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">For service-oriented queries. The inverse of exposedBy.</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>hasAttribute</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Links the devices with their attributes.</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
