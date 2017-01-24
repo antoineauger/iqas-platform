@@ -45,15 +45,6 @@
         <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">January 2017</Literal>
     </Annotation>
     <Declaration>
-        <ObjectProperty IRI="belongsTo"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="obsLifetimeValue"/>
-    </Declaration>
-    <Declaration>
-        <AnnotationProperty abbreviatedIRI="geo:alt"/>
-    </Declaration>
-    <Declaration>
         <DataProperty abbreviatedIRI="iot-lite:endpoint"/>
     </Declaration>
     <Declaration>
@@ -63,13 +54,7 @@
         <Class IRI="ObsMetadata"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="metadataType"/>
-    </Declaration>
-    <Declaration>
         <DataProperty IRI="sensingRateValue"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
     </Declaration>
     <Declaration>
         <DataProperty abbreviatedIRI="iot-lite:radius"/>
@@ -81,9 +66,6 @@
         <Class abbreviatedIRI="iot-lite:Polygon"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="AGGREGATION"/>
-    </Declaration>
-    <Declaration>
         <Class IRI="ObsFreshness"/>
     </Declaration>
     <Declaration>
@@ -93,25 +75,10 @@
         <Class IRI="&apos;BatteryLifetime&apos;"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="qu:QuantityKind"/>
-    </Declaration>
-    <Declaration>
         <DataProperty IRI="obsLevelValue"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="param_type"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="MEAN"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="usedToCharacterized"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="CurrentSetting"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="obsAccuracyValue"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="geo:Point"/>
@@ -132,13 +99,16 @@
         <Class abbreviatedIRI="qu:Unit"/>
     </Declaration>
     <Declaration>
+        <Datatype IRI="observationLevel"/>
+    </Declaration>
+    <Declaration>
         <NamedIndividual IRI="MACHINELEARNING"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Mechanism"/>
+        <DataProperty IRI="hasExactValue"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="hasExactValue"/>
+        <Class IRI="Mechanism"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:Property"/>
@@ -148,6 +118,147 @@
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="isProvidedBy"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="isDecreasedBy"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="ssn:hasValue"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="MAX"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="iot-lite:isSubSystemOf"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:SensingDevice"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasSensingDevice"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:System"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="INCREASE"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty abbreviatedIRI="iot-lite:relativeLocation"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="isSupportedBy"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="ssn:onPlatform"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:Platform"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="hasParams"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="FUSION"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="hasQuality"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:ObservationValue"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="ssn:observedBy"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="sensorStateValue"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty abbreviatedIRI="iot-lite:altRelative"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasCurrently"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="param_name"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="MIN"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="QualityofObservation"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="Parameter"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="decreases"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasUnit"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="contains"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:Observation"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="freshnessValue"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="hasMaxValue"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="param_order"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty abbreviatedIRI="iot-lite:observationValue"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="DECREASE"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="cannotBeAppliedAfter"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="belongsTo"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="obsLifetimeValue"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty abbreviatedIRI="geo:alt"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="increases"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="metadataType"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="AGGREGATION"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="qu:QuantityKind"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="MEAN"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="CurrentSetting"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="usedToCharacterized"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="obsAccuracyValue"/>
+    </Declaration>
+    <Declaration>
+        <Datatype IRI="sensorState"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
@@ -168,25 +279,7 @@
         <Class abbreviatedIRI="iot-lite:Coverage"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="iot-lite:isSubSystemOf"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="MAX"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:hasValue"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="ssn:SensingDevice"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty IRI="isRelatedTo"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="iot-lite:hasSensingDevice"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="ssn:System"/>
     </Declaration>
     <Declaration>
         <DataProperty abbreviatedIRI="iot-lite:interfaceDescription"/>
@@ -195,7 +288,7 @@
         <AnnotationProperty abbreviatedIRI="geo:lat"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty abbreviatedIRI="iot-lite:relativeLocation"/>
+        <DataProperty IRI="mechanismName"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:attachedSystem"/>
@@ -204,28 +297,10 @@
         <Class abbreviatedIRI="iot-lite:Service"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:onPlatform"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="isSupportedBy"/>
-    </Declaration>
-    <Declaration>
         <DataProperty IRI="sensor_id"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="hasParams"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="FUSION"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="ssn:Platform"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty IRI="hasMetadata"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="hasQuality"/>
     </Declaration>
     <Declaration>
         <Class IRI="ObsLifetime"/>
@@ -234,16 +309,10 @@
         <DataProperty IRI="metadataValue"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:ObservationValue"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="exposes"/>
-    </Declaration>
-    <Declaration>
         <Class IRI="Attribute"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:observedBy"/>
+        <ObjectProperty IRI="exposes"/>
     </Declaration>
     <Declaration>
         <Class IRI="Operator"/>
@@ -258,84 +327,112 @@
         <ObjectProperty IRI="exposedBy"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="sensorStateValue"/>
-    </Declaration>
-    <Declaration>
-        <AnnotationProperty abbreviatedIRI="iot-lite:altRelative"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty IRI="provides"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="geo:location"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
     </Declaration>
     <Declaration>
+        <ObjectProperty abbreviatedIRI="geo:location"/>
+    </Declaration>
+    <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasProperty"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="MIN"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="param_name"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="iot-lite:hasCurrently"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="QualityofObservation"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="iot-lite:Rectangle"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Parameter"/>
-    </Declaration>
-    <Declaration>
         <Class IRI="ObsAccuracy"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty abbreviatedIRI="iot-lite:hasUnit"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="hasMinValue"/>
     </Declaration>
     <Declaration>
-        <Class IRI="ObsLevel"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="contains"/>
-    </Declaration>
-    <Declaration>
-        <Class abbreviatedIRI="ssn:Observation"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="freshnessValue"/>
+        <ObjectProperty IRI="isIncreasedBy"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="canBeRetrievedThrough"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="hasMaxValue"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="param_order"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty IRI="supports"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty abbreviatedIRI="iot-lite:observationValue"/>
     </Declaration>
     <SubClassOf>
         <Class IRI="Attribute"/>
         <Class IRI="QualityofObservation"/>
     </SubClassOf>
     <SubClassOf>
+        <Class IRI="Attribute"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="usedToCharacterized"/>
+            <Class abbreviatedIRI="ssn:ObservationValue"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="Attribute"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty IRI="usedToCharacterized"/>
+            <Class abbreviatedIRI="ssn:ObservationValue"/>
+        </ObjectExactCardinality>
+    </SubClassOf>
+    <SubClassOf>
         <Class IRI="Mechanism"/>
         <Class IRI="QualityofObservation"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="Mechanism"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="cannotBeAppliedAfter"/>
+            <Class IRI="Mechanism"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="Mechanism"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="decreases"/>
+            <Class IRI="QualityofObservation"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="Mechanism"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="hasParams"/>
+            <Class IRI="Parameter"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="Mechanism"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="increases"/>
+            <Class IRI="QualityofObservation"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="Mechanism"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="cannotBeAppliedAfter"/>
+            <Class IRI="Mechanism"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="Mechanism"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="decreases"/>
+            <Class IRI="QualityofObservation"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="Mechanism"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="hasParams"/>
+            <Class IRI="Parameter"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="Mechanism"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="increases"/>
+            <Class IRI="QualityofObservation"/>
+        </ObjectAllValuesFrom>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="ObsAccuracy"/>
@@ -343,10 +440,6 @@
     </SubClassOf>
     <SubClassOf>
         <Class IRI="ObsFreshness"/>
-        <Class IRI="Attribute"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="ObsLevel"/>
         <Class IRI="Attribute"/>
     </SubClassOf>
     <SubClassOf>
@@ -358,8 +451,32 @@
         <Class IRI="Attribute"/>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="Parameter"/>
         <Class IRI="QualityofObservation"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="isDecreasedBy"/>
+            <Class IRI="Mechanism"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QualityofObservation"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="isIncreasedBy"/>
+            <Class IRI="Mechanism"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QualityofObservation"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="isDecreasedBy"/>
+            <Class IRI="Mechanism"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QualityofObservation"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="isIncreasedBy"/>
+            <Class IRI="Mechanism"/>
+        </ObjectAllValuesFrom>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="SensingRate"/>
@@ -610,13 +727,6 @@
         <Class IRI="Mechanism"/>
     </DisjointClasses>
     <DisjointClasses>
-        <Class IRI="ObsAccuracy"/>
-        <Class IRI="ObsFreshness"/>
-        <Class IRI="ObsLevel"/>
-        <Class IRI="ObsLifetime"/>
-        <Class IRI="ObsMetadata"/>
-    </DisjointClasses>
-    <DisjointClasses>
         <Class IRI="SensingRate"/>
         <Class IRI="State"/>
         <Class IRI="&apos;BatteryLifetime&apos;"/>
@@ -658,12 +768,20 @@
         <ObjectProperty IRI="givesAccessTo"/>
     </InverseObjectProperties>
     <InverseObjectProperties>
+        <ObjectProperty IRI="decreases"/>
+        <ObjectProperty IRI="isDecreasedBy"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
         <ObjectProperty IRI="exposedBy"/>
         <ObjectProperty IRI="exposes"/>
     </InverseObjectProperties>
     <InverseObjectProperties>
         <ObjectProperty IRI="hasQuality"/>
         <ObjectProperty IRI="usedToCharacterized"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="increases"/>
+        <ObjectProperty IRI="isIncreasedBy"/>
     </InverseObjectProperties>
     <InverseObjectProperties>
         <ObjectProperty IRI="isProvidedBy"/>
@@ -694,8 +812,16 @@
         <Class abbreviatedIRI="ssn:Property"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
+        <ObjectProperty IRI="cannotBeAppliedAfter"/>
+        <Class IRI="Mechanism"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
         <ObjectProperty IRI="contains"/>
         <Class abbreviatedIRI="ssn:Device"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="decreases"/>
+        <Class IRI="Mechanism"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="exposedBy"/>
@@ -720,6 +846,18 @@
     <ObjectPropertyDomain>
         <ObjectProperty IRI="hasQuality"/>
         <Class abbreviatedIRI="ssn:ObservationValue"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="increases"/>
+        <Class IRI="Mechanism"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="isDecreasedBy"/>
+        <Class IRI="QualityofObservation"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="isIncreasedBy"/>
+        <Class IRI="QualityofObservation"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="isProvidedBy"/>
@@ -842,8 +980,16 @@
         <Class abbreviatedIRI="iot-lite:Service"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
+        <ObjectProperty IRI="cannotBeAppliedAfter"/>
+        <Class IRI="Mechanism"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
         <ObjectProperty IRI="contains"/>
         <Class abbreviatedIRI="ssn:Sensor"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="decreases"/>
+        <Class IRI="QualityofObservation"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty IRI="exposedBy"/>
@@ -868,6 +1014,18 @@
     <ObjectPropertyRange>
         <ObjectProperty IRI="hasQuality"/>
         <Class IRI="Attribute"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="increases"/>
+        <Class IRI="QualityofObservation"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="isDecreasedBy"/>
+        <Class IRI="Mechanism"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="isIncreasedBy"/>
+        <Class IRI="Mechanism"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty IRI="isProvidedBy"/>
@@ -1002,6 +1160,10 @@
         <Class abbreviatedIRI="ssn:MeasurementProperty"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
+        <DataProperty IRI="mechanismName"/>
+        <Class IRI="Mechanism"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
         <DataProperty IRI="metadataType"/>
         <Class IRI="ObsMetadata"/>
     </DataPropertyDomain>
@@ -1015,7 +1177,7 @@
     </DataPropertyDomain>
     <DataPropertyDomain>
         <DataProperty IRI="obsLevelValue"/>
-        <Class IRI="ObsLevel"/>
+        <Class abbreviatedIRI="ssn:Property"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
         <DataProperty IRI="obsLifetimeValue"/>
@@ -1090,6 +1252,10 @@
         <Datatype abbreviatedIRI="xsd:string"/>
     </DataPropertyRange>
     <DataPropertyRange>
+        <DataProperty IRI="mechanismName"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
         <DataProperty IRI="metadataType"/>
         <Datatype abbreviatedIRI="xsd:string"/>
     </DataPropertyRange>
@@ -1103,7 +1269,7 @@
     </DataPropertyRange>
     <DataPropertyRange>
         <DataProperty IRI="obsLevelValue"/>
-        <Datatype abbreviatedIRI="xsd:string"/>
+        <Datatype IRI="observationLevel"/>
     </DataPropertyRange>
     <DataPropertyRange>
         <DataProperty IRI="obsLifetimeValue"/>
@@ -1127,12 +1293,7 @@
     </DataPropertyRange>
     <DataPropertyRange>
         <DataProperty IRI="sensorStateValue"/>
-        <DataOneOf>
-            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">CONNECTED</Literal>
-            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">DISCONNECTED</Literal>
-            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">IDLE</Literal>
-            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">SENSING</Literal>
-        </DataOneOf>
+        <Datatype IRI="sensorState"/>
     </DataPropertyRange>
     <DataPropertyRange>
         <DataProperty IRI="sensor_id"/>
@@ -1320,6 +1481,23 @@
         <AnnotationProperty abbreviatedIRI="geo:long"/>
         <AbbreviatedIRI>geo:Point</AbbreviatedIRI>
     </AnnotationPropertyDomain>
+    <DatatypeDefinition>
+        <Datatype IRI="observationLevel"/>
+        <DataOneOf>
+            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">INFORMATION</Literal>
+            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">KNOWLEDGE</Literal>
+            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">RAW DATA</Literal>
+        </DataOneOf>
+    </DatatypeDefinition>
+    <DatatypeDefinition>
+        <Datatype IRI="sensorState"/>
+        <DataOneOf>
+            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">CONNECTED</Literal>
+            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">DISCONNECTED</Literal>
+            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">IDLE</Literal>
+            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">SENSING</Literal>
+        </DataOneOf>
+    </DatatypeDefinition>
 </Ontology>
 
 
