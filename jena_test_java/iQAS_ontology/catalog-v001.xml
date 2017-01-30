@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <uri id="User Entered Import Resolution" name="file:/Users/an.auger/Desktop/iQAS_ontology/ssn.owl" uri="ssn.rdf"/>
     <uri id="Imports Wizard Entry" name="http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.owl"/>
     <group id="Folder Repository, directory=, recursive=true, Auto-Update=true, version=2" prefer="public" xml:base="">
-        <uri id="Automatically generated entry, Timestamp=1485178241799" name="http://isae.fr/iqas/qoo-ontology" uri="qoo-ontology.rdf"/>
-        <uri id="Automatically generated entry, Timestamp=1485178241799" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology-visu.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1485178241799" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1485178241799" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1485178241799" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.rdf"/>
+        <uri id="Automatically generated entry, Timestamp=1485793097352" name="http://isae.fr/iqas/qoo-ontology" uri="qoo-ontology.rdf"/>
+        <uri id="Automatically generated entry, Timestamp=1485793097352" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology-visu.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1485793097352" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1485793097352" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1485793097352" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.rdf"/>
     </group>
 </catalog>

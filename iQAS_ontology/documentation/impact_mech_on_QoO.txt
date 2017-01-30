@@ -1,0 +1,37 @@
+FILTERING
+
+decreases ObsRate             => certaines obs peuvent être droppées
+neutralFor ObsFreshness       => aucun impact sur les obs qui arrivent
+increases ObsAccuracy         => on admet que le fait de pré-vérifier une condition augmente la confiance que l'on a dans les obs
+
+****************************************************************
+
+MACHINE LEARNING
+
+increases ObsRate             => on peut potentiellement produire plus d'obs que ce que les sources pourraient produire
+increases ObsFreshness        => on peut régler un pas de temps pour la prédiction, on est donc assuré de recevoir les obs toutes les ... s
+decreases ObsAccuracy         => on utilise une méthode basique pour le ML donc on perd un peu en confiance
+
+****************************************************************
+
+FUSION
+
+decreases ObsRate             => le nombre global d'obs diminue par unité de temps (plus que 1 au lieu de X car AVG, MIN, MAX)
+decreases ObsFreshness        => il faut du temps pour faire la fusion (time-based or count-based window)
+increases ObsAccuracy         => on admet que le fait de faire de la fusion sur des données de bonne qualité augment la confiance que l'on peut avoir dans celles ci
+
+****************************************************************
+
+AGGREGATION
+
+increases ObsRate             => potentiellement plus d'observations si on aggrège depuis plusieurs sources
+increases ObsFreshness        => les obs arrivant plus régulièrement, on s'attend à ce qu'elles soient plus d'actualité
+neutralFor ObsAccuracy        => non modifié car aucun traitement sur les obs
+
+****************************************************************
+
+NO MECHANISM
+
+neutralFor ObsRate            => inchangé
+increases ObsFreshness        => aucun traitement sur les obs donc elles ressortent plus vite 
+neutralFor ObsAccuracy        => non modifié car aucun traitement sur les obs
