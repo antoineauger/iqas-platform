@@ -38,7 +38,6 @@ public class PlanActor extends UntypedActor {
     public PlanActor(Properties prop) {
         this.prop = prop;
         this.topicsToPullFrom.add("topic1");
-        //this.topicsToPullFrom.add("topic3");
         this.topicToPushTo = "topic2";
 
         // We only create one KafkaConsumer actor for all executeActors.
@@ -67,7 +66,7 @@ public class PlanActor extends UntypedActor {
             log.info("Received RFC message: {}", message);
 
             RFC receivedRFC = (RFC) message;
-            String remedyToPlan = receivedRFC.getRemedyToPlan();
+            String remedyToPlan = "SimpleFilteringPipeline";
 
             String actorNameToResolve = "executeActor";
 
