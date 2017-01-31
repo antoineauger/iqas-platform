@@ -5,6 +5,6 @@ package fr.isae.iqas.mechanisms;
  */
 
 @FunctionalInterface
-public interface ConvertKafkaMessages<K, V> {
+public interface IConvertRecords<K, V> {
     V convert(K messageFromSource);
 }

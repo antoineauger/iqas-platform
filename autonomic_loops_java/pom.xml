@@ -6,6 +6,7 @@
 
     <properties>
         <jdk.version>1.8</jdk.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <groupId>fr.isae.iqas.mapek</groupId>
@@ -84,6 +85,13 @@
     </dependencies>
 
     <build>
+        <!-- Set resource directory -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+
         <plugins>
 
             <!-- Set a compiler level -->
@@ -100,6 +108,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.3</version>
                 <executions>
                     <execution>
                         <phase>package</phase>

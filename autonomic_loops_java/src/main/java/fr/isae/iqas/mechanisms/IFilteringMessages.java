@@ -9,6 +9,6 @@ import akka.stream.javadsl.Flow;
  */
 
 @FunctionalInterface
-public interface FilterKafkaMessages<T> {
+public interface IFilteringMessages<T> {
     Flow<T, T, NotUsed> process(Flow<T, T, NotUsed> incomingFlow, Predicate<T> functionToApply) throws Exception;
 }

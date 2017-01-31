@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by an.auger on 09/11/2016.
  */
-public class GroupMechanisms implements GroupKafkaMessages<ProducerRecord> {
+public class AggregateMechanisms implements IAggregateMessages<ProducerRecord> {
     /**
      * @param incomingFlow
      * @param nbKafkaMessages

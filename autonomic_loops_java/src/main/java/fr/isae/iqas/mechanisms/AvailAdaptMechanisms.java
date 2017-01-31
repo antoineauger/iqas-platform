@@ -6,7 +6,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import scala.concurrent.duration.FiniteDuration;
 
-import static fr.isae.iqas.mechanisms.BasicOperations.*;
+import static fr.isae.iqas.mechanisms.Operators.*;
 
 /**
  * Created by an.auger on 08/11/2016.
@@ -14,8 +14,8 @@ import static fr.isae.iqas.mechanisms.BasicOperations.*;
 
 public class AvailAdaptMechanisms {
 
-    static FilterMechanisms filterTools = new FilterMechanisms();
-    static GroupMechanisms groupTools = new GroupMechanisms();
+    static FilteringMechanisms filteringTemplates = new FilteringMechanisms();
+    static AggregateMechanisms aggregateTemplates = new AggregateMechanisms();
     static Flow<ConsumerRecord, ConsumerRecord, NotUsed> flowConsumerRecords = Flow.of(ConsumerRecord.class);
     static Flow<ProducerRecord, ProducerRecord, NotUsed> flowProducerRecords = Flow.of(ProducerRecord.class);
 
@@ -24,7 +24,7 @@ public class AvailAdaptMechanisms {
      * @return
      */
     public static Flow<ConsumerRecord, ProducerRecord, NotUsed> f_convert_ConsumerToProducer(String topicToPublish) {
-        ConvertKafkaMessages<ConsumerRecord, ProducerRecord> convertTools = r -> new ProducerRecord<byte[], String>(topicToPublish, String.valueOf(r.value()));
+        IConvertRecords<ConsumerRecord, ProducerRecord> convertTools = r -> new ProducerRecord<byte[], String>(topicToPublish, String.valueOf(r.value()));
         return flowConsumerRecords.map(convertTools::convert);
     }
 
@@ -34,7 +34,7 @@ public class AvailAdaptMechanisms {
      * @throws Exception
      */
     public static Flow<ProducerRecord, ProducerRecord, NotUsed> f_filter_ValuesGreaterThan(double threshold) throws Exception {
-        return filterTools.filter(flowProducerRecords, r -> Float.parseFloat((String) r.value()) > threshold);
+        return filteringTemplates.filter(flowProducerRecords, r -> Float.parseFloat((String) r.value()) > threshold);
     }
 
     /**
@@ -43,7 +43,7 @@ public class AvailAdaptMechanisms {
      * @throws Exception
      */
     public static Flow<ProducerRecord, ProducerRecord, NotUsed> f_filter_ValuesLesserThan(double threshold) throws Exception {
-        return filterTools.filterNot(flowProducerRecords, r -> Float.parseFloat((String) r.value()) > threshold);
+        return filteringTemplates.filterNot(flowProducerRecords, r -> Float.parseFloat((String) r.value()) > threshold);
     }
 
     /**
@@ -53,7 +53,7 @@ public class AvailAdaptMechanisms {
      * @throws Exception
      */
     public static Flow<ProducerRecord, ProducerRecord, NotUsed> f_group_CountBasedMean(int nbRecords, String topicToPublish) throws Exception {
-        return groupTools.groupCountBased(flowProducerRecords, nbRecords, recordList -> computeMean(recordList, topicToPublish));
+        return aggregateTemplates.groupCountBased(flowProducerRecords, nbRecords, recordList -> AVG(recordList, topicToPublish));
     }
 
     /**
@@ -63,6 +63,6 @@ public class AvailAdaptMechanisms {
      * @throws Exception
      */
     public static Flow<ProducerRecord, ProducerRecord, NotUsed> f_group_TimeBasedMean(FiniteDuration t, String topicToPublish) throws Exception {
-        return groupTools.groupTimeBased(flowProducerRecords, t, recordList -> computeMean(recordList, topicToPublish));
+        return aggregateTemplates.groupTimeBased(flowProducerRecords, t, recordList -> AVG(recordList, topicToPublish));
     }
 }

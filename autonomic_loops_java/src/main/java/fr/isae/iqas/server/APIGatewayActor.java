@@ -6,7 +6,7 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.database.MongoController;
-import fr.isae.iqas.mapek.information.ManagerActor;
+import fr.isae.iqas.mapek.ManagerActor;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.Status;
 

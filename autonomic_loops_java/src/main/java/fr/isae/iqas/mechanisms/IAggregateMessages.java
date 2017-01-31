@@ -12,7 +12,7 @@ import java.util.List;
  */
 
 @FunctionalInterface
-public interface GroupKafkaMessages<K> {
+public interface IAggregateMessages<K> {
     Flow<K, K, NotUsed> process(Flow<K, K, NotUsed> incomingFlow,
                                 int nbKafkaMessages,
                                 FiniteDuration windowDuration,

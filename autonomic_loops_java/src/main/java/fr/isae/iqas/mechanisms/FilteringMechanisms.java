@@ -8,7 +8,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 /**
  * Created by an.auger on 08/11/2016.
  */
-public class FilterMechanisms implements FilterKafkaMessages<ProducerRecord> {
+public class FilteringMechanisms implements IFilteringMessages<ProducerRecord> {
     /**
      * @param incomingFlow
      * @param functionToApply

@@ -1,4 +1,4 @@
-package fr.isae.iqas.mapek.information;
+package fr.isae.iqas.mapek;
 
 import akka.Done;
 import akka.actor.ActorRef;
