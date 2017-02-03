@@ -89,8 +89,11 @@ public class MainClass {
         @Override
         public void onReceive(Object message) throws Throwable {
             if (message instanceof TerminatedMsg) {
-                log.info("Received TerminatedMsg message: {}", message);
-                getContext().stop(self());
+                TerminatedMsg terminatedMsg = (TerminatedMsg) message;
+                if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
+                    log.info("Received TerminatedMsg message: {}", message);
+                    getContext().stop(self());
+                }
             }
         }
     }

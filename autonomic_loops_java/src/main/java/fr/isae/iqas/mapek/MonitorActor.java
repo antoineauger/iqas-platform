@@ -91,8 +91,14 @@ public class MonitorActor extends UntypedActor {
             log.info("Received String message: {}", message);
             getSender().tell(message, getSelf());
         } else if (message instanceof TerminatedMsg) {
-            log.info("Received TerminatedMsg message: {}", message);
-            cleanShutdown();
+            TerminatedMsg terminatedMsg = (TerminatedMsg) message;
+            if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
+                log.info("Received TerminatedMsg message: {}", message);
+                if (kafkaActor != null) {
+                    getContext().stop(kafkaActor);
+                }
+                getContext().stop(self());
+            }
         } else {
             unhandled(message);
         }
@@ -100,7 +106,6 @@ public class MonitorActor extends UntypedActor {
 
     @Override
     public void postStop() {
-        cleanShutdown();
     }
 
     private void restartKafkaActor() {
@@ -123,12 +128,6 @@ public class MonitorActor extends UntypedActor {
 
         /*Consumer.atMostOnceSource(consumerSettings, Subscriptions.topics("topic1"))
             .runWith(Sink.foreach(a -> System.out.println(a)), materializer);*/
-    }
-
-    private void cleanShutdown() {
-        if (kafkaActor != null) {
-            getContext().stop(kafkaActor);
-        }
     }
 
 }

@@ -48,22 +48,23 @@ public class ManagerActor extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
         if (message instanceof TerminatedMsg) {
-            log.info("Received TerminatedMsg message: {}", message);
-
-            if (monitorActor != null) {
-                getContext().stop(monitorActor);
+            TerminatedMsg terminatedMsg = (TerminatedMsg) message;
+            if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
+                log.info("Received TerminatedMsg message: {}", message);
+                if (monitorActor != null) {
+                    getContext().stop(monitorActor);
+                }
+                if (analyzeActor != null) {
+                    getContext().stop(analyzeActor);
+                }
+                if (planActor != null) {
+                    getContext().stop(planActor);
+                }
+                if (executeActor != null) {
+                    getContext().stop(executeActor);
+                }
+                getContext().stop(self());
             }
-            if (analyzeActor != null) {
-                getContext().stop(analyzeActor);
-            }
-            if (planActor != null) {
-                getContext().stop(planActor);
-            }
-            if (executeActor != null) {
-                getContext().stop(executeActor);
-            }
-
-            getContext().stop(self());
         }
         else if (message instanceof Request) {
             if (processingActivated) {

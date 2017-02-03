@@ -17,9 +17,11 @@ public class AnalyzeActor extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
         if (message instanceof TerminatedMsg) {
-            log.info("Received TerminatedMsg message: {}", message);
-            getSender().tell(message, getSelf());
-            getContext().stop(self());
+            TerminatedMsg terminatedMsg = (TerminatedMsg) message;
+            if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
+                log.info("Received TerminatedMsg message: {}", message);
+                getContext().stop(self());
+            }
         }
     }
 }
