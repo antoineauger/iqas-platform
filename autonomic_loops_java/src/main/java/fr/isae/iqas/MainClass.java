@@ -21,7 +21,8 @@ import com.mongodb.async.client.MongoClient;
 import com.mongodb.async.client.MongoClients;
 import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.database.MongoRESTController;
-import fr.isae.iqas.model.messages.Terminated;
+import fr.isae.iqas.model.messages.TerminatedMsg;
+import fr.isae.iqas.pipelines.PipelineWatcherActor;
 import fr.isae.iqas.server.APIGatewayActor;
 import fr.isae.iqas.server.RESTServer;
 import org.apache.log4j.Logger;
@@ -46,13 +47,15 @@ public class MainClass {
             // Database initialization
             MongoClient mongoClient = MongoClients.create(new ConnectionString("mongodb://"
                     + prop.getProperty("database_endpoint_address") + ":" + prop.getProperty("database_endpoint_port")));
-
             MongoDatabase database = mongoClient.getDatabase("iqas");
             MongoRESTController mongoRESTController = new MongoRESTController(database, getContext(), pathAPIGatewayActor);
 
             // MongoDB initialization
             mongoRESTController.getController().dropIQASDatabase();
             mongoRESTController.getController().putSensorsFromFileIntoDB("templates/sensors.json");
+
+            // Watcher for dynamic QoO pipelines addition / removal
+            final ActorRef pipelineWatcherActor = getContext().actorOf(Props.create(PipelineWatcherActor.class, prop), "pipelineWatcherActor");
 
             // API Gateway actor creation
             final ActorRef apiGatewayActor = getContext().actorOf(Props.create(APIGatewayActor.class, prop, mongoRESTController.getController()),
@@ -74,22 +77,19 @@ public class MainClass {
             });
 
             // We add a shutdown hook to try gracefully to unbind server when possible
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    log.info("Gracefully shutting down autonomic loops and API gateway...");
-                    mongoClient.close();
-                    binding.thenCompose(ServerBinding::unbind)
-                            .thenAccept(unbound -> system.terminate());
-                }
-            });
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                log.info("Gracefully shutting down autonomic loops and API gateway...");
+                mongoClient.close();
+                binding.thenCompose(ServerBinding::unbind)
+                        .thenAccept(unbound -> system.terminate());
+            }));
 
         }
 
         @Override
         public void onReceive(Object message) throws Throwable {
-            if (message instanceof Terminated) {
-                log.info("Received Terminated message: {}", message);
+            if (message instanceof TerminatedMsg) {
+                log.info("Received TerminatedMsg message: {}", message);
                 getContext().stop(self());
             }
         }

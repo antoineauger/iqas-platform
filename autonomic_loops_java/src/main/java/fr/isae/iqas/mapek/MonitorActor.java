@@ -9,11 +9,10 @@ import akka.kafka.KafkaConsumerActor;
 import akka.kafka.ProducerSettings;
 import akka.kafka.Subscriptions;
 import akka.kafka.javadsl.Consumer;
-import akka.kafka.javadsl.Producer;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Sink;
-import fr.isae.iqas.model.messages.AddKafkaTopic;
-import fr.isae.iqas.model.messages.Terminated;
+import fr.isae.iqas.model.messages.AddKafkaTopicMsg;
+import fr.isae.iqas.model.messages.TerminatedMsg;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -80,19 +79,19 @@ public class MonitorActor extends UntypedActor {
                     getSelf(), "tick", getContext().dispatcher(), null);
 
             System.out.println("It works!");
-        } else if (message instanceof AddKafkaTopic) {
-            log.info("Received AddKafkaTopic message: {}", message);
+        } else if (message instanceof AddKafkaTopicMsg) {
+            log.info("Received AddKafkaTopicMsg message: {}", message);
             getSender().tell(message, getSelf());
-            AddKafkaTopic addKafkaTopicMsg = (AddKafkaTopic) message;
-            if (!watchedTopics.contains(addKafkaTopicMsg.getTopic())) {
-                watchedTopics.add(new TopicPartition(addKafkaTopicMsg.getTopic(), 0));
+            AddKafkaTopicMsg addKafkaTopicMsgMsg = (AddKafkaTopicMsg) message;
+            if (!watchedTopics.contains(addKafkaTopicMsgMsg.getTopic())) {
+                watchedTopics.add(new TopicPartition(addKafkaTopicMsgMsg.getTopic(), 0));
                 restartKafkaActor();
             }
         } else if (message instanceof String) {
             log.info("Received String message: {}", message);
             getSender().tell(message, getSelf());
-        } else if (message instanceof Terminated) {
-            log.info("Received Terminated message: {}", message);
+        } else if (message instanceof TerminatedMsg) {
+            log.info("Received TerminatedMsg message: {}", message);
             cleanShutdown();
         } else {
             unhandled(message);

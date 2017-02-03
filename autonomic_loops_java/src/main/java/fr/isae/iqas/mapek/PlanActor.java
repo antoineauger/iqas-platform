@@ -7,10 +7,9 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.kafka.ConsumerSettings;
 import akka.kafka.KafkaConsumerActor;
-import akka.pattern.AskTimeoutException;
 import akka.pattern.Patterns;
-import fr.isae.iqas.model.messages.RFC;
-import fr.isae.iqas.model.messages.Terminated;
+import fr.isae.iqas.model.messages.RFCMsg;
+import fr.isae.iqas.model.messages.TerminatedMsg;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -25,20 +24,22 @@ import java.util.concurrent.TimeUnit;
  * Created by an.auger on 13/09/2016.
  */
 public class PlanActor extends UntypedActor {
+    private String actorNameToResolve = "executeActor";
+
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private ConsumerSettings consumerSettings = null;
     private ActorRef kafkaActor = null;
     private Properties prop = null;
     private Set<String> topicsToPullFrom = new HashSet<>();
-    private String topicToPushTo = null;
+    private String topicToPublish = null;
 
     private Map<String, ActorRef> execActorsRefs = new HashMap<>();
 
     public PlanActor(Properties prop) {
         this.prop = prop;
         this.topicsToPullFrom.add("topic1");
-        this.topicToPushTo = "topic2";
+        this.topicToPublish = "topic2";
 
         // We only create one KafkaConsumer actor for all executeActors.
         // TODO: Evaluate performance of this solution
@@ -56,40 +57,49 @@ public class PlanActor extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Exception {
-        if (message instanceof Terminated) {
-            log.info("Received Terminated message: {}", message);
-            if (kafkaActor != null) {
-                getContext().stop(kafkaActor);
+        if (message instanceof TerminatedMsg) {
+            TerminatedMsg terminatedMsg = (TerminatedMsg) message;
+            ActorRef actorRefToStop = terminatedMsg.getTargetToStop();
+            if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
+                log.info("Received TerminatedMsg message: {}", message);
+                if (kafkaActor != null) {
+                    getContext().stop(kafkaActor);
+                }
+                getContext().stop(self());
             }
-            getContext().stop(self());
-        } else if (message instanceof RFC) {
-            log.info("Received RFC message: {}", message);
+            else {
+                gracefulStop(actorRefToStop);
+                execActorsRefs.remove(actorNameToResolve);
+            }
+        } else if (message instanceof RFCMsg) {
+            log.info("Received RFCMsg message: {}", message);
 
-            RFC receivedRFC = (RFC) message;
-            String remedyToPlan = "SimpleFilteringPipeline";
-
-            String actorNameToResolve = "executeActor";
+            RFCMsg receivedRFCMsg = (RFCMsg) message;
+            String remedyToPlan = "SimpleFilteringPipeline2";
 
             if (execActorsRefs.containsKey(actorNameToResolve)) { // if reference found, the corresponding actor has been started
                 ActorRef actorRefToStop = execActorsRefs.get(actorNameToResolve);
-                log.info("Stopping " + actorRefToStop.path().name());
-                try {
-                    Future<Boolean> stopped = Patterns.gracefulStop(actorRefToStop, Duration.create(10, TimeUnit.SECONDS), new Terminated());
-                    Await.result(stopped, Duration.create(10, TimeUnit.SECONDS));
-                    log.info("Successfully stopped " + actorRefToStop.path());
+                gracefulStop(actorRefToStop);
 
-                    ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, kafkaActor, topicsToPullFrom, topicToPushTo, remedyToPlan));
-                    execActorsRefs.put(actorNameToResolve, actorRefToStart);
-                    log.info("Successfully started " + actorRefToStart.path());
-                } catch (AskTimeoutException e) {
-                    // the actor wasn't stopped within 10 seconds
-                    log.error(e.toString());
-                }
+                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, kafkaActor, topicsToPullFrom, topicToPublish, remedyToPlan));
+                execActorsRefs.put(actorNameToResolve, actorRefToStart);
+                log.info("Successfully started " + actorRefToStart.path());
             } else {
-                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, kafkaActor, topicsToPullFrom, topicToPushTo, remedyToPlan));
+                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, kafkaActor, topicsToPullFrom, topicToPublish, remedyToPlan));
                 execActorsRefs.put(actorNameToResolve, actorRefToStart);
                 log.info("Successfully started " + actorRefToStart.path());
             }
+        }
+    }
+
+    private void gracefulStop(ActorRef actorRefToStop) {
+        log.info("Trying to stop " + actorRefToStop.path().name());
+        try {
+            Future<Boolean> stopped = Patterns.gracefulStop(actorRefToStop, Duration.create(5, TimeUnit.SECONDS), new TerminatedMsg(actorRefToStop));
+            Await.result(stopped, Duration.create(5, TimeUnit.SECONDS));
+            log.info("Successfully stopped " + actorRefToStop.path());
+        } catch (Exception e) {
+            log.error(e.toString());
         }
     }
 }

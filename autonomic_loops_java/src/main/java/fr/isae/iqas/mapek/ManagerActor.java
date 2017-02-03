@@ -6,8 +6,8 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.database.MongoController;
-import fr.isae.iqas.model.messages.RFC;
-import fr.isae.iqas.model.messages.Terminated;
+import fr.isae.iqas.model.messages.RFCMsg;
+import fr.isae.iqas.model.messages.TerminatedMsg;
 import fr.isae.iqas.model.request.Request;
 
 import java.util.Properties;
@@ -47,8 +47,8 @@ public class ManagerActor extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Exception {
-        if (message instanceof Terminated) {
-            log.info("Received Terminated message: {}", message);
+        if (message instanceof TerminatedMsg) {
+            log.info("Received TerminatedMsg message: {}", message);
 
             if (monitorActor != null) {
                 getContext().stop(monitorActor);
@@ -67,11 +67,11 @@ public class ManagerActor extends UntypedActor {
         }
         else if (message instanceof Request) {
             if (processingActivated) {
-                planActor.tell(new RFC("none"), getSelf());
+                planActor.tell(new RFCMsg("none"), getSelf());
                 processingActivated = false;
             }
             else {
-                planActor.tell(new RFC("testGraph"), getSelf());
+                planActor.tell(new RFCMsg("testGraph"), getSelf());
                 processingActivated = true;
             }
         }

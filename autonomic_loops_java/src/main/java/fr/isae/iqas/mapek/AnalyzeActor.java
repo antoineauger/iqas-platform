@@ -3,7 +3,7 @@ package fr.isae.iqas.mapek;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import fr.isae.iqas.model.messages.Terminated;
+import fr.isae.iqas.model.messages.TerminatedMsg;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -16,8 +16,8 @@ public class AnalyzeActor extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Exception {
-        if (message instanceof Terminated) {
-            log.info("Received Terminated message: {}", message);
+        if (message instanceof TerminatedMsg) {
+            log.info("Received TerminatedMsg message: {}", message);
             getSender().tell(message, getSelf());
             getContext().stop(self());
         }

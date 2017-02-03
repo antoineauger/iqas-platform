@@ -3,10 +3,10 @@ package fr.isae.iqas.model.messages;
 /**
  * Created by an.auger on 14/09/2016.
  */
-public class RFC {
+public class RFCMsg {
     private String remedyToPlan;
 
-    public RFC(String remedyToPlan) {
+    public RFCMsg(String remedyToPlan) {
         this.remedyToPlan = remedyToPlan;
     }
 
