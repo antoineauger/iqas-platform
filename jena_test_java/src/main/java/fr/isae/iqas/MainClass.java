@@ -119,13 +119,18 @@ public class MainClass {
                 "PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#>\n" +
                         "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
                         "PREFIX qoo: <http://isae.fr/iqas/qoo-ontology#>\n" +
-                        "\n" +
-                        "SELECT ?subject\n" +
+                        "PREFIX iot-lite: <http://purl.oclc.org/NET/UNIS/fiware/iot-lite#>\n" +
+                        "PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>\n" +
+                        "SELECT ?sensor ?topic ?longitude ?latitude ?location\n" +
                         "WHERE {\n" +
-                        "?subject rdf:type qoo:PipelineEco\n" +
-                        "}\n" +
-                        "LIMIT 25"
-                        );
+                        "?sensor iot-lite:id \"sensor02\" .\n" +
+                        "?sensor ssn:madeObservation ?o .\n" +
+                        "?o ssn:observedProperty ?topic .\n" +
+                        "?sensor geo:location ?pos .\n" +
+                        "?pos geo:long ?longitude .\n" +
+                        "?pos geo:lat ?latitude .\n" +
+                        "?pos iot-lite:relativeLocation ?location\n" +
+                        "}");
 
 
 //        OntDocumentManager mgr = new OntDocumentManager();
