@@ -5,10 +5,10 @@ import akka.http.javadsl.model.ContentTypes;
 import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
+import fr.isae.iqas.database.FusekiRESTController;
 import fr.isae.iqas.database.MongoRESTController;
 import fr.isae.iqas.model.request.Request;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -21,31 +21,31 @@ import static akka.http.javadsl.server.PathMatchers.segment;
 
 public class RESTServer extends AllDirectives {
     private MongoRESTController mongoRESTController;
+    private FusekiRESTController fusekiRESTController;
 
-    public RESTServer(MongoRESTController mongoRESTController) {
+    public RESTServer(MongoRESTController mongoRESTController, FusekiRESTController fusekiRESTController) {
         this.mongoRESTController = mongoRESTController;
+        this.fusekiRESTController = fusekiRESTController;
     }
 
     private CompletionStage<Route> getSensor(Executor ctx, String sensor_id) {
-        return CompletableFuture.supplyAsync(() -> mongoRESTController.getSensor(sensor_id), ctx);
+        return fusekiRESTController.getSensor(sensor_id, ctx);
     }
 
     private CompletionStage<Route> getAllSensors(Executor ctx) {
-        return CompletableFuture.supplyAsync(() -> mongoRESTController.getAllSensors(), ctx);
+        return fusekiRESTController.getAllSensors(ctx);
     }
 
-    // TODO: put sensor method here ?
-
     private CompletionStage<Route> getRequest(Executor ctx, String request_id) {
-        return CompletableFuture.supplyAsync(() -> mongoRESTController.getRequest(request_id), ctx);
+        return mongoRESTController.getRequest(request_id, ctx);
     }
 
     private CompletionStage<Route> getAllRequests(Executor ctx) {
-        return CompletableFuture.supplyAsync(() -> mongoRESTController.getAllRequests(), ctx);
+        return mongoRESTController.getAllRequests(ctx);
     }
 
     private CompletionStage<Route> putRequest(Executor ctx, Request request) {
-        return CompletableFuture.supplyAsync(() -> mongoRESTController.forwardRequestToAPIGateway(request), ctx);
+        return mongoRESTController.forwardRequestToAPIGateway(request, ctx);
     }
 
     public Route createRoute() {
@@ -55,8 +55,8 @@ public class RESTServer extends AllDirectives {
                 parameterOptional("name", optName -> {
                     String name = optName.orElse("Mister X");
                     //return extractExecutionContext(ctx -> onSuccess(() -> mongoController.getSensor(), Function.identity()));
-                    //CompletionStage<List<VirtualSensor>> result = mongoController.getSensor();
-                    //return completeOKWithFuture(result, Jackson.<List<VirtualSensor>>marshaller());
+                    //CompletionStage<List<VirtualSensorJSON>> result = mongoController.getSensor();
+                    //return completeOKWithFuture(result, Jackson.<List<VirtualSensorJSON>>marshaller());
                     return null;
                 });*/
 
@@ -65,7 +65,7 @@ public class RESTServer extends AllDirectives {
                         get(() -> route(
                                 // matches the empty path
                                 pathSingleSlash(() ->
-                                        // homepage + TODO: API overview
+                                        // homepage
                                         getFromResource("web/index.html", ContentTypes.TEXT_HTML_UTF8)
                                 ),
                                 path(segment("sensors"), () ->

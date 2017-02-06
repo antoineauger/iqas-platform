@@ -7,7 +7,7 @@ import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.MainClass;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.Status;
-import fr.isae.iqas.model.virtualsensor.VirtualSensor;
+import fr.isae.iqas.model.virtualsensor.old.VirtualSensorJSON;
 import org.apache.log4j.Logger;
 import org.bson.Document;
 
@@ -29,7 +29,7 @@ public class MongoController extends AllDirectives {
 
     private MongoDatabase mongoDatabase = null;
 
-    MongoController(MongoDatabase mongoDatabase) {
+    public MongoController(MongoDatabase mongoDatabase) {
         this.mongoDatabase = mongoDatabase;
         log.info("MongoController successfully created!");
     }
@@ -38,15 +38,15 @@ public class MongoController extends AllDirectives {
      * Sensors
      */
 
-    void _findSpecificSensor(String sensor_id, final SingleResultCallback<ArrayList<VirtualSensor>> callback) {
+    void _findSpecificSensor(String sensor_id, final SingleResultCallback<ArrayList<VirtualSensorJSON>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("sensors");
         collection.find(eq("sensor_id", sensor_id))
-                .map(myDoc -> new VirtualSensor(myDoc)).into(new ArrayList<>(), callback);
+                .map(myDoc -> new VirtualSensorJSON(myDoc)).into(new ArrayList<>(), callback);
     }
 
-    void _findAllSensors(final SingleResultCallback<ArrayList<VirtualSensor>> callback) {
+    void _findAllSensors(final SingleResultCallback<ArrayList<VirtualSensorJSON>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("sensors");
-        collection.find().map(myDoc -> new VirtualSensor(myDoc)).into(new ArrayList<>(), callback);
+        collection.find().map(myDoc -> new VirtualSensorJSON(myDoc)).into(new ArrayList<>(), callback);
     }
 
     /**
@@ -99,7 +99,7 @@ public class MongoController extends AllDirectives {
         _findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
                 ArrayList<Request> requestTempList = result.stream()
-                        .filter(r -> filters.contains(r.getCurrentStatus()))
+                        .filter(r -> filters.contains(r.getCurrent_status()))
                         .collect(Collectors.toCollection(ArrayList::new));
                 requests.complete(requestTempList);
             }

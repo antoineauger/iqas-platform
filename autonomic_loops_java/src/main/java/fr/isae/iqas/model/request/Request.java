@@ -124,7 +124,7 @@ public class Request {
      *
      * @return the current Status object
      */
-    public Status getCurrentStatus() {
+    public Status getCurrent_status() {
         return statesList.get(statesList.size() - 1).getStatus();
     }
 
@@ -135,7 +135,7 @@ public class Request {
      * @return a boolean (true/false) according to the value of the current Status
      */
     public @JsonIgnore boolean isInState(Status status) {
-        return getCurrentStatus().equals(status);
+        return getCurrent_status().equals(status);
     }
 
     /**

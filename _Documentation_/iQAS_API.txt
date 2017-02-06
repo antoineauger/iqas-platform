@@ -1,0 +1,24 @@
+==================== Sensors -> FusekiController ========================
+
+* GET
+
+/sensors
+
+/sensors/[sensor_id]
+
+==================== Requests -> MongoController ========================
+
+* GET
+
+/requests
+
+/requests/[request_id]
+
+* PUT
+
+/requests
+	Content-Type: application/json
+	{
+		"request_id": "",
+		"application_id": "[application_id]"
+	}

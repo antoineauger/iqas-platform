@@ -5,6 +5,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.mapek.ManagerActor;
 import fr.isae.iqas.model.request.Request;
@@ -22,18 +23,19 @@ public class APIGatewayActor extends UntypedActor {
 
     private Properties prop;
     private MongoController mongoController;
+    private FusekiController fusekiController;
     private ActorRef autoManagerRawData;
     private ActorRef autoManagerInfo;
 
     //TODO: to remove, only for testing with randomness
     private Random randomGenerator;
 
-    public APIGatewayActor(Properties prop, MongoController mongoController) {
+    public APIGatewayActor(Properties prop, MongoController mongoController, FusekiController fusekiController) {
         this.prop = prop;
         this.mongoController = mongoController;
+        this.fusekiController = fusekiController;
 
-        //autoManagerRawData = getContext().actorOf(Props.create(ManagerActor.class, prop), "autoManagerRawData");
-        autoManagerInfo = getContext()
+        this.autoManagerInfo = getContext()
                 .actorOf(Props.create(ManagerActor.class, this.prop, this.mongoController), "autoManagerInfo");
 
         //TODO: to remove, only for testing with randomness

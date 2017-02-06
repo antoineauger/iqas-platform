@@ -45,8 +45,6 @@ public class PipelineWatcherActor extends UntypedActor {
         getContext().system().scheduler().scheduleOnce(
                 Duration.create(1, TimeUnit.SECONDS),
                 getSelf(), "tick", getContext().dispatcher(), null);
-
-        System.out.println(getSelf().path().toString());
     }
 
     // override postRestart so we don't call preStart and schedule a new message

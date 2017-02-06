@@ -9,20 +9,21 @@ import akka.http.javadsl.server.Route;
 import akka.util.Timeout;
 import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.model.request.Request;
-import fr.isae.iqas.model.virtualsensor.VirtualSensor;
+import fr.isae.iqas.model.virtualsensor.old.VirtualSensorJSON;
 import org.apache.log4j.Logger;
 import org.bson.types.ObjectId;
 import scala.concurrent.Future;
 
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by an.auger on 17/11/2016.
  */
 public class MongoRESTController extends AllDirectives {
-    private static Logger log = Logger.getLogger(MongoController.class);
+    private static Logger log = Logger.getLogger(MongoRESTController.class);
 
     private MongoController controller;
     private UntypedActorContext context;
@@ -38,7 +39,7 @@ public class MongoRESTController extends AllDirectives {
         return controller;
     }
 
-    private Future<ActorRef> getAPIGatewayActor() {
+    public Future<ActorRef> getAPIGatewayActor() {
         return context.actorSelection(pathAPIGatewayActor).resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
@@ -46,8 +47,9 @@ public class MongoRESTController extends AllDirectives {
      * Sensors
      */
 
-    public Route getAllSensors() {
-        final CompletableFuture<ArrayList<VirtualSensor>> sensors = new CompletableFuture<>();
+    @Deprecated
+    public CompletableFuture<Route> getAllSensors(Executor ctx) {
+        final CompletableFuture<ArrayList<VirtualSensorJSON>> sensors = new CompletableFuture<>();
         controller._findAllSensors((result, t) -> {
             if (t == null) {
                 sensors.complete(result);
@@ -56,11 +58,12 @@ public class MongoRESTController extends AllDirectives {
                 sensors.completeExceptionally(t);
             }
         });
-        return completeOKWithFuture(sensors, Jackson.marshaller());
+        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(sensors, Jackson.marshaller()), ctx);
     }
 
-    public Route getSensor(String sensor_id) {
-        final CompletableFuture<ArrayList<VirtualSensor>> sensor = new CompletableFuture<>();
+    @Deprecated
+    public CompletableFuture<Route> getSensor(String sensor_id, Executor ctx) {
+        final CompletableFuture<ArrayList<VirtualSensorJSON>> sensor = new CompletableFuture<>();
         controller._findSpecificSensor(sensor_id, (result, t) -> {
             if (t == null) {
                 sensor.complete(result);
@@ -69,7 +72,7 @@ public class MongoRESTController extends AllDirectives {
                 sensor.completeExceptionally(t);
             }
         });
-        return completeOKWithFuture(sensor, Jackson.marshaller());
+        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(sensor, Jackson.marshaller()), ctx);
     }
 
     /**
@@ -80,9 +83,10 @@ public class MongoRESTController extends AllDirectives {
      * Method to get a specific Request from database
      *
      * @param request_id String, the request ID to retrieve
+     * @param ctx
      * @return object Route (which contains either the Request or an error)
      */
-    public Route getRequest(String request_id) {
+    public CompletableFuture<Route> getRequest(String request_id, Executor ctx) {
         final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
         controller._findSpecificRequest("request_id", request_id, (result, t) -> {
             if (t == null) {
@@ -92,7 +96,7 @@ public class MongoRESTController extends AllDirectives {
                 requests.completeExceptionally(t);
             }
         });
-        return completeOKWithFuture(requests, Jackson.marshaller());
+        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(requests, Jackson.marshaller()), ctx);
     }
 
     /**
@@ -101,7 +105,7 @@ public class MongoRESTController extends AllDirectives {
      * @param application_id String, the ID of the application
      * @return object Route (which contains either the app Requests or an error)
      */
-    public Route getRequestsByApplication(String application_id) {
+    public CompletableFuture<Route> getRequestsByApplication(String application_id) {
         final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
         controller._findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
@@ -111,15 +115,16 @@ public class MongoRESTController extends AllDirectives {
                 requests.completeExceptionally(t);
             }
         });
-        return completeOKWithFuture(requests, Jackson.marshaller());
+        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(requests, Jackson.marshaller()));
     }
 
     /**
      * Method to get all Requests from database
      *
      * @return object Route (which contains either all Requests or an error)
+     * @param ctx
      */
-    public Route getAllRequests() {
+    public CompletableFuture<Route> getAllRequests(Executor ctx) {
         final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
         controller._findAllRequests((result, t) -> {
             if (t == null) {
@@ -129,7 +134,7 @@ public class MongoRESTController extends AllDirectives {
                 requests.completeExceptionally(t);
             }
         });
-        return completeOKWithFuture(requests, Jackson.marshaller());
+        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(requests, Jackson.marshaller()), ctx);
     }
 
     /**
@@ -137,9 +142,10 @@ public class MongoRESTController extends AllDirectives {
      * This method only forwards the request to the APIGatewayActor
      *
      * @param request the Request object supplied by the user
+     * @param ctx
      * @return object Route with the JSON representation of the incoming request
      */
-    public Route forwardRequestToAPIGateway(Request request) {
+    public CompletableFuture<Route> forwardRequestToAPIGateway(Request request, Executor ctx) {
         // request_id assignment
         request.setRequest_id(new ObjectId().toString());
 
@@ -160,6 +166,6 @@ public class MongoRESTController extends AllDirectives {
             }
         }, context.dispatcher());
 
-        return completeOKWithFuture(forwardedRequestResult, Jackson.marshaller());
+        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(forwardedRequestResult, Jackson.marshaller()), ctx);
     }
 }
