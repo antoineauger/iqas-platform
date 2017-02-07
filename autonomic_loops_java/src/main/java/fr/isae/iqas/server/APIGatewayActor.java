@@ -24,8 +24,7 @@ public class APIGatewayActor extends UntypedActor {
     private Properties prop;
     private MongoController mongoController;
     private FusekiController fusekiController;
-    private ActorRef autoManagerRawData;
-    private ActorRef autoManagerInfo;
+    private ActorRef autoManager;
 
     //TODO: to remove, only for testing with randomness
     private Random randomGenerator;
@@ -35,8 +34,8 @@ public class APIGatewayActor extends UntypedActor {
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
 
-        this.autoManagerInfo = getContext()
-                .actorOf(Props.create(ManagerActor.class, this.prop, this.mongoController), "autoManagerInfo");
+        this.autoManager = getContext()
+                .actorOf(Props.create(ManagerActor.class, this.prop, this.mongoController), "autoManager");
 
         //TODO: to remove, only for testing with randomness
         /*
@@ -78,9 +77,8 @@ public class APIGatewayActor extends UntypedActor {
 
                 boolean insertSuccess = mongoController.putRequest(incomingRequest).get();
                 if (insertSuccess) {
-                    // TODO: route request to Raw Data or Info layers
-                    // For now, all requests are forwarded to the information AM
-                    autoManagerInfo.tell(incomingRequest, getSelf());
+                    // For now, all requests are forwarded to the AM
+                    autoManager.tell(incomingRequest, getSelf());
                 }
                 else {
                     log.error("Insert of the Request " + incomingRequest.getRequest_id() + " has failed. " +

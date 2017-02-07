@@ -9,9 +9,11 @@ import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import fr.isae.iqas.mechanisms.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -29,12 +31,14 @@ public interface IPipeline {
      * @param kafkaSource the kafka consumer to use
      * @param kafkaSink the kafka producer to use
      * @param topicToPublish the name of the topic to publish to
+     * @param operatorToApply an operator to set in the graph, if supported. May be null when not wanted
      * @return the graph to run for the given pipeline
      */
 
     Graph<ClosedShape, Materializer> getPipelineGraph(Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource,
                                                       Sink<ProducerRecord, CompletionStage<Done>> kafkaSink,
-                                                      String topicToPublish);
+                                                      String topicToPublish,
+                                                      Operator operatorToApply);
 
     /**
      * @return the pipeline ID corresponding to the Class name .class
@@ -45,6 +49,13 @@ public interface IPipeline {
      * @return a String representing the pipeline name
      */
     String getPipelineName();
+
+    /**
+     * @return a list of all supported Operator
+     * @see Operator for all possibilites
+     */
+    @JsonProperty("supported_operators")
+    ArrayList<Operator> getSupportedOperators();
 
     /**
      * Tells if the setParams method can be called for the given pipeline

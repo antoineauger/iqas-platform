@@ -6,7 +6,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import scala.concurrent.duration.FiniteDuration;
 
-import static fr.isae.iqas.mechanisms.Operators.AVG;
+import static fr.isae.iqas.mechanisms.StreamOperators.AVG;
 
 /**
  * Created by an.auger on 08/11/2016.

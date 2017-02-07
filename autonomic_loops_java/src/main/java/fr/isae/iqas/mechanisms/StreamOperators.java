@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Created by an.auger on 09/11/2016.
  */
-public class Operators {
+public class StreamOperators {
 
     /**
      * @param recordList

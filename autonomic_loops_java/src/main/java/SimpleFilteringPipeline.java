@@ -6,6 +6,7 @@ import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
+import fr.isae.iqas.mechanisms.Operator;
 import fr.isae.iqas.pipelines.IPipeline;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -30,7 +31,8 @@ public class SimpleFilteringPipeline implements IPipeline {
     @Override
     public Graph<ClosedShape, Materializer> getPipelineGraph(Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource,
                                                              Sink<ProducerRecord, CompletionStage<Done>> kafkaSink,
-                                                             String topicToPublish) {
+                                                             String topicToPublish,
+                                                             Operator operatorToApply) {
         runnableGraph = GraphDSL
                 .create(builder -> {
                     final Outlet<ConsumerRecord<byte[], String>> sourceGraph = builder.add(kafkaSource).out();
@@ -53,6 +55,12 @@ public class SimpleFilteringPipeline implements IPipeline {
     @Override
     public String getPipelineName() {
         return "Simple Filtering Pipeline";
+    }
+
+    @Override
+    public ArrayList<Operator> getSupportedOperators() {
+        ArrayList<Operator> arraylistTemp = new ArrayList<>();
+        return arraylistTemp;
     }
 
     @Override

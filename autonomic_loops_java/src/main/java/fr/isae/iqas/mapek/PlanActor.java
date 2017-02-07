@@ -74,6 +74,7 @@ public class PlanActor extends UntypedActor {
         } else if (message instanceof RFCMsg) {
             log.info("Received RFCMsg message: {}", message);
 
+            //TODO for now the remedyToPlan is hardcoded!
             RFCMsg receivedRFCMsg = (RFCMsg) message;
             String remedyToPlan = "SimpleFilteringPipeline";
 

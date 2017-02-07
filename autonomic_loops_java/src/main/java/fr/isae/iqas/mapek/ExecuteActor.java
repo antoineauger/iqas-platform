@@ -97,7 +97,8 @@ public class ExecuteActor extends UntypedActor {
                                     askParentForTermination();
                                 } else {
                                     IPipeline pipelineToEnforce = castedResultPipelineObject.get(0).getPipelineObject();
-                                    myRunnableGraph = RunnableGraph.fromGraph(pipelineToEnforce.getPipelineGraph(kafkaSource, kafkaSink, topicToPublish));
+                                    myRunnableGraph = RunnableGraph.fromGraph(
+                                            pipelineToEnforce.getPipelineGraph(kafkaSource, kafkaSink, topicToPublish, null));
                                     if (myRunnableGraph != null) {
                                         myRunnableGraph.run(materializer);
                                     }
