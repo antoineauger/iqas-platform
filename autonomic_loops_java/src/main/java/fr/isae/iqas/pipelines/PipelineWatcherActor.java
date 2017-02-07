@@ -3,6 +3,8 @@ package fr.isae.iqas.pipelines;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import fr.isae.iqas.model.Pipeline;
+import fr.isae.iqas.model.messages.PipelineRequestMsg;
 import org.apache.commons.codec.binary.Hex;
 import scala.concurrent.duration.Duration;
 
@@ -85,13 +87,23 @@ public class PipelineWatcherActor extends UntypedActor {
                 log.info("Missing QoO pipeline: " + pipelineName + " - removing Pipeline");
             }
         }
-        else if (message instanceof String) {
-            if (pipelineObjects.containsKey(message)) {  // The asked pipeline exists
-                getSender().tell(pipelineObjects.get(message), getSelf());
+        else if (message instanceof PipelineRequestMsg) {
+            ArrayList<Pipeline> objectToReturn = new ArrayList<>();
+            PipelineRequestMsg request = (PipelineRequestMsg) message;
+            if (request.isGetAllPipelines()) {
+                log.info("PipelineRequestMsg: all available and concrete pipelines have been asked");
+                for (IPipeline p : pipelineObjects.values()) {
+                    objectToReturn.add(new Pipeline(p.getPipelineID(), p.getPipelineName(), p));
+                }
             }
-            else { // Otherwise the actor send back a null object
-                getSender().tell("", getSelf());
+            else {
+                if (pipelineObjects.containsKey(request.getSpecificPipelineToGet())) {
+                    log.info("PipelineRequestMsg: concrete pipeline with id \"" + request.getSpecificPipelineToGet() + "\" has been asked");
+                    IPipeline pipelineTemp = pipelineObjects.get(request.getSpecificPipelineToGet());
+                    objectToReturn.add(new Pipeline(pipelineTemp.getPipelineID(), pipelineTemp.getPipelineName(), pipelineTemp));
+                }
             }
+            getSender().tell(objectToReturn, getSelf());
         }
     }
 

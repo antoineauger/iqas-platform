@@ -26,7 +26,8 @@ import fr.isae.iqas.model.messages.TerminatedMsg;
 import fr.isae.iqas.pipelines.PipelineWatcherActor;
 import fr.isae.iqas.server.APIGatewayActor;
 import fr.isae.iqas.server.RESTServer;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.Properties;
@@ -36,14 +37,16 @@ import java.util.concurrent.CompletionStage;
  * Created by an.auger on 13/09/2016.
  */
 public class MainClass extends AllDirectives{
-    private static Logger logger = Logger.getLogger(MainClass.class);
 
     private static class LocalMaster extends UntypedActor {
-        LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+        private LoggingAdapter log;
 
         public LocalMaster(Properties prop, ActorSystem system, Http http, Materializer materializer) {
+            log = Logging.getLogger(getContext().system(), this);
+
             // Path resolution for the APIGatewayActor
             String pathAPIGatewayActor = getSelf().path().toString() + "/" + prop.getProperty("api_gateway_actor_name");
+            String pathPipelineWatcherActor = getSelf().path().toString() + "/" + "pipelineWatcherActor";
 
             // Database initialization
             MongoClient mongoClient = MongoClients.create(new ConnectionString("mongodb://"
@@ -54,7 +57,7 @@ public class MainClass extends AllDirectives{
             MongoRESTController mongoRESTController = new MongoRESTController(database, getContext(), pathAPIGatewayActor);
 
             // FusekiController to perform SPARQL queries (sensors, pipelines)
-            FusekiRESTController fusekiRESTController = new FusekiRESTController(prop, getContext(), pathAPIGatewayActor);
+            FusekiRESTController fusekiRESTController = new FusekiRESTController(prop, getContext(), pathPipelineWatcherActor);
 
             // TODO: only for sensors, sensor insertion
             mongoRESTController.getController().dropIQASDatabase();
@@ -84,7 +87,7 @@ public class MainClass extends AllDirectives{
             // We add a shutdown hook to try gracefully to unbind server when possible
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 log.info("Gracefully shutting down autonomic loops and API gateway...");
-                //mongoClient.close();
+                mongoClient.close();
                 binding.thenCompose(ServerBinding::unbind)
                         .thenAccept(unbound -> system.terminate());
             }));
@@ -96,7 +99,7 @@ public class MainClass extends AllDirectives{
             if (message instanceof TerminatedMsg) {
                 TerminatedMsg terminatedMsg = (TerminatedMsg) message;
                 if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
-                    log.info("Received TerminatedMsg message: {}", message);
+                    log.info("Received TerminatedMsg message: " + message);
                     getContext().stop(self());
                 }
             }
@@ -104,6 +107,8 @@ public class MainClass extends AllDirectives{
     }
 
     public static void main(String[] args) throws Exception {
+        Logger logger = LoggerFactory.getLogger(MainClass.class);
+
         // Reading iQAS configuration
         String iqasConfFileName = "iqas.properties";
         Properties prop = new Properties();

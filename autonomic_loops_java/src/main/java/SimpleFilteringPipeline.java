@@ -20,7 +20,7 @@ import java.util.concurrent.CompletionStage;
  * Created by an.auger on 31/01/2017.
  */
 public class SimpleFilteringPipeline implements IPipeline {
-    Map<String, String> allParams = new HashMap<>();
+    Map<String, String> defaultParams = new HashMap<>();
     List<String> customizableParams = new ArrayList<>();
 
     Graph runnableGraph = null;
@@ -46,6 +46,11 @@ public class SimpleFilteringPipeline implements IPipeline {
     }
 
     @Override
+    public String getPipelineID() {
+        return getClass().getName();
+    }
+
+    @Override
     public String getPipelineName() {
         return "Simple Filtering Pipeline";
     }
@@ -56,8 +61,8 @@ public class SimpleFilteringPipeline implements IPipeline {
     }
 
     @Override
-    public Map<String, String> getCurrentParams() {
-        return allParams;
+    public Map<String, String> getDefaultParams() {
+        return defaultParams;
     }
 
     @Override

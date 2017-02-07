@@ -28,6 +28,10 @@ public class RESTServer extends AllDirectives {
         this.fusekiRESTController = fusekiRESTController;
     }
 
+    /**
+     * Fuseki controller: sensors, QoO pipelines
+     */
+
     private CompletionStage<Route> getSensor(Executor ctx, String sensor_id) {
         return fusekiRESTController.getSensor(sensor_id, ctx);
     }
@@ -35,6 +39,22 @@ public class RESTServer extends AllDirectives {
     private CompletionStage<Route> getAllSensors(Executor ctx) {
         return fusekiRESTController.getAllSensors(ctx);
     }
+
+    private CompletionStage<Route> getAllConcretePipelineNames() {
+        return fusekiRESTController.getConcretePipelineNames();
+    }
+
+    private CompletionStage<Route> getConcretePipeline(String pipeline_id) {
+        return fusekiRESTController.getConcretePipeline(pipeline_id);
+    }
+
+    private CompletionStage<Route> getAllConcretePipelines() {
+        return fusekiRESTController.getConcretePipelines();
+    }
+
+    /**
+     * MongoDB controller: requests, MAPE-K logging
+     */
 
     private CompletionStage<Route> getRequest(Executor ctx, String request_id) {
         return mongoRESTController.getRequest(request_id, ctx);
@@ -49,17 +69,6 @@ public class RESTServer extends AllDirectives {
     }
 
     public Route createRoute() {
-
-        // TODO: somehow useful?
-        /*Route iqasRequest =
-                parameterOptional("name", optName -> {
-                    String name = optName.orElse("Mister X");
-                    //return extractExecutionContext(ctx -> onSuccess(() -> mongoController.getSensor(), Function.identity()));
-                    //CompletionStage<List<VirtualSensorJSON>> result = mongoController.getSensor();
-                    //return completeOKWithFuture(result, Jackson.<List<VirtualSensorJSON>>marshaller());
-                    return null;
-                });*/
-
         return
                 route(
                         get(() -> route(
@@ -77,6 +86,24 @@ public class RESTServer extends AllDirectives {
                                         extractExecutionContext(ctx ->
                                                 onSuccess(() -> getSensor(ctx, sensor_id), Function.identity())
                                         )
+                                ),
+                                path(segment("pipelines").slash(segment()), pipeline_id ->
+                                        extractExecutionContext(ctx ->
+                                                onSuccess(() -> getConcretePipeline(pipeline_id), Function.identity())
+                                        )
+                                ),
+                                path(segment("pipelines"), () -> parameterOptional("print", optName -> {
+                                        String print = optName.orElse("");
+                                        if (print.equals("names")) {
+                                            return extractExecutionContext(ctx ->
+                                                    onSuccess(() -> getAllConcretePipelineNames(), Function.identity())
+                                            );
+                                        }
+                                        else {
+                                            return extractExecutionContext(ctx ->
+                                                    onSuccess(() -> getAllConcretePipelines(), Function.identity())
+                                            );
+                                        }})
                                 ),
                                 path(segment("requests"), () ->
                                         extractExecutionContext(ctx ->

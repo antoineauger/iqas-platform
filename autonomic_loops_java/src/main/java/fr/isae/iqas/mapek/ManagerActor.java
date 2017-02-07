@@ -16,7 +16,6 @@ import java.util.Properties;
  * Created by an.auger on 25/09/2016.
  */
 
-//TODO Create generic types for actor creation (ManagerActor, MonitorActor, AnalyzeActor, PlanActor, ExecuteActor)
 public class ManagerActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 

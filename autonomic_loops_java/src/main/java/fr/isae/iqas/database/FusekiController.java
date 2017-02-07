@@ -10,7 +10,8 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -21,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by an.auger on 25/01/2017.
  */
 public class FusekiController {
-    private static Logger log = Logger.getLogger(FusekiController.class);
+    private Logger log = LoggerFactory.getLogger(FusekiController.class);
 
     private String sparqlService = null;
     private String baseStringForRequests = null;

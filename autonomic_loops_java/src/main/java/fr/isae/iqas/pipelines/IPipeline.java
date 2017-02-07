@@ -7,6 +7,8 @@ import akka.stream.Graph;
 import akka.stream.Materializer;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
@@ -17,6 +19,8 @@ import java.util.concurrent.CompletionStage;
 /**
  * Created by an.auger on 31/01/2017.
  */
+
+@JsonIgnoreProperties({"pipelineName", "pipelineID"})
 public interface IPipeline {
 
     /**
@@ -27,9 +31,15 @@ public interface IPipeline {
      * @param topicToPublish the name of the topic to publish to
      * @return the graph to run for the given pipeline
      */
+
     Graph<ClosedShape, Materializer> getPipelineGraph(Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource,
                                                       Sink<ProducerRecord, CompletionStage<Done>> kafkaSink,
                                                       String topicToPublish);
+
+    /**
+     * @return the pipeline ID corresponding to the Class name .class
+     */
+    String getPipelineID();
 
     /**
      * @return a String representing the pipeline name
@@ -40,18 +50,21 @@ public interface IPipeline {
      * Tells if the setParams method can be called for the given pipeline
      * @return a true or false boolean
      */
+    @JsonProperty("is_adaptable")
     boolean isAdaptable();
 
     /**
      * Get the value of the current enforced parameters
      * @return Map(String, String) following the format (key, value)
      */
-    Map<String, String> getCurrentParams();
+    @JsonProperty("default_params")
+    Map<String, String> getDefaultParams();
 
     /**
      * Get only the name of the customizable parameters
      * @return List(String) of the parameter names
      */
+    @JsonProperty("customizable_params")
     List<String> getCustomizableParams();
 
     /**

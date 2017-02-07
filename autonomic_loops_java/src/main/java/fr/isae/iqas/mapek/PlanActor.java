@@ -75,7 +75,7 @@ public class PlanActor extends UntypedActor {
             log.info("Received RFCMsg message: {}", message);
 
             RFCMsg receivedRFCMsg = (RFCMsg) message;
-            String remedyToPlan = "SimpleFilteringPipeline2";
+            String remedyToPlan = "SimpleFilteringPipeline";
 
             if (execActorsRefs.containsKey(actorNameToResolve)) { // if reference found, the corresponding actor has been started
                 ActorRef actorRefToStop = execActorsRefs.get(actorNameToResolve);

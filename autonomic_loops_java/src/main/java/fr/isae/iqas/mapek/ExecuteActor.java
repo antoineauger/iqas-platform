@@ -16,6 +16,8 @@ import akka.stream.javadsl.RunnableGraph;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import akka.util.Timeout;
+import fr.isae.iqas.model.Pipeline;
+import fr.isae.iqas.model.messages.PipelineRequestMsg;
 import fr.isae.iqas.model.messages.TerminatedMsg;
 import fr.isae.iqas.pipelines.IPipeline;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -25,6 +27,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import scala.concurrent.Future;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -81,21 +84,20 @@ public class ExecuteActor extends UntypedActor {
                 if (t != null) {
                     log.error("Unable to find the PipelineWatcherActor: " + t.toString());
                 } else {
-                    ask(pipelineWatcherActor, remedyToPlan, new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {
+                    ask(pipelineWatcherActor, new PipelineRequestMsg(remedyToPlan), new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {
                         @Override
                         public void onComplete(Throwable t, Object pipelineObject) throws Throwable {
                             if (t != null) {
                                 log.error("Unable to find the PipelineWatcherActor: " + t.toString());
-                                log.error(t.toString());
                                 askParentForTermination();
                             } else {
-                                if (pipelineObject instanceof String) {
+                                ArrayList<Pipeline> castedResultPipelineObject = (ArrayList<Pipeline>) pipelineObject;
+                                if (castedResultPipelineObject.size() == 0) {
                                     log.error("Unable to retrieve the specified QoO pipeline " + remedyToPlan);
                                     askParentForTermination();
                                 } else {
-                                    IPipeline pipelineToEnforce = (IPipeline) pipelineObject;
+                                    IPipeline pipelineToEnforce = castedResultPipelineObject.get(0).getPipelineObject();
                                     myRunnableGraph = RunnableGraph.fromGraph(pipelineToEnforce.getPipelineGraph(kafkaSource, kafkaSink, topicToPublish));
-                                    System.out.println(pipelineToEnforce.getPipelineName());
                                     if (myRunnableGraph != null) {
                                         myRunnableGraph.run(materializer);
                                     }

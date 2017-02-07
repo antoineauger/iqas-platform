@@ -10,8 +10,8 @@ import akka.util.Timeout;
 import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.virtualsensor.old.VirtualSensorJSON;
-import org.apache.log4j.Logger;
 import org.bson.types.ObjectId;
+import org.slf4j.LoggerFactory;
 import scala.concurrent.Future;
 
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * Created by an.auger on 17/11/2016.
  */
 public class MongoRESTController extends AllDirectives {
-    private static Logger log = Logger.getLogger(MongoRESTController.class);
+    private org.slf4j.Logger log = LoggerFactory.getLogger(MongoRESTController.class);
 
     private MongoController controller;
     private UntypedActorContext context;

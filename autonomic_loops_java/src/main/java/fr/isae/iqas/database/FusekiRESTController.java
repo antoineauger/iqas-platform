@@ -2,18 +2,25 @@ package fr.isae.iqas.database;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActorContext;
+import akka.dispatch.OnComplete;
 import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
+import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.isae.iqas.model.Pipeline;
+import fr.isae.iqas.model.messages.PipelineRequestMsg;
 import ioinformarics.oss.jackson.module.jsonld.JsonldModule;
 import ioinformarics.oss.jackson.module.jsonld.JsonldResource;
 import ioinformarics.oss.jackson.module.jsonld.JsonldResourceBuilder;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import scala.concurrent.Await;
 import scala.concurrent.Future;
 
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -23,33 +30,31 @@ import java.util.concurrent.TimeUnit;
  * Created by an.auger on 03/02/2017.
  */
 public class FusekiRESTController extends AllDirectives {
-    private static Logger log = Logger.getLogger(FusekiRESTController.class);
+    private Logger log = LoggerFactory.getLogger(FusekiRESTController.class);
 
     private String baseQoOIRI = null;
     private FusekiController controller = null;
     private UntypedActorContext context;
-    private String pathAPIGatewayActor;
+    private String pathPipelineWatcherActor;
 
-    public FusekiRESTController(Properties prop, UntypedActorContext context, String pathAPIGatewayActor) {
+    public FusekiRESTController(Properties prop, UntypedActorContext context, String pathPipelineWatcherActor) {
         this.controller = new FusekiController(prop);
-
         String fullQoOIRI = prop.getProperty("qooIRI");
         this.baseQoOIRI = fullQoOIRI.substring(0,fullQoOIRI.length()-1);
         this.context = context;
-        this.pathAPIGatewayActor = pathAPIGatewayActor;
+        this.pathPipelineWatcherActor = pathPipelineWatcherActor;
     }
 
     public FusekiController getController() {
         return controller;
     }
 
-    public Future<ActorRef> getAPIGatewayActor() {
-        return context.actorSelection(pathAPIGatewayActor).resolveOne(new Timeout(5, TimeUnit.SECONDS));
+    public Future<ActorRef> getPipelineWatcherActor() {
+        return context.actorSelection(pathPipelineWatcherActor).resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
     /**
      * Sensors
-     * @param ctx
      */
 
     public CompletableFuture<Route> getAllSensors(Executor ctx) {
@@ -92,6 +97,122 @@ public class FusekiRESTController extends AllDirectives {
         });
 
         return sensor;
+    }
+
+    /**
+     * Pipelines
+     */
+
+    public CompletableFuture<Route> getConcretePipelineNames() {
+        CompletableFuture<Route> routeResponse;
+        CompletableFuture<ArrayList<String>> pipelines = new CompletableFuture<>();
+
+        getPipelineWatcherActor().onComplete(new OnComplete<ActorRef>() {
+            @Override
+            public void onComplete(Throwable t, ActorRef pipelineWatcherActor) throws Throwable {
+                if (t != null) {
+                    pipelines.completeExceptionally(
+                            new Throwable("Unable to find the PipelineWatcherActor: " + t.toString())
+                    );
+                }
+                else {
+                    PipelineRequestMsg a = new PipelineRequestMsg();
+                    ArrayList<String> arrayTemp = new ArrayList<>();
+                    Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
+                    Future<Object> o = Patterns.ask(pipelineWatcherActor, a, timeout);
+                    ArrayList<Pipeline> result = (ArrayList<Pipeline>) Await.result(o, timeout.duration());
+                    for (Pipeline p : result) {
+                        arrayTemp.add(p.getName());
+                    }
+                    pipelines.complete(arrayTemp);
+                }
+            }
+        }, context.dispatcher());
+
+        routeResponse = pipelines.thenApply((result) -> {
+            if (result.size() == 0) {
+                return complete((HttpResponse.create()
+                        .withStatus(400)
+                        .withEntity("No pipeline has been found!")));
+            }
+            else {
+                return completeOKWithFuture(pipelines, Jackson.marshaller());
+            }
+        });
+
+        return routeResponse;
+    }
+
+    public CompletableFuture<Route> getConcretePipelines() {
+        CompletableFuture<Route> routeResponse;
+        CompletableFuture<ArrayList<Pipeline>> pipelines = new CompletableFuture<>();
+
+        getPipelineWatcherActor().onComplete(new OnComplete<ActorRef>() {
+            @Override
+            public void onComplete(Throwable t, ActorRef pipelineWatcherActor) throws Throwable {
+                if (t != null) {
+                    pipelines.completeExceptionally(
+                            new Throwable("Unable to find the PipelineWatcherActor: " + t.toString())
+                    );
+                }
+                else {
+                    PipelineRequestMsg a = new PipelineRequestMsg();
+                    Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
+                    Future<Object> o = Patterns.ask(pipelineWatcherActor, a, timeout);
+                    ArrayList<Pipeline> result = (ArrayList<Pipeline>) Await.result(o, timeout.duration());
+                    pipelines.complete(result);
+                }
+            }
+        }, context.dispatcher());
+
+        routeResponse = pipelines.thenApply((result) -> {
+            if (result.size() == 0) {
+                return complete((HttpResponse.create()
+                        .withStatus(400)
+                        .withEntity("No pipeline has been found!")));
+            }
+            else {
+                return completeOKWithFuture(pipelines, Jackson.marshaller());
+            }
+        });
+
+        return routeResponse;
+    }
+
+    public CompletableFuture<Route> getConcretePipeline(String pipeline_id) {
+        CompletableFuture<Route> routeResponse;
+        CompletableFuture<ArrayList<Pipeline>> pipeline = new CompletableFuture<>();
+
+        getPipelineWatcherActor().onComplete(new OnComplete<ActorRef>() {
+            @Override
+            public void onComplete(Throwable t, ActorRef pipelineWatcherActor) throws Throwable {
+                if (t != null) {
+                    pipeline.completeExceptionally(
+                            new Throwable("Unable to find the PipelineWatcherActor: " + t.toString())
+                    );
+                }
+                else {
+                    PipelineRequestMsg a = new PipelineRequestMsg(pipeline_id);
+                    Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
+                    Future<Object> o = Patterns.ask(pipelineWatcherActor, a, timeout);
+                    ArrayList<Pipeline> result = (ArrayList<Pipeline>) Await.result(o, timeout.duration());
+                    pipeline.complete(result);
+                }
+            }
+        }, context.dispatcher());
+
+        routeResponse = pipeline.thenApply((result) -> {
+            if (result.size() == 0) {
+                return complete((HttpResponse.create()
+                        .withStatus(400)
+                        .withEntity("No pipeline found with id \"" + pipeline_id + "\"")));
+            }
+            else {
+                return completeOKWithFuture(pipeline, Jackson.marshaller());
+            }
+        });
+
+        return routeResponse;
     }
 
 }

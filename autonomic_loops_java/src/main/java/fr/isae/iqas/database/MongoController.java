@@ -8,8 +8,9 @@ import fr.isae.iqas.MainClass;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.Status;
 import fr.isae.iqas.model.virtualsensor.old.VirtualSensorJSON;
-import org.apache.log4j.Logger;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -25,7 +26,7 @@ import static com.mongodb.client.model.Filters.eq;
  * Created by an.auger on 20/09/2016.
  */
 public class MongoController extends AllDirectives {
-    private static Logger log = Logger.getLogger(MongoController.class);
+    private Logger log = LoggerFactory.getLogger(MongoController.class);
 
     private MongoDatabase mongoDatabase = null;
 
