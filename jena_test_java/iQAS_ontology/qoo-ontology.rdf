@@ -210,6 +210,36 @@
     
 
 
+    <!-- http://isae.fr/iqas/qoo-ontology#variation -->
+
+    <rdfs:Datatype rdf:about="http://isae.fr/iqas/qoo-ontology#variation">
+        <owl:equivalentClass>
+            <rdfs:Datatype>
+                <owl:oneOf>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#List"/>
+                        <rdf:first>CONSTANT</rdf:first>
+                        <rdf:rest>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#List"/>
+                                <rdf:first>HIGH</rdf:first>
+                                <rdf:rest>
+                                    <rdf:Description>
+                                        <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#List"/>
+                                        <rdf:first>LOW</rdf:first>
+                                        <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+                                    </rdf:Description>
+                                </rdf:rest>
+                            </rdf:Description>
+                        </rdf:rest>
+                    </rdf:Description>
+                </owl:oneOf>
+            </rdfs:Datatype>
+        </owl:equivalentClass>
+    </rdfs:Datatype>
+    
+
+
     <!-- 
     ///////////////////////////////////////////////////////////////////////////////////////
     //
@@ -218,6 +248,16 @@
     ///////////////////////////////////////////////////////////////////////////////////////
      -->
 
+    
+
+
+    <!-- http://isae.fr/iqas/qoo-ontology#associatedTo -->
+
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#associatedTo">
+        <owl:inverseOf rdf:resource="http://isae.fr/iqas/qoo-ontology#has"/>
+        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
+        <rdfs:range rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#MeasurementCapability"/>
+    </owl:ObjectProperty>
     
 
 
@@ -241,19 +281,19 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#composed_of -->
-
-    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#composed_of">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-    </owl:ObjectProperty>
-    
-
-
     <!-- http://isae.fr/iqas/qoo-ontology#concerns -->
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#concerns">
         <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoORequirement"/>
+        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://isae.fr/iqas/qoo-ontology#considers -->
+
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#considers">
+        <rdfs:domain rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Platform"/>
         <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
     </owl:ObjectProperty>
     
@@ -271,7 +311,7 @@
     <!-- http://isae.fr/iqas/qoo-ontology#decreases -->
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#decreases">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
+        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
         <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
     </owl:ObjectProperty>
     
@@ -298,9 +338,9 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#expressed_by -->
+    <!-- http://isae.fr/iqas/qoo-ontology#expressedBy -->
 
-    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#expressed_by">
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#expressedBy">
         <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoORequirement"/>
         <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOParameter"/>
     </owl:ObjectProperty>
@@ -316,29 +356,21 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#hasParams -->
+    <!-- http://isae.fr/iqas/qoo-ontology#has -->
 
-    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#hasParams">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#has">
+        <rdfs:domain rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#MeasurementCapability"/>
+        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
     </owl:ObjectProperty>
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#has_next -->
+    <!-- http://isae.fr/iqas/qoo-ontology#impacts -->
 
-    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#has_next">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-    </owl:ObjectProperty>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#has_previous -->
-
-    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#has_previous">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#impacts">
+        <owl:inverseOf rdf:resource="http://isae.fr/iqas/qoo-ontology#isImpactedBy"/>
+        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
+        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
     </owl:ObjectProperty>
     
 
@@ -346,8 +378,27 @@
     <!-- http://isae.fr/iqas/qoo-ontology#increases -->
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#increases">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
+        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
         <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://isae.fr/iqas/qoo-ontology#isImpactedBy -->
+
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#isImpactedBy">
+        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://isae.fr/iqas/qoo-ontology#isInTheAreaOf -->
+
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#isInTheAreaOf">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#SymmetricProperty"/>
+        <rdfs:domain rdf:resource="http://www.w3.org/2003/01/geo/wgs84_pos#Point"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2003/01/geo/wgs84_pos#Point"/>
     </owl:ObjectProperty>
     
 
@@ -362,21 +413,12 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#isRelatedTo -->
-
-    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#isRelatedTo">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#SensingRate"/>
-        <rdfs:range rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Observation"/>
-    </owl:ObjectProperty>
-    
-
-
     <!-- http://isae.fr/iqas/qoo-ontology#isSupportedBy -->
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#isSupportedBy">
         <owl:inverseOf rdf:resource="http://isae.fr/iqas/qoo-ontology#supports"/>
         <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#Operator"/>
-        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
+        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
     </owl:ObjectProperty>
     
 
@@ -384,7 +426,7 @@
     <!-- http://isae.fr/iqas/qoo-ontology#neutralFor -->
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#neutralFor">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
+        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
         <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
     </owl:ObjectProperty>
     
@@ -399,18 +441,18 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#requires_observation -->
+    <!-- http://isae.fr/iqas/qoo-ontology#requiresObservation -->
 
-    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#requires_observation">
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#requiresObservation">
         <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#ObservationRequest"/>
         <rdfs:range rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Observation"/>
     </owl:ObjectProperty>
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#requires_qoo -->
+    <!-- http://isae.fr/iqas/qoo-ontology#requiresQoo -->
 
-    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#requires_qoo">
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#requiresQoo">
         <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#ObservationRequest"/>
         <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoORequirement"/>
     </owl:ObjectProperty>
@@ -420,7 +462,7 @@
     <!-- http://isae.fr/iqas/qoo-ontology#supports -->
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#supports">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
+        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
         <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#Operator"/>
     </owl:ObjectProperty>
     
@@ -432,15 +474,6 @@
         <rdfs:domain rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#SensingDevice"/>
         <rdfs:range rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#Coverage"/>
         <rdfs:comment>Links the devices with their coverages.</rdfs:comment>
-    </owl:ObjectProperty>
-    
-
-
-    <!-- http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCurrently -->
-
-    <owl:ObjectProperty rdf:about="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCurrently">
-        <rdfs:domain rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Sensor"/>
-        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#CurrentSetting"/>
     </owl:ObjectProperty>
     
 
@@ -642,20 +675,11 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#absolute_order_in_pipeline -->
+    <!-- http://isae.fr/iqas/qoo-ontology#capabilityVariation -->
 
-    <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#absolute_order_in_pipeline">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
-    </owl:DatatypeProperty>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#batteryLifetimeValue -->
-
-    <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#batteryLifetimeValue">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#&apos;BatteryLifetime&apos;"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#capabilityVariation">
+        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
+        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#variation"/>
     </owl:DatatypeProperty>
     
 
@@ -696,15 +720,6 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#mechanismName -->
-
-    <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#mechanismName">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
-    </owl:DatatypeProperty>
-    
-
-
     <!-- http://isae.fr/iqas/qoo-ontology#min_treshold -->
 
     <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#min_treshold">
@@ -723,29 +738,11 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#param_name -->
+    <!-- http://isae.fr/iqas/qoo-ontology#qooAttributeVariation -->
 
-    <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#param_name">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
-    </owl:DatatypeProperty>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#param_value -->
-
-    <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#param_value">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
-    </owl:DatatypeProperty>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#sensingRateValue -->
-
-    <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#sensingRateValue">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#SensingRate"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#qooAttributeVariation">
+        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
+        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#variation"/>
     </owl:DatatypeProperty>
     
 
@@ -753,7 +750,7 @@
     <!-- http://isae.fr/iqas/qoo-ontology#sensorStateValue -->
 
     <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#sensorStateValue">
-        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#State"/>
+        <rdfs:domain rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Sensor"/>
         <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#sensorState"/>
     </owl:DatatypeProperty>
     
@@ -777,6 +774,15 @@
     
 
 
+    <!-- http://isae.fr/iqas/qoo-ontology#shouldBe -->
+
+    <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#shouldBe">
+        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+        <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#variation"/>
+    </owl:DatatypeProperty>
+    
+
+
     <!-- http://isae.fr/iqas/qoo-ontology#target_value -->
 
     <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#target_value">
@@ -792,15 +798,6 @@
         <rdfs:domain rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#Service"/>
         <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#anyURI"/>
         <rdfs:comment>Endpoint of the service. It is usually a URL where the service is available.</rdfs:comment>
-    </owl:DatatypeProperty>
-    
-
-
-    <!-- http://purl.oclc.org/NET/UNIS/fiware/iot-lite#id -->
-
-    <owl:DatatypeProperty rdf:about="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#id">
-        <rdfs:domain rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Device"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
     </owl:DatatypeProperty>
     
 
@@ -855,438 +852,52 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#CurrentSetting -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#CurrentSetting"/>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#ObsAccuracy -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#ObsAccuracy">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#ObsFreshness -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#ObsFreshness">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#ObsRate -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#ObsRate">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-    </owl:Class>
-    
-
-
     <!-- http://isae.fr/iqas/qoo-ontology#ObservationRequest -->
 
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#ObservationRequest"/>
+    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#ObservationRequest">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#requiresObservation"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Observation"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#requiresQoo"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoORequirement"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#requiresObservation"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Observation"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#requiresQoo"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoORequirement"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
     
 
 
     <!-- http://isae.fr/iqas/qoo-ontology#Operator -->
 
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#Operator"/>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#Parameter -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineAccurate -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineAccurate">
-        <owl:equivalentClass>
-            <owl:Class>
-                <owl:intersectionOf rdf:parseType="Collection">
-                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-                    <owl:Restriction>
-                        <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#composed_of"/>
-                        <owl:someValuesFrom>
-                            <owl:Restriction>
-                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                            </owl:Restriction>
-                        </owl:someValuesFrom>
-                    </owl:Restriction>
-                </owl:intersectionOf>
-            </owl:Class>
-        </owl:equivalentClass>
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineEco -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineEco">
-        <owl:equivalentClass>
-            <owl:Class>
-                <owl:intersectionOf rdf:parseType="Collection">
-                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-                    <owl:Restriction>
-                        <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#composed_of"/>
-                        <owl:someValuesFrom>
-                            <owl:Restriction>
-                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                            </owl:Restriction>
-                        </owl:someValuesFrom>
-                    </owl:Restriction>
-                </owl:intersectionOf>
-            </owl:Class>
-        </owl:equivalentClass>
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineEcoAndAccurate -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineEcoAndAccurate">
-        <owl:equivalentClass>
-            <owl:Class>
-                <owl:intersectionOf rdf:parseType="Collection">
-                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-                    <owl:Restriction>
-                        <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#composed_of"/>
-                        <owl:someValuesFrom>
-                            <owl:Class>
-                                <owl:unionOf rdf:parseType="Collection">
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                </owl:unionOf>
-                            </owl:Class>
-                        </owl:someValuesFrom>
-                    </owl:Restriction>
-                </owl:intersectionOf>
-            </owl:Class>
-        </owl:equivalentClass>
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineEcoAndFast -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineEcoAndFast">
-        <owl:equivalentClass>
-            <owl:Class>
-                <owl:intersectionOf rdf:parseType="Collection">
-                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-                    <owl:Restriction>
-                        <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#composed_of"/>
-                        <owl:someValuesFrom>
-                            <owl:Class>
-                                <owl:unionOf rdf:parseType="Collection">
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                </owl:unionOf>
-                            </owl:Class>
-                        </owl:someValuesFrom>
-                    </owl:Restriction>
-                </owl:intersectionOf>
-            </owl:Class>
-        </owl:equivalentClass>
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineFast -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineFast">
-        <owl:equivalentClass>
-            <owl:Class>
-                <owl:intersectionOf rdf:parseType="Collection">
-                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-                    <owl:Restriction>
-                        <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#composed_of"/>
-                        <owl:someValuesFrom>
-                            <owl:Restriction>
-                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                            </owl:Restriction>
-                        </owl:someValuesFrom>
-                    </owl:Restriction>
-                </owl:intersectionOf>
-            </owl:Class>
-        </owl:equivalentClass>
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurate -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurate">
-        <owl:equivalentClass>
-            <owl:Class>
-                <owl:intersectionOf rdf:parseType="Collection">
-                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-                    <owl:Restriction>
-                        <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#composed_of"/>
-                        <owl:someValuesFrom>
-                            <owl:Class>
-                                <owl:unionOf rdf:parseType="Collection">
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                </owl:unionOf>
-                            </owl:Class>
-                        </owl:someValuesFrom>
-                    </owl:Restriction>
-                </owl:intersectionOf>
-            </owl:Class>
-        </owl:equivalentClass>
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurateAndEco -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurateAndEco">
-        <owl:equivalentClass>
-            <owl:Class>
-                <owl:intersectionOf rdf:parseType="Collection">
-                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-                    <owl:Restriction>
-                        <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#composed_of"/>
-                        <owl:someValuesFrom>
-                            <owl:Class>
-                                <owl:unionOf rdf:parseType="Collection">
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                    <owl:Class>
-                                        <owl:intersectionOf rdf:parseType="Collection">
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                                            </owl:Restriction>
-                                            <owl:Restriction>
-                                                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                                                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                                            </owl:Restriction>
-                                        </owl:intersectionOf>
-                                    </owl:Class>
-                                </owl:unionOf>
-                            </owl:Class>
-                        </owl:someValuesFrom>
-                    </owl:Restriction>
-                </owl:intersectionOf>
-            </owl:Class>
-        </owl:equivalentClass>
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
+    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#Operator">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#isSupportedBy"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#isSupportedBy"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
     </owl:Class>
     
 
@@ -1294,69 +905,36 @@
     <!-- http://isae.fr/iqas/qoo-ontology#QoOAttribute -->
 
     <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#QoOAttribute">
-        <owl:equivalentClass>
-            <owl:Class>
-                <owl:unionOf rdf:parseType="Collection">
-                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-                </owl:unionOf>
-            </owl:Class>
-        </owl:equivalentClass>
         <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#isImpactedBy"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#isImpactedBy"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
     </owl:Class>
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#QoOMechanism -->
+    <!-- http://isae.fr/iqas/qoo-ontology#QoOEffect -->
 
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#QoOMechanism">
+    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#QoOEffect">
         <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
         <rdfs:subClassOf>
             <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#impacts"/>
                 <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
             </owl:Restriction>
         </rdfs:subClassOf>
         <rdfs:subClassOf>
             <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#hasParams"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-            </owl:Restriction>
-        </rdfs:subClassOf>
-        <rdfs:subClassOf>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-            </owl:Restriction>
-        </rdfs:subClassOf>
-        <rdfs:subClassOf>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-            </owl:Restriction>
-        </rdfs:subClassOf>
-        <rdfs:subClassOf>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-            </owl:Restriction>
-        </rdfs:subClassOf>
-        <rdfs:subClassOf>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#hasParams"/>
-                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-            </owl:Restriction>
-        </rdfs:subClassOf>
-        <rdfs:subClassOf>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-            </owl:Restriction>
-        </rdfs:subClassOf>
-        <rdfs:subClassOf>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#impacts"/>
                 <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
             </owl:Restriction>
         </rdfs:subClassOf>
@@ -1376,6 +954,66 @@
 
     <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#QoOPipeline">
         <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#isProvidedBy"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Platform"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#supports"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#Operator"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#isProvidedBy"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Platform"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#supports"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#Operator"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
     </owl:Class>
     
 
@@ -1384,6 +1022,31 @@
 
     <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#QoORequirement">
         <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#expressedBy"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOParameter"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#concerns"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#expressedBy"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOParameter"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#concerns"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
     </owl:Class>
     
 
@@ -1394,28 +1057,10 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#SensingRate -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#SensingRate">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#CurrentSetting"/>
-        <rdfs:comment>Current sensing rate of a sensor for a given Feature of Interest</rdfs:comment>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#State -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#State">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#CurrentSetting"/>
-        <rdfs:comment>Current state of a sensor (connected, disconnected, idle, sensing)</rdfs:comment>
-    </owl:Class>
-    
-
-
     <!-- http://isae.fr/iqas/qoo-ontology#&apos;BatteryLifetime&apos; -->
 
     <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#&apos;BatteryLifetime&apos;">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#CurrentSetting"/>
+        <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#MeasurementProperty"/>
     </owl:Class>
     
 
@@ -1460,6 +1105,18 @@
     <owl:Class rdf:about="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#Service">
         <rdfs:subClassOf>
             <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#exposedBy"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Platform"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#exposedBy"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Platform"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
                 <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#givesAccessTo"/>
                 <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Observation"/>
             </owl:Restriction>
@@ -1496,6 +1153,18 @@
 
     <owl:Class rdf:about="http://purl.oclc.org/NET/ssnx/ssn#Device">
         <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#System"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#contains"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Device"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#contains"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Device"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
     </owl:Class>
     
 
@@ -1549,6 +1218,30 @@
         <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Property"/>
         <rdfs:subClassOf>
             <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#has"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#forProperty"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Property"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementProperty"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#MeasurementProperty"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#has"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
                 <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#forProperty"/>
                 <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Property"/>
             </owl:Restriction>
@@ -1584,6 +1277,12 @@
     <owl:Class rdf:about="http://purl.oclc.org/NET/ssnx/ssn#Observation">
         <rdfs:subClassOf>
             <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#observationResult"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#SensorOutput"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
                 <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#canBeRetrievedThrough"/>
                 <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#Service"/>
             </owl:Restriction>
@@ -1610,6 +1309,13 @@
             <owl:Restriction>
                 <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#observedProperty"/>
                 <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Property"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#canBeRetrievedThrough"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#Service"/>
             </owl:Restriction>
         </rdfs:subClassOf>
         <rdfs:subClassOf>
@@ -1648,6 +1354,48 @@
     <owl:Class rdf:about="http://purl.oclc.org/NET/ssnx/ssn#Platform">
         <rdfs:subClassOf>
             <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#considers"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#exposes"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#Service"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#provides"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#attachedSystem"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#System"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#considers"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#exposes"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#Service"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#provides"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
                 <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#attachedSystem"/>
                 <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#System"/>
             </owl:Restriction>
@@ -1673,6 +1421,12 @@
                 <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#FeatureOfInterest"/>
             </owl:Restriction>
         </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#isPropertyOf"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#FeatureOfInterest"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
     </owl:Class>
     
 
@@ -1690,6 +1444,19 @@
     <owl:Class rdf:about="http://purl.oclc.org/NET/ssnx/ssn#SensingDevice">
         <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Device"/>
         <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Sensor"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCoverage"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#Coverage"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCoverage"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#Coverage"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
     </owl:Class>
     
 
@@ -1699,20 +1466,63 @@
     <owl:Class rdf:about="http://purl.oclc.org/NET/ssnx/ssn#Sensor">
         <rdfs:subClassOf>
             <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#canBeRetrievedThrough"/>
-                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#Service"/>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#belongsTo"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Device"/>
             </owl:Restriction>
         </rdfs:subClassOf>
         <rdfs:subClassOf>
             <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#canBeRetrievedThrough"/>
-                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#Service"/>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasSensingDevice"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#SensingDevice"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementCapability"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#MeasurementCapability"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#madeObservation"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Observation"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#belongsTo"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Device"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasSensingDevice"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#SensingDevice"/>
             </owl:Restriction>
         </rdfs:subClassOf>
         <rdfs:subClassOf>
             <owl:Restriction>
                 <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementCapability"/>
                 <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#MeasurementCapability"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#madeObservation"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Observation"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://www.w3.org/2003/01/geo/wgs84_pos#location"/>
+                <owl:allValuesFrom rdf:resource="http://www.w3.org/2003/01/geo/wgs84_pos#Point"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://www.w3.org/2003/01/geo/wgs84_pos#location"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="http://www.w3.org/2003/01/geo/wgs84_pos#Point"/>
             </owl:Restriction>
         </rdfs:subClassOf>
     </owl:Class>
@@ -1734,6 +1544,18 @@
                 <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Sensor"/>
             </owl:Restriction>
         </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#hasValue"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#ObservationValue"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#isProducedBy"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Sensor"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
     </owl:Class>
     
 
@@ -1743,8 +1565,26 @@
     <owl:Class rdf:about="http://purl.oclc.org/NET/ssnx/ssn#System">
         <rdfs:subClassOf>
             <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#isSubSystemOf"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#System"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
                 <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#hasSubSystem"/>
                 <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#System"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#onPlatform"/>
+                <owl:someValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Platform"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#isSubSystemOf"/>
+                <owl:allValuesFrom rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#System"/>
             </owl:Restriction>
         </rdfs:subClassOf>
         <rdfs:subClassOf>
@@ -1765,19 +1605,60 @@
 
     <!-- http://purl.org/NET/ssnx/qu/qu#QuantityKind -->
 
-    <owl:Class rdf:about="http://purl.org/NET/ssnx/qu/qu#QuantityKind"/>
+    <owl:Class rdf:about="http://purl.org/NET/ssnx/qu/qu#QuantityKind">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasQuantityKind"/>
+                <owl:allValuesFrom rdf:resource="http://purl.org/NET/ssnx/qu/qu#QuantityKind"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasQuantityKind"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="http://purl.org/NET/ssnx/qu/qu#QuantityKind"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
     
 
 
     <!-- http://purl.org/NET/ssnx/qu/qu#Unit -->
 
-    <owl:Class rdf:about="http://purl.org/NET/ssnx/qu/qu#Unit"/>
+    <owl:Class rdf:about="http://purl.org/NET/ssnx/qu/qu#Unit">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasUnit"/>
+                <owl:allValuesFrom rdf:resource="http://purl.org/NET/ssnx/qu/qu#Unit"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasUnit"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="http://purl.org/NET/ssnx/qu/qu#Unit"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
     
 
 
     <!-- http://www.w3.org/2003/01/geo/wgs84_pos#Point -->
 
-    <owl:Class rdf:about="http://www.w3.org/2003/01/geo/wgs84_pos#Point"/>
+    <owl:Class rdf:about="http://www.w3.org/2003/01/geo/wgs84_pos#Point">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#isInTheAreaOf"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2003/01/geo/wgs84_pos#Point"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#isInTheAreaOf"/>
+                <owl:allValuesFrom rdf:resource="http://www.w3.org/2003/01/geo/wgs84_pos#Point"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
     
 
 
@@ -1792,121 +1673,10 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#AGGREGATION -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#AGGREGATION">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-            </owl:Restriction>
-        </rdf:type>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-            </owl:Restriction>
-        </rdf:type>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-            </owl:Restriction>
-        </rdf:type>
-        <owl:sameAs rdf:resource="http://isae.fr/iqas/qoo-ontology#mech_aggreg_simple"/>
-    </owl:NamedIndividual>
-    
-
-
     <!-- http://isae.fr/iqas/qoo-ontology#AVG -->
 
     <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#AVG">
         <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Operator"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#FILTERING -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#FILTERING">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-            </owl:Restriction>
-        </rdf:type>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-            </owl:Restriction>
-        </rdf:type>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-            </owl:Restriction>
-        </rdf:type>
-        <owl:sameAs rdf:resource="http://isae.fr/iqas/qoo-ontology#mech_filter_simple"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#FUSION -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#FUSION">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-            </owl:Restriction>
-        </rdf:type>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-            </owl:Restriction>
-        </rdf:type>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-            </owl:Restriction>
-        </rdf:type>
-        <owl:sameAs rdf:resource="http://isae.fr/iqas/qoo-ontology#mech_fusion_avg"/>
-        <supports rdf:resource="http://isae.fr/iqas/qoo-ontology#AVG"/>
-        <supports rdf:resource="http://isae.fr/iqas/qoo-ontology#MAX"/>
-        <supports rdf:resource="http://isae.fr/iqas/qoo-ontology#MIN"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#MACHINE_LEARNING -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#MACHINE_LEARNING">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#decreases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-            </owl:Restriction>
-        </rdf:type>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-            </owl:Restriction>
-        </rdf:type>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-            </owl:Restriction>
-        </rdf:type>
-        <owl:sameAs rdf:resource="http://isae.fr/iqas/qoo-ontology#mech_ML_repeat"/>
     </owl:NamedIndividual>
     
 
@@ -1927,214 +1697,6 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#NO_MECHANISM -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#NO_MECHANISM">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#increases"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-            </owl:Restriction>
-        </rdf:type>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-            </owl:Restriction>
-        </rdf:type>
-        <rdf:type>
-            <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#neutralFor"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-            </owl:Restriction>
-        </rdf:type>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#mech_ML_repeat -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#mech_ML_repeat">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <hasParams rdf:resource="http://isae.fr/iqas/qoo-ontology#params_p2_m1"/>
-        <hasParams rdf:resource="http://isae.fr/iqas/qoo-ontology#params_p2_m1_2"/>
-        <absolute_order_in_pipeline rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</absolute_order_in_pipeline>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#mech_aggreg_simple -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#mech_aggreg_simple">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <hasParams rdf:resource="http://isae.fr/iqas/qoo-ontology#params_p3_m1"/>
-        <hasParams rdf:resource="http://isae.fr/iqas/qoo-ontology#params_p3_m1_2"/>
-        <has_next rdf:resource="http://isae.fr/iqas/qoo-ontology#mech_fusion_avg"/>
-        <absolute_order_in_pipeline rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</absolute_order_in_pipeline>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#mech_filter_simple -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#mech_filter_simple">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <hasParams rdf:resource="http://isae.fr/iqas/qoo-ontology#params_p1_m1"/>
-        <hasParams rdf:resource="http://isae.fr/iqas/qoo-ontology#params_p1_m1_2"/>
-        <hasParams rdf:resource="http://isae.fr/iqas/qoo-ontology#params_p1_m1_3"/>
-        <absolute_order_in_pipeline rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</absolute_order_in_pipeline>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#mech_fusion_avg -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#mech_fusion_avg">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <hasParams rdf:resource="http://isae.fr/iqas/qoo-ontology#params_p3_m2"/>
-        <hasParams rdf:resource="http://isae.fr/iqas/qoo-ontology#params_p3_m2_2"/>
-        <hasParams rdf:resource="http://isae.fr/iqas/qoo-ontology#params_p3_m2_3"/>
-        <has_previous rdf:resource="http://isae.fr/iqas/qoo-ontology#mech_aggreg_simple"/>
-        <absolute_order_in_pipeline rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</absolute_order_in_pipeline>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p1_m1 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p1_m1">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-        <param_name rdf:datatype="http://www.w3.org/2001/XMLSchema#string">mode</param_name>
-        <param_value rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lessThan</param_value>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p1_m1_2 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p1_m1_2">
-        <param_name rdf:datatype="http://www.w3.org/2001/XMLSchema#string">threshold</param_name>
-        <param_value rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0</param_value>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p1_m1_3 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p1_m1_3">
-        <param_name rdf:datatype="http://www.w3.org/2001/XMLSchema#string">policy</param_name>
-        <param_value rdf:datatype="http://www.w3.org/2001/XMLSchema#string">drop</param_value>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p2_m1 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p2_m1">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-        <param_name rdf:datatype="http://www.w3.org/2001/XMLSchema#string">mode</param_name>
-        <param_value rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lastvalue</param_value>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p2_m1_2 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p2_m1_2">
-        <param_name rdf:datatype="http://www.w3.org/2001/XMLSchema#string">interval</param_name>
-        <param_value rdf:datatype="http://www.w3.org/2001/XMLSchema#string">4s</param_value>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p3_m1 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p3_m1">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-        <param_name rdf:datatype="http://www.w3.org/2001/XMLSchema#string">mode</param_name>
-        <param_value rdf:datatype="http://www.w3.org/2001/XMLSchema#string">time</param_value>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p3_m1_2 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p3_m1_2">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-        <param_name rdf:datatype="http://www.w3.org/2001/XMLSchema#string">interval</param_name>
-        <param_value rdf:datatype="http://www.w3.org/2001/XMLSchema#string">1s</param_value>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p3_m2 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p3_m2">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-        <param_name rdf:datatype="http://www.w3.org/2001/XMLSchema#string">mode</param_name>
-        <param_value rdf:datatype="http://www.w3.org/2001/XMLSchema#string">time</param_value>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p3_m2_2 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p3_m2_2">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-        <param_name rdf:datatype="http://www.w3.org/2001/XMLSchema#string">interval</param_name>
-        <param_value rdf:datatype="http://www.w3.org/2001/XMLSchema#string">5s</param_value>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p3_m2_3 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p3_m2_3">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-        <param_name rdf:datatype="http://www.w3.org/2001/XMLSchema#string">operator</param_name>
-        <param_value rdf:datatype="http://www.w3.org/2001/XMLSchema#string">avg</param_value>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#pipeline_ML -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#pipeline_ML">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-        <composed_of rdf:resource="http://isae.fr/iqas/qoo-ontology#mech_ML_repeat"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#pipeline_aggreg_and_fuse -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#pipeline_aggreg_and_fuse">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-        <composed_of rdf:resource="http://isae.fr/iqas/qoo-ontology#mech_aggreg_simple"/>
-        <composed_of rdf:resource="http://isae.fr/iqas/qoo-ontology#mech_fusion_avg"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#pipeline_empty -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#pipeline_empty">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-        <composed_of rdf:resource="http://isae.fr/iqas/qoo-ontology#NO_MECHANISM"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#pipeline_filter -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#pipeline_filter">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-        <composed_of rdf:resource="http://isae.fr/iqas/qoo-ontology#mech_filter_simple"/>
-    </owl:NamedIndividual>
-    
-
-
     <!-- 
     ///////////////////////////////////////////////////////////////////////////////////////
     //
@@ -2143,22 +1705,6 @@
     ///////////////////////////////////////////////////////////////////////////////////////
      -->
 
-    <rdf:Description>
-        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
-        <owl:members rdf:parseType="Collection">
-            <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#ObsAccuracy"/>
-            <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#ObsFreshness"/>
-            <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#ObsRate"/>
-        </owl:members>
-    </rdf:Description>
-    <rdf:Description>
-        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
-        <owl:members rdf:parseType="Collection">
-            <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#SensingRate"/>
-            <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#State"/>
-            <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#&apos;BatteryLifetime&apos;"/>
-        </owl:members>
-    </rdf:Description>
     <rdf:Description>
         <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointProperties"/>
         <owl:members rdf:parseType="Collection">

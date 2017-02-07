@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
-<rdf:RDF xmlns="http://www.isae.fr/iqas/qoo-ontology#"
-     xml:base="http://www.isae.fr/iqas/qoo-ontology"
+<rdf:RDF xmlns="http://isae.fr/iqas/qoo-ontology#"
+     xml:base="http://isae.fr/iqas/qoo-ontology"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:owl="http://www.w3.org/2002/07/owl#"
      xmlns:xml="http://www.w3.org/XML/1998/namespace"
      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
-    <owl:Ontology rdf:about="http://www.isae.fr/iqas/qoo-ontology"/>
+    <owl:Ontology rdf:about="http://isae.fr/iqas/qoo-ontology"/>
     
 
 
@@ -18,6 +18,14 @@
     ///////////////////////////////////////////////////////////////////////////////////////
      -->
 
+    
+
+
+    <!-- http://isae.fr/iqas/qoo-ontology#associatedTo -->
+
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#associatedTo">
+        <owl:inverseOf rdf:resource="http://isae.fr/iqas/qoo-ontology#has"/>
+    </owl:ObjectProperty>
     
 
 
@@ -33,20 +41,23 @@
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#canBeRetrievedThrough">
         <owl:inverseOf rdf:resource="http://isae.fr/iqas/qoo-ontology#givesAccessTo"/>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
         <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#InverseFunctionalProperty"/>
     </owl:ObjectProperty>
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#composed_of -->
+    <!-- http://isae.fr/iqas/qoo-ontology#concerns -->
 
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#composed_of"/>
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#concerns">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    </owl:ObjectProperty>
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#concerns -->
+    <!-- http://isae.fr/iqas/qoo-ontology#considers -->
 
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#concerns"/>
+    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#considers"/>
     
 
 
@@ -76,9 +87,9 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#expressed_by -->
+    <!-- http://isae.fr/iqas/qoo-ontology#expressedBy -->
 
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#expressed_by"/>
+    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#expressedBy"/>
     
 
 
@@ -86,25 +97,22 @@
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#givesAccessTo">
         <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#InverseFunctionalProperty"/>
     </owl:ObjectProperty>
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#hasParams -->
+    <!-- http://isae.fr/iqas/qoo-ontology#has -->
 
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#hasParams"/>
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#has"/>
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#has_next -->
+    <!-- http://isae.fr/iqas/qoo-ontology#impacts -->
 
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#has_next"/>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#has_previous -->
-
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#has_previous"/>
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#impacts">
+        <owl:inverseOf rdf:resource="http://isae.fr/iqas/qoo-ontology#isImpactedBy"/>
+    </owl:ObjectProperty>
     
 
 
@@ -114,17 +122,26 @@
     
 
 
+    <!-- http://isae.fr/iqas/qoo-ontology#isImpactedBy -->
+
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#isImpactedBy"/>
+    
+
+
+    <!-- http://isae.fr/iqas/qoo-ontology#isInTheAreaOf -->
+
+    <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#isInTheAreaOf">
+        <owl:inverseOf rdf:resource="http://isae.fr/iqas/qoo-ontology#isInTheAreaOf"/>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#SymmetricProperty"/>
+    </owl:ObjectProperty>
+    
+
+
     <!-- http://isae.fr/iqas/qoo-ontology#isProvidedBy -->
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#isProvidedBy">
         <owl:inverseOf rdf:resource="http://isae.fr/iqas/qoo-ontology#provides"/>
     </owl:ObjectProperty>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#isRelatedTo -->
-
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#isRelatedTo"/>
     
 
 
@@ -148,15 +165,15 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#requires_observation -->
+    <!-- http://isae.fr/iqas/qoo-ontology#requiresObservation -->
 
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#requires_observation"/>
+    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#requiresObservation"/>
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#requires_qoo -->
+    <!-- http://isae.fr/iqas/qoo-ontology#requiresQoo -->
 
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#requires_qoo"/>
+    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#requiresQoo"/>
     
 
 
@@ -168,13 +185,9 @@
 
     <!-- http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCoverage -->
 
-    <rdf:Description rdf:about="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCoverage"/>
-    
-
-
-    <!-- http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCurrently -->
-
-    <rdf:Description rdf:about="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCurrently"/>
+    <owl:ObjectProperty rdf:about="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCoverage">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    </owl:ObjectProperty>
     
 
 
@@ -306,7 +319,9 @@
 
     <!-- http://www.w3.org/2003/01/geo/wgs84_pos#location -->
 
-    <rdf:Description rdf:about="http://www.w3.org/2003/01/geo/wgs84_pos#location"/>
+    <owl:ObjectProperty rdf:about="http://www.w3.org/2003/01/geo/wgs84_pos#location">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    </owl:ObjectProperty>
     
 
 
@@ -321,15 +336,9 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#absolute_order_in_pipeline -->
+    <!-- http://isae.fr/iqas/qoo-ontology#capabilityVariation -->
 
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#absolute_order_in_pipeline"/>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#batteryLifetimeValue -->
-
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#batteryLifetimeValue"/>
+    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#capabilityVariation"/>
     
 
 
@@ -357,12 +366,6 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#mechanismName -->
-
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#mechanismName"/>
-    
-
-
     <!-- http://isae.fr/iqas/qoo-ontology#min_treshold -->
 
     <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#min_treshold"/>
@@ -375,21 +378,9 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#param_name -->
+    <!-- http://isae.fr/iqas/qoo-ontology#qooAttributeVariation -->
 
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#param_name"/>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#param_value -->
-
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#param_value"/>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#sensingRateValue -->
-
-    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#sensingRateValue"/>
+    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#qooAttributeVariation"/>
     
 
 
@@ -411,6 +402,12 @@
     
 
 
+    <!-- http://isae.fr/iqas/qoo-ontology#shouldBe -->
+
+    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#shouldBe"/>
+    
+
+
     <!-- http://isae.fr/iqas/qoo-ontology#target_value -->
 
     <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#target_value"/>
@@ -420,12 +417,6 @@
     <!-- http://purl.oclc.org/NET/UNIS/fiware/iot-lite#endpoint -->
 
     <rdf:Description rdf:about="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#endpoint"/>
-    
-
-
-    <!-- http://purl.oclc.org/NET/UNIS/fiware/iot-lite#id -->
-
-    <rdf:Description rdf:about="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#id"/>
     
 
 
@@ -464,101 +455,9 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#CurrentSetting -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#CurrentSetting"/>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#ObsAccuracy -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#ObsAccuracy">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#ObsFreshness -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#ObsFreshness">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#ObsRate -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#ObsRate">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-    </owl:Class>
-    
-
-
     <!-- http://isae.fr/iqas/qoo-ontology#Operator -->
 
     <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#Operator"/>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#Parameter -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineAccurate -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineAccurate">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineEco -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineEco">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineEcoAndAccurate -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineEcoAndAccurate">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineEcoAndFast -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineEcoAndFast">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineFast -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineFast">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurate -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurate">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurateAndEco -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurateAndEco">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-    </owl:Class>
     
 
 
@@ -570,9 +469,9 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#QoOMechanism -->
+    <!-- http://isae.fr/iqas/qoo-ontology#QoOEffect -->
 
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#QoOMechanism">
+    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#QoOEffect">
         <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
     </owl:Class>
     
@@ -608,26 +507,10 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#SensingRate -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#SensingRate">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#CurrentSetting"/>
-    </owl:Class>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#State -->
-
-    <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#State">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#CurrentSetting"/>
-    </owl:Class>
-    
-
-
     <!-- http://isae.fr/iqas/qoo-ontology#&apos;BatteryLifetime&apos; -->
 
     <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#&apos;BatteryLifetime&apos;">
-        <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#CurrentSetting"/>
+        <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#MeasurementProperty"/>
     </owl:Class>
     
 
@@ -734,9 +617,9 @@
     
 
 
-    <!-- http://purl.oclc.org/NET/ssnx/ssn#Observation -->
+    <!-- http://purl.oclc.org/NET/ssnx/ssn#ObservationValue -->
 
-    <owl:Class rdf:about="http://purl.oclc.org/NET/ssnx/ssn#Observation"/>
+    <owl:Class rdf:about="http://purl.oclc.org/NET/ssnx/ssn#ObservationValue"/>
     
 
 
@@ -765,7 +648,6 @@
     <!-- http://purl.oclc.org/NET/ssnx/ssn#SensingDevice -->
 
     <owl:Class rdf:about="http://purl.oclc.org/NET/ssnx/ssn#SensingDevice">
-        <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Device"/>
         <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Sensor"/>
     </owl:Class>
     
@@ -774,7 +656,7 @@
     <!-- http://purl.oclc.org/NET/ssnx/ssn#Sensor -->
 
     <owl:Class rdf:about="http://purl.oclc.org/NET/ssnx/ssn#Sensor">
-        <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Observation"/>
+        <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#Device"/>
     </owl:Class>
     
 
@@ -782,6 +664,22 @@
     <!-- http://purl.oclc.org/NET/ssnx/ssn#System -->
 
     <owl:Class rdf:about="http://purl.oclc.org/NET/ssnx/ssn#System"/>
+    
+
+
+    <!-- http://purl.org/NET/ssnx/qu/qu#QuantityKind -->
+
+    <owl:Class rdf:about="http://purl.org/NET/ssnx/qu/qu#QuantityKind">
+        <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#ObservationValue"/>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.org/NET/ssnx/qu/qu#Unit -->
+
+    <owl:Class rdf:about="http://purl.org/NET/ssnx/qu/qu#Unit">
+        <rdfs:subClassOf rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#ObservationValue"/>
+    </owl:Class>
     
 
 
@@ -810,46 +708,10 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#AGGREGATION -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#AGGREGATION">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
-    </owl:NamedIndividual>
-    
-
-
     <!-- http://isae.fr/iqas/qoo-ontology#AVG -->
 
     <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#AVG">
         <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Operator"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#FILTERING -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#FILTERING">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#FUSION -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#FUSION">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#MACHINE_LEARNING -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#MACHINE_LEARNING">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
     </owl:NamedIndividual>
     
 
@@ -866,183 +728,6 @@
 
     <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#MIN">
         <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Operator"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#NO_MECHANISM -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#NO_MECHANISM">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#mech_ML_repeat -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#mech_ML_repeat">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#mech_aggreg_simple -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#mech_aggreg_simple">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#mech_filter_simple -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#mech_filter_simple">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#mech_fusion_avg -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#mech_fusion_avg">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOMechanism"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p1_m1 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p1_m1">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p1_m1_2 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p1_m1_2">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p1_m1_3 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p1_m1_3">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p2_m1 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p2_m1">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p2_m1_2 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p2_m1_2">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p3_m1 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p3_m1">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p3_m1_2 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p3_m1_2">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p3_m2 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p3_m2">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p3_m2_2 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p3_m2_2">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#params_p3_m2_3 -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#params_p3_m2_3">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#Parameter"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#pipeline_ML -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#pipeline_ML">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineFast"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#pipeline_aggreg_and_fuse -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#pipeline_aggreg_and_fuse">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineAccurate"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineEco"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineEcoAndAccurate"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineFast"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurate"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#pipeline_empty -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#pipeline_empty">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineEcoAndFast"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineFast"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurate"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurateAndEco"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://isae.fr/iqas/qoo-ontology#pipeline_filter -->
-
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#pipeline_filter">
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineAccurate"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineEco"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineEcoAndAccurate"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineEcoAndFast"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurate"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#PipelineFastAndAccurateAndEco"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOPipeline"/>
-        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
     </owl:NamedIndividual>
 </rdf:RDF>
 

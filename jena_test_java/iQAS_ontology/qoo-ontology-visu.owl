@@ -69,22 +69,13 @@
         <Class abbreviatedIRI="ssn:DetectionLimit"/>
     </Declaration>
     <Declaration>
+        <DataProperty IRI="qooAttributeVariation"/>
+    </Declaration>
+    <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:forProperty"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="composed_of"/>
-    </Declaration>
-    <Declaration>
         <DataProperty abbreviatedIRI="iot-lite:endpoint"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="pipeline_aggreg_and_fuse"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="batteryLifetimeValue"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="sensingRateValue"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:Sensor"/>
@@ -94,9 +85,6 @@
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="iot-lite:Polygon"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="ObsFreshness"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:observationResult"/>
@@ -117,6 +105,9 @@
         <DataProperty IRI="obsLevelValue"/>
     </Declaration>
     <Declaration>
+        <Datatype IRI="variation"/>
+    </Declaration>
+    <Declaration>
         <Class abbreviatedIRI="geo:Point"/>
     </Declaration>
     <Declaration>
@@ -126,31 +117,25 @@
         <ObjectProperty IRI="neutralFor"/>
     </Declaration>
     <Declaration>
-        <Class IRI="SensingRate"/>
+        <DataProperty IRI="shouldBe"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasMeasurementCapability"/>
     </Declaration>
     <Declaration>
-        <Class IRI="State"/>
-    </Declaration>
-    <Declaration>
         <Class abbreviatedIRI="ssn:MeasurementCapability"/>
     </Declaration>
     <Declaration>
-        <Class IRI="PipelineFastAndAccurateAndEco"/>
+        <ObjectProperty IRI="givesAccessTo"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="givesAccessTo"/>
+        <ObjectProperty IRI="considers"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="qu:Unit"/>
     </Declaration>
     <Declaration>
         <Datatype IRI="observationLevel"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="params_p3_m1_2"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="hasExactValue"/>
@@ -162,7 +147,7 @@
         <DataProperty abbreviatedIRI="iot-lite:interfaceType"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="mech_fusion_avg"/>
+        <ObjectProperty IRI="requiresQoo"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:Drift"/>
@@ -171,16 +156,7 @@
         <ObjectProperty IRI="isProvidedBy"/>
     </Declaration>
     <Declaration>
-        <Class IRI="PipelineFast"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="NO_MECHANISM"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasValue"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="param_value"/>
     </Declaration>
     <Declaration>
         <NamedIndividual IRI="MAX"/>
@@ -204,9 +180,6 @@
         <AnnotationProperty abbreviatedIRI="iot-lite:relativeLocation"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="params_p3_m2_2"/>
-    </Declaration>
-    <Declaration>
         <Datatype IRI="slaLevel"/>
     </Declaration>
     <Declaration>
@@ -216,22 +189,16 @@
         <ObjectProperty IRI="isSupportedBy"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="hasParams"/>
-    </Declaration>
-    <Declaration>
         <Class abbreviatedIRI="ssn:Platform"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="FUSION"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:featureOfInterest"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="mech_filter_simple"/>
+        <Class abbreviatedIRI="ssn:ObservationValue"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:ObservationValue"/>
+        <Class IRI="QoOEffect"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:observedBy"/>
@@ -246,13 +213,10 @@
         <DataProperty IRI="min_treshold"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="params_p2_m1"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty IRI="concerns"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="param_name"/>
+        <ObjectProperty IRI="requiresObservation"/>
     </Declaration>
     <Declaration>
         <Class IRI="QualityofObservation"/>
@@ -261,22 +225,13 @@
         <NamedIndividual IRI="MIN"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="iot-lite:hasCurrently"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="Parameter"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="mech_aggreg_simple"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty IRI="decreases"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="target_value"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="absolute_order_in_pipeline"/>
+        <ObjectProperty IRI="isImpactedBy"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:observedProperty"/>
@@ -291,25 +246,16 @@
         <Class abbreviatedIRI="ssn:Observation"/>
     </Declaration>
     <Declaration>
-        <Class IRI="PipelineEco"/>
-    </Declaration>
-    <Declaration>
         <DataProperty IRI="hasMaxValue"/>
     </Declaration>
     <Declaration>
         <Class IRI="QoOAttribute"/>
     </Declaration>
     <Declaration>
-        <Class IRI="ObsRate"/>
-    </Declaration>
-    <Declaration>
         <DataProperty abbreviatedIRI="iot-lite:observationValue"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="params_p2_m1_2"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="belongsTo"/>
@@ -330,61 +276,34 @@
         <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="AGGREGATION"/>
+        <ObjectProperty IRI="impacts"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="qu:QuantityKind"/>
     </Declaration>
     <Declaration>
-        <Class IRI="PipelineEcoAndAccurate"/>
-    </Declaration>
-    <Declaration>
         <Class IRI="QoOPipeline"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="has_previous"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="CurrentSetting"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasMeasurementProperty"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="params_p1_m1"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="has_next"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:isProducedBy"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="params_p3_m2"/>
+        <DataProperty IRI="capabilityVariation"/>
     </Declaration>
     <Declaration>
         <Datatype IRI="sensorState"/>
     </Declaration>
     <Declaration>
+        <ObjectProperty IRI="expressedBy"/>
+    </Declaration>
+    <Declaration>
         <Class IRI="QoOParameter"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="params_p3_m2_3"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="pipeline_empty"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="PipelineEcoAndFast"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="QoOMechanism"/>
-    </Declaration>
-    <Declaration>
         <Class abbreviatedIRI="ssn:Resolution"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="pipeline_filter"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
@@ -393,7 +312,7 @@
         <AnnotationProperty abbreviatedIRI="dc:description"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="FILTERING"/>
+        <ObjectProperty IRI="isInTheAreaOf"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="iot-lite:hasQuantityKind"/>
@@ -408,16 +327,7 @@
         <Class abbreviatedIRI="iot-lite:Coverage"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="isRelatedTo"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="PipelineFastAndAccurate"/>
-    </Declaration>
-    <Declaration>
         <Class abbreviatedIRI="ssn:MeasurementProperty"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="params_p1_m1_3"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="geo:lat"/>
@@ -429,7 +339,7 @@
         <DataProperty abbreviatedIRI="iot-lite:interfaceDescription"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="mechanismName"/>
+        <ObjectProperty IRI="has"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:attachedSystem"/>
@@ -439,15 +349,6 @@
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="iot-lite:Service"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="requires_observation"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="PipelineAccurate"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="mech_ML_repeat"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:SensorOutput"/>
@@ -468,9 +369,6 @@
         <Class IRI="Operator"/>
     </Declaration>
     <Declaration>
-        <DataProperty abbreviatedIRI="iot-lite:id"/>
-    </Declaration>
-    <Declaration>
         <AnnotationProperty abbreviatedIRI="dc:creator"/>
     </Declaration>
     <Declaration>
@@ -480,16 +378,10 @@
         <ObjectProperty IRI="provides"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="expressed_by"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="geo:location"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="params_p1_m1_2"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasProperty"/>
@@ -501,16 +393,7 @@
         <Class abbreviatedIRI="iot-lite:Rectangle"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="pipeline_ML"/>
-    </Declaration>
-    <Declaration>
         <NamedIndividual IRI="AVG"/>
-    </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="MACHINE_LEARNING"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="ObsAccuracy"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="hasMinValue"/>
@@ -519,397 +402,89 @@
         <ObjectProperty IRI="canBeRetrievedThrough"/>
     </Declaration>
     <Declaration>
+        <ObjectProperty IRI="associatedTo"/>
+    </Declaration>
+    <Declaration>
         <DataProperty IRI="service_level_agreement"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="supports"/>
     </Declaration>
-    <Declaration>
-        <NamedIndividual IRI="params_p3_m1"/>
-    </Declaration>
-    <Declaration>
-        <ObjectProperty IRI="requires_qoo"/>
-    </Declaration>
-    <EquivalentClasses>
-        <Class IRI="PipelineAccurate"/>
-        <ObjectIntersectionOf>
+    <SubClassOf>
+        <Class IRI="ObservationRequest"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="requiresObservation"/>
+            <Class abbreviatedIRI="ssn:Observation"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="ObservationRequest"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="requiresQoo"/>
+            <Class IRI="QoORequirement"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="ObservationRequest"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="requiresObservation"/>
+            <Class abbreviatedIRI="ssn:Observation"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="ObservationRequest"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="requiresQoo"/>
+            <Class IRI="QoORequirement"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="Operator"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="isSupportedBy"/>
             <Class IRI="QoOPipeline"/>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="composed_of"/>
-                <ObjectSomeValuesFrom>
-                    <ObjectProperty IRI="increases"/>
-                    <Class IRI="ObsAccuracy"/>
-                </ObjectSomeValuesFrom>
-            </ObjectSomeValuesFrom>
-        </ObjectIntersectionOf>
-    </EquivalentClasses>
-    <EquivalentClasses>
-        <Class IRI="PipelineEco"/>
-        <ObjectIntersectionOf>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="Operator"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="isSupportedBy"/>
             <Class IRI="QoOPipeline"/>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="composed_of"/>
-                <ObjectSomeValuesFrom>
-                    <ObjectProperty IRI="decreases"/>
-                    <Class IRI="ObsRate"/>
-                </ObjectSomeValuesFrom>
-            </ObjectSomeValuesFrom>
-        </ObjectIntersectionOf>
-    </EquivalentClasses>
-    <EquivalentClasses>
-        <Class IRI="PipelineEcoAndAccurate"/>
-        <ObjectIntersectionOf>
-            <Class IRI="QoOPipeline"/>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="composed_of"/>
-                <ObjectUnionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="decreases"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="decreases"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                </ObjectUnionOf>
-            </ObjectSomeValuesFrom>
-        </ObjectIntersectionOf>
-    </EquivalentClasses>
-    <EquivalentClasses>
-        <Class IRI="PipelineEcoAndFast"/>
-        <ObjectIntersectionOf>
-            <Class IRI="QoOPipeline"/>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="composed_of"/>
-                <ObjectUnionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="decreases"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="decreases"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                </ObjectUnionOf>
-            </ObjectSomeValuesFrom>
-        </ObjectIntersectionOf>
-    </EquivalentClasses>
-    <EquivalentClasses>
-        <Class IRI="PipelineFast"/>
-        <ObjectIntersectionOf>
-            <Class IRI="QoOPipeline"/>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="composed_of"/>
-                <ObjectSomeValuesFrom>
-                    <ObjectProperty IRI="increases"/>
-                    <Class IRI="ObsFreshness"/>
-                </ObjectSomeValuesFrom>
-            </ObjectSomeValuesFrom>
-        </ObjectIntersectionOf>
-    </EquivalentClasses>
-    <EquivalentClasses>
-        <Class IRI="PipelineFastAndAccurate"/>
-        <ObjectIntersectionOf>
-            <Class IRI="QoOPipeline"/>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="composed_of"/>
-                <ObjectUnionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                </ObjectUnionOf>
-            </ObjectSomeValuesFrom>
-        </ObjectIntersectionOf>
-    </EquivalentClasses>
-    <EquivalentClasses>
-        <Class IRI="PipelineFastAndAccurateAndEco"/>
-        <ObjectIntersectionOf>
-            <Class IRI="QoOPipeline"/>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="composed_of"/>
-                <ObjectUnionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="decreases"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="decreases"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="decreases"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="decreases"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                    <ObjectIntersectionOf>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="increases"/>
-                            <Class IRI="ObsFreshness"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsAccuracy"/>
-                        </ObjectSomeValuesFrom>
-                        <ObjectSomeValuesFrom>
-                            <ObjectProperty IRI="neutralFor"/>
-                            <Class IRI="ObsRate"/>
-                        </ObjectSomeValuesFrom>
-                    </ObjectIntersectionOf>
-                </ObjectUnionOf>
-            </ObjectSomeValuesFrom>
-        </ObjectIntersectionOf>
-    </EquivalentClasses>
-    <EquivalentClasses>
-        <Class IRI="QoOAttribute"/>
-        <ObjectUnionOf>
-            <Class IRI="ObsAccuracy"/>
-            <Class IRI="ObsFreshness"/>
-            <Class IRI="ObsRate"/>
-        </ObjectUnionOf>
-    </EquivalentClasses>
-    <SubClassOf>
-        <Class IRI="ObsAccuracy"/>
-        <Class IRI="QoOAttribute"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="ObsFreshness"/>
-        <Class IRI="QoOAttribute"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="ObsRate"/>
-        <Class IRI="QoOAttribute"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="PipelineAccurate"/>
-        <Class IRI="QoOPipeline"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="PipelineEco"/>
-        <Class IRI="QoOPipeline"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="PipelineEcoAndAccurate"/>
-        <Class IRI="QoOPipeline"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="PipelineEcoAndFast"/>
-        <Class IRI="QoOPipeline"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="PipelineFast"/>
-        <Class IRI="QoOPipeline"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="PipelineFastAndAccurate"/>
-        <Class IRI="QoOPipeline"/>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="PipelineFastAndAccurateAndEco"/>
-        <Class IRI="QoOPipeline"/>
+        </ObjectAllValuesFrom>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="QoOAttribute"/>
         <Class IRI="QualityofObservation"/>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="QoOMechanism"/>
+        <Class IRI="QoOAttribute"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="isImpactedBy"/>
+            <Class IRI="QoOEffect"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOAttribute"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="isImpactedBy"/>
+            <Class IRI="QoOEffect"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOEffect"/>
         <Class IRI="QualityofObservation"/>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="QoOMechanism"/>
+        <Class IRI="QoOEffect"/>
         <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="decreases"/>
+            <ObjectProperty IRI="impacts"/>
             <Class IRI="QoOAttribute"/>
         </ObjectSomeValuesFrom>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="QoOMechanism"/>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="hasParams"/>
-            <Class IRI="Parameter"/>
-        </ObjectSomeValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="QoOMechanism"/>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="increases"/>
-            <Class IRI="QoOAttribute"/>
-        </ObjectSomeValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="QoOMechanism"/>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="neutralFor"/>
-            <Class IRI="QoOAttribute"/>
-        </ObjectSomeValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="QoOMechanism"/>
+        <Class IRI="QoOEffect"/>
         <ObjectAllValuesFrom>
-            <ObjectProperty IRI="decreases"/>
-            <Class IRI="QoOAttribute"/>
-        </ObjectAllValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="QoOMechanism"/>
-        <ObjectAllValuesFrom>
-            <ObjectProperty IRI="hasParams"/>
-            <Class IRI="Parameter"/>
-        </ObjectAllValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="QoOMechanism"/>
-        <ObjectAllValuesFrom>
-            <ObjectProperty IRI="increases"/>
-            <Class IRI="QoOAttribute"/>
-        </ObjectAllValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="QoOMechanism"/>
-        <ObjectAllValuesFrom>
-            <ObjectProperty IRI="neutralFor"/>
+            <ObjectProperty IRI="impacts"/>
             <Class IRI="QoOAttribute"/>
         </ObjectAllValuesFrom>
     </SubClassOf>
@@ -922,20 +497,110 @@
         <Class IRI="QualityofObservation"/>
     </SubClassOf>
     <SubClassOf>
+        <Class IRI="QoOPipeline"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="decreases"/>
+            <Class IRI="QoOAttribute"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOPipeline"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="increases"/>
+            <Class IRI="QoOAttribute"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOPipeline"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="isProvidedBy"/>
+            <Class abbreviatedIRI="ssn:Platform"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOPipeline"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="neutralFor"/>
+            <Class IRI="QoOAttribute"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOPipeline"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="supports"/>
+            <Class IRI="Operator"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOPipeline"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="decreases"/>
+            <Class IRI="QoOAttribute"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOPipeline"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="increases"/>
+            <Class IRI="QoOAttribute"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOPipeline"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="isProvidedBy"/>
+            <Class abbreviatedIRI="ssn:Platform"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOPipeline"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="neutralFor"/>
+            <Class IRI="QoOAttribute"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOPipeline"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="supports"/>
+            <Class IRI="Operator"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
         <Class IRI="QoORequirement"/>
         <Class IRI="QualityofObservation"/>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="SensingRate"/>
-        <Class IRI="CurrentSetting"/>
+        <Class IRI="QoORequirement"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="expressedBy"/>
+            <Class IRI="QoOParameter"/>
+        </ObjectSomeValuesFrom>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="State"/>
-        <Class IRI="CurrentSetting"/>
+        <Class IRI="QoORequirement"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="concerns"/>
+            <Class IRI="QoOAttribute"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoORequirement"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="expressedBy"/>
+            <Class IRI="QoOParameter"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoORequirement"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty IRI="concerns"/>
+            <Class IRI="QoOAttribute"/>
+        </ObjectExactCardinality>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="&apos;BatteryLifetime&apos;"/>
-        <Class IRI="CurrentSetting"/>
+        <Class abbreviatedIRI="ssn:MeasurementProperty"/>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="iot-lite:Circle"/>
@@ -948,6 +613,20 @@
     <SubClassOf>
         <Class abbreviatedIRI="iot-lite:Rectangle"/>
         <Class abbreviatedIRI="iot-lite:Coverage"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="iot-lite:Service"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="exposedBy"/>
+            <Class abbreviatedIRI="ssn:Platform"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="iot-lite:Service"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="exposedBy"/>
+            <Class abbreviatedIRI="ssn:Platform"/>
+        </ObjectAllValuesFrom>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="iot-lite:Service"/>
@@ -976,6 +655,20 @@
         <Class abbreviatedIRI="ssn:System"/>
     </SubClassOf>
     <SubClassOf>
+        <Class abbreviatedIRI="ssn:Device"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="contains"/>
+            <Class abbreviatedIRI="ssn:Device"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Device"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="contains"/>
+            <Class abbreviatedIRI="ssn:Device"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
         <Class abbreviatedIRI="ssn:Drift"/>
         <Class abbreviatedIRI="ssn:MeasurementProperty"/>
     </SubClassOf>
@@ -1007,6 +700,34 @@
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="has"/>
+            <Class IRI="QoOEffect"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:forProperty"/>
+            <Class abbreviatedIRI="ssn:Property"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:hasMeasurementProperty"/>
+            <Class abbreviatedIRI="ssn:MeasurementProperty"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="has"/>
+            <Class IRI="QoOEffect"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:MeasurementCapability"/>
         <ObjectAllValuesFrom>
             <ObjectProperty abbreviatedIRI="ssn:forProperty"/>
             <Class abbreviatedIRI="ssn:Property"/>
@@ -1026,6 +747,13 @@
     <SubClassOf>
         <Class abbreviatedIRI="ssn:MeasurementRange"/>
         <Class abbreviatedIRI="ssn:MeasurementProperty"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Observation"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:observationResult"/>
+            <Class abbreviatedIRI="ssn:SensorOutput"/>
+        </ObjectSomeValuesFrom>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Observation"/>
@@ -1065,6 +793,13 @@
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Observation"/>
         <ObjectExactCardinality cardinality="1">
+            <ObjectProperty IRI="canBeRetrievedThrough"/>
+            <Class abbreviatedIRI="iot-lite:Service"/>
+        </ObjectExactCardinality>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Observation"/>
+        <ObjectExactCardinality cardinality="1">
             <ObjectProperty abbreviatedIRI="ssn:featureOfInterest"/>
             <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
         </ObjectExactCardinality>
@@ -1085,6 +820,55 @@
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Platform"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="considers"/>
+            <Class IRI="QoOAttribute"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Platform"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="exposes"/>
+            <Class abbreviatedIRI="iot-lite:Service"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Platform"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="provides"/>
+            <Class IRI="QoOPipeline"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Platform"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:attachedSystem"/>
+            <Class abbreviatedIRI="ssn:System"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Platform"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="considers"/>
+            <Class IRI="QoOAttribute"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Platform"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="exposes"/>
+            <Class abbreviatedIRI="iot-lite:Service"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Platform"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="provides"/>
+            <Class IRI="QoOPipeline"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Platform"/>
         <ObjectAllValuesFrom>
             <ObjectProperty abbreviatedIRI="ssn:attachedSystem"/>
             <Class abbreviatedIRI="ssn:System"/>
@@ -1102,6 +886,13 @@
         </ObjectSomeValuesFrom>
     </SubClassOf>
     <SubClassOf>
+        <Class abbreviatedIRI="ssn:Property"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
+            <Class abbreviatedIRI="ssn:FeatureOfInterest"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
         <Class abbreviatedIRI="ssn:Resolution"/>
         <Class abbreviatedIRI="ssn:MeasurementProperty"/>
     </SubClassOf>
@@ -1114,17 +905,59 @@
         <Class abbreviatedIRI="ssn:Sensor"/>
     </SubClassOf>
     <SubClassOf>
+        <Class abbreviatedIRI="ssn:SensingDevice"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
+            <Class abbreviatedIRI="iot-lite:Coverage"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:SensingDevice"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
+            <Class abbreviatedIRI="iot-lite:Coverage"/>
+        </ObjectExactCardinality>
+    </SubClassOf>
+    <SubClassOf>
         <Class abbreviatedIRI="ssn:Sensor"/>
         <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="canBeRetrievedThrough"/>
-            <Class abbreviatedIRI="iot-lite:Service"/>
+            <ObjectProperty IRI="belongsTo"/>
+            <Class abbreviatedIRI="ssn:Device"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="iot-lite:hasSensingDevice"/>
+            <Class abbreviatedIRI="ssn:SensingDevice"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:hasMeasurementCapability"/>
+            <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
+            <Class abbreviatedIRI="ssn:Observation"/>
         </ObjectSomeValuesFrom>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Sensor"/>
         <ObjectAllValuesFrom>
-            <ObjectProperty IRI="canBeRetrievedThrough"/>
-            <Class abbreviatedIRI="iot-lite:Service"/>
+            <ObjectProperty IRI="belongsTo"/>
+            <Class abbreviatedIRI="ssn:Device"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="iot-lite:hasSensingDevice"/>
+            <Class abbreviatedIRI="ssn:SensingDevice"/>
         </ObjectAllValuesFrom>
     </SubClassOf>
     <SubClassOf>
@@ -1133,6 +966,27 @@
             <ObjectProperty abbreviatedIRI="ssn:hasMeasurementCapability"/>
             <Class abbreviatedIRI="ssn:MeasurementCapability"/>
         </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
+            <Class abbreviatedIRI="ssn:Observation"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="geo:location"/>
+            <Class abbreviatedIRI="geo:Point"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty abbreviatedIRI="geo:location"/>
+            <Class abbreviatedIRI="geo:Point"/>
+        </ObjectExactCardinality>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:SensorOutput"/>
@@ -1149,11 +1003,46 @@
         </ObjectSomeValuesFrom>
     </SubClassOf>
     <SubClassOf>
+        <Class abbreviatedIRI="ssn:SensorOutput"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:hasValue"/>
+            <Class abbreviatedIRI="ssn:ObservationValue"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:SensorOutput"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:isProducedBy"/>
+            <Class abbreviatedIRI="ssn:Sensor"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:System"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="iot-lite:isSubSystemOf"/>
+            <Class abbreviatedIRI="ssn:System"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
         <Class abbreviatedIRI="ssn:System"/>
         <ObjectSomeValuesFrom>
             <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
             <Class abbreviatedIRI="ssn:System"/>
         </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:System"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty abbreviatedIRI="ssn:onPlatform"/>
+            <Class abbreviatedIRI="ssn:Platform"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:System"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="iot-lite:isSubSystemOf"/>
+            <Class abbreviatedIRI="ssn:System"/>
+        </ObjectAllValuesFrom>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:System"/>
@@ -1169,119 +1058,51 @@
             <Class abbreviatedIRI="ssn:Platform"/>
         </ObjectAllValuesFrom>
     </SubClassOf>
-    <DisjointClasses>
-        <Class IRI="ObsAccuracy"/>
-        <Class IRI="ObsFreshness"/>
-        <Class IRI="ObsRate"/>
-    </DisjointClasses>
-    <DisjointClasses>
-        <Class IRI="SensingRate"/>
-        <Class IRI="State"/>
-        <Class IRI="&apos;BatteryLifetime&apos;"/>
-    </DisjointClasses>
-    <ClassAssertion>
-        <Class IRI="QoOMechanism"/>
-        <NamedIndividual IRI="AGGREGATION"/>
-    </ClassAssertion>
-    <ClassAssertion>
+    <SubClassOf>
+        <Class abbreviatedIRI="qu:QuantityKind"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="iot-lite:hasQuantityKind"/>
+            <Class abbreviatedIRI="qu:QuantityKind"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="qu:QuantityKind"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty abbreviatedIRI="iot-lite:hasQuantityKind"/>
+            <Class abbreviatedIRI="qu:QuantityKind"/>
+        </ObjectExactCardinality>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="qu:Unit"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty abbreviatedIRI="iot-lite:hasUnit"/>
+            <Class abbreviatedIRI="qu:Unit"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="qu:Unit"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty abbreviatedIRI="iot-lite:hasUnit"/>
+            <Class abbreviatedIRI="qu:Unit"/>
+        </ObjectExactCardinality>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="geo:Point"/>
         <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="increases"/>
-            <Class IRI="ObsFreshness"/>
+            <ObjectProperty IRI="isInTheAreaOf"/>
+            <Class abbreviatedIRI="geo:Point"/>
         </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="AGGREGATION"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="increases"/>
-            <Class IRI="ObsRate"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="AGGREGATION"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="neutralFor"/>
-            <Class IRI="ObsAccuracy"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="AGGREGATION"/>
-    </ClassAssertion>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="geo:Point"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="isInTheAreaOf"/>
+            <Class abbreviatedIRI="geo:Point"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
     <ClassAssertion>
         <Class IRI="Operator"/>
         <NamedIndividual IRI="AVG"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOMechanism"/>
-        <NamedIndividual IRI="FILTERING"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="decreases"/>
-            <Class IRI="ObsRate"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="FILTERING"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="increases"/>
-            <Class IRI="ObsAccuracy"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="FILTERING"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="neutralFor"/>
-            <Class IRI="ObsFreshness"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="FILTERING"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOMechanism"/>
-        <NamedIndividual IRI="FUSION"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="decreases"/>
-            <Class IRI="ObsFreshness"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="FUSION"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="decreases"/>
-            <Class IRI="ObsRate"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="FUSION"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="increases"/>
-            <Class IRI="ObsAccuracy"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="FUSION"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOMechanism"/>
-        <NamedIndividual IRI="MACHINE_LEARNING"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="decreases"/>
-            <Class IRI="ObsAccuracy"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="MACHINE_LEARNING"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="increases"/>
-            <Class IRI="ObsFreshness"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="MACHINE_LEARNING"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="increases"/>
-            <Class IRI="ObsRate"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="MACHINE_LEARNING"/>
     </ClassAssertion>
     <ClassAssertion>
         <Class IRI="Operator"/>
@@ -1291,327 +1112,10 @@
         <Class IRI="Operator"/>
         <NamedIndividual IRI="MIN"/>
     </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOMechanism"/>
-        <NamedIndividual IRI="NO_MECHANISM"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="increases"/>
-            <Class IRI="ObsFreshness"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="NO_MECHANISM"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="neutralFor"/>
-            <Class IRI="ObsAccuracy"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="NO_MECHANISM"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="neutralFor"/>
-            <Class IRI="ObsRate"/>
-        </ObjectSomeValuesFrom>
-        <NamedIndividual IRI="NO_MECHANISM"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOMechanism"/>
-        <NamedIndividual IRI="mech_ML_repeat"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOMechanism"/>
-        <NamedIndividual IRI="mech_aggreg_simple"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOMechanism"/>
-        <NamedIndividual IRI="mech_filter_simple"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOMechanism"/>
-        <NamedIndividual IRI="mech_fusion_avg"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="Parameter"/>
-        <NamedIndividual IRI="params_p1_m1"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="Parameter"/>
-        <NamedIndividual IRI="params_p2_m1"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="Parameter"/>
-        <NamedIndividual IRI="params_p3_m1"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="Parameter"/>
-        <NamedIndividual IRI="params_p3_m1_2"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="Parameter"/>
-        <NamedIndividual IRI="params_p3_m2"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="Parameter"/>
-        <NamedIndividual IRI="params_p3_m2_2"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="Parameter"/>
-        <NamedIndividual IRI="params_p3_m2_3"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOPipeline"/>
-        <NamedIndividual IRI="pipeline_ML"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOPipeline"/>
-        <NamedIndividual IRI="pipeline_aggreg_and_fuse"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOPipeline"/>
-        <NamedIndividual IRI="pipeline_empty"/>
-    </ClassAssertion>
-    <ClassAssertion>
-        <Class IRI="QoOPipeline"/>
-        <NamedIndividual IRI="pipeline_filter"/>
-    </ClassAssertion>
-    <SameIndividual>
-        <NamedIndividual IRI="AGGREGATION"/>
-        <NamedIndividual IRI="mech_aggreg_simple"/>
-    </SameIndividual>
-    <SameIndividual>
-        <NamedIndividual IRI="FILTERING"/>
-        <NamedIndividual IRI="mech_filter_simple"/>
-    </SameIndividual>
-    <SameIndividual>
-        <NamedIndividual IRI="FUSION"/>
-        <NamedIndividual IRI="mech_fusion_avg"/>
-    </SameIndividual>
-    <SameIndividual>
-        <NamedIndividual IRI="MACHINE_LEARNING"/>
-        <NamedIndividual IRI="mech_ML_repeat"/>
-    </SameIndividual>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="supports"/>
-        <NamedIndividual IRI="FUSION"/>
-        <NamedIndividual IRI="AVG"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="supports"/>
-        <NamedIndividual IRI="FUSION"/>
-        <NamedIndividual IRI="MAX"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="supports"/>
-        <NamedIndividual IRI="FUSION"/>
-        <NamedIndividual IRI="MIN"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="hasParams"/>
-        <NamedIndividual IRI="mech_ML_repeat"/>
-        <NamedIndividual IRI="params_p2_m1"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="hasParams"/>
-        <NamedIndividual IRI="mech_ML_repeat"/>
-        <NamedIndividual IRI="params_p2_m1_2"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="hasParams"/>
-        <NamedIndividual IRI="mech_aggreg_simple"/>
-        <NamedIndividual IRI="params_p3_m1"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="hasParams"/>
-        <NamedIndividual IRI="mech_aggreg_simple"/>
-        <NamedIndividual IRI="params_p3_m1_2"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="has_next"/>
-        <NamedIndividual IRI="mech_aggreg_simple"/>
-        <NamedIndividual IRI="mech_fusion_avg"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="hasParams"/>
-        <NamedIndividual IRI="mech_filter_simple"/>
-        <NamedIndividual IRI="params_p1_m1"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="hasParams"/>
-        <NamedIndividual IRI="mech_filter_simple"/>
-        <NamedIndividual IRI="params_p1_m1_2"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="hasParams"/>
-        <NamedIndividual IRI="mech_filter_simple"/>
-        <NamedIndividual IRI="params_p1_m1_3"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="hasParams"/>
-        <NamedIndividual IRI="mech_fusion_avg"/>
-        <NamedIndividual IRI="params_p3_m2"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="hasParams"/>
-        <NamedIndividual IRI="mech_fusion_avg"/>
-        <NamedIndividual IRI="params_p3_m2_2"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="hasParams"/>
-        <NamedIndividual IRI="mech_fusion_avg"/>
-        <NamedIndividual IRI="params_p3_m2_3"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="has_previous"/>
-        <NamedIndividual IRI="mech_fusion_avg"/>
-        <NamedIndividual IRI="mech_aggreg_simple"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="composed_of"/>
-        <NamedIndividual IRI="pipeline_ML"/>
-        <NamedIndividual IRI="mech_ML_repeat"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="composed_of"/>
-        <NamedIndividual IRI="pipeline_aggreg_and_fuse"/>
-        <NamedIndividual IRI="mech_aggreg_simple"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="composed_of"/>
-        <NamedIndividual IRI="pipeline_aggreg_and_fuse"/>
-        <NamedIndividual IRI="mech_fusion_avg"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="composed_of"/>
-        <NamedIndividual IRI="pipeline_empty"/>
-        <NamedIndividual IRI="NO_MECHANISM"/>
-    </ObjectPropertyAssertion>
-    <ObjectPropertyAssertion>
-        <ObjectProperty IRI="composed_of"/>
-        <NamedIndividual IRI="pipeline_filter"/>
-        <NamedIndividual IRI="mech_filter_simple"/>
-    </ObjectPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="absolute_order_in_pipeline"/>
-        <NamedIndividual IRI="mech_ML_repeat"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#integer">1</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="absolute_order_in_pipeline"/>
-        <NamedIndividual IRI="mech_aggreg_simple"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#integer">1</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="absolute_order_in_pipeline"/>
-        <NamedIndividual IRI="mech_filter_simple"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#integer">1</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="absolute_order_in_pipeline"/>
-        <NamedIndividual IRI="mech_fusion_avg"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#integer">2</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_name"/>
-        <NamedIndividual IRI="params_p1_m1"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">mode</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_value"/>
-        <NamedIndividual IRI="params_p1_m1"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">lessThan</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_name"/>
-        <NamedIndividual IRI="params_p1_m1_2"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">threshold</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_value"/>
-        <NamedIndividual IRI="params_p1_m1_2"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">0</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_name"/>
-        <NamedIndividual IRI="params_p1_m1_3"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">policy</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_value"/>
-        <NamedIndividual IRI="params_p1_m1_3"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">drop</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_name"/>
-        <NamedIndividual IRI="params_p2_m1"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">mode</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_value"/>
-        <NamedIndividual IRI="params_p2_m1"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">lastvalue</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_name"/>
-        <NamedIndividual IRI="params_p2_m1_2"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">interval</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_value"/>
-        <NamedIndividual IRI="params_p2_m1_2"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">4s</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_name"/>
-        <NamedIndividual IRI="params_p3_m1"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">mode</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_value"/>
-        <NamedIndividual IRI="params_p3_m1"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">time</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_name"/>
-        <NamedIndividual IRI="params_p3_m1_2"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">interval</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_value"/>
-        <NamedIndividual IRI="params_p3_m1_2"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">1s</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_name"/>
-        <NamedIndividual IRI="params_p3_m2"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">mode</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_value"/>
-        <NamedIndividual IRI="params_p3_m2"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">time</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_name"/>
-        <NamedIndividual IRI="params_p3_m2_2"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">interval</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_value"/>
-        <NamedIndividual IRI="params_p3_m2_2"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">5s</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_name"/>
-        <NamedIndividual IRI="params_p3_m2_3"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">operator</Literal>
-    </DataPropertyAssertion>
-    <DataPropertyAssertion>
-        <DataProperty IRI="param_value"/>
-        <NamedIndividual IRI="params_p3_m2_3"/>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">avg</Literal>
-    </DataPropertyAssertion>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="associatedTo"/>
+        <ObjectProperty IRI="has"/>
+    </InverseObjectProperties>
     <InverseObjectProperties>
         <ObjectProperty IRI="belongsTo"/>
         <ObjectProperty IRI="contains"/>
@@ -1623,6 +1127,10 @@
     <InverseObjectProperties>
         <ObjectProperty IRI="exposedBy"/>
         <ObjectProperty IRI="exposes"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="impacts"/>
+        <ObjectProperty IRI="isImpactedBy"/>
     </InverseObjectProperties>
     <InverseObjectProperties>
         <ObjectProperty IRI="isProvidedBy"/>
@@ -1644,6 +1152,13 @@
         <ObjectProperty abbreviatedIRI="ssn:hasProperty"/>
         <ObjectProperty abbreviatedIRI="ssn:isPropertyOf"/>
     </InverseObjectProperties>
+    <SymmetricObjectProperty>
+        <ObjectProperty IRI="isInTheAreaOf"/>
+    </SymmetricObjectProperty>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="associatedTo"/>
+        <Class IRI="QoOEffect"/>
+    </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="belongsTo"/>
         <Class abbreviatedIRI="ssn:Sensor"/>
@@ -1653,12 +1168,12 @@
         <Class abbreviatedIRI="ssn:Observation"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
-        <ObjectProperty IRI="composed_of"/>
-        <Class IRI="QoOPipeline"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
         <ObjectProperty IRI="concerns"/>
         <Class IRI="QoORequirement"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="considers"/>
+        <Class abbreviatedIRI="ssn:Platform"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="contains"/>
@@ -1666,7 +1181,7 @@
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="decreases"/>
-        <Class IRI="QoOMechanism"/>
+        <Class IRI="QoOPipeline"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="exposedBy"/>
@@ -1677,7 +1192,7 @@
         <Class abbreviatedIRI="ssn:Platform"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
-        <ObjectProperty IRI="expressed_by"/>
+        <ObjectProperty IRI="expressedBy"/>
         <Class IRI="QoORequirement"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
@@ -1685,28 +1200,28 @@
         <Class abbreviatedIRI="iot-lite:Service"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
-        <ObjectProperty IRI="hasParams"/>
-        <Class IRI="QoOMechanism"/>
+        <ObjectProperty IRI="has"/>
+        <Class abbreviatedIRI="ssn:MeasurementCapability"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
-        <ObjectProperty IRI="has_next"/>
-        <Class IRI="QoOMechanism"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="has_previous"/>
-        <Class IRI="QoOMechanism"/>
+        <ObjectProperty IRI="impacts"/>
+        <Class IRI="QoOEffect"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="increases"/>
-        <Class IRI="QoOMechanism"/>
+        <Class IRI="QoOPipeline"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="isImpactedBy"/>
+        <Class IRI="QoOAttribute"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="isInTheAreaOf"/>
+        <Class abbreviatedIRI="geo:Point"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="isProvidedBy"/>
         <Class IRI="QoOPipeline"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="isRelatedTo"/>
-        <Class IRI="SensingRate"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="isSupportedBy"/>
@@ -1714,31 +1229,27 @@
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="neutralFor"/>
-        <Class IRI="QoOMechanism"/>
+        <Class IRI="QoOPipeline"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="provides"/>
         <Class abbreviatedIRI="ssn:Platform"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
-        <ObjectProperty IRI="requires_observation"/>
+        <ObjectProperty IRI="requiresObservation"/>
         <Class IRI="ObservationRequest"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
-        <ObjectProperty IRI="requires_qoo"/>
+        <ObjectProperty IRI="requiresQoo"/>
         <Class IRI="ObservationRequest"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="supports"/>
-        <Class IRI="QoOMechanism"/>
+        <Class IRI="QoOPipeline"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
         <Class abbreviatedIRI="ssn:SensingDevice"/>
-    </ObjectPropertyDomain>
-    <ObjectPropertyDomain>
-        <ObjectProperty abbreviatedIRI="iot-lite:hasCurrently"/>
-        <Class abbreviatedIRI="ssn:Sensor"/>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty abbreviatedIRI="iot-lite:hasQuantityKind"/>
@@ -1821,6 +1332,10 @@
         <Class abbreviatedIRI="ssn:Sensor"/>
     </ObjectPropertyDomain>
     <ObjectPropertyRange>
+        <ObjectProperty IRI="associatedTo"/>
+        <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
         <ObjectProperty IRI="belongsTo"/>
         <Class abbreviatedIRI="ssn:Device"/>
     </ObjectPropertyRange>
@@ -1829,11 +1344,11 @@
         <Class abbreviatedIRI="iot-lite:Service"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
-        <ObjectProperty IRI="composed_of"/>
-        <Class IRI="QoOMechanism"/>
+        <ObjectProperty IRI="concerns"/>
+        <Class IRI="QoOAttribute"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
-        <ObjectProperty IRI="concerns"/>
+        <ObjectProperty IRI="considers"/>
         <Class IRI="QoOAttribute"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
@@ -1853,7 +1368,7 @@
         <Class abbreviatedIRI="iot-lite:Service"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
-        <ObjectProperty IRI="expressed_by"/>
+        <ObjectProperty IRI="expressedBy"/>
         <Class IRI="QoOParameter"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
@@ -1861,32 +1376,32 @@
         <Class abbreviatedIRI="ssn:Observation"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
-        <ObjectProperty IRI="hasParams"/>
-        <Class IRI="Parameter"/>
+        <ObjectProperty IRI="has"/>
+        <Class IRI="QoOEffect"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
-        <ObjectProperty IRI="has_next"/>
-        <Class IRI="QoOMechanism"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty IRI="has_previous"/>
-        <Class IRI="QoOMechanism"/>
+        <ObjectProperty IRI="impacts"/>
+        <Class IRI="QoOAttribute"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty IRI="increases"/>
         <Class IRI="QoOAttribute"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
+        <ObjectProperty IRI="isImpactedBy"/>
+        <Class IRI="QoOEffect"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="isInTheAreaOf"/>
+        <Class abbreviatedIRI="geo:Point"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
         <ObjectProperty IRI="isProvidedBy"/>
         <Class abbreviatedIRI="ssn:Platform"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
-        <ObjectProperty IRI="isRelatedTo"/>
-        <Class abbreviatedIRI="ssn:Observation"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
         <ObjectProperty IRI="isSupportedBy"/>
-        <Class IRI="QoOMechanism"/>
+        <Class IRI="QoOPipeline"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty IRI="neutralFor"/>
@@ -1897,11 +1412,11 @@
         <Class IRI="QoOPipeline"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
-        <ObjectProperty IRI="requires_observation"/>
+        <ObjectProperty IRI="requiresObservation"/>
         <Class abbreviatedIRI="ssn:Observation"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
-        <ObjectProperty IRI="requires_qoo"/>
+        <ObjectProperty IRI="requiresQoo"/>
         <Class IRI="QoORequirement"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
@@ -1911,10 +1426,6 @@
     <ObjectPropertyRange>
         <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
         <Class abbreviatedIRI="iot-lite:Coverage"/>
-    </ObjectPropertyRange>
-    <ObjectPropertyRange>
-        <ObjectProperty abbreviatedIRI="iot-lite:hasCurrently"/>
-        <Class IRI="CurrentSetting"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty abbreviatedIRI="iot-lite:hasQuantityKind"/>
@@ -2002,12 +1513,8 @@
         <ObjectProperty IRI="neutralFor"/>
     </DisjointObjectProperties>
     <DataPropertyDomain>
-        <DataProperty IRI="absolute_order_in_pipeline"/>
-        <Class IRI="QoOMechanism"/>
-    </DataPropertyDomain>
-    <DataPropertyDomain>
-        <DataProperty IRI="batteryLifetimeValue"/>
-        <Class IRI="&apos;BatteryLifetime&apos;"/>
+        <DataProperty IRI="capabilityVariation"/>
+        <Class IRI="QoOEffect"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
         <DataProperty IRI="hasExactValue"/>
@@ -2026,10 +1533,6 @@
         <Class IRI="QoOParameter"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
-        <DataProperty IRI="mechanismName"/>
-        <Class IRI="QoOMechanism"/>
-    </DataPropertyDomain>
-    <DataPropertyDomain>
         <DataProperty IRI="min_treshold"/>
         <Class IRI="QoOParameter"/>
     </DataPropertyDomain>
@@ -2038,20 +1541,12 @@
         <Class abbreviatedIRI="ssn:ObservationValue"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
-        <DataProperty IRI="param_name"/>
-        <Class IRI="Parameter"/>
-    </DataPropertyDomain>
-    <DataPropertyDomain>
-        <DataProperty IRI="param_value"/>
-        <Class IRI="Parameter"/>
-    </DataPropertyDomain>
-    <DataPropertyDomain>
-        <DataProperty IRI="sensingRateValue"/>
-        <Class IRI="SensingRate"/>
+        <DataProperty IRI="qooAttributeVariation"/>
+        <Class IRI="QoOEffect"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
         <DataProperty IRI="sensorStateValue"/>
-        <Class IRI="State"/>
+        <Class abbreviatedIRI="ssn:Sensor"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
         <DataProperty IRI="sensor_id"/>
@@ -2062,16 +1557,16 @@
         <Class IRI="QoOParameter"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
+        <DataProperty IRI="shouldBe"/>
+        <Class IRI="QoOAttribute"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
         <DataProperty IRI="target_value"/>
         <Class IRI="QoOParameter"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
         <DataProperty abbreviatedIRI="iot-lite:endpoint"/>
         <Class abbreviatedIRI="iot-lite:Service"/>
-    </DataPropertyDomain>
-    <DataPropertyDomain>
-        <DataProperty abbreviatedIRI="iot-lite:id"/>
-        <Class abbreviatedIRI="ssn:Device"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
         <DataProperty abbreviatedIRI="iot-lite:interfaceDescription"/>
@@ -2090,12 +1585,8 @@
         <Class abbreviatedIRI="iot-lite:Circle"/>
     </DataPropertyDomain>
     <DataPropertyRange>
-        <DataProperty IRI="absolute_order_in_pipeline"/>
-        <Datatype abbreviatedIRI="xsd:int"/>
-    </DataPropertyRange>
-    <DataPropertyRange>
-        <DataProperty IRI="batteryLifetimeValue"/>
-        <Datatype abbreviatedIRI="xsd:string"/>
+        <DataProperty IRI="capabilityVariation"/>
+        <Datatype IRI="variation"/>
     </DataPropertyRange>
     <DataPropertyRange>
         <DataProperty IRI="hasExactValue"/>
@@ -2114,10 +1605,6 @@
         <Datatype abbreviatedIRI="xsd:string"/>
     </DataPropertyRange>
     <DataPropertyRange>
-        <DataProperty IRI="mechanismName"/>
-        <Datatype abbreviatedIRI="xsd:string"/>
-    </DataPropertyRange>
-    <DataPropertyRange>
         <DataProperty IRI="min_treshold"/>
         <Datatype abbreviatedIRI="xsd:string"/>
     </DataPropertyRange>
@@ -2126,16 +1613,8 @@
         <Datatype IRI="observationLevel"/>
     </DataPropertyRange>
     <DataPropertyRange>
-        <DataProperty IRI="param_name"/>
-        <Datatype abbreviatedIRI="xsd:string"/>
-    </DataPropertyRange>
-    <DataPropertyRange>
-        <DataProperty IRI="param_value"/>
-        <Datatype abbreviatedIRI="xsd:string"/>
-    </DataPropertyRange>
-    <DataPropertyRange>
-        <DataProperty IRI="sensingRateValue"/>
-        <Datatype abbreviatedIRI="xsd:string"/>
+        <DataProperty IRI="qooAttributeVariation"/>
+        <Datatype IRI="variation"/>
     </DataPropertyRange>
     <DataPropertyRange>
         <DataProperty IRI="sensorStateValue"/>
@@ -2150,16 +1629,16 @@
         <Datatype IRI="slaLevel"/>
     </DataPropertyRange>
     <DataPropertyRange>
+        <DataProperty IRI="shouldBe"/>
+        <Datatype IRI="variation"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
         <DataProperty IRI="target_value"/>
         <Datatype abbreviatedIRI="xsd:string"/>
     </DataPropertyRange>
     <DataPropertyRange>
         <DataProperty abbreviatedIRI="iot-lite:endpoint"/>
         <Datatype abbreviatedIRI="xsd:anyURI"/>
-    </DataPropertyRange>
-    <DataPropertyRange>
-        <DataProperty abbreviatedIRI="iot-lite:id"/>
-        <Datatype abbreviatedIRI="xsd:string"/>
     </DataPropertyRange>
     <DataPropertyRange>
         <DataProperty abbreviatedIRI="iot-lite:interfaceDescription"/>
@@ -2177,16 +1656,6 @@
         <DataProperty abbreviatedIRI="iot-lite:radius"/>
         <Datatype abbreviatedIRI="xsd:double"/>
     </DataPropertyRange>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>SensingRate</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Current sensing rate of a sensor for a given Feature of Interest</Literal>
-    </AnnotationAssertion>
-    <AnnotationAssertion>
-        <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
-        <IRI>State</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Current state of a sensor (connected, disconnected, idle, sensing)</Literal>
-    </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>
         <IRI>exposedBy</IRI>
@@ -2312,6 +1781,14 @@
         <DataOneOf>
             <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">BEST EFFORT</Literal>
             <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">GUARANTEED</Literal>
+        </DataOneOf>
+    </DatatypeDefinition>
+    <DatatypeDefinition>
+        <Datatype IRI="variation"/>
+        <DataOneOf>
+            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">CONSTANT</Literal>
+            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">HIGH</Literal>
+            <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">LOW</Literal>
         </DataOneOf>
     </DatatypeDefinition>
 </Ontology>
