@@ -1,9 +1,9 @@
 package fr.isae.iqas.database;
 
-import fr.isae.iqas.model.virtualsensor.Location;
-import fr.isae.iqas.model.virtualsensor.ServiceEndpoint;
-import fr.isae.iqas.model.virtualsensor.VirtualSensor;
-import fr.isae.iqas.model.virtualsensor.VirtualSensorList;
+import fr.isae.iqas.model.entity.Location;
+import fr.isae.iqas.model.entity.ServiceEndpoint;
+import fr.isae.iqas.model.entity.VirtualSensor;
+import fr.isae.iqas.model.entity.VirtualSensorList;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;

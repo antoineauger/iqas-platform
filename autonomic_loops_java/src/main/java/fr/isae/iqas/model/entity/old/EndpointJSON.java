@@ -1,4 +1,4 @@
-package fr.isae.iqas.model.virtualsensor.old;
+package fr.isae.iqas.model.entity.old;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

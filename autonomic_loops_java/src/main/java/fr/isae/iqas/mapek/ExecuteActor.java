@@ -16,9 +16,11 @@ import akka.stream.javadsl.RunnableGraph;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import akka.util.Timeout;
-import fr.isae.iqas.model.Pipeline;
-import fr.isae.iqas.model.messages.PipelineRequestMsg;
-import fr.isae.iqas.model.messages.TerminatedMsg;
+import fr.isae.iqas.model.message.PipelineRequestMsg;
+import fr.isae.iqas.model.message.TerminatedMsg;
+import fr.isae.iqas.model.observation.ObservationLevel;
+import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
+import fr.isae.iqas.model.request.Pipeline;
 import fr.isae.iqas.pipelines.IPipeline;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -27,10 +29,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import scala.concurrent.Future;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -97,8 +96,19 @@ public class ExecuteActor extends UntypedActor {
                                     askParentForTermination();
                                 } else {
                                     IPipeline pipelineToEnforce = castedResultPipelineObject.get(0).getPipelineObject();
-                                    myRunnableGraph = RunnableGraph.fromGraph(
-                                            pipelineToEnforce.getPipelineGraph(kafkaSource, kafkaSink, topicToPublish, null));
+
+                                    Map<String, String> qooParams = new HashMap<>();
+                                    qooParams.put("lower_bound","-50");
+                                    qooParams.put("upper_bound","+50");
+                                    pipelineToEnforce.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParams);
+
+                                    pipelineToEnforce.setCustomizableParameter("threshold", "15");
+
+                                    myRunnableGraph = RunnableGraph.fromGraph(pipelineToEnforce.getPipelineGraph(kafkaSource,
+                                            kafkaSink,
+                                            topicToPublish,
+                                            ObservationLevel.INFORMATION,
+                                            null));
                                     if (myRunnableGraph != null) {
                                         myRunnableGraph.run(materializer);
                                     }

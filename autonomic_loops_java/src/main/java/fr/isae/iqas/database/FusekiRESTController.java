@@ -10,8 +10,8 @@ import akka.http.javadsl.server.Route;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.isae.iqas.model.Pipeline;
-import fr.isae.iqas.model.messages.PipelineRequestMsg;
+import fr.isae.iqas.model.message.PipelineRequestMsg;
+import fr.isae.iqas.model.request.Pipeline;
 import ioinformarics.oss.jackson.module.jsonld.JsonldModule;
 import ioinformarics.oss.jackson.module.jsonld.JsonldResource;
 import ioinformarics.oss.jackson.module.jsonld.JsonldResourceBuilder;
@@ -103,7 +103,7 @@ public class FusekiRESTController extends AllDirectives {
      * Pipelines
      */
 
-    public CompletableFuture<Route> getConcretePipelineNames() {
+    public CompletableFuture<Route> getConcretePipelineIDs() {
         CompletableFuture<Route> routeResponse;
         CompletableFuture<ArrayList<String>> pipelines = new CompletableFuture<>();
 
@@ -122,7 +122,7 @@ public class FusekiRESTController extends AllDirectives {
                     Future<Object> o = Patterns.ask(pipelineWatcherActor, a, timeout);
                     ArrayList<Pipeline> result = (ArrayList<Pipeline>) Await.result(o, timeout.duration());
                     for (Pipeline p : result) {
-                        arrayTemp.add(p.getName());
+                        arrayTemp.add(p.getPipeline_id());
                     }
                     pipelines.complete(arrayTemp);
                 }

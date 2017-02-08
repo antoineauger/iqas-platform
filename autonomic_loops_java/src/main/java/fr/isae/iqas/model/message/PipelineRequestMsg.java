@@ -1,4 +1,4 @@
-package fr.isae.iqas.model.messages;
+package fr.isae.iqas.model.message;
 
 /**
  * Created by an.auger on 03/02/2017.

@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>API gateway</title>
-    <link rel="stylesheet" type="text/css" href="mystyle.css">
 </head>
 <body>
 <h1>API gateway for the iQAS platform</h1>
 
 <p> Welcome on the homepage of the API gateway. <br/>
-This API allows you to interact with the iQAS platform in order to subscribe to high-quality sensor observations. </p>
+    This API allows you to interact with the iQAS platform in order to subscribe to high-quality sensor observations.
+</p>
 
 <h2>GET endpoints</h2>
 <ul>
     <li>/sensors</li>
-    <li>/sensors/[sensor_id]</li>
+    <li>/sensors/[sensor_id]</li><br/>
     <li>/requests</li>
-    <li>/requests/[request_id]</li>
+    <li>/requests/[request_id]</li><br/>
     <li>/pipelines</li>
-    <li>/pipelines?print=names</li>
+    <li>/pipelines?print=ids</li>
     <li>/pipelines/[pipeline_id]</li>
 </ul>
 
@@ -31,12 +31,30 @@ For submitting a request, the format is the following:<br/><br/>
 <div style="font-family: monospace; margin-left: 30px;">
     Content-Type: application/json<br/>
     {<br/>
-        <div style="margin-left: 30px;">
-            "request_id": "",<br/>
-            "application_id": "[application_id]"<br/>
-        </div>
+    <div style="margin-left: 30px;">
+        "request_id": "",<br/>
+        "application_id": "[application_id]"<br/>
+    </div>
     }
 </div>
 
+<h2>Available QoO pipelines</h2>
+<ul id="qoo_pipeline_list">
+
+</ul>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script>
+    $(function(){
+        $.ajax({
+            url: "/pipelines?print=ids",
+            success: function( result ) {
+                $.each(result, function(index, item) {
+                    $( "#qoo_pipeline_list" ).append( "<li>" + item + "</li>" );
+                });
+            }
+        });
+    });
+</script>
 </body>
 </html>

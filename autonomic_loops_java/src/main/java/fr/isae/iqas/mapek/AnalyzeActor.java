@@ -3,7 +3,7 @@ package fr.isae.iqas.mapek;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import fr.isae.iqas.model.messages.TerminatedMsg;
+import fr.isae.iqas.model.message.TerminatedMsg;
 
 /**
  * Created by an.auger on 13/09/2016.

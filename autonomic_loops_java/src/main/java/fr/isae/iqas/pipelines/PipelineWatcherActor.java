@@ -3,8 +3,8 @@ package fr.isae.iqas.pipelines;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import fr.isae.iqas.model.Pipeline;
-import fr.isae.iqas.model.messages.PipelineRequestMsg;
+import fr.isae.iqas.model.message.PipelineRequestMsg;
+import fr.isae.iqas.model.request.Pipeline;
 import org.apache.commons.codec.binary.Hex;
 import scala.concurrent.duration.Duration;
 
@@ -149,23 +149,22 @@ public class PipelineWatcherActor extends UntypedActor {
         if (dirToScan.exists() && dirToScan.isDirectory()) {
             String[] allFiles = dirToScan.list();
             for (String f : allFiles) {
-                try {
-                    // only consider files ending in ".class" equals to the wanted pipeline
-                    if (!f.endsWith(".class") && !f.equals(pipelineName + ".class"))
-                        continue;
-
-                    Class aClass = cl.loadClass(f.substring(0, f.indexOf(".")));
-                    Class[] intf = aClass.getInterfaces();
-                    for (Class anIntf : intf) {
-                        if (anIntf.getName().equals("fr.isae.iqas.pipelines.IPipeline")) {
-                            IPipeline pipelineToLoad = (IPipeline) aClass.newInstance();
-                            pipelineObjects.put(pipelineName, pipelineToLoad);
-                            log.info("QoO pipeline " + pipelineName + " successfully loaded from bytecode " + pipelineName + ".class");
+                // only consider files ending in ".class" equals to the wanted pipeline
+                if (f.equals(pipelineName + ".class")) {
+                    try {
+                        Class aClass = cl.loadClass(f.substring(0, f.indexOf(".")));
+                        Class[] intf = aClass.getInterfaces();
+                        for (Class anIntf : intf) {
+                            if (anIntf.getName().equals("fr.isae.iqas.pipelines.IPipeline")) {
+                                IPipeline pipelineToLoad = (IPipeline) aClass.newInstance();
+                                pipelineObjects.put(pipelineName, pipelineToLoad);
+                                log.info("QoO pipeline " + pipelineName + " successfully loaded from bytecode " + pipelineName + ".class");
+                            }
                         }
+                    } catch (Exception e) {
+                        log.error("File " + f + " does not contain a valid IPipeline class!");
+                        log.error(e.toString());
                     }
-                } catch (Exception e) {
-                    log.error("File " + f + " does not contain a valid IPipeline class!");
-                    log.error(e.toString());
                 }
             }
         }

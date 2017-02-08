@@ -10,20 +10,24 @@ import akka.stream.javadsl.Source;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.isae.iqas.mechanisms.Operator;
+import fr.isae.iqas.model.observation.ObservationLevel;
+import fr.isae.iqas.model.quality.IComputeQoOAttributes;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
 
 /**
  * Created by an.auger on 31/01/2017.
  */
 
-@JsonIgnoreProperties({"pipelineName", "pipelineID"})
+@JsonIgnoreProperties({"pipelineName", "pipelineID", "params"})
 public interface IPipeline {
+    void setOptionsForQoOComputation(IComputeQoOAttributes computeAttributeHelper,
+                                     Map<String, String> qooParams);
 
     /**
      * Ground method to get the Akka graph to run
@@ -38,6 +42,7 @@ public interface IPipeline {
     Graph<ClosedShape, Materializer> getPipelineGraph(Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource,
                                                       Sink<ProducerRecord, CompletionStage<Done>> kafkaSink,
                                                       String topicToPublish,
+                                                      ObservationLevel askedLevel,
                                                       Operator operatorToApply);
 
     /**
@@ -55,7 +60,7 @@ public interface IPipeline {
      * @see Operator for all possibilites
      */
     @JsonProperty("supported_operators")
-    ArrayList<Operator> getSupportedOperators();
+    List<Operator> getSupportedOperators();
 
     /**
      * Tells if the setParams method can be called for the given pipeline
@@ -68,21 +73,21 @@ public interface IPipeline {
      * Get the value of the current enforced parameters
      * @return Map(String, String) following the format (key, value)
      */
-    @JsonProperty("default_params")
-    Map<String, String> getDefaultParams();
+    Map<String, String> getParams();
 
     /**
      * Get only the name of the customizable parameters
      * @return List(String) of the parameter names
      */
     @JsonProperty("customizable_params")
-    List<String> getCustomizableParams();
+    Set<String> getCustomizableParams();
 
     /**
-     * Useful to set one or more customizable parameters
-     * @param newParams Map(String, String) following the format (key, value)
+     * Useful to set a specific parameter
+     * @param param the default param to set
+     * @param value the new value casted in String
      * @return true if the operation has succeeded, false otherwise
      */
-    boolean setParams(Map<String, String> newParams);
+    boolean setCustomizableParameter(String param, String value);
 
 }

@@ -6,8 +6,8 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.database.MongoController;
-import fr.isae.iqas.model.messages.RFCMsg;
-import fr.isae.iqas.model.messages.TerminatedMsg;
+import fr.isae.iqas.model.message.RFCMsg;
+import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.request.Request;
 
 import java.util.Properties;

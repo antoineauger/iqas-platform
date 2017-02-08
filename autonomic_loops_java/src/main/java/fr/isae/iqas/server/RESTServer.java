@@ -40,8 +40,8 @@ public class RESTServer extends AllDirectives {
         return fusekiRESTController.getAllSensors(ctx);
     }
 
-    private CompletionStage<Route> getAllConcretePipelineNames() {
-        return fusekiRESTController.getConcretePipelineNames();
+    private CompletionStage<Route> getAllConcretePipelineIDs() {
+        return fusekiRESTController.getConcretePipelineIDs();
     }
 
     private CompletionStage<Route> getConcretePipeline(String pipeline_id) {
@@ -94,9 +94,9 @@ public class RESTServer extends AllDirectives {
                                 ),
                                 path(segment("pipelines"), () -> parameterOptional("print", optName -> {
                                         String print = optName.orElse("");
-                                        if (print.equals("names")) {
+                                        if (print.equals("ids")) {
                                             return extractExecutionContext(ctx ->
-                                                    onSuccess(() -> getAllConcretePipelineNames(), Function.identity())
+                                                    onSuccess(() -> getAllConcretePipelineIDs(), Function.identity())
                                             );
                                         }
                                         else {

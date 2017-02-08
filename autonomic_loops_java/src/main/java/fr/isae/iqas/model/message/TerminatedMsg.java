@@ -1,4 +1,4 @@
-package fr.isae.iqas.model.messages;
+package fr.isae.iqas.model.message;
 
 import akka.actor.ActorRef;
 

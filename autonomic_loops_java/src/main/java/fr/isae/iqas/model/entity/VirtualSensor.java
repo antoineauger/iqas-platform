@@ -1,4 +1,4 @@
-package fr.isae.iqas.model.virtualsensor;
+package fr.isae.iqas.model.entity;
 
 import ioinformarics.oss.jackson.module.jsonld.annotation.JsonldId;
 import ioinformarics.oss.jackson.module.jsonld.annotation.JsonldProperty;

@@ -22,7 +22,7 @@ import com.mongodb.async.client.MongoClients;
 import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.database.FusekiRESTController;
 import fr.isae.iqas.database.MongoRESTController;
-import fr.isae.iqas.model.messages.TerminatedMsg;
+import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.pipelines.PipelineWatcherActor;
 import fr.isae.iqas.server.APIGatewayActor;
 import fr.isae.iqas.server.RESTServer;

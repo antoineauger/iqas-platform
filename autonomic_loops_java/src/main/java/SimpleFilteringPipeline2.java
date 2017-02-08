@@ -20,16 +20,16 @@ import static fr.isae.iqas.model.observation.ObservationLevel.*;
 /**
  * Created by an.auger on 31/01/2017.
  */
-public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeline {
+public class SimpleFilteringPipeline2 extends AbstractPipeline implements IPipeline {
 
     private Graph runnableGraph = null;
     private static Flow<ConsumerRecord, ConsumerRecord, NotUsed> flowConsumerRecords;
     private static Flow<ProducerRecord, ProducerRecord, NotUsed> flowProducerRecords;
 
-    public SimpleFilteringPipeline() {
-        super("Simple Filtering Pipeline", true);
+    public SimpleFilteringPipeline2() {
+        super("Simple Filtering Pipeline2", true);
 
-        setParameter("threshold", "0.0", true);
+        setParameter("threshold", "18.0", true);
 
         flowConsumerRecords = Flow.of(ConsumerRecord.class);
         flowProducerRecords = Flow.of(ProducerRecord.class);
