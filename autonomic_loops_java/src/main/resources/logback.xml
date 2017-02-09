@@ -2,6 +2,13 @@
 
 <configuration scan="true" scanPeriod="10 seconds">
 
+    <!-- For loggers in the these namespaces, log only at ERROR level. -->
+    <logger name="akka.kafka.KafkaConsumerActor" level="WARN"/>
+    <logger name="org.mongodb.driver" level="WARN"/>
+    <logger name="org.apache.kafka" level="WARN"/>
+    <logger name="org.apache.zookeeper" level="WARN"/>
+    <logger name="org.I0Itec.zkclient" level="WARN"/>
+
     <!-- Simple file output -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <encoder>
@@ -31,21 +38,16 @@
         </encoder>
         <!-- Only log level INFO and above -->
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>DEBUG</level>
+            <level>INFO</level>
         </filter>
     </appender>
 
 
     <!-- Enable FILE and STDOUT appenders for all log messages.
-         By default, only log at level INFO and above. -->
+         By default, only log at level DEBUG and above. -->
     <root level="INFO">
         <appender-ref ref="FILE"/>
         <appender-ref ref="STDOUT"/>
     </root>
-
-    <!-- For loggers in the these namespaces, log only at ERROR level. -->
-    <logger name="akka.kafka.KafkaConsumerActor" level="ERROR"/>
-    <logger name="org.mongodb.driver" level="ERROR"/>
-    <logger name="org.apache.kafka" level="ERROR"/>
 
 </configuration>
