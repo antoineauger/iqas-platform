@@ -24,7 +24,7 @@ public class Request {
         this.request_id = request_id;
         this.application_id = application_id;
         this.statesList = new ArrayList<>();
-        this.statesList.add(new State(Status.CREATED, new Date()));
+        this.statesList.add(new State(State.Status.CREATED, new Date()));
     }
 
     public void setRequest_id(String request_id) {
@@ -59,7 +59,7 @@ public class Request {
         statesList = new ArrayList<>();
         List<Document> bsonStatesList = (List<Document>) bsonDocument.get("statesList");
         statesList.addAll(bsonStatesList.stream().map(d -> new State(
-                Status.valueOf(d.getString("status")),
+                State.Status.valueOf(d.getString("status")),
                 new Date(d.getLong("start_date")),
                 new Date(d.getLong("end_date")))).collect(Collectors.toList()));
     }
@@ -93,7 +93,7 @@ public class Request {
      * @param status the given Status to look for in the state list
      * @return a boolean (true/false)
      */
-    public @JsonIgnore boolean hasBeenInState(Status status) {
+    public @JsonIgnore boolean hasBeenInState(State.Status status) {
         for (State s : statesList) {
             if (s.getStatus().equals(status)) {
                 return true;
@@ -110,7 +110,7 @@ public class Request {
      * @return a State object corresponding to the given Status for the Request
      * @throws Exception if the Request has not been in the specified Status
      */
-    public @JsonIgnore State getStateDetails(Status status) throws Exception {
+    public @JsonIgnore State getStateDetails(State.Status status) throws Exception {
         for (State s : statesList) {
             if (s.getStatus().equals(status)) {
                 return s;
@@ -124,7 +124,7 @@ public class Request {
      *
      * @return the current Status object
      */
-    public Status getCurrent_status() {
+    public State.Status getCurrent_status() {
         return statesList.get(statesList.size() - 1).getStatus();
     }
 
@@ -134,7 +134,7 @@ public class Request {
      * @param status a Status object
      * @return a boolean (true/false) according to the value of the current Status
      */
-    public @JsonIgnore boolean isInState(Status status) {
+    public @JsonIgnore boolean isInState(State.Status status) {
         return getCurrent_status().equals(status);
     }
 
@@ -145,7 +145,7 @@ public class Request {
      *
      * @param newStatus the new Status enum object
      */
-    public @JsonIgnore void updateState(Status newStatus) {
+    public @JsonIgnore void updateState(State.Status newStatus) {
         Date currentDate = new Date();
         statesList.get(statesList.size() - 1).setEnd_date(currentDate);
         statesList.add(new State(newStatus, currentDate));

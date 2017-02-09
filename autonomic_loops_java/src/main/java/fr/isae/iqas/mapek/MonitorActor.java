@@ -11,7 +11,7 @@ import akka.kafka.Subscriptions;
 import akka.kafka.javadsl.Consumer;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Sink;
-import fr.isae.iqas.model.message.AddKafkaTopicMsg;
+import fr.isae.iqas.model.message.KafkaTopicMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;
@@ -79,12 +79,12 @@ public class MonitorActor extends UntypedActor {
                     getSelf(), "tick", getContext().dispatcher(), null);
 
             System.out.println("It works!");
-        } else if (message instanceof AddKafkaTopicMsg) {
-            log.info("Received AddKafkaTopicMsg message: {}", message);
+        } else if (message instanceof KafkaTopicMsg) {
+            log.info("Received KafkaTopicMsg message: {}", message);
             getSender().tell(message, getSelf());
-            AddKafkaTopicMsg addKafkaTopicMsgMsg = (AddKafkaTopicMsg) message;
-            if (!watchedTopics.contains(addKafkaTopicMsgMsg.getTopic())) {
-                watchedTopics.add(new TopicPartition(addKafkaTopicMsgMsg.getTopic(), 0));
+            KafkaTopicMsg kafkaTopicMsgMsg = (KafkaTopicMsg) message;
+            if (!watchedTopics.contains(kafkaTopicMsgMsg.getTopic())) {
+                watchedTopics.add(new TopicPartition(kafkaTopicMsgMsg.getTopic(), 0));
                 restartKafkaActor();
             }
         } else if (message instanceof String) {

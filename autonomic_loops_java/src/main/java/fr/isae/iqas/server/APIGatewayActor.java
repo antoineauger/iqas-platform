@@ -9,7 +9,7 @@ import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.mapek.ManagerActor;
 import fr.isae.iqas.model.request.Request;
-import fr.isae.iqas.model.request.Status;
+import fr.isae.iqas.model.request.State;
 
 import java.util.ArrayList;
 import java.util.Properties;
@@ -58,10 +58,10 @@ public class APIGatewayActor extends UntypedActor {
             Request incomingRequest = (Request) message;
 
             //TODO: Build request, Possible? YES / NO, Get ticket number, Forward request to API gateway
-            ArrayList<Status> statusesToRetrieve = new ArrayList<>();
-            statusesToRetrieve.add(Status.CREATED);
-            statusesToRetrieve.add(Status.ENFORCED);
-            statusesToRetrieve.add(Status.SUBMITTED);
+            ArrayList<State.Status> statusesToRetrieve = new ArrayList<>();
+            statusesToRetrieve.add(State.Status.CREATED);
+            statusesToRetrieve.add(State.Status.ENFORCED);
+            statusesToRetrieve.add(State.Status.SUBMITTED);
 
             ArrayList<Request> registeredRequestsForApp = mongoController
                     .getFilteredRequestsByApp(incomingRequest.getApplication_id(), statusesToRetrieve).get();

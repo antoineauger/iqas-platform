@@ -2,7 +2,18 @@ package fr.isae.iqas.model.request;
 
 import java.util.Date;
 
+/**
+ * Created by an.auger on 17/11/2016.
+ */
 public class State {
+    public enum Status {
+        CREATED,
+        SUBMITTED,
+        ENFORCED,
+        DONE,
+        REJECTED
+    }
+
     private Status status;
     private Date start_date;
     private Date end_date;
@@ -42,4 +53,5 @@ public class State {
     public void setEnd_date(Date end_date) {
         this.end_date = end_date;
     }
+
 }

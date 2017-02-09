@@ -7,7 +7,7 @@ import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.MainClass;
 import fr.isae.iqas.model.entity.old.VirtualSensorJSON;
 import fr.isae.iqas.model.request.Request;
-import fr.isae.iqas.model.request.Status;
+import fr.isae.iqas.model.request.State;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,7 +95,7 @@ public class MongoController extends AllDirectives {
      * @param filters        an ArrayList of Status objects. Only return Requests with one of these statuses.
      * @return a CompletableFuture that will be completed with either an ArrayList of Requests or a Throwable
      */
-    public CompletableFuture<ArrayList<Request>> getFilteredRequestsByApp(String application_id, ArrayList<Status> filters) {
+    public CompletableFuture<ArrayList<Request>> getFilteredRequestsByApp(String application_id, ArrayList<State.Status> filters) {
         final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
         _findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
