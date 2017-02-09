@@ -13,10 +13,13 @@ import java.util.Properties;
  * Created by an.auger on 09/02/2017.
  */
 public class KafkaAdminActor extends UntypedActor {
-    private Properties prop;
+    private static final int sessionTimeoutMs = 10 * 1000;
+    private static final int connectionTimeoutMs = 8 * 1000;
+
+    private String zookeeperConnect;
 
     public KafkaAdminActor(Properties prop) {
-        this.prop = prop;
+        this.zookeeperConnect = prop.getProperty("zookeeper_endpoint_address") + ":" + prop.getProperty("zookeeper_endpoint_port");
     }
 
     @Override
@@ -26,19 +29,16 @@ public class KafkaAdminActor extends UntypedActor {
         resetTopic("my-topic");
     }
 
-    public boolean resetTopic(String kafkaTopicToReset) {
+    private boolean resetTopic(String kafkaTopicToReset) {
         boolean firstOp = deleteTopic(kafkaTopicToReset);
         boolean secondOp = createTopic(kafkaTopicToReset);
 
         return (firstOp && secondOp);
     }
 
-    public boolean createTopic(String kafkaTopicToCreate) {
+    private boolean createTopic(String kafkaTopicToCreate) {
         boolean success = true;
 
-        String zookeeperConnect = prop.getProperty("zookeeper_endpoint_address") + ":" + prop.getProperty("zookeeper_endpoint_port");
-        int sessionTimeoutMs = 10 * 1000;
-        int connectionTimeoutMs = 8 * 1000;
         // Note: You must initialize the ZkClient with ZKStringSerializer.  If you don't, then
         // createTopic() will only seem to work (it will return without error).  The topic will exist in
         // only ZooKeeper and will be returned when listing topics, but Kafka itself does not create the
@@ -63,12 +63,9 @@ public class KafkaAdminActor extends UntypedActor {
         return success;
     }
 
-    public boolean deleteTopic(String kafkaTopicToDelete) {
+    private boolean deleteTopic(String kafkaTopicToDelete) {
         boolean success = true;
 
-        String zookeeperConnect = prop.getProperty("zookeeper_endpoint_address") + ":" + prop.getProperty("zookeeper_endpoint_port");
-        int sessionTimeoutMs = 10 * 1000;
-        int connectionTimeoutMs = 8 * 1000;
         // Note: You must initialize the ZkClient with ZKStringSerializer.  If you don't, then
         // createTopic() will only seem to work (it will return without error).  The topic will exist in
         // only ZooKeeper and will be returned when listing topics, but Kafka itself does not create the
