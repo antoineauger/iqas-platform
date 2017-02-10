@@ -6,7 +6,7 @@ import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
-import fr.isae.iqas.mechanisms.Operator;
+import fr.isae.iqas.model.request.Operator;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.pipelines.AbstractPipeline;
 import fr.isae.iqas.pipelines.IPipeline;

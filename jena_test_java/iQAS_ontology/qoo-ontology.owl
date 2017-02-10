@@ -68,10 +68,10 @@
         <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">January 2017</Literal>
     </Annotation>
     <Declaration>
-        <Class abbreviatedIRI="ssn:DetectionLimit"/>
+        <DataProperty IRI="qooAttributeVariation"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="qooAttributeVariation"/>
+        <Class abbreviatedIRI="ssn:DetectionLimit"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:forProperty"/>
@@ -89,10 +89,10 @@
         <Class abbreviatedIRI="iot-lite:Polygon"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:observationResult"/>
+        <Class abbreviatedIRI="ssn:Latency"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:Latency"/>
+        <ObjectProperty abbreviatedIRI="ssn:observationResult"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="geo:long"/>
@@ -131,13 +131,13 @@
         <ObjectProperty IRI="givesAccessTo"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="considers"/>
-    </Declaration>
-    <Declaration>
         <Class abbreviatedIRI="qu:Unit"/>
     </Declaration>
     <Declaration>
         <Datatype IRI="observationLevel"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="considers"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="hasExactValue"/>
@@ -152,10 +152,10 @@
         <ObjectProperty IRI="requiresQoo"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:Drift"/>
+        <ObjectProperty IRI="isProvidedBy"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="isProvidedBy"/>
+        <Class abbreviatedIRI="ssn:Drift"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasValue"/>
@@ -185,10 +185,10 @@
         <Datatype IRI="slaLevel"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:onPlatform"/>
+        <ObjectProperty IRI="isSupportedBy"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="isSupportedBy"/>
+        <ObjectProperty abbreviatedIRI="ssn:onPlatform"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:Platform"/>
@@ -221,16 +221,16 @@
         <ObjectProperty IRI="requiresObservation"/>
     </Declaration>
     <Declaration>
-        <Class IRI="QualityofObservation"/>
-    </Declaration>
-    <Declaration>
         <NamedIndividual IRI="MIN"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="decreases"/>
+        <Class IRI="QualityofObservation"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="target_value"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="decreases"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="isImpactedBy"/>
@@ -263,10 +263,13 @@
         <ObjectProperty IRI="belongsTo"/>
     </Declaration>
     <Declaration>
+        <Class abbreviatedIRI="ssn:MeasurementRange"/>
+    </Declaration>
+    <Declaration>
         <AnnotationProperty abbreviatedIRI="geo:alt"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:MeasurementRange"/>
+        <NamedIndividual IRI="OSB_ACCURACY"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="increases"/>
@@ -299,19 +302,22 @@
         <Datatype IRI="sensorState"/>
     </Declaration>
     <Declaration>
+        <Class IRI="QoOParameter"/>
+    </Declaration>
+    <Declaration>
         <ObjectProperty IRI="expressedBy"/>
     </Declaration>
     <Declaration>
-        <Class IRI="QoOParameter"/>
+        <NamedIndividual IRI="OBS_FRESHNESS"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:Resolution"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
+        <AnnotationProperty abbreviatedIRI="dc:description"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty abbreviatedIRI="dc:description"/>
+        <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="isInTheAreaOf"/>
@@ -332,13 +338,13 @@
         <Class abbreviatedIRI="ssn:MeasurementProperty"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty abbreviatedIRI="geo:lat"/>
+        <DataProperty abbreviatedIRI="iot-lite:interfaceDescription"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="dc:title"/>
     </Declaration>
     <Declaration>
-        <DataProperty abbreviatedIRI="iot-lite:interfaceDescription"/>
+        <AnnotationProperty abbreviatedIRI="geo:lat"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="has"/>
@@ -347,16 +353,16 @@
         <ObjectProperty abbreviatedIRI="ssn:attachedSystem"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="sensor_id"/>
-    </Declaration>
-    <Declaration>
         <Class abbreviatedIRI="iot-lite:Service"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:SensorOutput"/>
+        <DataProperty IRI="sensor_id"/>
     </Declaration>
     <Declaration>
         <Class IRI="ObservationRequest"/>
+    </Declaration>
+    <Declaration>
+        <Class abbreviatedIRI="ssn:SensorOutput"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:Frequency"/>
@@ -365,10 +371,10 @@
         <ObjectProperty IRI="exposes"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
+        <Class IRI="Operator"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Operator"/>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="dc:creator"/>
@@ -399,6 +405,9 @@
     </Declaration>
     <Declaration>
         <DataProperty IRI="hasMinValue"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="OBS_RATE"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="canBeRetrievedThrough"/>
@@ -1113,6 +1122,14 @@
     <ClassAssertion>
         <Class IRI="Operator"/>
         <NamedIndividual IRI="MIN"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="QoOAttribute"/>
+        <NamedIndividual IRI="OBS_FRESHNESS"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="QoOAttribute"/>
+        <NamedIndividual IRI="OSB_ACCURACY"/>
     </ClassAssertion>
     <InverseObjectProperties>
         <ObjectProperty IRI="associatedTo"/>

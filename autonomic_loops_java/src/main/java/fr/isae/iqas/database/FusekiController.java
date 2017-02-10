@@ -1,9 +1,6 @@
 package fr.isae.iqas.database;
 
-import fr.isae.iqas.model.entity.Location;
-import fr.isae.iqas.model.entity.ServiceEndpoint;
-import fr.isae.iqas.model.entity.VirtualSensor;
-import fr.isae.iqas.model.entity.VirtualSensorList;
+import fr.isae.iqas.model.jsonld.*;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
@@ -13,14 +10,13 @@ import org.apache.jena.rdf.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by an.auger on 25/01/2017.
  */
+// TODO to revise after ontology changes
 public class FusekiController {
     private Logger log = LoggerFactory.getLogger(FusekiController.class);
 
@@ -46,6 +42,10 @@ public class FusekiController {
 
         log.info("FusekiController successfully created!");
     }
+
+    /**
+     * Sensors
+     */
 
     VirtualSensorList _findAllSensors() {
         Map<String, VirtualSensor> processedSensors = new ConcurrentHashMap<>();
@@ -168,6 +168,79 @@ public class FusekiController {
         }
         else {
             return sensor;
+        }
+    }
+
+    /**
+     * Topics
+     */
+
+    TopicList _findAllTopics() {
+        QuerySolution binding;
+        Set<String> topicAlreadyAdded = new HashSet<>();
+        TopicList topicList = new TopicList();
+        topicList.topics = new ArrayList<>();
+
+        String req = baseStringForRequests +
+                "SELECT ?topic\n" +
+                "WHERE {\n" +
+                "?topic rdf:type ssn:Property\n" +
+                "}";
+
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
+                Resource topic = (Resource) binding.get("topic");
+
+                if (!topicAlreadyAdded.contains(topic.getURI())) {
+                    Topic t = new Topic();
+                    t.topic = topic.getURI();
+                    topicList.topics.add(t);
+                    topicAlreadyAdded.add(topic.getURI());
+                }
+            }
+        }
+
+        if (topicList.topics.size() == 0) {
+            return null;
+        }
+        else {
+            return topicList;
+        }
+    }
+
+    // TODO to finish
+    Topic _findSpecificTopic(String topic_id) {
+        QuerySolution binding = null;
+        Topic topic = new Topic();
+
+        String req = baseStringForRequests +
+                "SELECT ?topic ?service ?level\n" +
+                "WHERE {\n" +
+                topic_id + " rdf:type ssn:Property .\n" +
+                topic_id + " qoo:canBeRetrievedThrough ?service .\n" +
+                topic_id + " qoo:obsLevelValue ?level\n" +
+                "}";
+
+        //System.out.println(req);
+
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            if (r.hasNext()) {
+                binding = r.nextSolution();
+                Resource topicRes = (Resource) binding.get("service");
+
+
+                topic.topic = topicRes.getURI();
+            }
+        }
+
+        if (binding == null) {
+            return null;
+        }
+        else {
+            return topic;
         }
     }
 }

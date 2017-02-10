@@ -5,6 +5,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.model.message.RFCMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
@@ -16,10 +17,11 @@ import java.util.Properties;
  * Created by an.auger on 25/09/2016.
  */
 
-public class ManagerActor extends UntypedActor {
+public class AutoManagerActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private MongoController mongoController;
+    private FusekiController fusekiController;
 
     private boolean processingActivated;
 
@@ -28,13 +30,14 @@ public class ManagerActor extends UntypedActor {
     private ActorRef planActor = null;
     private ActorRef executeActor = null;
 
-    public ManagerActor(Properties prop, MongoController mongoController) {
+    public AutoManagerActor(Properties prop, MongoController mongoController, FusekiController fusekiController) {
         this.mongoController = mongoController;
+        this.fusekiController = fusekiController;
 
-        //monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop), "monitorInfo");
-        //analyzeActor = getContext().actorOf(Props.create(AnalyzeActor.class, prop), "analyzeInfo");
-        planActor = getContext().actorOf(Props.create(PlanActor.class, prop), "planInfo");
-        //executeActor = getContext().actorOf(Props.create(ExecuteActor.class, prop), "executeInfo");
+        //monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop), "monitorActor");
+        //analyzeActor = getContext().actorOf(Props.create(AnalyzeActor.class, prop), "analyzeActor");
+        planActor = getContext().actorOf(Props.create(PlanActor.class, prop), "planActor");
+        //executeActor = getContext().actorOf(Props.create(ExecuteActor.class, prop), "executeActor");
 
         processingActivated = false;
     }

@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>API gateway</title>
+    <style>
+        .code {
+            font-family: monospace;
+        }
+    </style>
 </head>
 <body>
 <h1>API gateway for the iQAS platform</h1>
@@ -15,33 +20,48 @@
 <ul>
     <li>/sensors</li>
     <li>/sensors/[sensor_id]</li><br/>
+
     <li>/requests</li>
     <li>/requests/[request_id]</li><br/>
+
+    <li>/topics</li><br/>
+    <!--<li>/topics/[topic_id]</li><br/>-->
+
     <li>/pipelines</li>
     <li>/pipelines?print=ids</li>
     <li>/pipelines/[pipeline_id]</li>
 </ul>
 
-<h2>PUT endpoints</h2>
+<h2>POST endpoints</h2>
 <ul>
     <li>/requests</li>
 </ul>
 
-For submitting a new request, the format is the following:<br/>
-<div style="font-family: monospace; margin-left: 30px;">
+For submitting a new request, the format is the following (all parameters are mandatory):<br/>
+<div style="margin-left: 30px;" class="code">
     Content-Type: application/json<br/>
     {<br/>
     <div style="margin-left: 30px;">
         "request_id": "",<br/>
         "application_id": "[application_id]"<br/>
+        "topic": (see below)<br/>
+        "location": (see below)<br/>
+        "sla_level": (see below)<br/>
+        "operator": (see below)<br/>
     </div>
     }
 </div>
 
 <br/>
+Topics: e.g., temperature, humidity, visibility, etc.<br/>
+Location: city name (Toulouse, Portet-Sur-Garonne, etc.) <!-- TODO / (long,lat) / option nearBy --><br/>
+Operators: <span class="code">NONE</span> / <span class="code">AVG</span> / <span class="code">MIN</span> / <span class="code">MAX</span><br/>
+Service Level Agreement levels: <span class="code">BEST_EFFORT</span> / <span class="code">GUARANTEED</span>
 
-Operators: AVG / MIN / MAX<br/>
-Service Level Agreement levels: BEST_EFFORT / GUARANTEED
+<h2>DELETE endpoints</h2>
+<ul>
+    <li>/requests/[request_id]</li>
+</ul>
 
 <h2>Available QoO pipelines</h2>
 <ul id="qoo_pipeline_list">

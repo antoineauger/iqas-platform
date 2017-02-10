@@ -4,8 +4,8 @@ import akka.http.javadsl.server.AllDirectives;
 import com.mongodb.async.SingleResultCallback;
 import com.mongodb.async.client.MongoCollection;
 import com.mongodb.async.client.MongoDatabase;
+import com.mongodb.client.result.DeleteResult;
 import fr.isae.iqas.MainClass;
-import fr.isae.iqas.model.entity.old.VirtualSensorJSON;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import org.bson.Document;
@@ -35,19 +35,18 @@ public class MongoController extends AllDirectives {
         log.info("MongoController successfully created!");
     }
 
+    // ######### Internal mongoDB methods #########
+
     /**
-     * Sensors
+     * MongoDB
      */
 
-    void _findSpecificSensor(String sensor_id, final SingleResultCallback<ArrayList<VirtualSensorJSON>> callback) {
-        MongoCollection<Document> collection = mongoDatabase.getCollection("sensors");
-        collection.find(eq("sensor_id", sensor_id))
-                .map(myDoc -> new VirtualSensorJSON(myDoc)).into(new ArrayList<>(), callback);
+    private void _dropIQASDatabase(final SingleResultCallback<Void> callback) {
+        mongoDatabase.drop(callback);
     }
 
-    void _findAllSensors(final SingleResultCallback<ArrayList<VirtualSensorJSON>> callback) {
-        MongoCollection<Document> collection = mongoDatabase.getCollection("sensors");
-        collection.find().map(myDoc -> new VirtualSensorJSON(myDoc)).into(new ArrayList<>(), callback);
+    private void _dropCollection(String collectionName, final SingleResultCallback<Void> callback) {
+        mongoDatabase.getCollection(collectionName).drop(callback);
     }
 
     /**
@@ -64,9 +63,32 @@ public class MongoController extends AllDirectives {
         collection.find().map(myDoc -> new Request(myDoc)).into(new ArrayList<>(), callback);
     }
 
-    private void _putRequest(Document req, final SingleResultCallback<Void> callback) {
+    void _putRequest(Document req, final SingleResultCallback<Void> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
         collection.insertOne(req, callback);
+    }
+
+    void _deleteRequest(String request_id, final SingleResultCallback<DeleteResult> callback) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
+        collection.deleteOne(eq("request_id", request_id), callback);
+    }
+
+    // ######### Exposed mongoDB methods #########
+
+    public CompletableFuture<Boolean> deleteRequest(String request_id) {
+        final CompletableFuture<Boolean> deleteddRequest = new CompletableFuture<>();
+        _deleteRequest(request_id, new SingleResultCallback<DeleteResult>() {
+            @Override
+            public void onResult(final DeleteResult result, final Throwable t) {
+                if (result.getDeletedCount() == 1) {
+                    deleteddRequest.complete(true);
+                }
+                else {
+                    deleteddRequest.complete(false);
+                }
+            }
+        });
+        return deleteddRequest;
     }
 
     /**
@@ -95,7 +117,7 @@ public class MongoController extends AllDirectives {
      * @param filters        an ArrayList of Status objects. Only return Requests with one of these statuses.
      * @return a CompletableFuture that will be completed with either an ArrayList of Requests or a Throwable
      */
-    public CompletableFuture<ArrayList<Request>> getFilteredRequestsByApp(String application_id, ArrayList<State.Status> filters) {
+    public CompletableFuture<ArrayList<Request>> getFilteredRequestsByApp(String application_id, List<State.Status> filters) {
         final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
         _findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
@@ -154,12 +176,6 @@ public class MongoController extends AllDirectives {
     // TODO : putRequests useful ?
     // ArrayList<Document> documents = requests.stream().map(Request::toBSON).collect(Collectors.toCollection(ArrayList::new));
 
-    // ######### Internal mongoDB methods #########
-
-    private void _dropIQASDatabase(final SingleResultCallback<Void> callback) {
-        mongoDatabase.drop(callback);
-    }
-
     /**
      * Method to drop the whole iQAS database
      */
@@ -172,10 +188,6 @@ public class MongoController extends AllDirectives {
                 log.error("Drop of the iQAS database failed: " + t.toString());
             }
         });
-    }
-
-    private void _dropCollection(String collectionName, final SingleResultCallback<Void> callback) {
-        mongoDatabase.getCollection(collectionName).drop(callback);
     }
 
     /**

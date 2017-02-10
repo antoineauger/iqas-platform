@@ -12,6 +12,13 @@ public class AnalyzeActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     public AnalyzeActor() {
+        /*
+        Different reasoning;
+
+        -Request : POST -> new actor and kafka topics to create
+
+
+        */
     }
 
     @Override

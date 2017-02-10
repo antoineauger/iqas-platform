@@ -1,5 +1,6 @@
 package fr.isae.iqas.server;
 
+import akka.actor.ActorRef;
 import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.model.ContentTypes;
 import akka.http.javadsl.model.HttpResponse;
@@ -7,13 +8,17 @@ import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 import fr.isae.iqas.database.FusekiRESTController;
 import fr.isae.iqas.database.MongoRESTController;
+import fr.isae.iqas.model.message.RESTRequestMsg;
 import fr.isae.iqas.model.request.Request;
+import org.bson.types.ObjectId;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import static akka.http.javadsl.server.PathMatchers.segment;
+import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.*;
 
 /**
  * Created by an.auger on 16/09/2016.
@@ -22,10 +27,12 @@ import static akka.http.javadsl.server.PathMatchers.segment;
 public class RESTServer extends AllDirectives {
     private MongoRESTController mongoRESTController;
     private FusekiRESTController fusekiRESTController;
+    private ActorRef apiGatewayActor;
 
-    public RESTServer(MongoRESTController mongoRESTController, FusekiRESTController fusekiRESTController) {
+    public RESTServer(MongoRESTController mongoRESTController, FusekiRESTController fusekiRESTController, ActorRef apiGatewayActor) {
         this.mongoRESTController = mongoRESTController;
         this.fusekiRESTController = fusekiRESTController;
+        this.apiGatewayActor = apiGatewayActor;
     }
 
     /**
@@ -38,6 +45,14 @@ public class RESTServer extends AllDirectives {
 
     private CompletionStage<Route> getAllSensors(Executor ctx) {
         return fusekiRESTController.getAllSensors(ctx);
+    }
+
+    private CompletionStage<Route> getAllTopics(Executor ctx) {
+        return fusekiRESTController.getAllTopics(ctx);
+    }
+
+    private CompletionStage<Route> getSpecificTopic(Executor ctx, String topic_id) {
+        return fusekiRESTController.getSpecificTopic(topic_id, ctx);
     }
 
     private CompletionStage<Route> getAllConcretePipelineIDs() {
@@ -62,10 +77,6 @@ public class RESTServer extends AllDirectives {
 
     private CompletionStage<Route> getAllRequests(Executor ctx) {
         return mongoRESTController.getAllRequests(ctx);
-    }
-
-    private CompletionStage<Route> putRequest(Executor ctx, Request request) {
-        return mongoRESTController.forwardRequestToAPIGateway(request, ctx);
     }
 
     public Route createRoute() {
@@ -114,13 +125,29 @@ public class RESTServer extends AllDirectives {
                                         extractExecutionContext(ctx ->
                                                 onSuccess(() -> getRequest(ctx, request_id), Function.identity())
                                         )
+                                ),
+                                path(segment("topics"), () ->
+                                        extractExecutionContext(ctx ->
+                                                onSuccess(() -> getAllTopics(ctx), Function.identity())
+                                        )
+                                ),
+                                path(segment("topics").slash(segment()), topic_id ->
+                                        extractExecutionContext(ctx ->
+                                                onSuccess(() -> getSpecificTopic(ctx, topic_id), Function.identity())
+                                        )
                                 )
                         )),
-                        put(() -> route(
+                        post(() -> route(
                                 path(segment("requests"), () ->
                                         entity(Jackson.unmarshaller(Request.class), myRequest ->
                                                 extractExecutionContext(ctx ->
-                                                        onSuccess(() -> putRequest(ctx, myRequest), Function.identity())
+                                                        onSuccess(() -> {
+                                                            myRequest.setRequest_id(new ObjectId().toString()); // new random id for request identification
+                                                            RESTRequestMsg m = new RESTRequestMsg(POST, myRequest); // construction of a special actor message
+                                                            apiGatewayActor.tell(m, ActorRef.noSender()); // POST request forwarded to APIGatewayActor
+                                                            return CompletableFuture.supplyAsync(() ->
+                                                                    completeOK(myRequest, Jackson.marshaller()), ctx);
+                                                        }, Function.identity())
                                                 )
                                         ).orElse(
                                                 complete(HttpResponse.create()
@@ -129,6 +156,20 @@ public class RESTServer extends AllDirectives {
                                                 )
                                         )
                                 )
+                        )),
+                        delete(() -> route(
+                                path(segment("requests").slash(segment()), request_id ->
+                                        extractExecutionContext(ctx ->
+                                                onSuccess(() -> {
+                                                    RESTRequestMsg m = new RESTRequestMsg(DELETE, new Request(request_id)); // construction of a special actor message
+                                                    apiGatewayActor.tell(m, ActorRef.noSender()); // POST request forwarded to APIGatewayActor
+                                                    return CompletableFuture.supplyAsync(() ->
+                                                            complete(HttpResponse.create()
+                                                                    .withStatus(200)
+                                                                    .withEntity("Asked for the deletion of the request with id " + request_id)));
+                                                }, Function.identity())
+
+                                        ))
                         )),
                         get(() -> complete(
                                 HttpResponse.create()
@@ -141,6 +182,11 @@ public class RESTServer extends AllDirectives {
                                         .withEntity("Unknown API endpoint!"))
                         ),
                         put(() -> complete(
+                                HttpResponse.create()
+                                        .withStatus(404)
+                                        .withEntity("Unknown API endpoint!"))
+                        ),
+                        delete(() -> complete(
                                 HttpResponse.create()
                                         .withStatus(404)
                                         .withEntity("Unknown API endpoint!"))

@@ -1,6 +1,6 @@
 package fr.isae.iqas.pipelines;
 
-import fr.isae.iqas.mechanisms.Operator;
+import fr.isae.iqas.model.request.Operator;
 import fr.isae.iqas.model.quality.IComputeQoOAttributes;
 
 import java.util.*;

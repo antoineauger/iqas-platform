@@ -1,4 +1,4 @@
-package fr.isae.iqas.model.entity;
+package fr.isae.iqas.model.jsonld;
 
 import ioinformarics.oss.jackson.module.jsonld.annotation.JsonldId;
 import ioinformarics.oss.jackson.module.jsonld.annotation.JsonldProperty;

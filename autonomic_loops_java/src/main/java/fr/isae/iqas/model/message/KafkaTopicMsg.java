@@ -5,22 +5,22 @@ package fr.isae.iqas.model.message;
  */
 
 public class KafkaTopicMsg {
-    public enum Subject {
+    public enum KafkaSubject {
         CREATE,
         DELETE,
         RESET
     }
 
-    private Subject subject;
+    private KafkaSubject kafkaSubject;
     private String topic;
 
-    public KafkaTopicMsg(Subject subject, String topic) {
-        this.subject = subject;
+    public KafkaTopicMsg(KafkaSubject kafkaSubject, String topic) {
+        this.kafkaSubject = kafkaSubject;
         this.topic = topic;
     }
 
-    public Subject getSubject() {
-        return subject;
+    public KafkaSubject getKafkaSubject() {
+        return kafkaSubject;
     }
 
     public String getTopic() {

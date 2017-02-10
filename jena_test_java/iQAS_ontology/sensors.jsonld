@@ -7,6 +7,18 @@
     "geo": "http://www.w3.org/2003/01/geo/wgs84_pos#"
   },
   "@graph": [
+        {
+          "@id": "qoo:temperature",
+          "@type": "ssn:Property"
+        },
+        {
+          "@id": "qoo:visibility",
+          "@type": "ssn:Property"
+        },
+        {
+          "@id": "qoo:humidity",
+          "@type": "ssn:Property"
+        },
     {
       "@id": "qoo:iQAS",
       "qoo:exposes": [
@@ -32,6 +44,7 @@
       "ssn:attachedSystem": [
         {
           "@id": "qoo:sensor01",
+          "@type": "ssn:Sensor",
           "iot-lite:id": "sensor01",
           "geo:location": {
             "@id": "qoo:loc_sensor01",
@@ -47,14 +60,14 @@
               "ssn:observedProperty": [
                 {
                   "@id": "qoo:temperature",
-                  "qoo:obsLevelValue": "RAW DATA",
+                  "qoo:obsLevelValue": "RAW_DATA",
                   "qoo:canBeRetrievedThrough": {
                     "@id": "qoo:serv_sensor01_temp"
                   }
                 },
                 {
                   "@id": "qoo:visibility",
-                  "qoo:obsLevelValue": "RAW DATA",
+                  "qoo:obsLevelValue": "RAW_DATA",
                   "qoo:canBeRetrievedThrough": {
                     "@id": "qoo:serv_sensor01_visib"
                   }
@@ -93,6 +106,7 @@
         },
         {
           "@id": "qoo:sensor02",
+          "@type": "ssn:Sensor",
           "iot-lite:id": "sensor02",
           "geo:location": {
             "@id": "qoo:loc_sensor02",
@@ -108,7 +122,7 @@
               "ssn:observedProperty": [
                 {
                   "@id": "qoo:visibility",
-                  "qoo:obsLevelValue": "RAW DATA",
+                  "qoo:obsLevelValue": "RAW_DATA",
                   "qoo:canBeRetrievedThrough": {
                     "@id": "qoo:serv_sensor02_visib"
                   }

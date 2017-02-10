@@ -55,7 +55,7 @@ public class MainClass extends AllDirectives{
             MongoDatabase database = mongoClient.getDatabase("iqas");
 
             // MongoController to perform management queries (requests, mapek logging)
-            MongoRESTController mongoRESTController = new MongoRESTController(database, getContext(), pathAPIGatewayActor);
+            MongoRESTController mongoRESTController = new MongoRESTController(database);
 
             // FusekiController to perform SPARQL queries (sensors, pipelines)
             FusekiRESTController fusekiRESTController = new FusekiRESTController(prop, getContext(), pathPipelineWatcherActor);
@@ -72,7 +72,7 @@ public class MainClass extends AllDirectives{
                     prop.getProperty("api_gateway_actor_name"));
 
             // REST server creation
-            final RESTServer app = new RESTServer(mongoRESTController, fusekiRESTController);
+            final RESTServer app = new RESTServer(mongoRESTController, fusekiRESTController, apiGatewayActor);
             final Flow<HttpRequest, HttpResponse, NotUsed> handler = app.createRoute().flow(system, materializer);
             final CompletionStage<ServerBinding> binding = http.bindAndHandle(handler,
                     ConnectHttp.toHost((String) prop.get("api_gateway_endpoint_address"),

@@ -3,12 +3,12 @@
     <uri id="User Entered Import Resolution" name="file:/Users/an.auger/Desktop/iQAS_ontology/ssn.owl" uri="ssn.rdf"/>
     <uri id="Imports Wizard Entry" name="http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.owl"/>
     <group id="Folder Repository, directory=, recursive=true, Auto-Update=true, version=2" prefer="public" xml:base="">
-        <uri id="Automatically generated entry, Timestamp=1486487347021" name="http://isae.fr/iqas/qoo-ontology" uri="qoo-ontology.rdf"/>
-        <uri id="Automatically generated entry, Timestamp=1486487347021" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology-visu.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1486487347021" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1486487347021" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1486487347021" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.rdf"/>
-        <uri id="Automatically generated entry, Timestamp=1486487347021" name="http://www.isae.fr/iqas/qoo-ontology" uri="to_import/qoo-ontology-full.rdf"/>
-        <uri id="Automatically generated entry, Timestamp=1486487347021" name="shadowed:http://isae.fr/iqas/qoo-ontology" uri="to_import/qoo-ontology.rdf"/>
+        <uri id="Automatically generated entry, Timestamp=1486544373236" name="http://isae.fr/iqas/qoo-ontology" uri="qoo-ontology.rdf"/>
+        <uri id="Automatically generated entry, Timestamp=1486544373236" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology-visu.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1486544373236" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1486544373236" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1486544373236" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.rdf"/>
+        <uri id="Automatically generated entry, Timestamp=1486544373236" name="shadowed:http://isae.fr/iqas/qoo-ontology" uri="to_import/qoo-ontology-full.rdf"/>
+        <uri id="Automatically generated entry, Timestamp=1486544373236" name="shadowed:http://isae.fr/iqas/qoo-ontology" uri="to_import/qoo-ontology.rdf"/>
     </group>
 </catalog>

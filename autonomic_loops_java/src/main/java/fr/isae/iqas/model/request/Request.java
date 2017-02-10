@@ -1,7 +1,7 @@
 package fr.isae.iqas.model.request;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.bson.Document;
 
@@ -10,21 +10,41 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static fr.isae.iqas.model.request.State.Status.CREATED;
+
 /**
  * Created by an.auger on 13/09/2016.
  */
+
 public class Request {
+    public enum SLALevel {
+        BEST_EFFORT,
+        GUARANTEED
+    }
+
     private String request_id;
     private String application_id;
+    private String topic;
+    private String location;
+    private Operator operator;
+    private SLALevel sla_level;
     private @JsonIgnore ArrayList<State> statesList;
 
-    @JsonIgnoreProperties({"statesList"})
+    @JsonCreator
     public Request(@JsonProperty("request_id") String request_id,
-                   @JsonProperty("application_id") String application_id) {
+                   @JsonProperty("application_id") String application_id,
+                   @JsonProperty("topic") String topic,
+                   @JsonProperty("location") String location,
+                   @JsonProperty("sla_level") String sla_level,
+                   @JsonProperty("operator") String operator) {
         this.request_id = request_id;
         this.application_id = application_id;
+        this.topic = topic;
+        this.location = location;
+        this.sla_level = SLALevel.valueOf(sla_level);
+        this.operator = Operator.valueOf(operator);
         this.statesList = new ArrayList<>();
-        this.statesList.add(new State(State.Status.CREATED, new Date()));
+        this.statesList.add(new State(CREATED, new Date()));
     }
 
     public void setRequest_id(String request_id) {
@@ -53,15 +73,30 @@ public class Request {
      * @param bsonDocument the BSON document that will be used to construct the Request object
      */
     public Request(Document bsonDocument) {
-        request_id = bsonDocument.getString("request_id");
-        application_id = bsonDocument.getString("application_id");
+        this.request_id = bsonDocument.getString("request_id");
+        this.application_id = bsonDocument.getString("application_id");
+        this.topic = bsonDocument.getString("topic");
+        this.location = bsonDocument.getString("location");
+        this.sla_level = SLALevel.valueOf(bsonDocument.getString("sla_level"));
+        this.operator = Operator.valueOf(bsonDocument.getString("operator"));
 
-        statesList = new ArrayList<>();
+        this.statesList = new ArrayList<>();
         List<Document> bsonStatesList = (List<Document>) bsonDocument.get("statesList");
-        statesList.addAll(bsonStatesList.stream().map(d -> new State(
+        this.statesList.addAll(bsonStatesList.stream().map(d -> new State(
                 State.Status.valueOf(d.getString("status")),
                 new Date(d.getLong("start_date")),
                 new Date(d.getLong("end_date")))).collect(Collectors.toList()));
+    }
+
+    /**
+     * 3rd constructor useful to ask Request deletion
+     *
+     * @param request_id the id of the request to delete
+     */
+    public Request(String request_id) {
+        this.request_id = request_id;
+        this.application_id = "";
+        this.statesList = new ArrayList<>();
     }
 
     /**
@@ -73,6 +108,10 @@ public class Request {
         Document docToReturn = new Document();
         docToReturn.put("request_id", request_id);
         docToReturn.put("application_id", application_id);
+        docToReturn.put("topic", topic);
+        docToReturn.put("location", location);
+        docToReturn.put("sla_level", sla_level.toString());
+        docToReturn.put("operator", operator.toString());
 
         List<Document> statesListDoc = new ArrayList<>();
         for (State s : statesList) {
@@ -151,4 +190,19 @@ public class Request {
         statesList.add(new State(newStatus, currentDate));
     }
 
+    public Operator getOperator() {
+        return operator;
+    }
+
+    public void setOperator(Operator operator) {
+        this.operator = operator;
+    }
+
+    public SLALevel getSla_level() {
+        return sla_level;
+    }
+
+    public void setSla_level(SLALevel sla_level) {
+        this.sla_level = sla_level;
+    }
 }

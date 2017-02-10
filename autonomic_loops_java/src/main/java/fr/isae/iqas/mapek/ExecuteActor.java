@@ -7,10 +7,13 @@ import akka.actor.UntypedActorContext;
 import akka.dispatch.OnComplete;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.kafka.ConsumerSettings;
+import akka.kafka.KafkaConsumerActor;
 import akka.kafka.ProducerSettings;
 import akka.kafka.Subscriptions;
 import akka.kafka.javadsl.Consumer;
 import akka.kafka.javadsl.Producer;
+import akka.pattern.Patterns;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.RunnableGraph;
 import akka.stream.javadsl.Sink;
@@ -22,12 +25,17 @@ import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
 import fr.isae.iqas.model.request.Pipeline;
 import fr.isae.iqas.pipelines.IPipeline;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import scala.concurrent.Await;
 import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
 
 import java.util.*;
 import java.util.concurrent.CompletionStage;
@@ -47,19 +55,27 @@ public class ExecuteActor extends UntypedActor {
     private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = null;
     private Sink<ProducerRecord, CompletionStage<Done>> kafkaSink = null;
 
+    private ActorRef kafkaActor = null;
     private ActorMaterializer materializer = null;
     private RunnableGraph myRunnableGraph = null;
     private String remedyToPlan = null;
     private String topicToPublish = null;
 
-    public ExecuteActor(Properties prop, ActorRef kafkaActor, Set<String> topicsToPullFrom, String topicToPublish, String remedyToPlan) throws Exception {
+    public ExecuteActor(Properties prop, Set<String> topicsToPullFrom, String topicToPublish, String remedyToPlan) throws Exception {
         this.context = getContext();
+
+        ConsumerSettings consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
+                .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
+                .withGroupId("groupInfoPlan")
+                .withClientId("clientInfoPlan")
+                .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
         ProducerSettings producerSettings = ProducerSettings
                 .create(getContext().system(), new ByteArraySerializer(), new StringSerializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"));
 
         // Kafka source
+        kafkaActor = getContext().actorOf((KafkaConsumerActor.props(consumerSettings)));
         Set<TopicPartition> watchedTopics = new HashSet<>();
         watchedTopics.addAll(topicsToPullFrom.stream().map(s -> new TopicPartition(s, 0)).collect(Collectors.toList()));
         this.kafkaSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(watchedTopics));
@@ -127,6 +143,17 @@ public class ExecuteActor extends UntypedActor {
             TerminatedMsg terminatedMsg = (TerminatedMsg) message;
             if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
                 log.info("Received TerminatedMsg message: {}", message);
+                if (kafkaActor != null) {
+                    log.info("Trying to stop " + kafkaActor.path().name());
+                    try {
+                        Future<Boolean> stopped = Patterns.gracefulStop(kafkaActor, Duration.create(5, TimeUnit.SECONDS));
+                        Await.result(stopped, Duration.create(5, TimeUnit.SECONDS));
+                        log.info("Successfully stopped " + kafkaActor.path());
+                    } catch (Exception e) {
+                        log.error(e.toString());
+                    }
+                    getContext().stop(kafkaActor);
+                }
                 getContext().stop(getSelf());
             }
         }

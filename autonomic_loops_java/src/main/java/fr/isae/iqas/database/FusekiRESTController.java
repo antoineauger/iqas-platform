@@ -100,6 +100,53 @@ public class FusekiRESTController extends AllDirectives {
     }
 
     /**
+     * Topics
+     */
+
+    public CompletableFuture<Route> getAllTopics(Executor ctx) {
+        CompletableFuture<Route> topics;
+        ObjectMapper mapper = new ObjectMapper();
+
+        topics = CompletableFuture.supplyAsync(() -> controller._findAllTopics(), ctx).thenApply((result) -> {
+            if (result == null) {
+                return complete(HttpResponse.create()
+                        .withStatus(400)
+                        .withEntity("No topic currently, come back later!"));
+            }
+            else {
+                mapper.registerModule(new JsonldModule(mapper::createObjectNode));
+                JsonldResourceBuilder builder = JsonldResource.Builder.create();
+                builder.context(baseQoOIRI);
+                return completeOK(builder.build(result), Jackson.marshaller(mapper));
+            }
+        });
+
+        return topics;
+    }
+
+    public CompletableFuture<Route> getSpecificTopic(String topic_id, Executor ctx) {
+        CompletableFuture<Route> topic;
+        ObjectMapper mapper = new ObjectMapper();
+
+        topic = CompletableFuture.supplyAsync(() -> controller._findSpecificTopic(topic_id), ctx).thenApply((result) -> {
+            if (result == null) {
+                return complete(HttpResponse.create()
+                        .withStatus(400)
+                        .withEntity("Unable to find topic " + topic_id + "! " +
+                                "Please check namespace and retry."));
+            }
+            else {
+                mapper.registerModule(new JsonldModule(mapper::createObjectNode));
+                JsonldResourceBuilder builder = JsonldResource.Builder.create();
+                builder.context(baseQoOIRI);
+                return completeOK(builder.build(result), Jackson.marshaller(mapper));
+            }
+        });
+
+        return topic;
+    }
+
+    /**
      * Pipelines
      */
 
