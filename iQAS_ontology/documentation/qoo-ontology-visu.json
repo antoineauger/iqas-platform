@@ -1,5 +1,5 @@
 {
-  "_comment": "Created with OWL2VOWL (version 0.3.0), http://vowl.visualdataweb.org [Additional Information added by WebVOWL Exporter Version: 1.0.1]",
+  "_comment": "Created with OWL2VOWL (version 0.3.1), http://vowl.visualdataweb.org [Additional Information added by WebVOWL Exporter Version: 1.0.1]",
   "header": {
     "languages": [
       "en",
@@ -107,16 +107,16 @@
   "namespace": [],
   "metrics": {
     "classCount": 37,
-    "objectPropertyCount": 44,
-    "datatypePropertyCount": 18,
-    "individualCount": 3
+    "objectPropertyCount": 45,
+    "datatypePropertyCount": 20,
+    "individualCount": 5
   },
   "settings": {
     "global": {
-      "zoom": 0.26425451014034396,
+      "zoom": 0.26425451014034357,
       "translation": [
-        495.85314364496264,
-        311.9094758067931
+        527.8105842435265,
+        300.38709323129814
       ],
       "paused": false
     },
@@ -173,19 +173,11 @@
   },
   "class": [
     {
-      "id": "9",
+      "id": "18",
       "type": "owl:Class"
     },
     {
-      "id": "14",
-      "type": "owl:Class"
-    },
-    {
-      "id": "28",
-      "type": "owl:Class"
-    },
-    {
-      "id": "53",
+      "id": "22",
       "type": "owl:Class"
     },
     {
@@ -193,59 +185,27 @@
       "type": "owl:Class"
     },
     {
-      "id": "13",
+      "id": "56",
       "type": "owl:Class"
     },
     {
-      "id": "17",
+      "id": "44",
       "type": "owl:Class"
     },
     {
-      "id": "47",
+      "id": "25",
       "type": "owl:Class"
     },
     {
-      "id": "67",
+      "id": "64",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "53",
       "type": "owl:Class"
     },
     {
-      "id": "34",
-      "type": "owl:Class"
-    },
-    {
-      "id": "4",
-      "type": "owl:Class"
-    },
-    {
-      "id": "43",
-      "type": "owl:Class"
-    },
-    {
-      "id": "51",
-      "type": "owl:Class"
-    },
-    {
-      "id": "6",
-      "type": "owl:Class"
-    },
-    {
-      "id": "21",
-      "type": "owl:Class"
-    },
-    {
-      "id": "16",
-      "type": "owl:Class"
-    },
-    {
-      "id": "24",
-      "type": "owl:Class"
-    },
-    {
-      "id": "27",
-      "type": "owl:Class"
-    },
-    {
-      "id": "92",
+      "id": "73",
       "type": "owl:Class"
     },
     {
@@ -253,19 +213,15 @@
       "type": "owl:Class"
     },
     {
-      "id": "11",
+      "id": "13",
       "type": "owl:Class"
     },
     {
-      "id": "40",
+      "id": "35",
       "type": "owl:Class"
     },
     {
-      "id": "2",
-      "type": "owl:Class"
-    },
-    {
-      "id": "55",
+      "id": "47",
       "type": "owl:Class"
     },
     {
@@ -273,11 +229,27 @@
       "type": "owl:Class"
     },
     {
-      "id": "83",
+      "id": "32",
       "type": "owl:Class"
     },
     {
-      "id": "78",
+      "id": "29",
+      "type": "owl:Class"
+    },
+    {
+      "id": "24",
+      "type": "owl:Class"
+    },
+    {
+      "id": "8",
+      "type": "owl:Class"
+    },
+    {
+      "id": "2",
+      "type": "owl:Class"
+    },
+    {
+      "id": "97",
       "type": "owl:Class"
     },
     {
@@ -289,83 +261,15 @@
       "type": "owl:Class"
     },
     {
-      "id": "12",
+      "id": "51",
       "type": "owl:Class"
     },
     {
-      "id": "191",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "38",
+      "id": "11",
       "type": "owl:Class"
     },
     {
-      "id": "194",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "48",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "162",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "7",
-      "type": "owl:Class"
-    },
-    {
-      "id": "18",
-      "type": "owl:Class"
-    },
-    {
-      "id": "57",
-      "type": "owl:Class"
-    },
-    {
-      "id": "141",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "70",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "103",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "94",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "89",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "101",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "86",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "97",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "208",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "36",
-      "type": "rdfs:Datatype"
-    },
-    {
-      "id": "10",
+      "id": "58",
       "type": "owl:Class"
     },
     {
@@ -373,23 +277,127 @@
       "type": "owl:Class"
     },
     {
-      "id": "157",
+      "id": "88",
+      "type": "owl:Class"
+    },
+    {
+      "id": "84",
+      "type": "owl:Class"
+    },
+    {
+      "id": "10",
+      "type": "owl:Class"
+    },
+    {
+      "id": "28",
+      "type": "owl:Class"
+    },
+    {
+      "id": "21",
+      "type": "owl:Class"
+    },
+    {
+      "id": "199",
       "type": "rdfs:Datatype"
+    },
+    {
+      "id": "108",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "54",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "49",
+      "type": "owl:Class"
+    },
+    {
+      "id": "168",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "75",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "99",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "146",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "16",
+      "type": "owl:Class"
     },
     {
       "id": "26",
       "type": "owl:Class"
     },
     {
-      "id": "207",
+      "id": "62",
+      "type": "owl:Class"
+    },
+    {
+      "id": "94",
       "type": "rdfs:Datatype"
     },
     {
-      "id": "66",
+      "id": "187",
       "type": "rdfs:Datatype"
     },
     {
-      "id": "179",
+      "id": "91",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "102",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "40",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "60",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "106",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "213",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "162",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "71",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "19",
+      "type": "owl:Class"
+    },
+    {
+      "id": "4",
+      "type": "owl:Class"
+    },
+    {
+      "id": "185",
+      "type": "rdfs:Datatype"
+    },
+    {
+      "id": "6",
+      "type": "owl:Class"
+    },
+    {
+      "id": "212",
       "type": "rdfs:Datatype"
     }
   ],
@@ -402,26 +410,25 @@
         "IRI-based": "MeasurementProperty"
       },
       "subClasses": [
-        "10",
-        "11",
-        "12",
-        "13",
-        "14",
-        "15",
-        "16",
-        "17",
-        "18"
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26"
       ],
       "attributes": [
         "external"
       ],
-      "id": "9",
+      "id": "18",
       "superClasses": [
-        "7"
+        "16"
       ],
       "pos": [
-        -32.45943527899662,
-        739.0895434983088
+        1611.7721281521815,
+        31.502904590523872
       ]
     },
     {
@@ -434,13 +441,13 @@
       "attributes": [
         "external"
       ],
-      "id": "14",
+      "id": "22",
       "superClasses": [
-        "9"
+        "18"
       ],
       "pos": [
-        -451.9924259248252,
-        712.3259360709407
+        1886.604615260079,
+        -274.40075745464105
       ]
     },
     {
@@ -453,10 +460,10 @@
       "attributes": [
         "external"
       ],
-      "id": "28",
+      "id": "33",
       "pos": [
-        1360.9065543595686,
-        -285.7274995487718
+        -148.551944243871,
+        405.8813342001628
       ]
     },
     {
@@ -469,10 +476,10 @@
       "attributes": [
         "external"
       ],
-      "id": "53",
+      "id": "56",
       "pos": [
-        509.33148212096796,
-        1067.999983339267
+        1369.8419705275885,
+        666.090125213186
       ]
     },
     {
@@ -488,29 +495,13 @@
       "attributes": [
         "external"
       ],
-      "id": "33",
+      "id": "44",
       "superClasses": [
-        "34"
+        "45"
       ],
       "pos": [
-        1799.769471544248,
-        1701.855815350719
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#'BatteryLifetime'",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "instances": 0,
-      "label": {
-        "IRI-based": "'BatteryLifetime'"
-      },
-      "id": "13",
-      "superClasses": [
-        "9"
-      ],
-      "pos": [
-        -309.55339178056437,
-        437.13790187484506
+        1590.4343108570783,
+        1820.252085484131
       ]
     },
     {
@@ -523,13 +514,25 @@
       "attributes": [
         "external"
       ],
-      "id": "17",
+      "id": "25",
       "superClasses": [
-        "9"
+        "18"
       ],
       "pos": [
-        -343.59545658386077,
-        1017.0627710650278
+        2015.097399111001,
+        -66.23391210652406
+      ]
+    },
+    {
+      "iri": "http://www.w3.org/2001/XMLSchema#double",
+      "baseIri": "http://www.w3.org/2001/XMLSchema",
+      "id": "64",
+      "label": {
+        "IRI-based": "double"
+      },
+      "pos": [
+        1809.1828759641892,
+        1759.173804829421
       ]
     },
     {
@@ -542,10 +545,10 @@
       "attributes": [
         "external"
       ],
-      "id": "47",
+      "id": "53",
       "pos": [
-        750.2376473125875,
-        1625.7862382363996
+        531.931459968554,
+        1599.5843062590595
       ]
     },
     {
@@ -555,10 +558,10 @@
       "label": {
         "IRI-based": "ObservationRequest"
       },
-      "id": "67",
+      "id": "73",
       "pos": [
-        457.6107032439246,
-        241.12181299851636
+        769.8549937292695,
+        145.67273857856566
       ]
     },
     {
@@ -569,9 +572,9 @@
         "IRI-based": "Coverage"
       },
       "subClasses": [
-        "33",
-        "38",
-        "40"
+        "44",
+        "49",
+        "51"
       ],
       "comment": {
         "en": "The coverage of an IoT device (i.e. a temperature sensor inside a room has a coverage of that room)."
@@ -579,10 +582,10 @@
       "attributes": [
         "external"
       ],
-      "id": "34",
+      "id": "45",
       "pos": [
-        1823.8413714244775,
-        1345.9584012506477
+        1236.552175282121,
+        1760.3563809493937
       ]
     },
     {
@@ -595,14 +598,14 @@
       "attributes": [
         "external"
       ],
-      "id": "4",
+      "id": "13",
       "superClasses": [
-        "1",
-        "21"
+        "10",
+        "29"
       ],
       "pos": [
-        1497.7924143845964,
-        1102.5790367516786
+        1059.4865468360288,
+        1389.4914550208211
       ]
     },
     {
@@ -612,13 +615,29 @@
       "label": {
         "IRI-based": "QoOAttribute"
       },
-      "id": "43",
+      "individuals": [
+        {
+          "iri": "http://isae.fr/iqas/qoo-ontology#OSB_ACCURACY",
+          "baseIri": "http://isae.fr/iqas/qoo-ontology",
+          "labels": {
+            "IRI-based": "OSB_ACCURACY"
+          }
+        },
+        {
+          "iri": "http://isae.fr/iqas/qoo-ontology#OBS_FRESHNESS",
+          "baseIri": "http://isae.fr/iqas/qoo-ontology",
+          "labels": {
+            "IRI-based": "OBS_FRESHNESS"
+          }
+        }
+      ],
+      "id": "35",
       "superClasses": [
-        "27"
+        "2"
       ],
       "pos": [
-        874.6008098716168,
-        -416.86460613886055
+        146.43486625236912,
+        -19.148636717992304
       ]
     },
     {
@@ -634,10 +653,10 @@
       "attributes": [
         "external"
       ],
-      "id": "51",
+      "id": "47",
       "pos": [
-        1140.4530109724537,
-        151.21646200359504
+        316.8615358592274,
+        722.6033887866423
       ]
     },
     {
@@ -650,13 +669,29 @@
       "attributes": [
         "external"
       ],
-      "id": "6",
+      "id": "15",
       "superClasses": [
-        "7"
+        "16"
       ],
       "pos": [
-        524.1528047288534,
-        594.1511612058505
+        1171.1998206284256,
+        317.9038540850006
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#QoOCustomizableParameter",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "instances": 0,
+      "label": {
+        "IRI-based": "QoOCustomizableParameter"
+      },
+      "id": "32",
+      "superClasses": [
+        "8"
+      ],
+      "pos": [
+        -100.9286038262582,
+        -474.788213159208
       ]
     },
     {
@@ -667,15 +702,15 @@
         "IRI-based": "Sensor"
       },
       "subClasses": [
-        "4"
+        "13"
       ],
       "attributes": [
         "external"
       ],
-      "id": "21",
+      "id": "29",
       "pos": [
-        1136.8784867524837,
-        879.2473669874485
+        1119.970977050942,
+        979.9713384255067
       ]
     },
     {
@@ -688,13 +723,13 @@
       "attributes": [
         "external"
       ],
-      "id": "16",
+      "id": "24",
       "superClasses": [
-        "9"
+        "18"
       ],
       "pos": [
-        -443.52137546739567,
-        827.4001082330743
+        1962.9284691230057,
+        -181.79810021147205
       ]
     },
     {
@@ -704,13 +739,16 @@
       "label": {
         "IRI-based": "QoOParameter"
       },
-      "id": "24",
+      "subClasses": [
+        "32"
+      ],
+      "id": "8",
       "superClasses": [
-        "27"
+        "2"
       ],
       "pos": [
-        77.67811278540702,
-        -530.6800299904407
+        410.26913666970677,
+        -708.8200052138603
       ]
     },
     {
@@ -721,16 +759,16 @@
         "IRI-based": "QualityofObservation"
       },
       "subClasses": [
-        "43",
-        "45",
-        "23",
-        "26",
-        "24"
+        "35",
+        "1",
+        "4",
+        "6",
+        "8"
       ],
-      "id": "27",
+      "id": "2",
       "pos": [
-        562.8677997452837,
-        -529.4151905739049
+        228.1420739040071,
+        -340.83768547307733
       ]
     },
     {
@@ -743,10 +781,10 @@
       "attributes": [
         "external"
       ],
-      "id": "92",
+      "id": "97",
       "pos": [
-        697.3923606775522,
-        2029.2865853841713
+        338.8362129860548,
+        1973.103909008989
       ]
     },
     {
@@ -756,13 +794,13 @@
       "label": {
         "IRI-based": "QoOEffect"
       },
-      "id": "45",
+      "id": "1",
       "superClasses": [
-        "27"
+        "2"
       ],
       "pos": [
-        660.5251686369793,
-        -6.920312524691301
+        639.9190387661447,
+        23.36888245453533
       ]
     },
     {
@@ -775,13 +813,13 @@
       "attributes": [
         "external"
       ],
-      "id": "11",
+      "id": "20",
       "superClasses": [
-        "9"
+        "18"
       ],
       "pos": [
-        -403.63464140867677,
-        930.1615781713157
+        1532.12628298663,
+        -362.63612430701676
       ]
     },
     {
@@ -797,13 +835,13 @@
       "attributes": [
         "external"
       ],
-      "id": "40",
+      "id": "51",
       "superClasses": [
-        "34"
+        "45"
       ],
       "pos": [
-        2158.278563966353,
-        1205.4064790317104
+        1511.1408200876785,
+        1985.0886219011065
       ]
     },
     {
@@ -814,15 +852,15 @@
         "IRI-based": "System"
       },
       "subClasses": [
-        "1"
+        "10"
       ],
       "attributes": [
         "external"
       ],
-      "id": "2",
+      "id": "11",
       "pos": [
-        1744.9360147508187,
-        -63.827545240208174
+        -220.78637708218477,
+        839.934685932191
       ]
     },
     {
@@ -835,10 +873,10 @@
       "attributes": [
         "external"
       ],
-      "id": "55",
+      "id": "58",
       "pos": [
-        851.1811234901346,
-        1186.5853434160622
+        759.6607056195306,
+        1188.4582555897425
       ]
     },
     {
@@ -851,13 +889,13 @@
       "attributes": [
         "external"
       ],
-      "id": "15",
+      "id": "23",
       "superClasses": [
-        "9"
+        "18"
       ],
       "pos": [
-        -261.6254275314265,
-        1091.6250320384295
+        1656.4020930873567,
+        -380.3750454964838
       ]
     },
     {
@@ -890,10 +928,10 @@
           }
         }
       ],
-      "id": "83",
+      "id": "88",
       "pos": [
-        1230.0450426785437,
-        -1055.8364264198735
+        -577.6178776704992,
+        -315.57797703874
       ]
     },
     {
@@ -906,10 +944,10 @@
       "attributes": [
         "external"
       ],
-      "id": "78",
+      "id": "84",
       "pos": [
-        421.2242052940949,
-        1887.8552528292928
+        131.21300149058612,
+        1796.2228130798997
       ]
     },
     {
@@ -920,18 +958,18 @@
         "IRI-based": "Device"
       },
       "subClasses": [
-        "4"
+        "13"
       ],
       "attributes": [
         "external"
       ],
-      "id": "1",
+      "id": "10",
       "superClasses": [
-        "2"
+        "11"
       ],
       "pos": [
-        1561.813870740254,
-        613.7054919321969
+        571.0033912898795,
+        1068.9225715274465
       ]
     },
     {
@@ -944,10 +982,10 @@
       "attributes": [
         "external"
       ],
-      "id": "20",
+      "id": "28",
       "pos": [
-        785.9827224300836,
-        664.1105970306177
+        866.4464763535777,
+        677.7936205854352
       ]
     },
     {
@@ -960,25 +998,49 @@
       "attributes": [
         "external"
       ],
-      "id": "12",
+      "id": "21",
       "superClasses": [
-        "9"
+        "18"
       ],
       "pos": [
-        -145.22609611398147,
-        1138.698061457077
+        1987.948719985491,
+        202.11104088864212
       ]
     },
     {
-      "iri": "http://www.w3.org/2001/XMLSchema#double",
+      "iri": "http://www.w3.org/2001/XMLSchema#string",
       "baseIri": "http://www.w3.org/2001/XMLSchema",
-      "id": "191",
+      "id": "199",
       "label": {
-        "IRI-based": "double"
+        "IRI-based": "string"
       },
       "pos": [
-        1667.6962391637453,
-        1889.076695883913
+        91.11874936297089,
+        912.6010809566005
+      ]
+    },
+    {
+      "iri": "http://www.w3.org/2001/XMLSchema#anyURI",
+      "baseIri": "http://www.w3.org/2001/XMLSchema",
+      "id": "108",
+      "label": {
+        "IRI-based": "anyURI"
+      },
+      "pos": [
+        76.4441685882472,
+        815.221037248298
+      ]
+    },
+    {
+      "iri": "http://www.w3.org/2001/XMLSchema#string",
+      "baseIri": "http://www.w3.org/2001/XMLSchema",
+      "id": "54",
+      "label": {
+        "IRI-based": "string"
+      },
+      "pos": [
+        291.28992245938605,
+        1655.2848206904264
       ]
     },
     {
@@ -994,49 +1056,61 @@
       "attributes": [
         "external"
       ],
-      "id": "38",
+      "id": "49",
       "superClasses": [
-        "34"
+        "45"
       ],
       "pos": [
-        2145.3259380206136,
-        1478.365817997831
+        1267.7418216760807,
+        2107.1793340126173
       ]
     },
     {
       "iri": "http://www.w3.org/2001/XMLSchema#string",
       "baseIri": "http://www.w3.org/2001/XMLSchema",
-      "id": "194",
+      "id": "168",
       "label": {
         "IRI-based": "string"
       },
       "pos": [
-        1357.0757659777246,
-        299.06484741167947
+        163.21419143106547,
+        1002.3712914200386
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#slaLevel",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "id": "75",
+      "label": {
+        "IRI-based": "slaLevel"
+      },
+      "pos": [
+        579.4515515301988,
+        -940.0602477799484
       ]
     },
     {
       "iri": "http://www.w3.org/2001/XMLSchema#string",
       "baseIri": "http://www.w3.org/2001/XMLSchema",
-      "id": "48",
+      "id": "99",
       "label": {
         "IRI-based": "string"
       },
       "pos": [
-        810.1136844207083,
-        1880.8645721091511
+        647.2405700785482,
+        -853.8201962214519
       ]
     },
     {
-      "iri": "http://www.w3.org/2001/XMLSchema#string",
-      "baseIri": "http://www.w3.org/2001/XMLSchema",
-      "id": "162",
+      "iri": "http://isae.fr/iqas/qoo-ontology#variation",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "id": "146",
       "label": {
-        "IRI-based": "string"
+        "IRI-based": "variation"
       },
       "pos": [
-        1398.5236391016158,
-        119.90031670048852
+        189.85163752658045,
+        230.3686897032185
       ]
     },
     {
@@ -1047,16 +1121,16 @@
         "IRI-based": "Property"
       },
       "subClasses": [
-        "6",
-        "9"
+        "15",
+        "18"
       ],
       "attributes": [
         "external"
       ],
-      "id": "7",
+      "id": "16",
       "pos": [
-        371.3207753264747,
-        949.1829962096946
+        1403.3838476337453,
+        498.8068526800313
       ]
     },
     {
@@ -1069,13 +1143,13 @@
       "attributes": [
         "external"
       ],
-      "id": "18",
+      "id": "26",
       "superClasses": [
-        "9"
+        "18"
       ],
       "pos": [
-        -381.3734223498291,
-        516.8556841020335
+        2024.4760270277823,
+        76.73674336213469
       ]
     },
     {
@@ -1088,130 +1162,130 @@
       "attributes": [
         "external"
       ],
-      "id": "57",
+      "id": "62",
       "pos": [
-        1652.707018955999,
-        979.6787381036021
+        1623.5408948500208,
+        1142.2002947448784
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#variation",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "id": "141",
-      "label": {
-        "IRI-based": "variation"
-      },
-      "pos": [
-        708.2377258055636,
-        -674.6358927282836
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#slaLevel",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "id": "70",
-      "label": {
-        "IRI-based": "slaLevel"
-      },
-      "pos": [
-        -56.4655818464534,
-        -760.6185532920965
-      ]
-    },
-    {
-      "iri": "http://www.w3.org/2001/XMLSchema#anyURI",
-      "baseIri": "http://www.w3.org/2001/XMLSchema",
-      "id": "103",
-      "label": {
-        "IRI-based": "anyURI"
-      },
-      "pos": [
-        1398.794449213493,
-        209.8877443482031
-      ]
-    },
-    {
-      "iri": "http://www.w3.org/2001/XMLSchema#string",
-      "baseIri": "http://www.w3.org/2001/XMLSchema",
       "id": "94",
       "label": {
-        "IRI-based": "string"
-      },
-      "pos": [
-        -187.98943349822684,
-        -543.7433936925892
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#variation",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "id": "89",
-      "label": {
         "IRI-based": "variation"
       },
       "pos": [
-        419.8972751307806,
-        -110.80005608719908
+        598.7234459002169,
+        240.32537489392183
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#observationLevel",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "id": "101",
+      "id": "187",
       "label": {
         "IRI-based": "observationLevel"
       },
       "pos": [
-        928.7330485907196,
-        1810.8877558181166
+        -529.3106608854551,
+        25.15540402112966
       ]
     },
     {
       "iri": "http://www.w3.org/2001/XMLSchema#string",
       "baseIri": "http://www.w3.org/2001/XMLSchema",
-      "id": "86",
+      "id": "91",
       "label": {
         "IRI-based": "string"
       },
       "pos": [
-        1198.0756511192137,
-        1179.0351910854918
+        1367.7271469858474,
+        1147.5614941220183
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#sensorState",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "id": "97",
+      "id": "102",
       "label": {
         "IRI-based": "sensorState"
       },
       "pos": [
-        1380.890056905197,
-        858.6871205004036
+        1308.960582308794,
+        1219.8371747906458
       ]
     },
     {
       "iri": "http://www.w3.org/2001/XMLSchema#string",
       "baseIri": "http://www.w3.org/2001/XMLSchema",
-      "id": "208",
+      "id": "40",
       "label": {
         "IRI-based": "string"
       },
       "pos": [
-        -158.83070149401786,
-        -655.5790128601568
+        470.30843372773825,
+        -984.7492500430404
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#observationLevel",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "id": "60",
+      "label": {
+        "IRI-based": "observationLevel"
+      },
+      "pos": [
+        -552.9440790388098,
+        -84.68974988236755
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#observationLevel",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "id": "106",
+      "label": {
+        "IRI-based": "observationLevel"
+      },
+      "pos": [
+        568.0330651918881,
+        1859.8614866820922
       ]
     },
     {
       "iri": "http://www.w3.org/2001/XMLSchema#string",
       "baseIri": "http://www.w3.org/2001/XMLSchema",
-      "id": "36",
+      "id": "213",
       "label": {
         "IRI-based": "string"
       },
       "pos": [
-        -171.06891297556854,
-        -432.997873101993
+        332.1677547686667,
+        -969.5900135710116
+      ]
+    },
+    {
+      "iri": "http://www.w3.org/2001/XMLSchema#string",
+      "baseIri": "http://www.w3.org/2001/XMLSchema",
+      "id": "162",
+      "label": {
+        "IRI-based": "string"
+      },
+      "pos": [
+        1889.1128322471252,
+        0.17057044123332923
+      ]
+    },
+    {
+      "iri": "http://www.w3.org/2001/XMLSchema#string",
+      "baseIri": "http://www.w3.org/2001/XMLSchema",
+      "id": "71",
+      "label": {
+        "IRI-based": "string"
+      },
+      "pos": [
+        1677.874762687754,
+        -252.48047171204792
       ]
     },
     {
@@ -1224,13 +1298,13 @@
       "attributes": [
         "external"
       ],
-      "id": "10",
+      "id": "19",
       "superClasses": [
-        "9"
+        "18"
       ],
       "pos": [
-        -428.69219125838464,
-        607.6629144556216
+        1786.8038939212547,
+        -344.8637961271974
       ]
     },
     {
@@ -1240,25 +1314,25 @@
       "label": {
         "IRI-based": "QoORequirement"
       },
-      "id": "23",
+      "id": "4",
       "superClasses": [
-        "27"
+        "2"
       ],
       "pos": [
-        343.41375168430017,
-        -239.92779196638594
+        570.2206487932897,
+        -321.52551333937635
       ]
     },
     {
       "iri": "http://www.w3.org/2001/XMLSchema#string",
       "baseIri": "http://www.w3.org/2001/XMLSchema",
-      "id": "157",
+      "id": "185",
       "label": {
         "IRI-based": "string"
       },
       "pos": [
-        -318.1673848481758,
-        756.0844505948028
+        1837.5756809609215,
+        202.02843402181452
       ]
     },
     {
@@ -1268,49 +1342,25 @@
       "label": {
         "IRI-based": "QoOPipeline"
       },
-      "id": "26",
+      "id": "6",
       "superClasses": [
-        "27"
+        "2"
       ],
       "pos": [
-        1155.28601281777,
-        -682.8610449741828
+        -262.2264708427322,
+        -73.92809021316806
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#variation",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "id": "207",
+      "id": "212",
       "label": {
         "IRI-based": "variation"
       },
       "pos": [
-        436.7470599431415,
-        70.3360467918209
-      ]
-    },
-    {
-      "iri": "http://www.w3.org/2001/XMLSchema#string",
-      "baseIri": "http://www.w3.org/2001/XMLSchema",
-      "id": "66",
-      "label": {
-        "IRI-based": "string"
-      },
-      "pos": [
-        -135.51301046112664,
-        1016.2099987844605
-      ]
-    },
-    {
-      "iri": "http://www.w3.org/2001/XMLSchema#string",
-      "baseIri": "http://www.w3.org/2001/XMLSchema",
-      "id": "179",
-      "label": {
-        "IRI-based": "string"
-      },
-      "pos": [
-        -161.04141680376148,
-        486.05457367921355
+        837.5496171313453,
+        -206.54643445681836
       ]
     }
   ],
@@ -1328,48 +1378,56 @@
       "type": "rdfs:SubClassOf"
     },
     {
-      "id": "8",
+      "id": "7",
       "type": "rdfs:SubClassOf"
     },
     {
-      "id": "19",
+      "id": "9",
+      "type": "rdfs:SubClassOf"
+    },
+    {
+      "id": "12",
+      "type": "rdfs:SubClassOf"
+    },
+    {
+      "id": "14",
+      "type": "rdfs:SubClassOf"
+    },
+    {
+      "id": "17",
+      "type": "rdfs:SubClassOf"
+    },
+    {
+      "id": "27",
       "type": "owl:objectProperty"
-    },
-    {
-      "id": "22",
-      "type": "owl:objectProperty"
-    },
-    {
-      "id": "25",
-      "type": "rdfs:SubClassOf"
-    },
-    {
-      "id": "29",
-      "type": "rdfs:SubClassOf"
     },
     {
       "id": "30",
-      "type": "rdfs:SubClassOf"
+      "type": "owl:objectProperty"
     },
     {
       "id": "31",
       "type": "rdfs:SubClassOf"
     },
     {
-      "id": "32",
+      "id": "34",
       "type": "rdfs:SubClassOf"
     },
     {
-      "id": "35",
-      "type": "owl:datatypeProperty"
+      "id": "36",
+      "type": "rdfs:SubClassOf"
     },
     {
       "id": "37",
       "type": "rdfs:SubClassOf"
     },
     {
-      "id": "39",
+      "id": "38",
       "type": "rdfs:SubClassOf"
+    },
+    {
+      "id": "39",
+      "type": "owl:datatypeProperty"
     },
     {
       "id": "41",
@@ -1380,60 +1438,56 @@
       "type": "rdfs:SubClassOf"
     },
     {
-      "id": "44",
+      "id": "43",
       "type": "rdfs:SubClassOf"
     },
     {
       "id": "46",
-      "type": "owl:datatypeProperty"
+      "type": "owl:objectProperty"
     },
     {
-      "id": "49",
+      "id": "48",
       "type": "rdfs:SubClassOf"
     },
     {
       "id": "50",
-      "type": "owl:objectProperty"
-    },
-    {
-      "id": "54",
-      "type": "owl:objectProperty"
-    },
-    {
-      "id": "56",
-      "type": "owl:objectProperty"
-    },
-    {
-      "id": "58",
       "type": "rdfs:SubClassOf"
+    },
+    {
+      "id": "52",
+      "type": "owl:datatypeProperty"
+    },
+    {
+      "id": "55",
+      "type": "rdfs:SubClassOf"
+    },
+    {
+      "id": "57",
+      "type": "owl:objectProperty"
     },
     {
       "id": "59",
-      "type": "rdfs:SubClassOf"
-    },
-    {
-      "id": "60",
-      "type": "owl:objectProperty"
+      "type": "owl:datatypeProperty"
     },
     {
       "id": "61",
-      "type": "rdfs:SubClassOf"
-    },
-    {
-      "id": "62",
-      "type": "rdfs:SubClassOf"
+      "type": "owl:objectProperty"
     },
     {
       "id": "63",
-      "type": "owl:objectProperty"
-    },
-    {
-      "id": "64",
-      "type": "owl:objectProperty"
+      "type": "rdfs:SubClassOf"
     },
     {
       "id": "65",
-      "type": "owl:datatypeProperty"
+      "type": "owl:objectProperty"
+    },
+    {
+      "id": "66",
+      "type": "rdfs:SubClassOf"
+    },
+    {
+      "id": "67",
+      "type": "rdfs:SubClassOf"
     },
     {
       "id": "68",
@@ -1441,26 +1495,26 @@
     },
     {
       "id": "69",
-      "type": "owl:datatypeProperty"
-    },
-    {
-      "id": "71",
       "type": "owl:objectProperty"
     },
     {
-      "id": "73",
+      "id": "70",
+      "type": "owl:datatypeProperty"
+    },
+    {
+      "id": "72",
       "type": "owl:objectProperty"
     },
     {
       "id": "74",
+      "type": "owl:datatypeProperty"
+    },
+    {
+      "id": "76",
       "type": "owl:objectProperty"
     },
     {
-      "id": "75",
-      "type": "owl:objectProperty"
-    },
-    {
-      "id": "77",
+      "id": "78",
       "type": "owl:objectProperty"
     },
     {
@@ -1472,35 +1526,35 @@
       "type": "owl:objectProperty"
     },
     {
-      "id": "81",
-      "type": "owl:objectProperty"
-    },
-    {
       "id": "82",
       "type": "owl:objectProperty"
     },
     {
-      "id": "84",
+      "id": "83",
       "type": "owl:objectProperty"
     },
     {
       "id": "85",
-      "type": "owl:datatypeProperty"
+      "type": "owl:objectProperty"
+    },
+    {
+      "id": "86",
+      "type": "owl:objectProperty"
     },
     {
       "id": "87",
       "type": "owl:objectProperty"
     },
     {
-      "id": "88",
-      "type": "owl:datatypeProperty"
-    },
-    {
-      "id": "90",
+      "id": "89",
       "type": "owl:objectProperty"
     },
     {
-      "id": "91",
+      "id": "90",
+      "type": "owl:datatypeProperty"
+    },
+    {
+      "id": "92",
       "type": "owl:objectProperty"
     },
     {
@@ -1513,63 +1567,51 @@
     },
     {
       "id": "96",
-      "type": "owl:datatypeProperty"
+      "type": "owl:objectProperty"
     },
     {
       "id": "98",
-      "type": "owl:objectProperty"
-    },
-    {
-      "id": "99",
-      "type": "owl:allValuesFrom"
+      "type": "owl:datatypeProperty"
     },
     {
       "id": "100",
-      "type": "owl:datatypeProperty"
-    },
-    {
-      "id": "52",
       "type": "owl:objectProperty"
     },
     {
-      "id": "102",
+      "id": "101",
       "type": "owl:datatypeProperty"
+    },
+    {
+      "id": "103",
+      "type": "owl:objectProperty"
     },
     {
       "id": "104",
-      "type": "owl:allValuesFrom"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "105",
-      "type": "owl:someValuesFrom"
-    },
-    {
-      "id": "106",
-      "type": "owl:someValuesFrom"
+      "type": "owl:datatypeProperty"
     },
     {
       "id": "107",
-      "type": "owl:allValuesFrom"
-    },
-    {
-      "id": "108",
-      "type": "owl:someValuesFrom"
+      "type": "owl:datatypeProperty"
     },
     {
       "id": "109",
-      "type": "owl:allValuesFrom"
-    },
-    {
-      "id": "110",
       "type": "owl:someValuesFrom"
     },
     {
+      "id": "110",
+      "type": "owl:allValuesFrom"
+    },
+    {
       "id": "111",
-      "type": "owl:objectProperty"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "112",
-      "type": "owl:allValuesFrom"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "113",
@@ -1577,15 +1619,15 @@
     },
     {
       "id": "114",
-      "type": "owl:allValuesFrom"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "115",
-      "type": "owl:objectProperty"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "116",
-      "type": "owl:allValuesFrom"
+      "type": "owl:objectProperty"
     },
     {
       "id": "117",
@@ -1597,11 +1639,11 @@
     },
     {
       "id": "119",
-      "type": "owl:someValuesFrom"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "120",
-      "type": "owl:someValuesFrom"
+      "type": "owl:objectProperty"
     },
     {
       "id": "121",
@@ -1609,11 +1651,11 @@
     },
     {
       "id": "122",
-      "type": "owl:allValuesFrom"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "123",
-      "type": "owl:someValuesFrom"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "124",
@@ -1621,7 +1663,7 @@
     },
     {
       "id": "125",
-      "type": "owl:allValuesFrom"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "126",
@@ -1629,7 +1671,11 @@
     },
     {
       "id": "127",
-      "type": "owl:objectProperty"
+      "type": "owl:someValuesFrom"
+    },
+    {
+      "id": "128",
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "129",
@@ -1637,35 +1683,31 @@
     },
     {
       "id": "130",
-      "type": "owl:someValuesFrom"
-    },
-    {
-      "id": "128",
-      "type": "owl:objectProperty"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "131",
-      "type": "owl:objectProperty"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "132",
-      "type": "owl:allValuesFrom"
-    },
-    {
-      "id": "133",
-      "type": "owl:allValuesFrom"
+      "type": "owl:objectProperty"
     },
     {
       "id": "134",
-      "type": "owl:someValuesFrom"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "135",
       "type": "owl:someValuesFrom"
     },
     {
+      "id": "133",
+      "type": "owl:objectProperty"
+    },
+    {
       "id": "136",
-      "type": "owl:someValuesFrom"
+      "type": "owl:objectProperty"
     },
     {
       "id": "137",
@@ -1673,7 +1715,7 @@
     },
     {
       "id": "138",
-      "type": "owl:allValuesFrom"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "139",
@@ -1681,7 +1723,11 @@
     },
     {
       "id": "140",
-      "type": "owl:datatypeProperty"
+      "type": "owl:allValuesFrom"
+    },
+    {
+      "id": "141",
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "142",
@@ -1689,51 +1735,47 @@
     },
     {
       "id": "143",
-      "type": "owl:allValuesFrom"
-    },
-    {
-      "id": "144",
       "type": "owl:someValuesFrom"
     },
     {
-      "id": "145",
+      "id": "144",
       "type": "owl:allValuesFrom"
     },
     {
-      "id": "146",
-      "type": "owl:allValuesFrom"
+      "id": "145",
+      "type": "owl:datatypeProperty"
     },
     {
       "id": "147",
-      "type": "owl:allValuesFrom"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "148",
       "type": "owl:allValuesFrom"
     },
     {
-      "id": "76",
-      "type": "owl:objectProperty"
-    },
-    {
       "id": "149",
-      "type": "owl:someValuesFrom"
-    },
-    {
-      "id": "150",
       "type": "owl:allValuesFrom"
     },
     {
+      "id": "150",
+      "type": "owl:someValuesFrom"
+    },
+    {
       "id": "151",
-      "type": "owl:objectProperty"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "152",
-      "type": "owl:someValuesFrom"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "153",
-      "type": "owl:someValuesFrom"
+      "type": "owl:allValuesFrom"
+    },
+    {
+      "id": "81",
+      "type": "owl:objectProperty"
     },
     {
       "id": "154",
@@ -1741,19 +1783,23 @@
     },
     {
       "id": "155",
-      "type": "owl:someValuesFrom"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "156",
-      "type": "owl:datatypeProperty"
+      "type": "owl:objectProperty"
     },
     {
-      "id": "158",
+      "id": "157",
       "type": "owl:someValuesFrom"
     },
     {
-      "id": "159",
+      "id": "158",
       "type": "owl:allValuesFrom"
+    },
+    {
+      "id": "159",
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "160",
@@ -1765,7 +1811,7 @@
     },
     {
       "id": "163",
-      "type": "owl:objectProperty"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "164",
@@ -1773,19 +1819,19 @@
     },
     {
       "id": "165",
-      "type": "owl:someValuesFrom"
-    },
-    {
-      "id": "166",
       "type": "owl:objectProperty"
     },
     {
-      "id": "168",
-      "type": "owl:allValuesFrom"
+      "id": "166",
+      "type": "owl:someValuesFrom"
+    },
+    {
+      "id": "167",
+      "type": "owl:datatypeProperty"
     },
     {
       "id": "169",
-      "type": "owl:someValuesFrom"
+      "type": "owl:objectProperty"
     },
     {
       "id": "170",
@@ -1797,31 +1843,31 @@
     },
     {
       "id": "172",
-      "type": "owl:someValuesFrom"
-    },
-    {
-      "id": "173",
-      "type": "owl:allValuesFrom"
+      "type": "owl:objectProperty"
     },
     {
       "id": "174",
-      "type": "owl:objectProperty"
-    },
-    {
-      "id": "175",
       "type": "owl:allValuesFrom"
     },
     {
-      "id": "176",
+      "id": "175",
       "type": "owl:someValuesFrom"
     },
     {
+      "id": "176",
+      "type": "owl:allValuesFrom"
+    },
+    {
       "id": "177",
-      "type": "owl:objectProperty"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "178",
-      "type": "owl:datatypeProperty"
+      "type": "owl:allValuesFrom"
+    },
+    {
+      "id": "179",
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "180",
@@ -1829,7 +1875,7 @@
     },
     {
       "id": "181",
-      "type": "owl:objectProperty"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "182",
@@ -1837,75 +1883,71 @@
     },
     {
       "id": "183",
-      "type": "owl:allValuesFrom"
+      "type": "owl:objectProperty"
     },
     {
       "id": "184",
-      "type": "owl:objectProperty"
-    },
-    {
-      "id": "185",
-      "type": "owl:someValuesFrom"
-    },
-    {
-      "id": "72",
-      "type": "owl:objectProperty"
+      "type": "owl:datatypeProperty"
     },
     {
       "id": "186",
-      "type": "owl:allValuesFrom"
-    },
-    {
-      "id": "187",
-      "type": "owl:someValuesFrom"
+      "type": "owl:datatypeProperty"
     },
     {
       "id": "188",
-      "type": "owl:someValuesFrom"
+      "type": "owl:objectProperty"
     },
     {
       "id": "189",
-      "type": "owl:allValuesFrom"
+      "type": "owl:objectProperty"
     },
     {
       "id": "190",
-      "type": "rdfs:SubClassOf"
+      "type": "owl:objectProperty"
+    },
+    {
+      "id": "191",
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "192",
-      "type": "rdfs:SubClassOf"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "193",
-      "type": "rdfs:SubClassOf"
+      "type": "owl:objectProperty"
+    },
+    {
+      "id": "194",
+      "type": "owl:someValuesFrom"
+    },
+    {
+      "id": "77",
+      "type": "owl:objectProperty"
     },
     {
       "id": "195",
-      "type": "owl:someValuesFrom"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "196",
-      "type": "owl:allValuesFrom"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "197",
-      "type": "owl:someValuesFrom"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "198",
-      "type": "owl:allValuesFrom"
-    },
-    {
-      "id": "199",
-      "type": "owl:allValuesFrom"
-    },
-    {
-      "id": "200",
       "type": "owl:someValuesFrom"
     },
     {
-      "id": "201",
+      "id": "200",
       "type": "owl:allValuesFrom"
+    },
+    {
+      "id": "201",
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "202",
@@ -1913,47 +1955,75 @@
     },
     {
       "id": "203",
-      "type": "owl:datatypeProperty"
-    },
-    {
-      "id": "204",
-      "type": "owl:someValuesFrom"
-    },
-    {
-      "id": "205",
       "type": "owl:allValuesFrom"
     },
     {
+      "id": "204",
+      "type": "owl:allValuesFrom"
+    },
+    {
+      "id": "205",
+      "type": "owl:someValuesFrom"
+    },
+    {
       "id": "206",
+      "type": "owl:allValuesFrom"
+    },
+    {
+      "id": "207",
+      "type": "owl:someValuesFrom"
+    },
+    {
+      "id": "208",
       "type": "owl:datatypeProperty"
     },
     {
-      "id": "167",
-      "type": "owl:objectProperty"
-    },
-    {
       "id": "209",
-      "type": "owl:objectProperty"
+      "type": "owl:allValuesFrom"
     },
     {
       "id": "210",
-      "type": "owl:objectProperty"
+      "type": "owl:someValuesFrom"
     },
     {
       "id": "211",
       "type": "owl:datatypeProperty"
     },
     {
-      "id": "212",
-      "type": "owl:datatypeProperty"
-    },
-    {
-      "id": "213",
+      "id": "173",
       "type": "owl:objectProperty"
     },
     {
       "id": "214",
+      "type": "owl:objectProperty"
+    },
+    {
+      "id": "215",
+      "type": "owl:objectProperty"
+    },
+    {
+      "id": "216",
+      "type": "owl:datatypeProperty"
+    },
+    {
+      "id": "217",
+      "type": "owl:datatypeProperty"
+    },
+    {
+      "id": "218",
+      "type": "owl:objectProperty"
+    },
+    {
+      "id": "219",
       "type": "owl:allValuesFrom"
+    },
+    {
+      "id": "220",
+      "type": "owl:allValuesFrom"
+    },
+    {
+      "id": "221",
+      "type": "owl:someValuesFrom"
     }
   ],
   "propertyAttribute": [
@@ -1961,559 +2031,628 @@
       "range": "2",
       "domain": "1",
       "attributes": [
-        "anonymous",
-        "object"
+        "object",
+        "anonymous"
       ],
       "id": "0",
       "pos": [
-        1653.3749427455364,
-        274.9389733459943
+        434.0305563350759,
+        -158.734401509271
       ]
     },
     {
-      "range": "1",
+      "range": "2",
       "domain": "4",
       "attributes": [
-        "anonymous",
-        "object"
+        "object",
+        "anonymous"
       ],
       "id": "3",
       "pos": [
-        1529.8031425624254,
-        858.1422643419378
+        399.1813613486484,
+        -331.18159940622684
       ]
     },
     {
-      "range": "7",
+      "range": "2",
       "domain": "6",
       "attributes": [
-        "anonymous",
-        "object"
+        "object",
+        "anonymous"
       ],
       "id": "5",
       "pos": [
-        428.8254708096619,
-        769.7773075798931
+        -17.04219846936256,
+        -207.38288784312272
       ]
     },
     {
-      "range": "7",
-      "domain": "9",
+      "range": "2",
+      "domain": "8",
       "attributes": [
-        "anonymous",
-        "object"
+        "object",
+        "anonymous"
       ],
-      "id": "8",
+      "id": "7",
       "pos": [
-        169.43067002373903,
-        844.1362698540017
+        319.2056052868569,
+        -524.8288453434689
+      ]
+    },
+    {
+      "range": "11",
+      "domain": "10",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "9",
+      "pos": [
+        175.10850710384733,
+        954.4286287298187
+      ]
+    },
+    {
+      "range": "10",
+      "domain": "13",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "12",
+      "pos": [
+        815.2449690629542,
+        1229.2070132741337
+      ]
+    },
+    {
+      "range": "16",
+      "domain": "15",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "14",
+      "pos": [
+        1318.6400436492884,
+        371.7696084066455
+      ]
+    },
+    {
+      "range": "16",
+      "domain": "18",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "17",
+      "pos": [
+        1507.5779878929634,
+        265.15487863527756
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#observedBy",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "21",
+      "range": "29",
       "label": {
         "IRI-based": "observedBy"
-      },
-      "domain": "20",
-      "attributes": [
-        "external",
-        "object"
-      ],
-      "id": "19",
-      "pos": [
-        952.3678241504946,
-        793.4243108625393
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#expressedBy",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "24",
-      "label": {
-        "IRI-based": "expressedBy"
-      },
-      "domain": "23",
-      "attributes": [
-        "object"
-      ],
-      "id": "22",
-      "pos": [
-        150.06731125432992,
-        -342.7291924010268
-      ]
-    },
-    {
-      "range": "27",
-      "domain": "26",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "25",
-      "pos": [
-        859.0769062815268,
-        -606.1381177740438
-      ]
-    },
-    {
-      "range": "27",
-      "domain": "24",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "29",
-      "pos": [
-        320.27295626534533,
-        -530.0476102821729
-      ]
-    },
-    {
-      "range": "9",
-      "domain": "17",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "30",
-      "pos": [
-        -188.0274459314287,
-        878.0761572816683
-      ]
-    },
-    {
-      "range": "9",
-      "domain": "18",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "31",
-      "pos": [
-        -206.91642881441288,
-        627.9726138001711
-      ]
-    },
-    {
-      "range": "34",
-      "domain": "33",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "32",
-      "pos": [
-        1811.8054214843628,
-        1523.9071083006834
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#max_treshold",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "36",
-      "label": {
-        "IRI-based": "max_treshold"
-      },
-      "domain": "24",
-      "attributes": [
-        "datatype"
-      ],
-      "id": "35",
-      "pos": [
-        -57.23298721276231,
-        -477.70087498065357
-      ]
-    },
-    {
-      "range": "34",
-      "domain": "38",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "37",
-      "pos": [
-        1984.5836547225456,
-        1412.1621096242393
-      ]
-    },
-    {
-      "range": "34",
-      "domain": "40",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "39",
-      "pos": [
-        1991.0599676954153,
-        1275.682440141179
-      ]
-    },
-    {
-      "range": "21",
-      "domain": "4",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "41",
-      "pos": [
-        1289.3184915926286,
-        1059.886363064123
-      ]
-    },
-    {
-      "range": "27",
-      "domain": "43",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "42",
-      "pos": [
-        718.7343048084502,
-        -473.1398983563827
-      ]
-    },
-    {
-      "range": "27",
-      "domain": "45",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "44",
-      "pos": [
-        611.6964841911315,
-        -268.1677515492981
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#observationValue",
-      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "48",
-      "label": {
-        "IRI-based": "observationValue"
-      },
-      "domain": "47",
-      "attributes": [
-        "external",
-        "datatype"
-      ],
-      "id": "46",
-      "pos": [
-        784.7150951041635,
-        1772.6638601301042
-      ]
-    },
-    {
-      "range": "27",
-      "domain": "23",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "49",
-      "pos": [
-        453.14077571479197,
-        -384.6714912701454
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#exposedBy",
-      "inverse": "52",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "28",
-      "label": {
-        "IRI-based": "exposedBy"
-      },
-      "domain": "51",
-      "comment": {
-        "en": "A service is exposed by the platform."
-      },
-      "attributes": [
-        "object"
-      ],
-      "id": "50",
-      "pos": [
-        1256.88114726968,
-        -56.39558185432293
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasValue",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "47",
-      "label": {
-        "IRI-based": "hasValue"
-      },
-      "domain": "55",
-      "attributes": [
-        "external",
-        "object"
-      ],
-      "id": "54",
-      "pos": [
-        767.9666779738412,
-        1408.6414480634037
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#isInTheAreaOf",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "57",
-      "label": {
-        "IRI-based": "isInTheAreaOf"
-      },
-      "domain": "57",
-      "attributes": [
-        "symmetric",
-        "object"
-      ],
-      "id": "56",
-      "pos": [
-        1770.5600592821615,
-        991.1398262426084
-      ]
-    },
-    {
-      "range": "9",
-      "domain": "14",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "58",
-      "pos": [
-        -242.22593060191093,
-        725.7077397846248
-      ]
-    },
-    {
-      "range": "9",
-      "domain": "13",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "59",
-      "pos": [
-        -171.0064135297805,
-        588.1137226865769
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#isImpactedBy",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "45",
-      "label": {
-        "IRI-based": "isImpactedBy"
-      },
-      "domain": "43",
-      "attributes": [
-        "object"
-      ],
-      "id": "60",
-      "pos": [
-        725.5247838136768,
-        -245.05632956753428
-      ]
-    },
-    {
-      "range": "9",
-      "domain": "15",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "61",
-      "pos": [
-        -147.04243140521157,
-        915.3572877683691
-      ]
-    },
-    {
-      "range": "9",
-      "domain": "16",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "62",
-      "pos": [
-        -237.99040537319615,
-        783.2448258656916
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#observedProperty",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "7",
-      "label": {
-        "IRI-based": "observedProperty"
-      },
-      "domain": "20",
-      "attributes": [
-        "external",
-        "object"
-      ],
-      "id": "63",
-      "pos": [
-        583.249587079315,
-        822.1934984634446
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#contains",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "21",
-      "label": {
-        "IRI-based": "contains"
-      },
-      "domain": "1",
-      "attributes": [
-        "object"
-      ],
-      "id": "64",
-      "pos": [
-        1363.0152926432627,
-        740.0941894386032
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#hasMaxValue",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "66",
-      "label": {
-        "IRI-based": "hasMaxValue"
-      },
-      "domain": "9",
-      "attributes": [
-        "datatype"
-      ],
-      "id": "65",
-      "pos": [
-        -90.84066963244886,
-        896.0820031543971
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#requiresQoo",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "23",
-      "label": {
-        "IRI-based": "requiresQoo"
-      },
-      "domain": "67",
-      "attributes": [
-        "object"
-      ],
-      "id": "68",
-      "pos": [
-        352.26938527357015,
-        5.4063677314850045
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#service_level_agreement",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "70",
-      "label": {
-        "IRI-based": "service_level_agreement"
-      },
-      "domain": "24",
-      "attributes": [
-        "datatype"
-      ],
-      "id": "69",
-      "pos": [
-        0.9255336432564967,
-        -662.24323731057
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#attachedSystem",
-      "inverse": "72",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "2",
-      "label": {
-        "IRI-based": "attachedSystem"
       },
       "domain": "28",
       "attributes": [
         "external",
         "object"
       ],
-      "id": "71",
+      "id": "27",
       "pos": [
-        1596.6399988983674,
-        -244.29029173105585
+        975.3969402248497,
+        845.7997129046404
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#expressedBy",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "8",
+      "label": {
+        "IRI-based": "expressedBy"
+      },
+      "domain": "4",
+      "attributes": [
+        "object"
+      ],
+      "id": "30",
+      "pos": [
+        560.3964671692347,
+        -552.0625252333783
+      ]
+    },
+    {
+      "range": "8",
+      "domain": "32",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "31",
+      "pos": [
+        154.67026642172428,
+        -591.8041091865341
+      ]
+    },
+    {
+      "range": "2",
+      "domain": "35",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "34",
+      "pos": [
+        188.98572920183767,
+        -186.67543171363698
+      ]
+    },
+    {
+      "range": "18",
+      "domain": "22",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "36",
+      "pos": [
+        1749.1883717061303,
+        -121.44892643205858
+      ]
+    },
+    {
+      "range": "18",
+      "domain": "23",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "37",
+      "pos": [
+        1634.0871106197692,
+        -174.43607045297995
+      ]
+    },
+    {
+      "range": "18",
+      "domain": "24",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "38",
+      "pos": [
+        1787.3502986375936,
+        -75.14759781047408
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#max_treshold",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "40",
+      "label": {
+        "IRI-based": "max_treshold"
+      },
+      "domain": "8",
+      "attributes": [
+        "datatype"
+      ],
+      "id": "39",
+      "pos": [
+        444.51620120981556,
+        -866.2130314352478
+      ]
+    },
+    {
+      "range": "18",
+      "domain": "25",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "41",
+      "pos": [
+        1813.4347636315913,
+        -17.365503758000095
+      ]
+    },
+    {
+      "range": "18",
+      "domain": "26",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "42",
+      "pos": [
+        1818.1240775899819,
+        54.11982397632928
+      ]
+    },
+    {
+      "range": "45",
+      "domain": "44",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "43",
+      "pos": [
+        1413.4932430695997,
+        1790.3042332167624
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#offers",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "47",
+      "label": {
+        "IRI-based": "offers"
+      },
+      "domain": "33",
+      "attributes": [
+        "object"
+      ],
+      "id": "46",
+      "pos": [
+        90.34304352732113,
+        548.1408504655979
+      ]
+    },
+    {
+      "range": "45",
+      "domain": "49",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "48",
+      "pos": [
+        1252.1469984791008,
+        1933.7678574810054
+      ]
+    },
+    {
+      "range": "45",
+      "domain": "51",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "50",
+      "pos": [
+        1373.8464976848998,
+        1872.7225014252501
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#observationValue",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "54",
+      "label": {
+        "IRI-based": "observationValue"
+      },
+      "domain": "53",
+      "attributes": [
+        "external",
+        "datatype"
+      ],
+      "id": "52",
+      "pos": [
+        402.2546389264122,
+        1629.60017848393
+      ]
+    },
+    {
+      "range": "29",
+      "domain": "13",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "55",
+      "pos": [
+        1164.8526825029116,
+        1206.7202604038605
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasValue",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "53",
+      "label": {
+        "IRI-based": "hasValue"
+      },
+      "domain": "58",
+      "attributes": [
+        "external",
+        "object"
+      ],
+      "id": "57",
+      "pos": [
+        648.6142304481175,
+        1408.9062636059825
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#in_ObsLevel",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "60",
+      "label": {
+        "IRI-based": "in_ObsLevel"
+      },
+      "domain": "6",
+      "attributes": [
+        "datatype"
+      ],
+      "id": "59",
+      "pos": [
+        -417.5681637674233,
+        -79.67846234255522
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#isInTheAreaOf",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "62",
+      "label": {
+        "IRI-based": "isInTheAreaOf"
+      },
+      "domain": "62",
+      "attributes": [
+        "object",
+        "symmetric"
+      ],
+      "id": "61",
+      "pos": [
+        1738.8375367746996,
+        1126.1064547894816
+      ]
+    },
+    {
+      "range": "18",
+      "domain": "19",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "63",
+      "pos": [
+        1699.2880110367182,
+        -156.68044576833677
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#isImpactedBy",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "1",
+      "label": {
+        "IRI-based": "isImpactedBy"
+      },
+      "domain": "35",
+      "attributes": [
+        "object"
+      ],
+      "id": "65",
+      "pos": [
+        401.17139759879564,
+        -49.67035565871469
+      ]
+    },
+    {
+      "range": "18",
+      "domain": "20",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "66",
+      "pos": [
+        1571.9492055694059,
+        -165.56660985824644
+      ]
+    },
+    {
+      "range": "18",
+      "domain": "21",
+      "attributes": [
+        "object",
+        "anonymous"
+      ],
+      "id": "67",
+      "pos": [
+        1799.8604240688362,
+        116.806972739583
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#observedProperty",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "16",
+      "label": {
+        "IRI-based": "observedProperty"
+      },
+      "domain": "28",
+      "attributes": [
+        "external",
+        "object"
+      ],
+      "id": "68",
+      "pos": [
+        1136.8497487184902,
+        579.7427289328513
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#contains",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "29",
+      "label": {
+        "IRI-based": "contains"
+      },
+      "domain": "10",
+      "attributes": [
+        "object"
+      ],
+      "id": "69",
+      "pos": [
+        842.2587786228027,
+        1044.7496853981397
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#hasMaxValue",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "71",
+      "label": {
+        "IRI-based": "hasMaxValue"
+      },
+      "domain": "18",
+      "attributes": [
+        "datatype"
+      ],
+      "id": "70",
+      "pos": [
+        1649.3273153822843,
+        -129.837848954489
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#allowsToSet",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "32",
+      "label": {
+        "IRI-based": "allowsToSet"
+      },
+      "domain": "6",
+      "attributes": [
+        "object"
+      ],
+      "id": "72",
+      "pos": [
+        -191.6625578275856,
+        -284.1471319219931
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#service_level_agreement",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "75",
+      "label": {
+        "IRI-based": "service_level_agreement"
+      },
+      "domain": "8",
+      "attributes": [
+        "datatype"
+      ],
+      "id": "74",
+      "pos": [
+        505.963932014898,
+        -839.6166232085932
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#attachedSystem",
+      "inverse": "77",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "11",
+      "label": {
+        "IRI-based": "attachedSystem"
+      },
+      "domain": "33",
+      "attributes": [
+        "external",
+        "object"
+      ],
+      "id": "76",
+      "pos": [
+        -225.18991260043273,
+        612.3348033681112
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#concerns",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
+      "range": "35",
       "label": {
         "IRI-based": "concerns"
       },
-      "domain": "23",
+      "domain": "4",
       "attributes": [
         "object"
       ],
-      "id": "73",
+      "id": "78",
       "pos": [
-        592.2452647425205,
-        -368.9780659847667
+        341.2545967867901,
+        -210.72308479296038
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasSubSystem",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "2",
+      "range": "11",
       "label": {
         "IRI-based": "hasSubSystem"
       },
-      "domain": "2",
+      "domain": "11",
       "attributes": [
         "external",
         "object"
       ],
-      "id": "74",
+      "id": "79",
       "pos": [
-        1852.8780079079863,
-        -110.33422971553395
+        -313.76360298553084,
+        915.3597167034379
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#isProvidedBy",
-      "inverse": "76",
+      "inverse": "81",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "28",
+      "range": "33",
       "label": {
         "IRI-based": "isProvidedBy"
       },
-      "domain": "26",
+      "domain": "6",
       "attributes": [
         "object"
       ],
-      "id": "75",
+      "id": "80",
       "pos": [
-        1276.862613913746,
-        -504.453438840853
+        -199.40324797128187,
+        164.15528569986873
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#decreases",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "35",
+      "label": {
+        "IRI-based": "decreases"
+      },
+      "domain": "6",
+      "attributes": [
+        "object"
+      ],
+      "id": "82",
+      "pos": [
+        -77.07841943029347,
+        -69.09139805880827
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasQuantityKind",
       "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "78",
+      "range": "84",
       "label": {
         "IRI-based": "hasQuantityKind"
       },
-      "domain": "47",
+      "domain": "53",
       "comment": {
         "undefined": "Links a sensor or an attribute with the quantity  kind it measures (e.g. A sensor -sensor1- measures temperature: sensor1 hasQuantityKind temperature)."
       },
@@ -2521,319 +2660,287 @@
         "external",
         "object"
       ],
-      "id": "77",
+      "id": "83",
       "pos": [
-        585.7309263033411,
-        1756.820745532846
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#decreases",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
-      "label": {
-        "IRI-based": "decreases"
-      },
-      "domain": "26",
-      "attributes": [
-        "object"
-      ],
-      "id": "79",
-      "pos": [
-        1046.278016035214,
-        -533.8276902882482
+        331.57223072957004,
+        1697.9035596694796
       ]
     },
     {
       "iri": "http://www.w3.org/2003/01/geo/wgs84_pos#location",
       "baseIri": "http://www.w3.org/2003/01/geo/wgs84_pos",
-      "range": "57",
+      "range": "62",
       "label": {
         "IRI-based": "location"
       },
-      "domain": "21",
+      "domain": "29",
       "attributes": [
         "external",
         "object"
       ],
-      "id": "80",
+      "id": "85",
       "pos": [
-        1397.8927911715768,
-        955.0572238939676
+        1387.500802185362,
+        1040.652700507727
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#forProperty",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "7",
+      "range": "16",
       "label": {
         "IRI-based": "forProperty"
       },
-      "domain": "6",
+      "domain": "15",
       "attributes": [
         "external",
         "object"
       ],
-      "id": "81",
+      "id": "86",
       "pos": [
-        399.9953812517375,
-        756.2475361732677
+        1341.8151160624689,
+        343.6458857417603
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#supports",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "83",
+      "range": "88",
       "label": {
         "IRI-based": "supports"
       },
-      "domain": "26",
-      "attributes": [
-        "object"
-      ],
-      "id": "82",
-      "pos": [
-        1239.195238996199,
-        -862.9455507587353
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#isSubSystemOf",
-      "inverse": "74",
-      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "2",
-      "label": {
-        "IRI-based": "isSubSystemOf"
-      },
-      "domain": "2",
-      "attributes": [
-        "external",
-        "object"
-      ],
-      "id": "84",
-      "pos": [
-        1856.4702954089257,
-        -27.720276052815944
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#sensor_id",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "86",
-      "label": {
-        "IRI-based": "sensor_id"
-      },
-      "domain": "21",
-      "attributes": [
-        "datatype"
-      ],
-      "id": "85",
-      "pos": [
-        1171.456647759006,
-        1048.6361247301634
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#isSupportedBy",
-      "inverse": "82",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "26",
-      "label": {
-        "IRI-based": "isSupportedBy"
-      },
-      "domain": "83",
+      "domain": "6",
       "attributes": [
         "object"
       ],
       "id": "87",
       "pos": [
-        1157.3445160468186,
-        -881.818220814487
+        -381.4329237195397,
+        -254.10349598849226
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#isSubSystemOf",
+      "inverse": "79",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "11",
+      "label": {
+        "IRI-based": "isSubSystemOf"
+      },
+      "domain": "11",
+      "attributes": [
+        "external",
+        "object"
+      ],
+      "id": "89",
+      "pos": [
+        -242.09577214860096,
+        954.3092962067785
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#sensor_id",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "91",
+      "label": {
+        "IRI-based": "sensor_id"
+      },
+      "domain": "29",
+      "attributes": [
+        "datatype"
+      ],
+      "id": "90",
+      "pos": [
+        1257.1647919396187,
+        1072.773599631888
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#isSupportedBy",
+      "inverse": "87",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "6",
+      "label": {
+        "IRI-based": "isSupportedBy"
+      },
+      "domain": "88",
+      "attributes": [
+        "object"
+      ],
+      "id": "92",
+      "pos": [
+        -402.6259498116738,
+        -225.96435369511025
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#qooAttributeVariation",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "89",
+      "range": "94",
       "label": {
         "IRI-based": "qooAttributeVariation"
       },
-      "domain": "45",
-      "attributes": [
-        "datatype"
-      ],
-      "id": "88",
-      "pos": [
-        528.840740758088,
-        -63.76885323172442
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#isProducedBy",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "21",
-      "label": {
-        "IRI-based": "isProducedBy"
-      },
-      "domain": "55",
-      "attributes": [
-        "external",
-        "object"
-      ],
-      "id": "90",
-      "pos": [
-        1018.5845946793164,
-        1068.4188147347077
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#belongsTo",
-      "inverse": "64",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "1",
-      "label": {
-        "IRI-based": "belongsTo"
-      },
-      "domain": "21",
-      "attributes": [
-        "object"
-      ],
-      "id": "91",
-      "pos": [
-        1366.1332159680376,
-        770.3593819768224
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#target_value",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "94",
-      "label": {
-        "IRI-based": "target_value"
-      },
-      "domain": "24",
+      "domain": "1",
       "attributes": [
         "datatype"
       ],
       "id": "93",
       "pos": [
-        -65.12549167275398,
-        -537.7019468527399
+        615.6069799978619,
+        151.40828248243122
       ]
     },
     {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#featureOfInterest",
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#isProducedBy",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "53",
+      "range": "29",
       "label": {
-        "IRI-based": "featureOfInterest"
+        "IRI-based": "isProducedBy"
       },
-      "domain": "20",
+      "domain": "58",
       "attributes": [
         "external",
         "object"
       ],
       "id": "95",
       "pos": [
-        666.488445107675,
-        884.4162716641872
+        947.509436683893,
+        1095.7207811096416
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#belongsTo",
+      "inverse": "69",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "10",
+      "label": {
+        "IRI-based": "belongsTo"
+      },
+      "domain": "29",
+      "attributes": [
+        "object"
+      ],
+      "id": "96",
+      "pos": [
+        848.0533691398977,
+        1019.0951092440478
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#target_value",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "99",
+      "label": {
+        "IRI-based": "target_value"
+      },
+      "domain": "8",
+      "attributes": [
+        "datatype"
+      ],
+      "id": "98",
+      "pos": [
+        541.9080978952945,
+        -789.3684251106148
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#featureOfInterest",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "56",
+      "label": {
+        "IRI-based": "featureOfInterest"
+      },
+      "domain": "28",
+      "attributes": [
+        "external",
+        "object"
+      ],
+      "id": "100",
+      "pos": [
+        1106.3994942981399,
+        661.2864778166876
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#sensorStateValue",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "97",
+      "range": "102",
       "label": {
         "IRI-based": "sensorStateValue"
       },
-      "domain": "21",
+      "domain": "29",
       "attributes": [
         "datatype"
       ],
-      "id": "96",
+      "id": "101",
       "pos": [
-        1268.795996203897,
-        868.1320886890437
+        1225.9983219635583,
+        1114.5413732712889
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#isPropertyOf",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "53",
+      "range": "56",
       "label": {
         "IRI-based": "isPropertyOf"
       },
-      "domain": "7",
+      "domain": "16",
       "attributes": [
         "external",
         "object"
       ],
-      "id": "98",
+      "id": "103",
       "pos": [
-        367.6549030570626,
-        1137.7002583435387
+        1561.224693096529,
+        617.2240303418306
       ]
     },
     {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#forProperty",
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasProperty",
+      "inverse": "103",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "7",
+      "range": "16",
       "label": {
-        "IRI-based": "forProperty"
+        "IRI-based": "hasProperty"
       },
-      "domain": "6",
+      "domain": "56",
       "attributes": [
-        "allValues",
+        "someValues",
         "external",
         "object"
       ],
-      "id": "99",
+      "id": "104",
       "pos": [
-        371.5131071042716,
-        744.544487197653
+        1533.89930929463,
+        662.8471836377346
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#obsLevelValue",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "101",
+      "range": "106",
       "label": {
         "IRI-based": "obsLevelValue"
       },
-      "domain": "47",
+      "domain": "53",
       "attributes": [
         "datatype"
       ],
-      "id": "100",
+      "id": "105",
       "pos": [
-        852.0174173449334,
-        1731.3328784142577
+        552.7234688972287,
+        1749.4858252028248
       ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#exposes",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "51",
-      "label": {
-        "IRI-based": "exposes"
-      },
-      "domain": "28",
-      "comment": {
-        "en": "The platform exposes some service to query the different Sensors."
-      },
-      "attributes": [
-        "object"
-      ],
-      "id": "52"
     },
     {
       "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#endpoint",
       "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "103",
+      "range": "108",
       "label": {
         "IRI-based": "endpoint"
       },
-      "domain": "51",
+      "domain": "47",
       "comment": {
         "undefined": "Endpoint of the service. It is usually a URL where the service is available."
       },
@@ -2841,230 +2948,223 @@
         "external",
         "datatype"
       ],
-      "id": "102",
+      "id": "107",
       "pos": [
-        1279.002921616447,
-        182.6821880658208
+        186.30309936322732,
+        772.8993200346571
       ]
     },
     {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasProperty",
-      "inverse": "98",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "7",
+      "iri": "http://isae.fr/iqas/qoo-ontology#contains",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "10",
       "label": {
-        "IRI-based": "hasProperty"
+        "IRI-based": "contains"
       },
-      "domain": "53",
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "104",
-      "pos": [
-        383.99435993519484,
-        1165.7205317105115
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasProperty",
-      "inverse": "98",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "7",
-      "label": {
-        "IRI-based": "hasProperty"
-      },
-      "domain": "53",
+      "domain": "10",
       "attributes": [
         "someValues",
-        "external",
         "object"
       ],
-      "id": "105",
+      "id": "109",
       "pos": [
-        335.12673799978916,
-        1114.7665018181988
+        482.3067647807971,
+        1143.457370228269
       ]
     },
     {
-      "iri": "http://isae.fr/iqas/qoo-ontology#exposedBy",
-      "inverse": "52",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "28",
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#exposedBy",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "47",
       "label": {
         "IRI-based": "exposedBy"
       },
-      "domain": "51",
-      "comment": {
-        "en": "A service is exposed by the platform."
-      },
+      "domain": "10",
+      "comment": {},
       "attributes": [
-        "someValues",
-        "object"
+        "external",
+        "object",
+        "allValues"
       ],
-      "id": "106",
+      "id": "110",
       "pos": [
-        1219.6626990610398,
-        -81.9918124406335
+        420.67304986885875,
+        915.9434477907316
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#givesAccessTo",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "20",
+      "range": "28",
       "label": {
         "IRI-based": "givesAccessTo"
       },
-      "domain": "51",
+      "domain": "47",
       "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "107",
-      "pos": [
-        972.4200911624249,
-        397.49520523323514
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#contains",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "1",
-      "label": {
-        "IRI-based": "contains"
-      },
-      "domain": "1",
-      "attributes": [
-        "someValues",
-        "object"
-      ],
-      "id": "108",
-      "pos": [
-        1672.2018853639242,
-        575.277809876476
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#contains",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "1",
-      "label": {
-        "IRI-based": "contains"
-      },
-      "domain": "1",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "109",
-      "pos": [
-        1678.0524154187995,
-        630.1132521994184
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#expressedBy",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "24",
-      "label": {
-        "IRI-based": "expressedBy"
-      },
-      "domain": "23",
-      "attributes": [
-        "someValues",
-        "object"
-      ],
-      "id": "110",
-      "pos": [
-        179.37573438867543,
-        -368.5766224555425
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#impacts",
-      "inverse": "60",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
-      "label": {
-        "IRI-based": "impacts"
-      },
-      "domain": "45",
-      "attributes": [
-        "object"
+        "object",
+        "allValues"
       ],
       "id": "111",
       "pos": [
-        739.8599360701684,
-        -218.0312962795957
+        588.3580393551201,
+        698.7514247935015
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#expressedBy",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "24",
+      "range": "8",
       "label": {
         "IRI-based": "expressedBy"
       },
-      "domain": "23",
+      "domain": "4",
       "attributes": [
-        "allValues",
+        "someValues",
         "object"
       ],
       "id": "112",
       "pos": [
-        211.01848282881133,
-        -398.9163359496051
+        494.9469813905925,
+        -526.0511801617926
       ]
     },
     {
-      "iri": "http://isae.fr/iqas/qoo-ontology#exposedBy",
-      "inverse": "52",
+      "iri": "http://isae.fr/iqas/qoo-ontology#contains",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "28",
+      "range": "10",
       "label": {
-        "IRI-based": "exposedBy"
+        "IRI-based": "contains"
       },
-      "domain": "51",
-      "comment": {
-        "en": "A service is exposed by the platform."
-      },
+      "domain": "10",
       "attributes": [
-        "allValues",
-        "object"
+        "object",
+        "allValues"
       ],
       "id": "113",
       "pos": [
-        1301.0776692868876,
-        -44.35693742731403
+        526.9243288425773,
+        1175.712323352517
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#exposedBy",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "47",
+      "label": {
+        "IRI-based": "exposedBy"
+      },
+      "domain": "10",
+      "comment": {},
+      "attributes": [
+        "someValues",
+        "external",
+        "object"
+      ],
+      "id": "114",
+      "pos": [
+        448.7522263585025,
+        894.2779927427363
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#increases",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "35",
+      "label": {
+        "IRI-based": "increases"
+      },
+      "domain": "6",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "115",
+      "pos": [
+        -69.75674209969114,
+        -1.5296559761793904
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#impacts",
+      "inverse": "65",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "35",
+      "label": {
+        "IRI-based": "impacts"
+      },
+      "domain": "1",
+      "attributes": [
+        "object"
+      ],
+      "id": "116",
+      "pos": [
+        404.2874364383322,
+        19.726368576433927
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#isProvidedBy",
+      "inverse": "81",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "33",
+      "label": {
+        "IRI-based": "isProvidedBy"
+      },
+      "domain": "6",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "117",
+      "pos": [
+        -247.29002413140626,
+        163.8765654328695
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#concerns",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
+      "range": "35",
       "label": {
         "IRI-based": "concerns"
       },
-      "domain": "23",
+      "domain": "4",
       "attributes": [
-        "allValues",
-        "object"
+        "object",
+        "allValues"
       ],
-      "id": "114",
+      "id": "118",
       "pos": [
-        601.9636273032943,
-        -339.8323725091093
+        359.9535598925349,
+        -183.6581854777606
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#expressedBy",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "8",
+      "label": {
+        "IRI-based": "expressedBy"
+      },
+      "domain": "4",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "119",
+      "pos": [
+        529.0541810611871,
+        -539.5233744330346
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasUnit",
       "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "92",
+      "range": "97",
       "label": {
         "IRI-based": "hasUnit"
       },
-      "domain": "47",
+      "domain": "53",
       "comment": {
         "undefined": "Links the sensor with the units of the quantity kind it measures (e.g. A sensor -sensor1- measures temperature in Celsius: senso1 hasUnit celsius)."
       },
@@ -3072,818 +3172,730 @@
         "external",
         "object"
       ],
-      "id": "115",
-      "pos": [
-        723.8150039950699,
-        1827.5364118102855
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#isProvidedBy",
-      "inverse": "76",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "28",
-      "label": {
-        "IRI-based": "isProvidedBy"
-      },
-      "domain": "26",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "116",
-      "pos": [
-        1309.7645092938571,
-        -527.4396652800535
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#decreases",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
-      "label": {
-        "IRI-based": "decreases"
-      },
-      "domain": "26",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "117",
-      "pos": [
-        956.5031024295032,
-        -601.4089686554707
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#increases",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
-      "label": {
-        "IRI-based": "increases"
-      },
-      "domain": "26",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "118",
-      "pos": [
-        1016.5398320288066,
-        -572.3005446160065
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#decreases",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
-      "label": {
-        "IRI-based": "decreases"
-      },
-      "domain": "26",
-      "attributes": [
-        "someValues",
-        "object"
-      ],
-      "id": "119",
-      "pos": [
-        941.4148616258275,
-        -637.7223262206861
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#supports",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "83",
-      "label": {
-        "IRI-based": "supports"
-      },
-      "domain": "26",
-      "attributes": [
-        "someValues",
-        "object"
-      ],
       "id": "120",
       "pos": [
-        1117.205354057908,
-        -887.2891542982226
+        435.3838364773044,
+        1786.344107634024
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#neutralFor",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
+      "range": "35",
       "label": {
         "IRI-based": "neutralFor"
       },
-      "domain": "26",
+      "domain": "6",
       "attributes": [
         "someValues",
         "object"
       ],
       "id": "121",
       "pos": [
-        1061.8572085844737,
-        -508.30995400426264
+        -82.72482470296944,
+        -28.375036276555544
       ]
     },
     {
-      "iri": "http://isae.fr/iqas/qoo-ontology#neutralFor",
+      "iri": "http://isae.fr/iqas/qoo-ontology#allowsToSet",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
+      "range": "32",
       "label": {
-        "IRI-based": "neutralFor"
+        "IRI-based": "allowsToSet"
       },
-      "domain": "26",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "122",
-      "pos": [
-        969.8899209066919,
-        -632.493293518864
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#isProvidedBy",
-      "inverse": "76",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "28",
-      "label": {
-        "IRI-based": "isProvidedBy"
-      },
-      "domain": "26",
+      "domain": "6",
       "attributes": [
         "someValues",
         "object"
       ],
-      "id": "123",
+      "id": "122",
       "pos": [
-        1253.3324727141487,
-        -484.16504394543233
+        -252.79901425551583,
+        -306.5308686600139
       ]
     },
     {
-      "iri": "http://isae.fr/iqas/qoo-ontology#increases",
+      "iri": "http://isae.fr/iqas/qoo-ontology#decreases",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
+      "range": "35",
       "label": {
-        "IRI-based": "increases"
+        "IRI-based": "decreases"
       },
-      "domain": "26",
+      "domain": "6",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "123",
+      "pos": [
+        -46.558644702999715,
+        -123.27464322370784
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#supports",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "88",
+      "label": {
+        "IRI-based": "supports"
+      },
+      "domain": "6",
       "attributes": [
         "someValues",
         "object"
       ],
       "id": "124",
       "pos": [
-        984.2453492451831,
-        -573.6729309077065
+        -423.5549755933651,
+        -197.98810050808052
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#increases",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "35",
+      "label": {
+        "IRI-based": "increases"
+      },
+      "domain": "6",
+      "attributes": [
+        "someValues",
+        "object"
+      ],
+      "id": "125",
+      "pos": [
+        -62.57930787901078,
+        -148.27583523784978
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#neutralFor",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "35",
+      "label": {
+        "IRI-based": "neutralFor"
+      },
+      "domain": "6",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "126",
+      "pos": [
+        -57.554513526399745,
+        -44.33367848456792
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#decreases",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "35",
+      "label": {
+        "IRI-based": "decreases"
+      },
+      "domain": "6",
+      "attributes": [
+        "someValues",
+        "object"
+      ],
+      "id": "127",
+      "pos": [
+        -74.86795507134251,
+        -111.91137096449856
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#isProvidedBy",
+      "inverse": "81",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "33",
+      "label": {
+        "IRI-based": "isProvidedBy"
+      },
+      "domain": "6",
+      "attributes": [
+        "someValues",
+        "object"
+      ],
+      "id": "128",
+      "pos": [
+        -284.3868589942493,
+        182.18292868340677
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#supports",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "83",
+      "range": "88",
       "label": {
         "IRI-based": "supports"
       },
-      "domain": "26",
+      "domain": "6",
       "attributes": [
-        "allValues",
-        "object"
+        "object",
+        "allValues"
       ],
-      "id": "125",
+      "id": "129",
       "pos": [
-        1198.8003477328743,
-        -870.6338136128849
+        -444.73441799269324,
+        -170.0746429766715
       ]
     },
     {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#isPropertyOf",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "53",
+      "iri": "http://isae.fr/iqas/qoo-ontology#allowsToSet",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "32",
       "label": {
-        "IRI-based": "isPropertyOf"
+        "IRI-based": "allowsToSet"
       },
-      "domain": "7",
+      "domain": "6",
       "attributes": [
-        "allValues",
-        "external",
-        "object"
+        "object",
+        "allValues"
       ],
-      "id": "126",
+      "id": "130",
       "pos": [
-        335.17626339577845,
-        1149.247970598325
+        -222.9641411628342,
+        -296.1831595063753
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#provides",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "6",
+      "label": {
+        "IRI-based": "provides"
+      },
+      "domain": "33",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "131",
+      "pos": [
+        -257.65729925403167,
+        190.80294723973043
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#canBeRetrievedThrough",
-      "inverse": "128",
+      "inverse": "133",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "51",
+      "range": "47",
       "label": {
         "IRI-based": "canBeRetrievedThrough"
       },
-      "domain": "20",
+      "domain": "28",
       "attributes": [
         "object"
       ],
-      "id": "127",
+      "id": "132",
       "pos": [
-        978.3019386810623,
-        428.3193210564028
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCoverage",
-      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "34",
-      "label": {
-        "IRI-based": "hasCoverage"
-      },
-      "domain": "4",
-      "comment": {
-        "undefined": "Links the devices with their coverages."
-      },
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "129",
-      "pos": [
-        1644.7281828024045,
-        1259.9420968578065
+        594.0224968228189,
+        725.8116189371684
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#isPropertyOf",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "53",
+      "range": "56",
       "label": {
         "IRI-based": "isPropertyOf"
       },
-      "domain": "7",
+      "domain": "16",
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "134",
+      "pos": [
+        1555.220597525037,
+        560.161967268823
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#attachedSystem",
+      "inverse": "77",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "11",
+      "label": {
+        "IRI-based": "attachedSystem"
+      },
+      "domain": "33",
       "attributes": [
         "someValues",
         "external",
         "object"
       ],
-      "id": "130",
+      "id": "135",
       "pos": [
-        304.208814357958,
-        1106.2715204912952
+        -270.8532327707587,
+        612.313165262624
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#givesAccessTo",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "20",
+      "range": "28",
       "label": {
         "IRI-based": "givesAccessTo"
       },
-      "domain": "51",
+      "domain": "47",
       "attributes": [
         "object"
       ],
-      "id": "128"
+      "id": "133"
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementProperty",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "9",
+      "range": "18",
       "label": {
         "IRI-based": "hasMeasurementProperty"
       },
-      "domain": "6",
+      "domain": "15",
       "attributes": [
         "external",
-        "object"
-      ],
-      "id": "131",
-      "pos": [
-        228.60398749770687,
-        630.6592853096139
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#provides",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "26",
-      "label": {
-        "IRI-based": "provides"
-      },
-      "domain": "28",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "132",
-      "pos": [
-        1339.258469350782,
-        -521.4183198286315
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#considers",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
-      "label": {
-        "IRI-based": "considers"
-      },
-      "domain": "28",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "133",
-      "pos": [
-        1131.3072368873,
-        -379.97749773338666
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#attachedSystem",
-      "inverse": "72",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "2",
-      "label": {
-        "IRI-based": "attachedSystem"
-      },
-      "domain": "28",
-      "attributes": [
-        "someValues",
-        "external",
-        "object"
-      ],
-      "id": "134",
-      "pos": [
-        1565.9286840753184,
-        -207.90238950679233
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#exposes",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "51",
-      "label": {
-        "IRI-based": "exposes"
-      },
-      "domain": "28",
-      "comment": {
-        "en": "The platform exposes some service to query the different Sensors."
-      },
-      "attributes": [
-        "someValues",
-        "object"
-      ],
-      "id": "135",
-      "pos": [
-        1285.9317784189295,
-        -71.50244064068006
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#provides",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "26",
-      "label": {
-        "IRI-based": "provides"
-      },
-      "domain": "28",
-      "attributes": [
-        "someValues",
         "object"
       ],
       "id": "136",
       "pos": [
-        1306.1144528805403,
-        -495.1006282811771
+        1390.821788898022,
+        156.22557456164955
       ]
     },
     {
-      "iri": "http://isae.fr/iqas/qoo-ontology#considers",
+      "iri": "http://isae.fr/iqas/qoo-ontology#offers",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
+      "range": "47",
       "label": {
-        "IRI-based": "considers"
+        "IRI-based": "offers"
       },
-      "domain": "28",
+      "domain": "33",
       "attributes": [
         "someValues",
         "object"
       ],
       "id": "137",
       "pos": [
-        1114.6419592379455,
-        -324.87021933579433
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#attachedSystem",
-      "inverse": "72",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "2",
-      "label": {
-        "IRI-based": "attachedSystem"
-      },
-      "domain": "28",
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "138",
-      "pos": [
-        1545.8490256509183,
-        -157.2747979777128
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#exposes",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "51",
-      "label": {
-        "IRI-based": "exposes"
-      },
-      "domain": "28",
-      "comment": {
-        "en": "The platform exposes some service to query the different Sensors."
-      },
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "139",
-      "pos": [
-        1249.3249334433983,
-        -89.13548402538122
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#shouldBe",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "141",
-      "label": {
-        "IRI-based": "shouldBe"
-      },
-      "domain": "43",
-      "attributes": [
-        "datatype"
-      ],
-      "id": "140",
-      "pos": [
-        781.0896513037512,
-        -561.7554741449846
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#observedProperty",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "7",
-      "label": {
-        "IRI-based": "observedProperty"
-      },
-      "domain": "20",
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "142",
-      "pos": [
-        568.3601918465497,
-        792.1649567897302
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#featureOfInterest",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "53",
-      "label": {
-        "IRI-based": "featureOfInterest"
-      },
-      "domain": "20",
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "143",
-      "pos": [
-        640.5047456745139,
-        863.4800610099074
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#observationResult",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "55",
-      "label": {
-        "IRI-based": "observationResult"
-      },
-      "domain": "20",
-      "attributes": [
-        "someValues",
-        "external",
-        "object"
-      ],
-      "id": "144",
-      "pos": [
-        838.5266558402179,
-        929.0246583517343
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#observationResult",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "55",
-      "label": {
-        "IRI-based": "observationResult"
-      },
-      "domain": "20",
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "145",
-      "pos": [
-        810.1649018266423,
-        932.5890982438385
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementProperty",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "9",
-      "label": {
-        "IRI-based": "hasMeasurementProperty"
-      },
-      "domain": "6",
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "146",
-      "pos": [
-        234.1854414752475,
-        657.4719838061816
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#canBeRetrievedThrough",
-      "inverse": "128",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "51",
-      "label": {
-        "IRI-based": "canBeRetrievedThrough"
-      },
-      "domain": "20",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "147",
-      "pos": [
-        942.9852271478314,
-        406.09271571050425
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#observedBy",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "21",
-      "label": {
-        "IRI-based": "observedBy"
-      },
-      "domain": "20",
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "148",
-      "pos": [
-        940.1618041804471,
-        823.8837023333355
+        58.45763869484747,
+        592.231363188383
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#provides",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "26",
+      "range": "6",
       "label": {
         "IRI-based": "provides"
       },
-      "domain": "28",
-      "attributes": [
-        "object"
-      ],
-      "id": "76"
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#has",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "45",
-      "label": {
-        "IRI-based": "has"
-      },
-      "domain": "6",
+      "domain": "33",
       "attributes": [
         "someValues",
         "object"
       ],
-      "id": "149",
+      "id": "138",
       "pos": [
-        558.3868242353785,
-        296.113035043081
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#has",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "45",
-      "label": {
-        "IRI-based": "has"
-      },
-      "domain": "6",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "150",
-      "pos": [
-        601.6851697171896,
-        302.51523783411585
+        -223.08759440449245,
+        179.62674398017612
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#considers",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
+      "range": "35",
       "label": {
         "IRI-based": "considers"
       },
+      "domain": "33",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "139",
+      "pos": [
+        -5.448775513289139,
+        204.72820619995167
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#attachedSystem",
+      "inverse": "77",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "11",
+      "label": {
+        "IRI-based": "attachedSystem"
+      },
+      "domain": "33",
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "140",
+      "pos": [
+        -201.3671745528449,
+        629.3628255812323
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#featureOfInterest",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "56",
+      "label": {
+        "IRI-based": "featureOfInterest"
+      },
       "domain": "28",
       "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "141",
+      "pos": [
+        1115.136143148099,
+        699.9821204947373
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#observedProperty",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "16",
+      "label": {
+        "IRI-based": "observedProperty"
+      },
+      "domain": "28",
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "142",
+      "pos": [
+        1125.2590605553357,
+        553.5188807364177
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#considers",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "35",
+      "label": {
+        "IRI-based": "considers"
+      },
+      "domain": "33",
+      "attributes": [
+        "someValues",
         "object"
       ],
-      "id": "151",
+      "id": "143",
       "pos": [
-        1123.0381203707416,
-        -352.30464159035165
+        17.040529084246092,
+        221.93168150139684
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#offers",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "47",
+      "label": {
+        "IRI-based": "offers"
+      },
+      "domain": "33",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "144",
+      "pos": [
+        74.39288948526391,
+        570.2362882210114
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#shouldBe",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "146",
+      "label": {
+        "IRI-based": "shouldBe"
+      },
+      "domain": "35",
+      "attributes": [
+        "datatype"
+      ],
+      "id": "145",
+      "pos": [
+        172.74081372236492,
+        132.03233526711065
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#observationResult",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "58",
+      "label": {
+        "IRI-based": "observationResult"
+      },
+      "domain": "28",
+      "attributes": [
+        "someValues",
+        "external",
+        "object"
+      ],
+      "id": "147",
+      "pos": [
+        769.7804044241478,
+        922.4622550211632
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#canBeRetrievedThrough",
+      "inverse": "133",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "47",
+      "label": {
+        "IRI-based": "canBeRetrievedThrough"
+      },
+      "domain": "28",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "148",
+      "pos": [
+        590.0097988230069,
+        671.286962959086
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#observedBy",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "29",
+      "label": {
+        "IRI-based": "observedBy"
+      },
+      "domain": "28",
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "149",
+      "pos": [
+        953.0411204455673,
+        866.495641220065
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementProperty",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "9",
+      "range": "18",
       "label": {
         "IRI-based": "hasMeasurementProperty"
       },
-      "domain": "6",
+      "domain": "15",
       "attributes": [
         "someValues",
         "external",
         "object"
       ],
-      "id": "152",
+      "id": "150",
       "pos": [
-        241.45802740230363,
-        683.8213049321682
+        1407.814836235922,
+        179.81299175632003
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#forProperty",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "7",
+      "range": "16",
       "label": {
         "IRI-based": "forProperty"
       },
-      "domain": "6",
+      "domain": "15",
       "attributes": [
         "someValues",
         "external",
         "object"
+      ],
+      "id": "151",
+      "pos": [
+        1349.8858486199838,
+        309.8344223059526
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#observationResult",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "58",
+      "label": {
+        "IRI-based": "observationResult"
+      },
+      "domain": "28",
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "152",
+      "pos": [
+        826.0521404484817,
+        932.3531863574789
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementProperty",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "18",
+      "label": {
+        "IRI-based": "hasMeasurementProperty"
+      },
+      "domain": "15",
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
       ],
       "id": "153",
       "pos": [
-        461.8944510438578,
-        784.2337901442235
+        1375.0521522504407,
+        132.31722352753232
       ]
     },
     {
-      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasQuantityKind",
-      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "78",
+      "iri": "http://isae.fr/iqas/qoo-ontology#provides",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "6",
       "label": {
-        "IRI-based": "hasQuantityKind"
+        "IRI-based": "provides"
       },
-      "domain": "78",
-      "comment": {
-        "undefined": "Links a sensor or an attribute with the quantity  kind it measures (e.g. A sensor -sensor1- measures temperature: sensor1 hasQuantityKind temperature)."
-      },
+      "domain": "33",
       "attributes": [
-        "allValues",
-        "external",
         "object"
+      ],
+      "id": "81"
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#forProperty",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "16",
+      "label": {
+        "IRI-based": "forProperty"
+      },
+      "domain": "15",
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
       ],
       "id": "154",
       "pos": [
-        332.4161902626486,
-        1952.9476319012222
+        1375.2814946290177,
+        327.8736400580323
       ]
     },
     {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasSubSystem",
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasProperty",
+      "inverse": "103",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "2",
+      "range": "16",
       "label": {
-        "IRI-based": "hasSubSystem"
+        "IRI-based": "hasProperty"
       },
-      "domain": "2",
+      "domain": "56",
       "attributes": [
-        "someValues",
         "external",
-        "object"
+        "object",
+        "allValues"
       ],
       "id": "155",
       "pos": [
-        1831.3486583696665,
-        10.396676844316646
+        1543.992064280248,
+        589.9406316640506
       ]
     },
     {
-      "iri": "http://isae.fr/iqas/qoo-ontology#hasMinValue",
+      "iri": "http://isae.fr/iqas/qoo-ontology#considers",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "157",
+      "range": "35",
       "label": {
-        "IRI-based": "hasMinValue"
+        "IRI-based": "considers"
       },
-      "domain": "9",
+      "domain": "33",
       "attributes": [
-        "datatype"
+        "object"
       ],
       "id": "156",
       "pos": [
-        -185.26929851290305,
-        748.1792080771355
+        -29.66937550644463,
+        189.5171029725477
       ]
     },
     {
-      "iri": "http://isae.fr/iqas/qoo-ontology#isInTheAreaOf",
+      "iri": "http://isae.fr/iqas/qoo-ontology#has",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "57",
+      "range": "1",
       "label": {
-        "IRI-based": "isInTheAreaOf"
+        "IRI-based": "has"
       },
-      "domain": "57",
+      "domain": "15",
       "attributes": [
         "someValues",
-        "symmetric",
         "object"
+      ],
+      "id": "157",
+      "pos": [
+        909.3936148798743,
+        177.3488844053335
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#has",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "1",
+      "label": {
+        "IRI-based": "has"
+      },
+      "domain": "15",
+      "attributes": [
+        "object",
+        "allValues"
       ],
       "id": "158",
       "pos": [
-        1749.8997977419463,
-        1042.0099693994762
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasUnit",
-      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "92",
-      "label": {
-        "IRI-based": "hasUnit"
-      },
-      "domain": "92",
-      "comment": {
-        "undefined": "Links the sensor with the units of the quantity kind it measures (e.g. A sensor -sensor1- measures temperature in Celsius: senso1 hasUnit celsius)."
-      },
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "159",
-      "pos": [
-        692.3930655637434,
-        2136.993534111595
+        934.697664624384,
+        132.24631998322454
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#onPlatform",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "28",
+      "range": "33",
       "label": {
         "IRI-based": "onPlatform"
       },
-      "domain": "2",
+      "domain": "11",
+      "attributes": [
+        "someValues",
+        "external",
+        "object"
+      ],
+      "id": "159",
+      "pos": [
+        -170.84204160552883,
+        631.5074802121613
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#isSubSystemOf",
+      "inverse": "79",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "11",
+      "label": {
+        "IRI-based": "isSubSystemOf"
+      },
+      "domain": "11",
       "attributes": [
         "someValues",
         "external",
@@ -3891,18 +3903,112 @@
       ],
       "id": "160",
       "pos": [
-        1570.6186450369512,
-        -176.39132316932628
+        -332.65529252859494,
+        881.2074565582798
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#hasMinValue",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "162",
+      "label": {
+        "IRI-based": "hasMinValue"
+      },
+      "domain": "18",
+      "attributes": [
+        "datatype"
+      ],
+      "id": "161",
+      "pos": [
+        1760.2844517863273,
+        14.724849005146588
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasQuantityKind",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "84",
+      "label": {
+        "IRI-based": "hasQuantityKind"
+      },
+      "domain": "84",
+      "comment": {
+        "undefined": "Links a sensor or an attribute with the quantity  kind it measures (e.g. A sensor -sensor1- measures temperature: sensor1 hasQuantityKind temperature)."
+      },
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "163",
+      "pos": [
+        26.619194816194693,
+        1838.97716257613
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#onPlatform",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "33",
+      "label": {
+        "IRI-based": "onPlatform"
+      },
+      "domain": "11",
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "164",
+      "pos": [
+        -246.8124463255854,
+        628.9612076963622
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#requiresQoO",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "4",
+      "label": {
+        "IRI-based": "requiresQoO"
+      },
+      "domain": "73",
+      "attributes": [
+        "object"
+      ],
+      "id": "165",
+      "pos": [
+        692.4883623964784,
+        -109.10003306122199
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasSubSystem",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "11",
+      "label": {
+        "IRI-based": "hasSubSystem"
+      },
+      "domain": "11",
+      "attributes": [
+        "someValues",
+        "external",
+        "object"
+      ],
+      "id": "166",
+      "pos": [
+        -337.72451204630397,
+        838.5687030616066
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#interfaceType",
       "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "162",
+      "range": "168",
       "label": {
         "IRI-based": "interfaceType"
       },
-      "domain": "51",
+      "domain": "47",
       "comment": {
         "undefined": "Defines the type of interface of the service endpoint."
       },
@@ -3910,20 +4016,20 @@
         "external",
         "datatype"
       ],
-      "id": "161",
+      "id": "167",
       "pos": [
-        1279.3062689353965,
-        134.3670094576008
+        230.74940633323592,
+        879.40017533993
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCoverage",
       "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "34",
+      "range": "45",
       "label": {
         "IRI-based": "hasCoverage"
       },
-      "domain": "4",
+      "domain": "13",
       "comment": {
         "undefined": "Links the devices with their coverages."
       },
@@ -3931,660 +4037,659 @@
         "external",
         "object"
       ],
-      "id": "163",
-      "pos": [
-        1676.3072499311336,
-        1218.9317953949528
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#onPlatform",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "28",
-      "label": {
-        "IRI-based": "onPlatform"
-      },
-      "domain": "2",
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "164",
-      "pos": [
-        1595.3582577677473,
-        -213.5491968357432
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#isSubSystemOf",
-      "inverse": "74",
-      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "2",
-      "label": {
-        "IRI-based": "isSubSystemOf"
-      },
-      "domain": "2",
-      "attributes": [
-        "someValues",
-        "external",
-        "object"
-      ],
-      "id": "165",
-      "pos": [
-        1861.226428611326,
-        -68.79554202975555
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#associatedTo",
-      "inverse": "167",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "6",
-      "label": {
-        "IRI-based": "associatedTo"
-      },
-      "domain": "45",
-      "attributes": [
-        "object"
-      ],
-      "id": "166",
-      "pos": [
-        582.9069095889196,
-        277.8137976597199
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasValue",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "47",
-      "label": {
-        "IRI-based": "hasValue"
-      },
-      "domain": "55",
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "168",
-      "pos": [
-        838.5727766114791,
-        1423.5036608743414
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#isProducedBy",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "21",
-      "label": {
-        "IRI-based": "isProducedBy"
-      },
-      "domain": "55",
-      "attributes": [
-        "someValues",
-        "external",
-        "object"
-      ],
       "id": "169",
       "pos": [
-        994.0990577868638,
-        1042.8264489167793
+        1164.7911019201938,
+        1577.9343251226587
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#isSubSystemOf",
-      "inverse": "74",
+      "inverse": "79",
       "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "2",
+      "range": "11",
       "label": {
         "IRI-based": "isSubSystemOf"
       },
-      "domain": "2",
+      "domain": "11",
       "attributes": [
-        "allValues",
         "external",
-        "object"
+        "object",
+        "allValues"
       ],
       "id": "170"
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasSubSystem",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "2",
+      "range": "11",
       "label": {
         "IRI-based": "hasSubSystem"
       },
-      "domain": "2",
+      "domain": "11",
       "attributes": [
-        "allValues",
         "external",
-        "object"
+        "object",
+        "allValues"
       ],
       "id": "171",
       "pos": [
-        1824.3828697089673,
-        -147.54389101061707
+        -283.9764390649543,
+        940.8104110479079
       ]
     },
     {
-      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasSensingDevice",
-      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "4",
+      "iri": "http://isae.fr/iqas/qoo-ontology#associatedTo",
+      "inverse": "173",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "15",
       "label": {
-        "IRI-based": "hasSensingDevice"
+        "IRI-based": "associatedTo"
       },
-      "domain": "21",
-      "comment": {
-        "undefined": "Links a sensor with a sensing device the same way as SSN."
-      },
+      "domain": "1",
       "attributes": [
-        "someValues",
-        "external",
         "object"
       ],
       "id": "172",
       "pos": [
-        1300.0608749621942,
-        1032.4759990066193
-      ]
-    },
-    {
-      "iri": "http://www.w3.org/2003/01/geo/wgs84_pos#location",
-      "baseIri": "http://www.w3.org/2003/01/geo/wgs84_pos",
-      "range": "57",
-      "label": {
-        "IRI-based": "location"
-      },
-      "domain": "21",
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "173",
-      "pos": [
-        1403.2537476863258,
-        922.9105851583188
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#madeObservation",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "20",
-      "label": {
-        "IRI-based": "madeObservation"
-      },
-      "domain": "21",
-      "attributes": [
-        "external",
-        "object"
-      ],
-      "id": "174",
-      "pos": [
-        988.7289439657965,
-        745.3395125023134
+        916.5398566718558,
+        151.62081650875237
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#isProducedBy",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "21",
+      "range": "29",
       "label": {
         "IRI-based": "isProducedBy"
       },
-      "domain": "55",
+      "domain": "58",
       "attributes": [
-        "allValues",
         "external",
-        "object"
+        "object",
+        "allValues"
       ],
-      "id": "175",
+      "id": "174",
       "pos": [
-        1042.4465369634913,
-        1090.0685457436944
+        976.168271090801,
+        1153.1855011158311
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasValue",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "47",
+      "range": "53",
       "label": {
         "IRI-based": "hasValue"
       },
-      "domain": "55",
+      "domain": "58",
       "attributes": [
         "someValues",
         "external",
         "object"
+      ],
+      "id": "175",
+      "pos": [
+        678.082266795498,
+        1425.100161889814
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasValue",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "53",
+      "label": {
+        "IRI-based": "hasValue"
+      },
+      "domain": "58",
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
       ],
       "id": "176",
       "pos": [
-        803.8245076220653,
-        1414.8545154982444
+        618.6452468999421,
+        1392.4047088529487
       ]
     },
     {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasProperty",
-      "inverse": "98",
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#isProducedBy",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "7",
+      "range": "29",
       "label": {
-        "IRI-based": "hasProperty"
+        "IRI-based": "isProducedBy"
       },
-      "domain": "53",
+      "domain": "58",
       "attributes": [
+        "someValues",
         "external",
         "object"
       ],
-      "id": "177"
+      "id": "177",
+      "pos": [
+        962.360464687397,
+        1125.3687918137043
+      ]
     },
     {
-      "iri": "http://isae.fr/iqas/qoo-ontology#hasExactValue",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "179",
+      "iri": "http://www.w3.org/2003/01/geo/wgs84_pos#location",
+      "baseIri": "http://www.w3.org/2003/01/geo/wgs84_pos",
+      "range": "62",
       "label": {
-        "IRI-based": "hasExactValue"
+        "IRI-based": "location"
       },
-      "domain": "9",
+      "domain": "29",
       "attributes": [
-        "datatype"
+        "external",
+        "object",
+        "allValues"
       ],
       "id": "178",
       "pos": [
-        -105.5352082976194,
-        595.2845888615429
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#neutralFor",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
-      "label": {
-        "IRI-based": "neutralFor"
-      },
-      "domain": "26",
-      "attributes": [
-        "object"
-      ],
-      "id": "180",
-      "pos": [
-        992.0943666431548,
-        -604.9864384629088
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasSensingDevice",
-      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "4",
-      "label": {
-        "IRI-based": "hasSensingDevice"
-      },
-      "domain": "21",
-      "comment": {
-        "undefined": "Links a sensor with a sensing device the same way as SSN."
-      },
-      "attributes": [
-        "external",
-        "object"
-      ],
-      "id": "181",
-      "pos": [
-        1330.8757414292254,
-        980.2188756959335
+        1378.112282126186,
+        1071.2750165668972
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#belongsTo",
-      "inverse": "64",
+      "inverse": "69",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "1",
+      "range": "10",
       "label": {
         "IRI-based": "belongsTo"
       },
-      "domain": "21",
+      "domain": "29",
       "attributes": [
-        "allValues",
-        "object"
+        "object",
+        "allValues"
       ],
-      "id": "182",
+      "id": "179",
       "pos": [
-        1335.984148026993,
-        725.4535341997707
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementCapability",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "6",
-      "label": {
-        "IRI-based": "hasMeasurementCapability"
-      },
-      "domain": "21",
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "183",
-      "pos": [
-        825.1169095774382,
-        765.1912732970055
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementCapability",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "6",
-      "label": {
-        "IRI-based": "hasMeasurementCapability"
-      },
-      "domain": "21",
-      "attributes": [
-        "external",
-        "object"
-      ],
-      "id": "184",
-      "pos": [
-        835.5410482531886,
-        742.084449573244
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#belongsTo",
-      "inverse": "64",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "1",
-      "label": {
-        "IRI-based": "belongsTo"
-      },
-      "domain": "21",
-      "attributes": [
-        "someValues",
-        "object"
-      ],
-      "id": "185"
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#onPlatform",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "28",
-      "label": {
-        "IRI-based": "onPlatform"
-      },
-      "domain": "2",
-      "attributes": [
-        "external",
-        "object"
-      ],
-      "id": "72"
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasSensingDevice",
-      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "4",
-      "label": {
-        "IRI-based": "hasSensingDevice"
-      },
-      "domain": "21",
-      "comment": {
-        "undefined": "Links a sensor with a sensing device the same way as SSN."
-      },
-      "attributes": [
-        "allValues",
-        "external",
-        "object"
-      ],
-      "id": "186",
-      "pos": [
-        1313.8418923130826,
-        1006.9218850385552
-      ]
-    },
-    {
-      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementCapability",
-      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "6",
-      "label": {
-        "IRI-based": "hasMeasurementCapability"
-      },
-      "domain": "21",
-      "attributes": [
-        "someValues",
-        "external",
-        "object"
-      ],
-      "id": "187",
-      "pos": [
-        847.7506059143155,
-        721.1306585489551
+        853.3132778884864,
+        1068.8482026908964
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#madeObservation",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "20",
+      "range": "28",
       "label": {
         "IRI-based": "madeObservation"
       },
-      "domain": "21",
+      "domain": "29",
+      "attributes": [
+        "external",
+        "object"
+      ],
+      "id": "180",
+      "pos": [
+        1044.6985249624931,
+        794.9762598095623
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#belongsTo",
+      "inverse": "69",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "10",
+      "label": {
+        "IRI-based": "belongsTo"
+      },
+      "domain": "29",
       "attributes": [
         "someValues",
+        "object"
+      ],
+      "id": "181"
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasSensingDevice",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "13",
+      "label": {
+        "IRI-based": "hasSensingDevice"
+      },
+      "domain": "29",
+      "comment": {
+        "undefined": "Links a sensor with a sensing device the same way as SSN."
+      },
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "182",
+      "pos": [
+        1076.8120037726976,
+        1191.960905674203
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasProperty",
+      "inverse": "103",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "16",
+      "label": {
+        "IRI-based": "hasProperty"
+      },
+      "domain": "56",
+      "attributes": [
+        "external",
+        "object"
+      ],
+      "id": "183"
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#hasExactValue",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "185",
+      "label": {
+        "IRI-based": "hasExactValue"
+      },
+      "domain": "18",
+      "attributes": [
+        "datatype"
+      ],
+      "id": "184",
+      "pos": [
+        1738.0032410186839,
+        126.83190665673108
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#out_ObsLevel",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "187",
+      "label": {
+        "IRI-based": "out_ObsLevel"
+      },
+      "domain": "6",
+      "attributes": [
+        "datatype"
+      ],
+      "id": "186",
+      "pos": [
+        -405.72987671099634,
+        -20.690873567451277
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#exposedBy",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "47",
+      "label": {
+        "IRI-based": "exposedBy"
+      },
+      "domain": "10",
+      "comment": {},
+      "attributes": [
         "external",
         "object"
       ],
       "id": "188",
       "pos": [
-        1002.8798463588936,
-        717.7428217753425
+        394.51338863401736,
+        937.1856576989213
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#neutralFor",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "35",
+      "label": {
+        "IRI-based": "neutralFor"
+      },
+      "domain": "6",
+      "attributes": [
+        "object"
+      ],
+      "id": "189",
+      "pos": [
+        -83.60342564005711,
+        23.98774161442117
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasSensingDevice",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "13",
+      "label": {
+        "IRI-based": "hasSensingDevice"
+      },
+      "domain": "29",
+      "comment": {
+        "undefined": "Links a sensor with a sensing device the same way as SSN."
+      },
+      "attributes": [
+        "external",
+        "object"
+      ],
+      "id": "190",
+      "pos": [
+        1108.0239840952895,
+        1197.5151286595787
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementCapability",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "15",
+      "label": {
+        "IRI-based": "hasMeasurementCapability"
+      },
+      "domain": "29",
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "191",
+      "pos": [
+        1150.0870675897359,
+        647.5659329527781
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#madeObservation",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "20",
+      "range": "28",
       "label": {
         "IRI-based": "madeObservation"
       },
-      "domain": "21",
+      "domain": "29",
       "attributes": [
-        "allValues",
+        "someValues",
         "external",
-        "object"
-      ],
-      "id": "189",
-      "pos": [
-        973.767935628892,
-        771.5710084658064
-      ]
-    },
-    {
-      "range": "9",
-      "domain": "10",
-      "attributes": [
-        "anonymous",
-        "object"
-      ],
-      "id": "190",
-      "pos": [
-        -230.57581326869064,
-        673.3762289769652
-      ]
-    },
-    {
-      "range": "9",
-      "domain": "12",
-      "attributes": [
-        "anonymous",
         "object"
       ],
       "id": "192",
       "pos": [
-        -88.84276569648904,
-        938.8938024776929
+        1019.5014329307186,
+        809.6759577717112
       ]
     },
     {
-      "range": "9",
-      "domain": "11",
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementCapability",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "15",
+      "label": {
+        "IRI-based": "hasMeasurementCapability"
+      },
+      "domain": "29",
       "attributes": [
-        "anonymous",
+        "external",
         "object"
       ],
       "id": "193",
       "pos": [
-        -218.0470383438367,
-        834.6255608348123
+        1193.851647395646,
+        654.9488984715261
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasSensingDevice",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "13",
+      "label": {
+        "IRI-based": "hasSensingDevice"
+      },
+      "domain": "29",
+      "comment": {
+        "undefined": "Links a sensor with a sensing device the same way as SSN."
+      },
+      "attributes": [
+        "someValues",
+        "external",
+        "object"
+      ],
+      "id": "194",
+      "pos": [
+        1137.071178625503,
+        1198.643155587034
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#onPlatform",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "33",
+      "label": {
+        "IRI-based": "onPlatform"
+      },
+      "domain": "11",
+      "attributes": [
+        "external",
+        "object"
+      ],
+      "id": "77"
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasCoverage",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "45",
+      "label": {
+        "IRI-based": "hasCoverage"
+      },
+      "domain": "13",
+      "comment": {
+        "undefined": "Links the devices with their coverages."
+      },
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "195",
+      "pos": [
+        1119.114244899065,
+        1599.6047892193662
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#isPropertyOf",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "56",
+      "label": {
+        "IRI-based": "isPropertyOf"
+      },
+      "domain": "16",
+      "attributes": [
+        "someValues",
+        "external",
+        "object"
+      ],
+      "id": "196",
+      "pos": [
+        1531.9375900858513,
+        630.0863602654324
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#madeObservation",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "28",
+      "label": {
+        "IRI-based": "madeObservation"
+      },
+      "domain": "29",
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "197",
+      "pos": [
+        999.6380141633588,
+        830.0412253599512
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/ssnx/ssn#hasMeasurementCapability",
+      "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
+      "range": "15",
+      "label": {
+        "IRI-based": "hasMeasurementCapability"
+      },
+      "domain": "29",
+      "attributes": [
+        "someValues",
+        "external",
+        "object"
+      ],
+      "id": "198",
+      "pos": [
+        1170.4640270932018,
+        663.0840251460605
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#requiresObservation",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "20",
+      "range": "28",
       "label": {
         "IRI-based": "requiresObservation"
       },
-      "domain": "67",
+      "domain": "73",
       "attributes": [
-        "someValues",
-        "object"
-      ],
-      "id": "195",
-      "pos": [
-        597.09169074826,
-        476.889639808928
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#requiresQoo",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "23",
-      "label": {
-        "IRI-based": "requiresQoo"
-      },
-      "domain": "67",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "196",
-      "pos": [
-        322.85672154312664,
-        9.759344513413408
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#isSupportedBy",
-      "inverse": "82",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "26",
-      "label": {
-        "IRI-based": "isSupportedBy"
-      },
-      "domain": "83",
-      "attributes": [
-        "someValues",
-        "object"
-      ],
-      "id": "197",
-      "pos": [
-        1275.320562995903,
-        -854.7238170302667
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#isSupportedBy",
-      "inverse": "82",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "26",
-      "label": {
-        "IRI-based": "isSupportedBy"
-      },
-      "domain": "83",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "198"
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#isImpactedBy",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "45",
-      "label": {
-        "IRI-based": "isImpactedBy"
-      },
-      "domain": "43",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "199",
-      "pos": [
-        810.0209170864927,
-        -197.45663502424824
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#isImpactedBy",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "45",
-      "label": {
-        "IRI-based": "isImpactedBy"
-      },
-      "domain": "43",
-      "attributes": [
-        "someValues",
-        "object"
+        "object",
+        "allValues"
       ],
       "id": "200",
       "pos": [
-        771.0266211558144,
-        -227.1138842908753
+        821.3038257666074,
+        417.6100888927663
       ]
     },
     {
-      "iri": "http://isae.fr/iqas/qoo-ontology#impacts",
-      "inverse": "60",
+      "iri": "http://isae.fr/iqas/qoo-ontology#requiresObservation",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
+      "range": "28",
       "label": {
-        "IRI-based": "impacts"
+        "IRI-based": "requiresObservation"
       },
-      "domain": "45",
+      "domain": "73",
       "attributes": [
-        "allValues",
+        "someValues",
         "object"
       ],
       "id": "201",
       "pos": [
-        778.423341661675,
-        -196.72869952316006
+        849.8294521788691,
+        412.38299600711036
       ]
     },
     {
-      "iri": "http://isae.fr/iqas/qoo-ontology#impacts",
-      "inverse": "60",
+      "iri": "http://isae.fr/iqas/qoo-ontology#isSupportedBy",
+      "inverse": "87",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
+      "range": "6",
       "label": {
-        "IRI-based": "impacts"
+        "IRI-based": "isSupportedBy"
       },
-      "domain": "45",
+      "domain": "88",
       "attributes": [
         "someValues",
         "object"
       ],
-      "id": "202"
+      "id": "202",
+      "pos": [
+        -467.1264181835886,
+        -142.96653540763506
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#isSupportedBy",
+      "inverse": "87",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "6",
+      "label": {
+        "IRI-based": "isSupportedBy"
+      },
+      "domain": "88",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "203"
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#isImpactedBy",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "1",
+      "label": {
+        "IRI-based": "isImpactedBy"
+      },
+      "domain": "35",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "204",
+      "pos": [
+        392.9657982827318,
+        46.795756459767986
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#isImpactedBy",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "1",
+      "label": {
+        "IRI-based": "isImpactedBy"
+      },
+      "domain": "35",
+      "attributes": [
+        "someValues",
+        "object"
+      ],
+      "id": "205",
+      "pos": [
+        388.06903257522094,
+        -3.9926107283493915
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#impacts",
+      "inverse": "65",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "35",
+      "label": {
+        "IRI-based": "impacts"
+      },
+      "domain": "1",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "206",
+      "pos": [
+        410.0904220924737,
+        -21.658496832396064
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#impacts",
+      "inverse": "65",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "35",
+      "label": {
+        "IRI-based": "impacts"
+      },
+      "domain": "1",
+      "attributes": [
+        "someValues",
+        "object"
+      ],
+      "id": "207"
     },
     {
       "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#radius",
       "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "191",
+      "range": "64",
       "label": {
         "IRI-based": "radius"
       },
-      "domain": "33",
+      "domain": "44",
       "comment": {
         "undefined": "Specifies the radius of a circle coverage defined by a point -the center of the circle- and its radius."
       },
@@ -4592,121 +4697,121 @@
         "external",
         "datatype"
       ],
-      "id": "203",
+      "id": "208",
       "pos": [
-        1722.8490011866534,
-        1810.894701821573
+        1708.8875839100278,
+        1787.17793822079
       ]
     },
     {
-      "iri": "http://isae.fr/iqas/qoo-ontology#requiresQoo",
+      "iri": "http://isae.fr/iqas/qoo-ontology#requiresQoO",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "23",
+      "range": "4",
       "label": {
-        "IRI-based": "requiresQoo"
+        "IRI-based": "requiresQoO"
       },
-      "domain": "67",
+      "domain": "73",
+      "attributes": [
+        "object",
+        "allValues"
+      ],
+      "id": "209",
+      "pos": [
+        664.8028286703807,
+        -98.04892896072268
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#requiresQoO",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "4",
+      "label": {
+        "IRI-based": "requiresQoO"
+      },
+      "domain": "73",
       "attributes": [
         "someValues",
         "object"
       ],
-      "id": "204",
+      "id": "210",
       "pos": [
-        382.6760633678438,
-        -3.7492445765185116
-      ]
-    },
-    {
-      "iri": "http://isae.fr/iqas/qoo-ontology#requiresObservation",
-      "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "20",
-      "label": {
-        "IRI-based": "requiresObservation"
-      },
-      "domain": "67",
-      "attributes": [
-        "allValues",
-        "object"
-      ],
-      "id": "205",
-      "pos": [
-        618.8873103375756,
-        457.2945727096745
+        715.8055834194904,
+        -127.91598459066373
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#capabilityVariation",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "207",
+      "range": "212",
       "label": {
         "IRI-based": "capabilityVariation"
       },
-      "domain": "45",
+      "domain": "1",
       "attributes": [
         "datatype"
       ],
-      "id": "206",
+      "id": "211",
       "pos": [
-        539.4875967083161,
-        34.86626884512654
+        750.7328311726963,
+        -105.54734301043787
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#has",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "45",
+      "range": "1",
       "label": {
         "IRI-based": "has"
       },
-      "domain": "6",
+      "domain": "15",
       "attributes": [
         "object"
       ],
-      "id": "167"
+      "id": "173"
     },
     {
       "iri": "http://purl.oclc.org/NET/ssnx/ssn#observationResult",
       "baseIri": "http://purl.oclc.org/NET/ssnx/ssn",
-      "range": "55",
+      "range": "58",
       "label": {
         "IRI-based": "observationResult"
       },
-      "domain": "20",
+      "domain": "28",
       "attributes": [
         "external",
         "object"
       ],
-      "id": "209",
+      "id": "214",
       "pos": [
-        781.9289108225688,
-        936.134671064573
+        797.5797037768646,
+        927.3712378931637
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#requiresObservation",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "20",
+      "range": "28",
       "label": {
         "IRI-based": "requiresObservation"
       },
-      "domain": "67",
+      "domain": "73",
       "attributes": [
         "object"
       ],
-      "id": "210",
+      "id": "215",
       "pos": [
-        645.1603413628471,
-        443.13624213190525
+        792.8811717274593,
+        423.4438908899235
       ]
     },
     {
       "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#interfaceDescription",
       "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
-      "range": "194",
+      "range": "199",
       "label": {
         "IRI-based": "interfaceDescription"
       },
-      "domain": "51",
+      "domain": "47",
       "comment": {
         "undefined": "Description of the service."
       },
@@ -4714,63 +4819,104 @@
         "external",
         "datatype"
       ],
-      "id": "211",
+      "id": "216",
       "pos": [
-        1262.0875268519908,
-        234.23390300256122
+        190.80379798451048,
+        828.7005963568116
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#min_treshold",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "208",
+      "range": "213",
       "label": {
         "IRI-based": "min_treshold"
       },
-      "domain": "24",
+      "domain": "8",
       "attributes": [
         "datatype"
       ],
-      "id": "212",
+      "id": "217",
       "pos": [
-        -53.215019039894074,
-        -599.8039612883958
+        365.5431853266389,
+        -858.1539404352809
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#increases",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "43",
+      "range": "35",
       "label": {
         "IRI-based": "increases"
       },
-      "domain": "26",
+      "domain": "6",
       "attributes": [
         "object"
       ],
-      "id": "213",
+      "id": "218",
       "pos": [
-        1018.6039143114898,
-        -542.7649526757266
+        -52.66938109061816,
+        -86.9928274089382
       ]
     },
     {
       "iri": "http://isae.fr/iqas/qoo-ontology#isInTheAreaOf",
       "baseIri": "http://isae.fr/iqas/qoo-ontology",
-      "range": "57",
+      "range": "62",
       "label": {
         "IRI-based": "isInTheAreaOf"
       },
-      "domain": "57",
+      "domain": "62",
       "attributes": [
-        "allValues",
+        "object",
         "symmetric",
-        "object"
+        "allValues"
       ],
-      "id": "214",
+      "id": "219",
       "pos": [
-        1761.3433826676426,
-        938.5286404733721
+        1734.7292858464373,
+        1179.5230669351565
+      ]
+    },
+    {
+      "iri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasUnit",
+      "baseIri": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite",
+      "range": "97",
+      "label": {
+        "IRI-based": "hasUnit"
+      },
+      "domain": "97",
+      "comment": {
+        "undefined": "Links the sensor with the units of the quantity kind it measures (e.g. A sensor -sensor1- measures temperature in Celsius: senso1 hasUnit celsius)."
+      },
+      "attributes": [
+        "external",
+        "object",
+        "allValues"
+      ],
+      "id": "220",
+      "pos": [
+        281.41038227926794,
+        2066.849872138833
+      ]
+    },
+    {
+      "iri": "http://isae.fr/iqas/qoo-ontology#isInTheAreaOf",
+      "baseIri": "http://isae.fr/iqas/qoo-ontology",
+      "range": "62",
+      "label": {
+        "IRI-based": "isInTheAreaOf"
+      },
+      "domain": "62",
+      "attributes": [
+        "someValues",
+        "object",
+        "symmetric"
+      ],
+      "id": "221",
+      "pos": [
+        1704.3440342010044,
+        1225.0896621855427
       ]
     }
   ]

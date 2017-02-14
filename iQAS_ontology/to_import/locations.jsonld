@@ -1,0 +1,44 @@
+{
+  "@context": {
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "iot-lite": "http://purl.oclc.org/NET/UNIS/fiware/iot-lite#",
+    "ssn": "http://purl.oclc.org/NET/ssnx/ssn#",
+    "qoo": "http://isae.fr/iqas/qoo-ontology#",
+    "geo": "http://www.w3.org/2003/01/geo/wgs84_pos#"
+  },
+  "@graph": [
+    { 
+      "@id": "qoo:loc_toulouse",
+      "@type": "geo:Point",
+      "geo:lat": "43.601176",
+      "geo:long": "1.439363",
+      "geo:alt": "0",
+      "iot-lite:relativeLocation": "Toulouse",
+      "iot-lite:altRelative": "0"
+    },
+    { 
+      "@id": "qoo:loc_portet",
+      "@type": "geo:Point",
+      "geo:lat": "43.53101809",
+      "geo:long": "1.40158296",
+      "geo:alt": "152",
+      "iot-lite:relativeLocation": "Chullanka - Portet-sur-Garonne",
+      "iot-lite:altRelative": "0",
+      "qoo:isInTheAreaOf": {
+        "@id": "qoo:loc_toulouse"
+      }
+    },
+    { 
+      "@id": "qoo:loc_jardin",
+      "@type": "geo:Point",
+      "geo:lat": "43.59543567",
+      "geo:long": "1.45255566",
+      "geo:alt": "145",
+      "iot-lite:relativeLocation": "Jardin des plantes - Toulouse",
+      "iot-lite:altRelative": "0",
+      "qoo:isInTheAreaOf": {
+        "@id": "qoo:loc_toulouse"
+      }
+    }
+  ]
+}

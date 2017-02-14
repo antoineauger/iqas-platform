@@ -69,6 +69,7 @@ public class AutoManagerActor extends UntypedActor {
             }
         }
         else if (message instanceof Request) {
+            // TODO
             if (processingActivated) {
                 planActor.tell(new RFCMsg("none"), getSelf());
                 processingActivated = false;

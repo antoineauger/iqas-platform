@@ -10,9 +10,9 @@ tdb:DatasetTDB  rdfs:subClassOf  ja:RDFDataset .
 tdb:GraphTDB rdfs:subClassOf ja:Model .
 
 :service_tdb_all  a                   fuseki:Service ;
-        rdfs:label                    "TDB iqas" ;
+        rdfs:label                    "TDB qoo-onto" ;
         fuseki:dataset                :tdb_dataset_readwrite ;
-        fuseki:name                   "iqas" ;
+        fuseki:name                   "qoo-onto" ;
         fuseki:serviceQuery           "query" , "sparql" ;
         fuseki:serviceReadGraphStore  "get" ;
         fuseki:serviceReadWriteGraphStore
@@ -31,7 +31,7 @@ tdb:GraphTDB rdfs:subClassOf ja:Model .
         ] .
 
 :tdbDataset a tdb:DatasetTDB ;
-        tdb:location  "/etc/fuseki/databases/iqas" ;
+        tdb:location  "/etc/fuseki/databases/qoo-onto" ;
         ja:defaultGraph       :model_inf ;
         tdb:unionDefaultGraph true ;
         .
