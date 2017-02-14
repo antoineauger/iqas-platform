@@ -24,8 +24,12 @@
     <li>/requests</li>
     <li>/requests/[request_id]</li><br/>
 
-    <li>/topics</li><br/>
-    <!--<li>/topics/[topic_id]</li><br/>-->
+    <!-- TODO
+    <li>/places</li>
+    <li>/places?near=[location]</li> -->
+
+    <li>/topics</li>
+    <li>/topics/[topic_URI]</li><br/>
 
     <li>/pipelines</li>
     <li>/pipelines?print=ids</li>
@@ -53,7 +57,7 @@ For submitting a new request, the format is the following (all parameters are ma
 </div>
 
 <br/>
-Topics: e.g., temperature, humidity, visibility, etc.<br/>
+Topics: see topic list <a href="/topics">here</a><br/>
 Location: city name (Toulouse, Portet-Sur-Garonne, etc.) <!-- TODO / (long,lat) / option nearBy --><br/>
 Operators: <span class="code">NONE</span> / <span class="code">AVG</span> / <span class="code">MIN</span> / <span class="code">MAX</span><br/>
 Service Level Agreement levels: <span class="code">BEST_EFFORT</span> / <span class="code">GUARANTEED</span>

@@ -73,6 +73,9 @@
       "@id": "qoo:sensor01",
       "@type": "ssn:Sensor",
       "iot-lite:id": "sensor01",
+      "geo:location": {
+        "@id": "qoo:loc_portet"
+      },
       "qoo:sensorStateValue": "CONNECTED",
       "ssn:madeObservation": [
         {
@@ -95,7 +98,7 @@
           ]   
         }
       ],
-      "qoo:exposedBy": [
+      "iot-lite:exposedBy": [
         {
           "@id": "qoo:serv_sensor01_temp"
         },
@@ -138,6 +141,9 @@
       "@id": "qoo:sensor02",
       "@type": "ssn:Sensor",
       "iot-lite:id": "sensor02",
+      "geo:location": {
+        "@id": "qoo:loc_jardin"
+      },
       "qoo:sensorStateValue": "CONNECTED",
       "ssn:madeObservation": [
         {
@@ -153,7 +159,7 @@
           ]
         }
       ],
-      "qoo:exposedBy": [
+      "iot-lite:exposedBy": [
         {
           "@id": "qoo:serv_sensor02_visib"
         }
