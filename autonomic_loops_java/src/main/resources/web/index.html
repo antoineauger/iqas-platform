@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>API gateway</title>
-    <style>
-        .code {
-            font-family: monospace;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
 <h1>API gateway for the iQAS platform</h1>
@@ -17,24 +13,49 @@
 </p>
 
 <h2>GET endpoints</h2>
-<ul>
-    <li>/sensors</li>
-    <li>/sensors/[sensor_id]</li><br/>
 
-    <li>/requests</li>
-    <li>/requests/[request_id]</li><br/>
-
-    <!-- TODO
-    <li>/places</li>
-    <li>/places?near=[location]</li> -->
-
-    <li>/topics</li>
-    <li>/topics/[topic_URI]</li><br/>
-
-    <li>/pipelines</li>
-    <li>/pipelines?print=ids</li>
-    <li>/pipelines/[pipeline_id]</li>
-</ul>
+<table width="100%">
+    <tr>
+        <th>Sensors</th>
+        <th>Requests</th>
+        <th>Places</th>
+        <th>Topics</th>
+        <th>Pipelines</th>
+    </tr>
+    <tr>
+        <td>
+            <ul>
+                <li><a href="/sensors">/sensors</a></li>
+                <li>/sensors/[sensor_id]</li>
+            </ul>
+        </td>
+        <td>
+            <ul>
+                <li><a href="/requests">/requests</a></li>
+                <li>/requests/[request_id]</li>
+            </ul>
+        </td>
+        <td>
+            <ul>
+                <li><a href="/places">/places</a></li>
+                <li>/places?near=[location]</li>
+            </ul>
+        </td>
+        <td>
+            <ul>
+                <li><a href="/topics">/topics</a></li>
+                <li>/topics/[topic_URI]</li>
+            </ul>
+        </td>
+        <td>
+            <ul>
+                <li><a href="/pipelines">/pipelines</a></li>
+                <li><a href="/pipelines?print=ids">/pipelines?print=ids</a></li>
+                <li>/pipelines/[pipeline_id]</li>
+            </ul>
+        </td>
+    </tr>
+</table>
 
 <h2>POST endpoints</h2>
 <ul>
@@ -72,18 +93,7 @@ Service Level Agreement levels: <span class="code">BEST_EFFORT</span> / <span cl
 
 </ul>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<script>
-    $(function(){
-        $.ajax({
-            url: "/pipelines?print=ids",
-            success: function( result ) {
-                $.each(result, function(index, item) {
-                    $( "#qoo_pipeline_list" ).append( "<li>" + item + "</li>" );
-                });
-            }
-        });
-    });
-</script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="script.js"></script>
 </body>
 </html>

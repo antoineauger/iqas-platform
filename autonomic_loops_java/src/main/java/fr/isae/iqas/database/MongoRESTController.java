@@ -3,6 +3,8 @@ package fr.isae.iqas.database;
 import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.model.request.Request;
 import org.slf4j.LoggerFactory;
@@ -39,7 +41,10 @@ public class MongoRESTController extends AllDirectives {
      * @return object Route (which contains either the Request or an error)
      */
     public CompletableFuture<Route> getRequest(String request_id, Executor ctx) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
         final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
+
         controller._findSpecificRequest("request_id", request_id, (result, t) -> {
             if (t == null) {
                 requests.complete(result);
@@ -48,7 +53,7 @@ public class MongoRESTController extends AllDirectives {
                 requests.completeExceptionally(t);
             }
         });
-        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(requests, Jackson.marshaller()), ctx);
+        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(requests, Jackson.marshaller(mapper)), ctx);
     }
 
     /**
@@ -58,7 +63,10 @@ public class MongoRESTController extends AllDirectives {
      * @return object Route (which contains either the app Requests or an error)
      */
     public CompletableFuture<Route> getRequestsByApplication(String application_id) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
         final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
+
         controller._findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
                 requests.complete(result);
@@ -67,7 +75,7 @@ public class MongoRESTController extends AllDirectives {
                 requests.completeExceptionally(t);
             }
         });
-        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(requests, Jackson.marshaller()));
+        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(requests, Jackson.marshaller(mapper)));
     }
 
     /**
@@ -77,7 +85,10 @@ public class MongoRESTController extends AllDirectives {
      * @param ctx
      */
     public CompletableFuture<Route> getAllRequests(Executor ctx) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
         final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
+
         controller._findAllRequests((result, t) -> {
             if (t == null) {
                 requests.complete(result);
@@ -86,6 +97,6 @@ public class MongoRESTController extends AllDirectives {
                 requests.completeExceptionally(t);
             }
         });
-        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(requests, Jackson.marshaller()), ctx);
+        return CompletableFuture.supplyAsync(() -> completeOKWithFuture(requests, Jackson.marshaller(mapper)), ctx);
     }
 }

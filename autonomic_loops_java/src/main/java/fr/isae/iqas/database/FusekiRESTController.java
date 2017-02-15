@@ -10,6 +10,7 @@ import akka.http.javadsl.server.Route;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import fr.isae.iqas.model.request.Pipeline;
 import ioinformarics.oss.jackson.module.jsonld.JsonldModule;
@@ -69,6 +70,7 @@ public class FusekiRESTController extends AllDirectives {
             }
             else {
                 mapper.registerModule(new JsonldModule(mapper::createObjectNode));
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
                 JsonldResourceBuilder builder = JsonldResource.Builder.create();
                 builder.context(baseQoOIRI);
                 return completeOK(builder.build(result), Jackson.marshaller(mapper));
@@ -90,6 +92,7 @@ public class FusekiRESTController extends AllDirectives {
             }
             else {
                 mapper.registerModule(new JsonldModule(mapper::createObjectNode));
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
                 JsonldResourceBuilder builder = JsonldResource.Builder.create();
                 builder.context(baseQoOIRI);
                 return completeOK(builder.build(result), Jackson.marshaller(mapper));
@@ -115,6 +118,7 @@ public class FusekiRESTController extends AllDirectives {
             }
             else {
                 mapper.registerModule(new JsonldModule(mapper::createObjectNode));
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
                 JsonldResourceBuilder builder = JsonldResource.Builder.create();
                 builder.context(baseQoOIRI);
                 return completeOK(builder.build(result), Jackson.marshaller(mapper));
@@ -137,6 +141,7 @@ public class FusekiRESTController extends AllDirectives {
             }
             else {
                 mapper.registerModule(new JsonldModule(mapper::createObjectNode));
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
                 JsonldResourceBuilder builder = JsonldResource.Builder.create();
                 builder.context(baseQoOIRI);
                 return completeOK(builder.build(result), Jackson.marshaller(mapper));
@@ -153,6 +158,7 @@ public class FusekiRESTController extends AllDirectives {
     public CompletableFuture<Route> getConcretePipelineIDs() {
         CompletableFuture<Route> routeResponse;
         CompletableFuture<ArrayList<String>> pipelines = new CompletableFuture<>();
+        ObjectMapper mapper = new ObjectMapper();
 
         getPipelineWatcherActor().onComplete(new OnComplete<ActorRef>() {
             @Override
@@ -183,7 +189,8 @@ public class FusekiRESTController extends AllDirectives {
                         .withEntity("No pipeline has been found!")));
             }
             else {
-                return completeOKWithFuture(pipelines, Jackson.marshaller());
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                return completeOKWithFuture(pipelines, Jackson.marshaller(mapper));
             }
         });
 
@@ -193,6 +200,7 @@ public class FusekiRESTController extends AllDirectives {
     public CompletableFuture<Route> getConcretePipelines() {
         CompletableFuture<Route> routeResponse;
         CompletableFuture<ArrayList<Pipeline>> pipelines = new CompletableFuture<>();
+        ObjectMapper mapper = new ObjectMapper();
 
         getPipelineWatcherActor().onComplete(new OnComplete<ActorRef>() {
             @Override
@@ -219,7 +227,8 @@ public class FusekiRESTController extends AllDirectives {
                         .withEntity("No pipeline has been found!")));
             }
             else {
-                return completeOKWithFuture(pipelines, Jackson.marshaller());
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                return completeOKWithFuture(pipelines, Jackson.marshaller(mapper));
             }
         });
 
@@ -229,6 +238,7 @@ public class FusekiRESTController extends AllDirectives {
     public CompletableFuture<Route> getConcretePipeline(String pipeline_id) {
         CompletableFuture<Route> routeResponse;
         CompletableFuture<ArrayList<Pipeline>> pipeline = new CompletableFuture<>();
+        ObjectMapper mapper = new ObjectMapper();
 
         getPipelineWatcherActor().onComplete(new OnComplete<ActorRef>() {
             @Override
@@ -255,7 +265,8 @@ public class FusekiRESTController extends AllDirectives {
                         .withEntity("No pipeline found with id \"" + pipeline_id + "\"")));
             }
             else {
-                return completeOKWithFuture(pipeline, Jackson.marshaller());
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                return completeOKWithFuture(pipeline, Jackson.marshaller(mapper));
             }
         });
 

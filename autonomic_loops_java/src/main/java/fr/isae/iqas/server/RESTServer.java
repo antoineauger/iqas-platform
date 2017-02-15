@@ -83,11 +83,19 @@ public class RESTServer extends AllDirectives {
         return
                 route(
                         get(() -> route(
-                                // matches the empty path
+                                
+                                // Homepage, css and scripts
                                 pathSingleSlash(() ->
-                                        // homepage
                                         getFromResource("web/index.html", ContentTypes.TEXT_HTML_UTF8)
                                 ),
+                                path(segment("style.css"), () ->
+                                        getFromResource("web/style.css")
+                                ),
+                                path(segment("script.js"), () ->
+                                        getFromResource("web/script.js")
+                                ),
+
+                                // REST APIs
                                 path(segment("sensors"), () ->
                                         extractExecutionContext(ctx ->
                                                 onSuccess(() -> getAllSensors(ctx), Function.identity())
