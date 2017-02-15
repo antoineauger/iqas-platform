@@ -6,8 +6,8 @@ import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
-import fr.isae.iqas.model.request.Operator;
 import fr.isae.iqas.model.observation.ObservationLevel;
+import fr.isae.iqas.model.request.Operator;
 import fr.isae.iqas.pipelines.AbstractPipeline;
 import fr.isae.iqas.pipelines.IPipeline;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -16,6 +16,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import java.util.concurrent.CompletionStage;
 
 import static fr.isae.iqas.model.observation.ObservationLevel.*;
+import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
  * Created by an.auger on 31/01/2017.
@@ -29,7 +30,8 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
     public SimpleFilteringPipeline() {
         super("Simple Filtering Pipeline", true);
 
-        setParameter("threshold", "0.0", true);
+        addSupportedOperator(NONE);
+        setParameter("threshold_min", String.valueOf(Float.MIN_VALUE), true);
 
         flowConsumerRecords = Flow.of(ConsumerRecord.class);
         flowProducerRecords = Flow.of(ProducerRecord.class);
@@ -52,16 +54,16 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                     Flow<ConsumerRecord, ProducerRecord, NotUsed> f1 = flowConsumerRecords.map(r ->
                             new ProducerRecord<byte[], String>(topicToPublish, String.valueOf(r.value())));
                     Flow<ProducerRecord, ProducerRecord, NotUsed> f2 = flowProducerRecords.filter(r ->
-                            Float.parseFloat((String) r.value()) < Float.valueOf(getParams().get("threshold")));
+                            Float.parseFloat((String) r.value()) < Float.valueOf(getParams().get("threshold_min")));
 
                     if (askedLevelFinal == RAW_DATA) {
-
+                        builder.from(sourceGraph).via(builder.add(f1)).via(builder.add(f2)).toInlet(sinkGraph);
                     }
                     else if (askedLevelFinal == INFORMATION) {
                         builder.from(sourceGraph).via(builder.add(f1)).via(builder.add(f2)).toInlet(sinkGraph);
                     }
                     else if (askedLevelFinal == KNOWLEDGE) {
-
+                        builder.from(sourceGraph).via(builder.add(f1)).via(builder.add(f2)).toInlet(sinkGraph);
                     }
                     else { // other observation levels are not supported
                         return null;

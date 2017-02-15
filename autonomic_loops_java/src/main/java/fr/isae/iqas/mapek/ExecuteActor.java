@@ -118,7 +118,7 @@ public class ExecuteActor extends UntypedActor {
                                     qooParams.put("upper_bound","+50");
                                     pipelineToEnforce.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParams);
 
-                                    pipelineToEnforce.setCustomizableParameter("threshold", "15");
+                                    pipelineToEnforce.setCustomizableParameter("threshold_min", "0");
 
                                     myRunnableGraph = RunnableGraph.fromGraph(pipelineToEnforce.getPipelineGraph(kafkaSource,
                                             kafkaSink,

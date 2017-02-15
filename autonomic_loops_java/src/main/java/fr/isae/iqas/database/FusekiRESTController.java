@@ -273,4 +273,106 @@ public class FusekiRESTController extends AllDirectives {
         return routeResponse;
     }
 
+    /**
+     * Places
+     */
+
+    public CompletableFuture<Route> getAllPlaces(Executor ctx) {
+        CompletableFuture<Route> places;
+        ObjectMapper mapper = new ObjectMapper();
+
+        places = CompletableFuture.supplyAsync(() -> controller._findAllPlaces(), ctx).thenApply((result) -> {
+            if (result == null) {
+                return complete(HttpResponse.create()
+                        .withStatus(400)
+                        .withEntity("There is no sensor deployed on the field yet! Please try later..."));
+            }
+            else {
+                mapper.registerModule(new JsonldModule(mapper::createObjectNode));
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                JsonldResourceBuilder builder = JsonldResource.Builder.create();
+                builder.context(baseQoOIRI);
+                return completeOK(builder.build(result), Jackson.marshaller(mapper));
+            }
+        });
+
+        return places;
+    }
+
+    public CompletableFuture<Route> getPlacesNearTo(String location, Executor ctx) {
+        CompletableFuture<Route> places;
+        ObjectMapper mapper = new ObjectMapper();
+
+        places = CompletableFuture.supplyAsync(() -> controller._findPlacesNearTo(location), ctx).thenApply((result) -> {
+            if (result == null) {
+                return complete(HttpResponse.create()
+                        .withStatus(400)
+                        .withEntity("There is no sensor deployed on the field near to " + location + " yet! Please try later..."));
+            }
+            else {
+                mapper.registerModule(new JsonldModule(mapper::createObjectNode));
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                JsonldResourceBuilder builder = JsonldResource.Builder.create();
+                builder.context(baseQoOIRI);
+                return completeOK(builder.build(result), Jackson.marshaller(mapper));
+            }
+        });
+
+        return places;
+    }
+
+    /**
+     * QoO attributes
+     */
+
+    public CompletableFuture<Route> getAllQoOAttributes(Executor ctx) {
+        CompletableFuture<Route> qooAttributes;
+        ObjectMapper mapper = new ObjectMapper();
+
+        qooAttributes = CompletableFuture.supplyAsync(() -> controller._findAllQoOAttributes(), ctx).thenApply((result) -> {
+            if (result == null) {
+                return complete(HttpResponse.create()
+                        .withStatus(400)
+                        .withEntity("No QoO attributes available, " +
+                                "the iQAS platform may not be able to provide QoO support..."));
+            }
+            else {
+                mapper.registerModule(new JsonldModule(mapper::createObjectNode));
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                JsonldResourceBuilder builder = JsonldResource.Builder.create();
+                builder.context(baseQoOIRI);
+                return completeOK(builder.build(result), Jackson.marshaller(mapper));
+            }
+        });
+
+        return qooAttributes;
+    }
+
+    /**
+     * QoO customizable parameters
+     */
+
+    public CompletableFuture<Route> getAllQoOCustomizableAttributes(Executor ctx) {
+        CompletableFuture<Route> qooAttributes;
+        ObjectMapper mapper = new ObjectMapper();
+
+        qooAttributes = CompletableFuture.supplyAsync(() -> controller._findAllQoOCustomizableParameters(), ctx).thenApply((result) -> {
+            if (result == null) {
+                return complete(HttpResponse.create()
+                        .withStatus(400)
+                        .withEntity("No customizable QoO attributes have been found, " +
+                                "the iQAS platform may not be able to provide QoO support..."));
+            }
+            else {
+                mapper.registerModule(new JsonldModule(mapper::createObjectNode));
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                JsonldResourceBuilder builder = JsonldResource.Builder.create();
+                builder.context(baseQoOIRI);
+                return completeOK(builder.build(result), Jackson.marshaller(mapper));
+            }
+        });
+
+        return qooAttributes;
+    }
+
 }

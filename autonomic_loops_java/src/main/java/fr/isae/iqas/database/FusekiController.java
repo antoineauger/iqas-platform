@@ -10,7 +10,9 @@ import org.apache.jena.rdf.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -278,4 +280,187 @@ public class FusekiController {
             return endpointsForTopic;
         }
     }
+
+    /**
+     * Places
+     */
+
+    LocationList _findAllPlaces() {
+        QuerySolution binding = null;
+        LocationList locationList = new LocationList();
+        locationList.locations = new ArrayList<>();
+
+        String req = baseStringForRequests +
+                "SELECT DISTINCT ?latitude ?longitude ?altitude ?relativeLocation ?altRelative\n" +
+                "WHERE {\n" +
+                "  ?s rdf:type ssn:Sensor .\n" +
+                "  ?s geo:location ?loc .\n" +
+                "  ?loc rdf:type geo:Point .\n" +
+                "  ?loc geo:lat ?latitude .\n" +
+                "  ?loc geo:long ?longitude .\n" +
+                "  ?loc geo:alt ?altitude .\n" +
+                "  ?loc iot-lite:relativeLocation ?relativeLocation .\n" +
+                "  ?loc iot-lite:altRelative ?altRelative \n" +
+                "}";
+
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
+                Literal latitude = binding.getLiteral("latitude");
+                Literal longitude = binding.getLiteral("longitude");
+                Literal altitude = binding.getLiteral("altitude");
+                Literal relative_altitude = binding.getLiteral("altRelative");
+                Literal relative_location = binding.getLiteral("relativeLocation");
+
+                Location locationTemp = new Location();
+                locationTemp.latitude = latitude.getString();
+                locationTemp.longitude = longitude.getString();
+                locationTemp.altitude = altitude.getString();
+                locationTemp.relative_altitude = relative_altitude.getString();
+                locationTemp.relative_location = relative_location.getString();
+
+                locationList.locations.add(locationTemp);
+            }
+        }
+
+        if (binding == null) {
+            return null;
+        }
+        else {
+            return locationList;
+        }
+    }
+
+    LocationList _findPlacesNearTo(String location) {
+        QuerySolution binding = null;
+        LocationList locationList = new LocationList();
+        locationList.locations = new ArrayList<>();
+
+        String req = baseStringForRequests +
+                "SELECT DISTINCT ?latitude ?longitude ?altitude ?relativeLocation ?altRelative\n" +
+                "WHERE {\n" +
+                "  ?s rdf:type ssn:Sensor .\n" +
+                "    ?area rdf:type geo:Point .\n" +
+                "    ?area iot-lite:relativeLocation \"" + location + "\" .\n" +
+                "  ?s geo:location ?loc .\n" +
+                "  ?loc rdf:type geo:Point .\n" +
+                "  ?loc qoo:isInTheAreaOf ?area .\n" +
+                "  ?loc geo:lat ?latitude .\n" +
+                "  ?loc geo:long ?longitude .\n" +
+                "  ?loc geo:alt ?altitude .\n" +
+                "  ?loc iot-lite:relativeLocation ?relativeLocation .\n" +
+                "  ?loc iot-lite:altRelative ?altRelative \n" +
+                "}";
+
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
+                Literal latitude = binding.getLiteral("latitude");
+                Literal longitude = binding.getLiteral("longitude");
+                Literal altitude = binding.getLiteral("altitude");
+                Literal relative_altitude = binding.getLiteral("altRelative");
+                Literal relative_location = binding.getLiteral("relativeLocation");
+
+                Location locationTemp = new Location();
+                locationTemp.latitude = latitude.getString();
+                locationTemp.longitude = longitude.getString();
+                locationTemp.altitude = altitude.getString();
+                locationTemp.relative_altitude = relative_altitude.getString();
+                locationTemp.relative_location = relative_location.getString();
+
+                locationList.locations.add(locationTemp);
+            }
+        }
+
+        if (binding == null) {
+            return null;
+        }
+        else {
+            return locationList;
+        }
+    }
+
+    /**
+     * QoO attributes
+     */
+
+    QoOAttributeList _findAllQoOAttributes() {
+        QuerySolution binding = null;
+        QoOAttributeList qoOAttributeList = new QoOAttributeList();
+        qoOAttributeList.qoo_attributes = new ArrayList<>();
+
+        String req = baseStringForRequests +
+                "SELECT DISTINCT ?attribute ?variation\n" +
+                "WHERE {\n" +
+                "?attribute rdf:type qoo:QoOAttribute .\n" +
+                "?attribute qoo:shouldBe ?variation\n" +
+                "}";
+
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
+
+                Resource attribute = (Resource) binding.get("attribute");
+                Literal variation = binding.getLiteral("variation");
+
+                QoOAttribute attrTemp = new QoOAttribute();
+                attrTemp.name = attribute.getURI().split("#")[1];
+                attrTemp.should_be = variation.getString();
+
+                qoOAttributeList.qoo_attributes.add(attrTemp);
+            }
+        }
+
+        if (binding == null) {
+            return null;
+        }
+        else {
+            return qoOAttributeList;
+        }
+    }
+
+    /**
+     * QoO customizable parameters
+     */
+
+    QoOCustomizableParamList _findAllQoOCustomizableParameters() {
+        QuerySolution binding = null;
+        QoOCustomizableParamList customizableParamList = new QoOCustomizableParamList();
+        customizableParamList.customizable_params = new ArrayList<>();
+
+        String req = baseStringForRequests +
+                "SELECT ?param ?doc\n" +
+                "WHERE {\n" +
+                "?param rdf:type qoo:QoOCustomizableParameter .\n" +
+                "?param qoo:documentation ?doc\n" +
+                "}";
+
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
+
+                Resource param = (Resource) binding.get("param");
+                String paramName = param.getURI().split("#")[1];
+                Literal doc = binding.getLiteral("doc");
+
+                QoOCustomizableParam paramTemp = new QoOCustomizableParam();
+                paramTemp.param_name = paramName;
+                paramTemp.details = doc.getString();
+
+                customizableParamList.customizable_params.add(paramTemp);
+            }
+        }
+
+        if (binding == null) {
+            return null;
+        }
+        else {
+            return customizableParamList;
+        }
+    }
+
 }

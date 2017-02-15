@@ -196,16 +196,12 @@
         {
           "@id": "qoo:OBS_ACCURACY",
           "@type": "qoo:QoOAttribute",
-          "shouldBe": {
-            "@id": "qoo:HIGH"
-          }
+          "qoo:shouldBe": "HIGH"
         },
         {
           "@id": "qoo:OBS_FRESHNESS",
           "@type": "qoo:QoOAttribute",
-          "shouldBe": {
-            "@id": "qoo:LOW"
-          }
+          "qoo:shouldBe": "LOW"
         }
       ],
       "qoo:provides": [
@@ -219,8 +215,33 @@
           ],
           "qoo:allowsToSet": [
             {
-              "@id": "qoo:threshold",
-              "@type": "qoo:QoOCustomizableParameter"
+              "@id": "qoo:threshold_min",
+              "@type": "qoo:QoOCustomizableParameter",
+              "qoo:documentation": "A string (float) that indicates the lowest admissible value.",
+              "qoo:has": [
+                {
+                  "@id": "qoo:SimpleFilteringPipeline_threshold_min_effect_1",
+                  "@type": "qoo:QoOEffect",
+                  "qoo:capabilityVariation": "CONSTANT",
+                  "qoo:qooAttributeVariation": "HIGH",
+                  "qoo:impacts": [
+                    {
+                      "@id": "qoo:OBS_ACCURACY"
+                    }
+                  ]
+                },
+                {
+                  "@id": "qoo:SimpleFilteringPipeline_threshold_min_effect_2",
+                  "@type": "qoo:QoOEffect",
+                  "qoo:capabilityVariation": "CONSTANT",
+                  "qoo:qooAttributeVariation": "CONSTANT",
+                  "qoo:impacts": [
+                    {
+                      "@id": "qoo:OBS_FRESHNESS"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }

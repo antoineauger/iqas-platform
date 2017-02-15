@@ -1,7 +1,7 @@
 package fr.isae.iqas.pipelines;
 
-import fr.isae.iqas.model.request.Operator;
 import fr.isae.iqas.model.quality.IComputeQoOAttributes;
+import fr.isae.iqas.model.request.Operator;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -80,6 +80,10 @@ public abstract class AbstractPipeline {
             params.put(param, newValue);
             return true;
         }
+    }
+
+    public void addSupportedOperator(Operator operator) {
+        supportedOperators.add(operator);
     }
 
 }

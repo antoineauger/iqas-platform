@@ -181,7 +181,14 @@
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#associatedTo">
         <owl:inverseOf rdf:resource="http://isae.fr/iqas/qoo-ontology#has"/>
         <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
-        <rdfs:range rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#MeasurementCapability"/>
+        <rdfs:range>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#QoOCustomizableParameter"/>
+                    <rdf:Description rdf:about="http://purl.oclc.org/NET/ssnx/ssn#MeasurementCapability"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:range>
     </owl:ObjectProperty>
     
 
@@ -268,7 +275,14 @@
     <!-- http://isae.fr/iqas/qoo-ontology#has -->
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#has">
-        <rdfs:domain rdf:resource="http://purl.oclc.org/NET/ssnx/ssn#MeasurementCapability"/>
+        <rdfs:domain>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#QoOCustomizableParameter"/>
+                    <rdf:Description rdf:about="http://purl.oclc.org/NET/ssnx/ssn#MeasurementCapability"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:domain>
         <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
     </owl:ObjectProperty>
     
@@ -618,6 +632,15 @@
     
 
 
+    <!-- http://isae.fr/iqas/qoo-ontology#documentation -->
+
+    <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#documentation">
+        <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOCustomizableParameter"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
     <!-- http://isae.fr/iqas/qoo-ontology#hasExactValue -->
 
     <owl:DatatypeProperty rdf:about="http://isae.fr/iqas/qoo-ontology#hasExactValue">
@@ -878,6 +901,18 @@
 
     <owl:Class rdf:about="http://isae.fr/iqas/qoo-ontology#QoOCustomizableParameter">
         <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOParameter"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#has"/>
+                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#has"/>
+                <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
     </owl:Class>
     
 
@@ -888,8 +923,34 @@
         <rdfs:subClassOf rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
         <rdfs:subClassOf>
             <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#associatedTo"/>
+                <owl:someValuesFrom>
+                    <owl:Class>
+                        <owl:unionOf rdf:parseType="Collection">
+                            <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#QoOCustomizableParameter"/>
+                            <rdf:Description rdf:about="http://purl.oclc.org/NET/ssnx/ssn#MeasurementCapability"/>
+                        </owl:unionOf>
+                    </owl:Class>
+                </owl:someValuesFrom>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
                 <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#impacts"/>
                 <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#associatedTo"/>
+                <owl:allValuesFrom>
+                    <owl:Class>
+                        <owl:unionOf rdf:parseType="Collection">
+                            <rdf:Description rdf:about="http://isae.fr/iqas/qoo-ontology#QoOCustomizableParameter"/>
+                            <rdf:Description rdf:about="http://purl.oclc.org/NET/ssnx/ssn#MeasurementCapability"/>
+                        </owl:unionOf>
+                    </owl:Class>
+                </owl:allValuesFrom>
             </owl:Restriction>
         </rdfs:subClassOf>
         <rdfs:subClassOf>
@@ -1673,9 +1734,9 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#OSB_ACCURACY -->
+    <!-- http://isae.fr/iqas/qoo-ontology#OBS_ACCURACY -->
 
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#OSB_ACCURACY">
+    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#OBS_ACCURACY">
         <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
         <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
     </owl:NamedIndividual>

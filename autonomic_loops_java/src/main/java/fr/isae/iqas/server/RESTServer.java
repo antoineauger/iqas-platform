@@ -18,7 +18,8 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import static akka.http.javadsl.server.PathMatchers.segment;
-import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.*;
+import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.DELETE;
+import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.POST;
 
 /**
  * Created by an.auger on 16/09/2016.
@@ -36,7 +37,7 @@ public class RESTServer extends AllDirectives {
     }
 
     /**
-     * Fuseki controller: sensors, QoO pipelines
+     * Fuseki controller: sensors, topics, places, QoO pipelines
      */
 
     private CompletionStage<Route> getSensor(Executor ctx, String sensor_id) {
@@ -67,6 +68,22 @@ public class RESTServer extends AllDirectives {
         return fusekiRESTController.getConcretePipelines();
     }
 
+    private CompletionStage<Route> getAllQoOAttributes(Executor ctx) {
+        return fusekiRESTController.getAllQoOAttributes(ctx);
+    }
+
+    private CompletionStage<Route> getAllQoOCustomizableAttributes(Executor ctx) {
+        return fusekiRESTController.getAllQoOCustomizableAttributes(ctx);
+    }
+
+    private CompletionStage<Route> getAllPlaces(Executor ctx) {
+        return fusekiRESTController.getAllPlaces(ctx);
+    }
+
+    private CompletionStage<Route> getPlacesNearTo(Executor ctx, String location) {
+        return fusekiRESTController.getPlacesNearTo(location, ctx);
+    }
+
     /**
      * MongoDB controller: requests, MAPE-K logging
      */
@@ -83,7 +100,7 @@ public class RESTServer extends AllDirectives {
         return
                 route(
                         get(() -> route(
-                                
+
                                 // Homepage, css and scripts
                                 pathSingleSlash(() ->
                                         getFromResource("web/index.html", ContentTypes.TEXT_HTML_UTF8)
@@ -142,6 +159,29 @@ public class RESTServer extends AllDirectives {
                                 path(segment("topics").slash(segment()), topic_id ->
                                         extractExecutionContext(ctx ->
                                                 onSuccess(() -> getSpecificTopic(ctx, topic_id), Function.identity())
+                                        )
+                                ),
+                                path(segment("places"), () -> parameterOptional("nearTo", locName -> {
+                                            String location = locName.orElse("");
+                                            if (location.equals("")) {
+                                                return extractExecutionContext(ctx ->
+                                                        onSuccess(() -> getAllPlaces(ctx), Function.identity())
+                                                );
+                                            }
+                                            else {
+                                                return extractExecutionContext(ctx ->
+                                                        onSuccess(() -> getPlacesNearTo(ctx, location), Function.identity())
+                                                );
+                                            }})
+                                ),
+                                path(segment("qoo").slash(segment("parameters")), () ->
+                                        extractExecutionContext(ctx ->
+                                                onSuccess(() -> getAllQoOCustomizableAttributes(ctx), Function.identity())
+                                        )
+                                ),
+                                path(segment("qoo").slash(segment("attributes")), () ->
+                                        extractExecutionContext(ctx ->
+                                                onSuccess(() -> getAllQoOAttributes(ctx), Function.identity())
                                         )
                                 )
                         )),

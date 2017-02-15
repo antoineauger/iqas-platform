@@ -68,6 +68,13 @@
             <version>0.0.5</version>
         </dependency>
 
+        <!-- JSON objects-->
+        <!-- <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20090211</version>
+        </dependency> -->
+
         <!-- Log4j -->
         <dependency>
             <groupId>com.typesafe.akka</groupId>

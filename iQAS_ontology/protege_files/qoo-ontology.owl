@@ -81,10 +81,10 @@
         <DataProperty abbreviatedIRI="iot-lite:endpoint"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:Sensor"/>
+        <DataProperty abbreviatedIRI="iot-lite:radius"/>
     </Declaration>
     <Declaration>
-        <DataProperty abbreviatedIRI="iot-lite:radius"/>
+        <Class abbreviatedIRI="ssn:Sensor"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="iot-lite:Polygon"/>
@@ -219,19 +219,19 @@
         <ObjectProperty IRI="requiresObservation"/>
     </Declaration>
     <Declaration>
+        <NamedIndividual IRI="MIN"/>
+    </Declaration>
+    <Declaration>
         <Class IRI="QualityofObservation"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="MIN"/>
+        <DataProperty IRI="target_value"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="decreases"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="isImpactedBy"/>
-    </Declaration>
-    <Declaration>
-        <DataProperty IRI="target_value"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:observedProperty"/>
@@ -247,6 +247,9 @@
     </Declaration>
     <Declaration>
         <DataProperty IRI="hasMaxValue"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="documentation"/>
     </Declaration>
     <Declaration>
         <Class IRI="QoOAttribute"/>
@@ -267,7 +270,7 @@
         <AnnotationProperty abbreviatedIRI="geo:alt"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="OSB_ACCURACY"/>
+        <NamedIndividual IRI="OBS_ACCURACY"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="increases"/>
@@ -300,10 +303,10 @@
         <Datatype IRI="sensorState"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="expressedBy"/>
+        <Class IRI="QoOParameter"/>
     </Declaration>
     <Declaration>
-        <Class IRI="QoOParameter"/>
+        <ObjectProperty IRI="expressedBy"/>
     </Declaration>
     <Declaration>
         <NamedIndividual IRI="OBS_FRESHNESS"/>
@@ -384,10 +387,10 @@
         <AnnotationProperty abbreviatedIRI="dc:creator"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
+        <Class IRI="Operator"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Operator"/>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="provides"/>
@@ -402,10 +405,10 @@
         <ObjectProperty abbreviatedIRI="ssn:hasProperty"/>
     </Declaration>
     <Declaration>
-        <Class IRI="QoOCustomizableParameter"/>
+        <AnnotationProperty abbreviatedIRI="dc:date"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty abbreviatedIRI="dc:date"/>
+        <Class IRI="QoOCustomizableParameter"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="iot-lite:Rectangle"/>
@@ -493,8 +496,32 @@
         <Class IRI="QoOParameter"/>
     </SubClassOf>
     <SubClassOf>
+        <Class IRI="QoOCustomizableParameter"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="has"/>
+            <Class IRI="QoOEffect"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOCustomizableParameter"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="has"/>
+            <Class IRI="QoOEffect"/>
+        </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
         <Class IRI="QoOEffect"/>
         <Class IRI="QualityofObservation"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOEffect"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="associatedTo"/>
+            <ObjectUnionOf>
+                <Class IRI="QoOCustomizableParameter"/>
+                <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+            </ObjectUnionOf>
+        </ObjectSomeValuesFrom>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="QoOEffect"/>
@@ -502,6 +529,16 @@
             <ObjectProperty IRI="impacts"/>
             <Class IRI="QoOAttribute"/>
         </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOEffect"/>
+        <ObjectAllValuesFrom>
+            <ObjectProperty IRI="associatedTo"/>
+            <ObjectUnionOf>
+                <Class IRI="QoOCustomizableParameter"/>
+                <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+            </ObjectUnionOf>
+        </ObjectAllValuesFrom>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="QoOEffect"/>
@@ -1150,7 +1187,7 @@
     </ClassAssertion>
     <ClassAssertion>
         <Class IRI="QoOAttribute"/>
-        <NamedIndividual IRI="OSB_ACCURACY"/>
+        <NamedIndividual IRI="OBS_ACCURACY"/>
     </ClassAssertion>
     <InverseObjectProperties>
         <ObjectProperty IRI="associatedTo"/>
@@ -1233,7 +1270,10 @@
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="has"/>
-        <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+        <ObjectUnionOf>
+            <Class IRI="QoOCustomizableParameter"/>
+            <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+        </ObjectUnionOf>
     </ObjectPropertyDomain>
     <ObjectPropertyDomain>
         <ObjectProperty IRI="impacts"/>
@@ -1377,7 +1417,10 @@
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty IRI="associatedTo"/>
-        <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+        <ObjectUnionOf>
+            <Class IRI="QoOCustomizableParameter"/>
+            <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+        </ObjectUnionOf>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty IRI="belongsTo"/>
@@ -1561,6 +1604,10 @@
         <Class IRI="QoOEffect"/>
     </DataPropertyDomain>
     <DataPropertyDomain>
+        <DataProperty IRI="documentation"/>
+        <Class IRI="QoOCustomizableParameter"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
         <DataProperty IRI="hasExactValue"/>
         <Class abbreviatedIRI="ssn:MeasurementProperty"/>
     </DataPropertyDomain>
@@ -1639,6 +1686,10 @@
     <DataPropertyRange>
         <DataProperty IRI="capabilityVariation"/>
         <Datatype IRI="variation"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="documentation"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
     </DataPropertyRange>
     <DataPropertyRange>
         <DataProperty IRI="hasExactValue"/>

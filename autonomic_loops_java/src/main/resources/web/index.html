@@ -23,35 +23,35 @@
         <th>Pipelines</th>
     </tr>
     <tr>
-        <td>
+        <td width="20%">
             <ul>
                 <li><a href="/sensors">/sensors</a></li>
                 <li>/sensors/[sensor_id]</li>
             </ul>
         </td>
-        <td>
+        <td width="20%">
             <ul>
                 <li><a href="/requests">/requests</a></li>
                 <li>/requests/[request_id]</li>
             </ul>
         </td>
-        <td>
+        <td width="20%">
             <ul>
                 <li><a href="/places">/places</a></li>
-                <li>/places?near=[location]</li>
+                <li>/places?nearTo=[location]</li>
             </ul>
         </td>
-        <td>
+        <td width="20%">
             <ul>
                 <li><a href="/topics">/topics</a></li>
                 <li>/topics/[topic_URI]</li>
             </ul>
         </td>
-        <td>
+        <td width="20%">
             <ul>
                 <li><a href="/pipelines">/pipelines</a></li>
-                <li><a href="/pipelines?print=ids">/pipelines?print=ids</a></li>
                 <li>/pipelines/[pipeline_id]</li>
+                <li><a href="/pipelines?print=ids">/pipelines?print=ids</a></li>
             </ul>
         </td>
     </tr>
@@ -62,36 +62,73 @@
     <li>/requests</li>
 </ul>
 
-For submitting a new request, the format is the following (all parameters are mandatory):<br/>
+For submitting a new iQAS request, the format is the following (all parameters are mandatory):<br/>
 <div style="margin-left: 30px;" class="code">
     Content-Type: application/json<br/>
     {<br/>
     <div style="margin-left: 30px;">
         "request_id": "",<br/>
         "application_id": "[application_id]"<br/>
-        "topic": (see below)<br/>
-        "location": (see below)<br/>
-        "sla_level": (see below)<br/>
-        "operator": (see below)<br/>
+        "topic": [topic] / "ALL"<br/>
+        "location": [location] / "ALL"<br/>
+        "qoo": (see below)<br/>
     </div>
     }
 </div>
 
 <br/>
-Topics: see topic list <a href="/topics">here</a><br/>
-Location: city name (Toulouse, Portet-Sur-Garonne, etc.) <!-- TODO / (long,lat) / option nearBy --><br/>
-Operators: <span class="code">NONE</span> / <span class="code">AVG</span> / <span class="code">MIN</span> / <span class="code">MAX</span><br/>
-Service Level Agreement levels: <span class="code">BEST_EFFORT</span> / <span class="code">GUARANTEED</span>
+
+<table width="100%">
+    <tr>
+        <th colspan="2">Quality of Observation (QoO)</th>
+    </tr>
+    <tr>
+        <td width="50%">
+            Format of a "QoO Service Level Agreement" for an iQAS request:
+            <div style="margin-left: 30px;" class="code">
+                "qoo": {<br/>
+                <div style="margin-left: 30px;">
+                    "interested_in": [QoO_attributes_list]<br/>
+                    "additional_params": {<br/>
+                    <div style="margin-left: 30px;">
+                        "[additional_param_name]": "[additional_param_value]",<br/>
+                        <div style="margin-left: 30px;">
+                            ...
+                        </div>
+                    </div>
+                    }<br/>
+                    "sla_level": "BEST_EFFORT" / "GUARANTEED"<br/>
+                    "operator": "NONE" / "AVG" / "MIN" / "MAX"<br/>
+                </div>
+                }
+            </div>
+        </td>
+        <td width="50%">
+            Details:
+            <ul>
+                <li><span class="code">interested_in</span> contains an ordered list
+                    (first=very important, last=less important) of QoO attributes that matter for the given application.
+                    See <a href="/qoo/attributes">/qoo/attributes</a> for the current supported QoO attributes.</li> <br/>
+                <li><span class="code">additional_params</span> can be used to specify additional QoO requirements.
+                    Visit <a href="/qoo/parameters">/qoo/parameters</a> to see what parameters can be customized.</li>
+            </ul>
+        </td>
+    </tr>
+</table>
 
 <h2>DELETE endpoints</h2>
 <ul>
     <li>/requests/[request_id]</li>
 </ul>
 
-<h2>Available QoO pipelines</h2>
-<ul id="qoo_pipeline_list">
+<hr/><br/>
 
-</ul>
+<div>
+    <span style="font-weight: bold">Successfully loaded QoO pipelines:</span>
+    <ul id="qoo_pipeline_list">
+        <!-- Here go the result of the jQuery request to display the successfully loaded QoO pipelines -->
+    </ul>
+</div>
 
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <script type="text/javascript" src="script.js"></script>

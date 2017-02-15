@@ -9,9 +9,9 @@ import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import fr.isae.iqas.model.request.Operator;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.quality.IComputeQoOAttributes;
+import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
