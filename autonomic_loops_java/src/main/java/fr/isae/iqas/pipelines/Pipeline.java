@@ -1,7 +1,6 @@
-package fr.isae.iqas.model.request;
+package fr.isae.iqas.pipelines;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import fr.isae.iqas.pipelines.IPipeline;
 
 /**
  * Created by an.auger on 06/02/2017.

@@ -30,6 +30,8 @@ public class Request {
     private SLALevel sla_level;
     private @JsonIgnore ArrayList<State> statesList;
 
+    private ArrayList<String> logs;
+
     @JsonCreator
     public Request(@JsonProperty("request_id") String request_id,
                    @JsonProperty("application_id") String application_id,
@@ -45,6 +47,8 @@ public class Request {
         this.operator = Operator.valueOf(operator);
         this.statesList = new ArrayList<>();
         this.statesList.add(new State(CREATED, new Date()));
+        this.logs = new ArrayList<>();
+        addLog("Object request has been created.");
     }
 
     public void setRequest_id(String request_id) {
@@ -82,10 +86,14 @@ public class Request {
 
         this.statesList = new ArrayList<>();
         List<Document> bsonStatesList = (List<Document>) bsonDocument.get("statesList");
-        this.statesList.addAll(bsonStatesList.stream().map(d -> new State(
-                State.Status.valueOf(d.getString("status")),
+        this.statesList.addAll(bsonStatesList.stream().map(d ->
+                new State(State.Status.valueOf(d.getString("status")),
                 new Date(d.getLong("start_date")),
                 new Date(d.getLong("end_date")))).collect(Collectors.toList()));
+
+        this.logs = new ArrayList<>();
+        List<String> logList = (List<String>) bsonDocument.get("logs");
+        this.logs.addAll(logList);
     }
 
     /**
@@ -112,6 +120,7 @@ public class Request {
         docToReturn.put("location", location);
         docToReturn.put("sla_level", sla_level.toString());
         docToReturn.put("operator", operator.toString());
+        docToReturn.put("logs", logs);
 
         List<Document> statesListDoc = new ArrayList<>();
         for (State s : statesList) {
@@ -184,10 +193,20 @@ public class Request {
      *
      * @param newStatus the new Status enum object
      */
-    public @JsonIgnore void updateState(State.Status newStatus) {
+    public void updateState(State.Status newStatus) {
         Date currentDate = new Date();
         statesList.get(statesList.size() - 1).setEnd_date(currentDate);
         statesList.add(new State(newStatus, currentDate));
+    }
+
+    public void addLog(String s) {
+        Date date = new Date();
+        logs.add(0, date.toString() + ": " + s);
+    }
+
+
+    public ArrayList<String> getLogs() {
+        return logs;
     }
 
     public Operator getOperator() {

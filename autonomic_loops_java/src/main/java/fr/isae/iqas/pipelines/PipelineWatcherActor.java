@@ -4,7 +4,6 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
-import fr.isae.iqas.model.request.Pipeline;
 import org.apache.commons.codec.binary.Hex;
 import scala.concurrent.duration.Duration;
 

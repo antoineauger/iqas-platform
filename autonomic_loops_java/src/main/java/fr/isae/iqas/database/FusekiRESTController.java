@@ -12,7 +12,7 @@ import akka.util.Timeout;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
-import fr.isae.iqas.model.request.Pipeline;
+import fr.isae.iqas.pipelines.Pipeline;
 import ioinformarics.oss.jackson.module.jsonld.JsonldModule;
 import ioinformarics.oss.jackson.module.jsonld.JsonldResource;
 import ioinformarics.oss.jackson.module.jsonld.JsonldResourceBuilder;
