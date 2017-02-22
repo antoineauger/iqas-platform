@@ -36,6 +36,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.util.*;
 import java.util.concurrent.CompletionStage;
@@ -55,7 +56,9 @@ public class ExecuteActor extends UntypedActor {
     private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = null;
     private Sink<ProducerRecord, CompletionStage<Done>> kafkaSink = null;
 
+    private ActorRef monitorActor = null;
     private ActorRef kafkaActor = null;
+
     private ActorMaterializer materializer = null;
     private RunnableGraph myRunnableGraph = null;
     private String remedyToPlan = null;
@@ -87,7 +90,10 @@ public class ExecuteActor extends UntypedActor {
         this.remedyToPlan = remedyToPlan;
         this.topicToPublish = topicToPublish;
 
-        // Materializer to run graphs (pipelines)
+        // ActorRef to log to the monitor actor of the MAPE-K loop
+        this.monitorActor = getContext().actorFor(getContext().parent().path().parent().child("monitorActor"));
+
+        // Materializer to run graphs (QoO pipelines)
         this.materializer = ActorMaterializer.create(getContext().system());
     }
 
@@ -113,12 +119,13 @@ public class ExecuteActor extends UntypedActor {
                                 } else {
                                     IPipeline pipelineToEnforce = castedResultPipelineObject.get(0).getPipelineObject();
 
+                                    pipelineToEnforce.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(10, TimeUnit.SECONDS));
                                     Map<String, String> qooParams = new HashMap<>();
-                                    qooParams.put("lower_bound","-50");
-                                    qooParams.put("upper_bound","+50");
+                                    qooParams.put("min_value","-50.0");
+                                    qooParams.put("max_value","+50.0");
                                     pipelineToEnforce.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParams);
 
-                                    pipelineToEnforce.setCustomizableParameter("threshold_min", "0");
+                                    pipelineToEnforce.setCustomizableParameter("threshold_min", "0.0");
 
                                     myRunnableGraph = RunnableGraph.fromGraph(pipelineToEnforce.getPipelineGraph(kafkaSource,
                                             kafkaSink,
@@ -156,6 +163,9 @@ public class ExecuteActor extends UntypedActor {
                 }
                 getContext().stop(getSelf());
             }
+        }
+        else if (message instanceof String) {
+            log.info("Received String message: {}", message);
         }
     }
 

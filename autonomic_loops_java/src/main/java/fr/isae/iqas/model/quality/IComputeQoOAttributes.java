@@ -12,9 +12,9 @@ import java.util.Map;
  */
 
 public interface IComputeQoOAttributes {
-    @QoOParam(name = "lower_bound", type = Double.class)
-    @QoOParam(name = "upper_bound", type = Double.class)
-    Information computeQoOAccuracy(Information information, Double lower_bound, Double upper_bound);
+    @QoOParam(name = "min_value", type = Double.class)
+    @QoOParam(name = "max_value", type = Double.class)
+    Information computeQoOAccuracy(Information information, Double min_value, Double max_value);
     Information computeQoOFreshness(Information information);
 
     // Static method to retrieve annotations

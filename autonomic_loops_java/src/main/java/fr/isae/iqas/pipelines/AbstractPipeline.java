@@ -1,15 +1,25 @@
 package fr.isae.iqas.pipelines;
 
+import akka.NotUsed;
+import akka.actor.ActorRef;
+import akka.stream.javadsl.Flow;
+import fr.isae.iqas.MainClass;
 import fr.isae.iqas.model.quality.IComputeQoOAttributes;
 import fr.isae.iqas.model.request.Operator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by an.auger on 08/02/2017.
  */
 public abstract class AbstractPipeline {
+    public Logger logger = LoggerFactory.getLogger(MainClass.class);
+    final FiniteDuration ONE_SECOND = FiniteDuration.create(1, TimeUnit.SECONDS);
 
     private String pipelineName;
     private boolean adaptable;
@@ -20,6 +30,8 @@ public abstract class AbstractPipeline {
     private Map<String, Class> qooParamPrototypes;
     private Map<String, String> qooParams;
 
+    private ActorRef monitorActor;
+    private FiniteDuration reportFrequency;
     private IComputeQoOAttributes computeAttributeHelper;
 
     public AbstractPipeline(String pipelineName, boolean adaptable) {
@@ -32,6 +44,8 @@ public abstract class AbstractPipeline {
         this.qooParamPrototypes = new ConcurrentHashMap<>();
         this.qooParams = new ConcurrentHashMap<>();
 
+        this.monitorActor = null;
+        this.reportFrequency = ONE_SECOND;
         this.qooParamPrototypes = IComputeQoOAttributes.getQoOParamsForInterface();
     }
 
@@ -43,6 +57,12 @@ public abstract class AbstractPipeline {
                 this.qooParams.put(s, qooParams.get(s));
             }
         }
+    }
+
+    public void setOptionsForMAPEKReporting(ActorRef monitorActor,
+                                            FiniteDuration reportFrequency) {
+        this.monitorActor = monitorActor;
+        this.reportFrequency = reportFrequency;
     }
 
     public String getPipelineName() {
@@ -86,4 +106,27 @@ public abstract class AbstractPipeline {
         supportedOperators.add(operator);
     }
 
+    public ActorRef getMonitorActor() {
+        return monitorActor;
+    }
+
+    public FiniteDuration getReportFrequency() {
+        return reportFrequency;
+    }
+
+    public void setReportFrequency(FiniteDuration reportFrequency) {
+        this.reportFrequency = reportFrequency;
+    }
+
+    public Flow<String, Integer, NotUsed> getFlowToComputeObsRate() {
+        return Flow.of(String.class).keepAlive(reportFrequency.div(2), () -> "keep")
+                .map(p -> {
+                    if (p.equals("keep")) {
+                        return 0;
+                    }
+                    else {
+                        return 1;
+                    }
+                }).groupedWithin(Integer.MAX_VALUE, reportFrequency).map(i -> i.stream().mapToInt(Integer::intValue).sum());
+    }
 }

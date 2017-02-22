@@ -16,28 +16,28 @@ public class MySpecificQoOAttributeComputation implements IComputeQoOAttributes 
     }
 
     @Override
-    @QoOParam(name = "lower_bound", type = Double.class)
-    @QoOParam(name = "upper_bound", type = Double.class)
-    public Information computeQoOAccuracy(Information information, Double lower_bound, Double upper_bound) {
+    @QoOParam(name = "min_value", type = Double.class)
+    @QoOParam(name = "max_value", type = Double.class)
+    public Information computeQoOAccuracy(Information information, Double min_value, Double max_value) {
         Double currentValue = information.getValue();
         Double accuracy;
 
-        if (currentValue >= lower_bound  && currentValue <= upper_bound) {
+        if (currentValue >= min_value  && currentValue <= max_value) {
             accuracy = 100.0;
         }
         else {
             Double absoluteDist = 0.0;
-            if (currentValue < lower_bound) {
-                absoluteDist = lower_bound - currentValue;
+            if (currentValue < min_value) {
+                absoluteDist = min_value - currentValue;
             }
-            else if (currentValue > upper_bound) {
-                absoluteDist = currentValue - upper_bound;
+            else if (currentValue > max_value) {
+                absoluteDist = currentValue - max_value;
             }
-            if (absoluteDist >= (upper_bound - lower_bound)) {
+            if (absoluteDist >= (max_value - min_value)) {
                 accuracy = 0.0;
             }
             else {
-                accuracy = ((upper_bound - lower_bound) - absoluteDist) / (upper_bound - lower_bound);
+                accuracy = ((max_value - min_value) - absoluteDist) / (max_value - min_value);
             }
         }
 

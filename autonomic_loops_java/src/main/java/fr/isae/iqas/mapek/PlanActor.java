@@ -6,7 +6,7 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
-import fr.isae.iqas.model.message.RFCMsg;
+import fr.isae.iqas.model.message.MAPEKInternalMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -52,11 +52,11 @@ public class PlanActor extends UntypedActor {
                 gracefulStop(actorRefToStop);
                 execActorsRefs.remove(actorNameToResolve);
             }
-        } else if (message instanceof RFCMsg) {
+        } else if (message instanceof MAPEKInternalMsg.RFCMsg) {
             log.info("Received RFCMsg message: {}", message);
 
             //TODO for now the remedyToPlan is hardcoded!
-            RFCMsg receivedRFCMsg = (RFCMsg) message;
+            MAPEKInternalMsg.RFCMsg receivedRFCMsg = (MAPEKInternalMsg.RFCMsg) message;
             String remedyToPlan = "SimpleFilteringPipeline";
 
             if (execActorsRefs.containsKey(actorNameToResolve)) { // if reference found, the corresponding actor has been started

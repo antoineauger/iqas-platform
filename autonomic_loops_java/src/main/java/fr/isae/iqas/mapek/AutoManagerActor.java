@@ -7,7 +7,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
-import fr.isae.iqas.model.message.RFCMsg;
+import fr.isae.iqas.model.message.MAPEKInternalMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.request.Request;
 
@@ -34,7 +34,7 @@ public class AutoManagerActor extends UntypedActor {
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
 
-        //monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop), "monitorActor");
+        monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop), "monitorActor");
         //analyzeActor = getContext().actorOf(Props.create(AnalyzeActor.class, prop), "analyzeActor");
         planActor = getContext().actorOf(Props.create(PlanActor.class, prop), "planActor");
         //executeActor = getContext().actorOf(Props.create(ExecuteActor.class, prop), "executeActor");
@@ -71,11 +71,11 @@ public class AutoManagerActor extends UntypedActor {
         else if (message instanceof Request) {
             // TODO
             if (processingActivated) {
-                planActor.tell(new RFCMsg("none"), getSelf());
+                planActor.tell(new MAPEKInternalMsg.RFCMsg("none"), getSelf());
                 processingActivated = false;
             }
             else {
-                planActor.tell(new RFCMsg("testGraph"), getSelf());
+                planActor.tell(new MAPEKInternalMsg.RFCMsg("testGraph"), getSelf());
                 processingActivated = true;
             }
         }

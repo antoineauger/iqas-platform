@@ -1,10 +1,13 @@
 package fr.isae.iqas.pipelines;
 
 import akka.Done;
+import akka.NotUsed;
+import akka.actor.ActorRef;
 import akka.kafka.javadsl.Consumer;
 import akka.stream.ClosedShape;
 import akka.stream.Graph;
 import akka.stream.Materializer;
+import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -14,6 +17,7 @@ import fr.isae.iqas.model.quality.IComputeQoOAttributes;
 import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.util.List;
 import java.util.Map;
@@ -26,8 +30,15 @@ import java.util.concurrent.CompletionStage;
 
 @JsonIgnoreProperties({"pipelineName", "pipelineID", "params"})
 public interface IPipeline {
+    ActorRef getMonitorActor();
+
+    Flow<String, Integer, NotUsed> getFlowToComputeObsRate();
+
     void setOptionsForQoOComputation(IComputeQoOAttributes computeAttributeHelper,
                                      Map<String, String> qooParams);
+
+    void setOptionsForMAPEKReporting(ActorRef monitorActor,
+                                     FiniteDuration reportFrequency);
 
     /**
      * Ground method to get the Akka graph to run

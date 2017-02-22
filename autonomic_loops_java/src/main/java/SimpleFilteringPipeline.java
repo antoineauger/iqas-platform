@@ -1,11 +1,9 @@
 import akka.Done;
 import akka.NotUsed;
+import akka.actor.ActorRef;
 import akka.kafka.javadsl.Consumer;
 import akka.stream.*;
-import akka.stream.javadsl.Flow;
-import akka.stream.javadsl.GraphDSL;
-import akka.stream.javadsl.Sink;
-import akka.stream.javadsl.Source;
+import akka.stream.javadsl.*;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.request.Operator;
 import fr.isae.iqas.pipelines.AbstractPipeline;
@@ -22,7 +20,6 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * Created by an.auger on 31/01/2017.
  */
 public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeline {
-
     private Graph runnableGraph = null;
     private static Flow<ConsumerRecord, ConsumerRecord, NotUsed> flowConsumerRecords;
     private static Flow<ProducerRecord, ProducerRecord, NotUsed> flowProducerRecords;
@@ -50,6 +47,11 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                     // Definition of kafka topics for Source and Sink
                     final Outlet<ConsumerRecord<byte[], String>> sourceGraph = builder.add(kafkaSource).out();
                     final Inlet<ProducerRecord> sinkGraph = builder.add(kafkaSink).in();
+                    // Definition of the broadcast for the MAPE-K monitoring
+                    final UniformFanOutShape<ProducerRecord, ProducerRecord> bcast = builder.add(Broadcast.create(2));
+
+
+                    // ################################# YOUR CODE GOES HERE #################################
 
                     Flow<ConsumerRecord, ProducerRecord, NotUsed> f1 = flowConsumerRecords.map(r ->
                             new ProducerRecord<byte[], String>(topicToPublish, String.valueOf(r.value())));
@@ -57,18 +59,26 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                             Float.parseFloat((String) r.value()) < Float.valueOf(getParams().get("threshold_min")));
 
                     if (askedLevelFinal == RAW_DATA) {
-                        builder.from(sourceGraph).via(builder.add(f1)).via(builder.add(f2)).toInlet(sinkGraph);
+                        builder.from(sourceGraph).via(builder.add(f1)).via(builder.add(f2)).viaFanOut(bcast).toInlet(sinkGraph);
                     }
                     else if (askedLevelFinal == INFORMATION) {
-                        builder.from(sourceGraph).via(builder.add(f1)).via(builder.add(f2)).toInlet(sinkGraph);
+                        builder.from(sourceGraph).via(builder.add(f1)).via(builder.add(f2)).viaFanOut(bcast).toInlet(sinkGraph);
                     }
                     else if (askedLevelFinal == KNOWLEDGE) {
-                        builder.from(sourceGraph).via(builder.add(f1)).via(builder.add(f2)).toInlet(sinkGraph);
+                        builder.from(sourceGraph).via(builder.add(f1)).via(builder.add(f2)).viaFanOut(bcast).toInlet(sinkGraph);
                     }
                     else { // other observation levels are not supported
                         return null;
                     }
 
+
+                    // ################################# END OF YOUR CODE #################################
+
+                    // Do not remove - useful for MAPE-K monitoring
+                    builder.from(bcast)
+                            .via(builder.add(Flow.of(ProducerRecord.class).map(p -> "obs")))
+                            .via(builder.add(getFlowToComputeObsRate()))
+                            .to(builder.add(Sink.foreach(elem -> getMonitorActor().tell(String.valueOf(elem), ActorRef.noSender()))));
                     return ClosedShape.getInstance();
                 });
 

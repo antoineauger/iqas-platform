@@ -113,8 +113,8 @@
             {
               "@id": "qoo:range_temp_sensor01",
               "@type": "ssn:MeasurementRange",
-              "qoo:hasMinValue": "-50",
-              "qoo:hasMaxValue": "50"
+              "qoo:hasMinValue": "-50.0",
+              "qoo:hasMaxValue": "+50.0"
             }
           ],
           "ssn:forProperty": {
@@ -127,7 +127,7 @@
             {
               "@id": "qoo:range_temp_sensor01",
               "@type": "ssn:MeasurementRange",
-              "qoo:hasMinValue": "0",
+              "qoo:hasMinValue": "0.0",
               "qoo:hasMaxValue": "+INF"
             }
           ],
@@ -171,7 +171,7 @@
             {
               "@id": "qoo:range_visib_sensor02",
               "@type": "ssn:MeasurementRange",
-              "qoo:hasMinValue": "0",
+              "qoo:hasMinValue": "0.0",
               "qoo:hasMaxValue": "+INF"
             }
           ],
