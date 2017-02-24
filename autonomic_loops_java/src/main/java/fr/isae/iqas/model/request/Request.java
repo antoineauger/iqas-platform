@@ -3,11 +3,13 @@ package fr.isae.iqas.model.request;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import fr.isae.iqas.model.quality.QoOAttribute;
 import org.bson.Document;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static fr.isae.iqas.model.request.State.Status.CREATED;
@@ -17,17 +19,12 @@ import static fr.isae.iqas.model.request.State.Status.CREATED;
  */
 
 public class Request {
-    public enum SLALevel {
-        BEST_EFFORT,
-        GUARANTEED
-    }
 
     private String request_id;
     private String application_id;
     private String topic;
     private String location;
-    private Operator operator;
-    private SLALevel sla_level;
+    private QoORequirements qooConstraints;
     private @JsonIgnore ArrayList<State> statesList;
 
     private ArrayList<String> logs;
@@ -37,14 +34,14 @@ public class Request {
                    @JsonProperty("application_id") String application_id,
                    @JsonProperty("topic") String topic,
                    @JsonProperty("location") String location,
-                   @JsonProperty("sla_level") String sla_level,
-                   @JsonProperty("operator") String operator) {
+                   @JsonProperty("qoo") QoORequirements qooConstraints) {
         this.request_id = request_id;
         this.application_id = application_id;
         this.topic = topic;
         this.location = location;
-        this.sla_level = SLALevel.valueOf(sla_level);
-        this.operator = Operator.valueOf(operator);
+
+        this.qooConstraints = qooConstraints;
+
         this.statesList = new ArrayList<>();
         this.statesList.add(new State(CREATED, new Date()));
         this.logs = new ArrayList<>();
@@ -81,8 +78,14 @@ public class Request {
         this.application_id = bsonDocument.getString("application_id");
         this.topic = bsonDocument.getString("topic");
         this.location = bsonDocument.getString("location");
-        this.sla_level = SLALevel.valueOf(bsonDocument.getString("sla_level"));
-        this.operator = Operator.valueOf(bsonDocument.getString("operator"));
+
+        Document qooDoc = (Document) bsonDocument.get("qoo");
+
+        this.qooConstraints = new QoORequirements(
+                qooDoc.getString("operator"),
+                qooDoc.getString("sla_level"),
+                (List<String>) qooDoc.get("interested_in"),
+                (Map<String, String>) qooDoc.get("additional_params"));
 
         this.statesList = new ArrayList<>();
         List<Document> bsonStatesList = (List<Document>) bsonDocument.get("statesList");
@@ -118,9 +121,19 @@ public class Request {
         docToReturn.put("application_id", application_id);
         docToReturn.put("topic", topic);
         docToReturn.put("location", location);
-        docToReturn.put("sla_level", sla_level.toString());
-        docToReturn.put("operator", operator.toString());
         docToReturn.put("logs", logs);
+
+        Document qooDoc = new Document();
+        qooDoc.put("sla_level", qooConstraints.getSla_level().toString());
+        qooDoc.put("operator", qooConstraints.getOperator().toString());
+        qooDoc.put("additional_params", qooConstraints.getAdditional_params());
+        List<String> interestedInText = new ArrayList<>();
+        for (QoOAttribute q : qooConstraints.getInterested_in()) {
+            interestedInText.add(q.toString());
+        }
+        qooDoc.put("interested_in", interestedInText);
+
+        docToReturn.put("qoo", qooDoc);
 
         List<Document> statesListDoc = new ArrayList<>();
         for (State s : statesList) {
@@ -204,24 +217,11 @@ public class Request {
         logs.add(0, date.toString() + ": " + s);
     }
 
-
     public ArrayList<String> getLogs() {
         return logs;
     }
 
-    public Operator getOperator() {
-        return operator;
-    }
-
-    public void setOperator(Operator operator) {
-        this.operator = operator;
-    }
-
-    public SLALevel getSla_level() {
-        return sla_level;
-    }
-
-    public void setSla_level(SLALevel sla_level) {
-        this.sla_level = sla_level;
+    public QoORequirements getQooConstraints() {
+        return qooConstraints;
     }
 }
