@@ -63,8 +63,9 @@ public class ExecuteActor extends UntypedActor {
     private RunnableGraph myRunnableGraph = null;
     private String remedyToPlan = null;
     private String topicToPublish = null;
+    private String associatedRequest_id = "UNKNOWN";
 
-    public ExecuteActor(Properties prop, Set<String> topicsToPullFrom, String topicToPublish, String remedyToPlan) throws Exception {
+    public ExecuteActor(Properties prop, Set<String> topicsToPullFrom, String topicToPublish, String remedyToPlan, String associatedRequest_id) {
         this.context = getContext();
 
         ConsumerSettings consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
@@ -89,6 +90,7 @@ public class ExecuteActor extends UntypedActor {
         // Retrieval of available QoO pipelines
         this.remedyToPlan = remedyToPlan;
         this.topicToPublish = topicToPublish;
+        this.associatedRequest_id = associatedRequest_id;
 
         // ActorRef to log to the monitor actor of the MAPE-K loop
         this.monitorActor = getContext().actorFor(getContext().parent().path().parent().child("monitorActor"));
@@ -119,6 +121,7 @@ public class ExecuteActor extends UntypedActor {
                                 } else {
                                     IPipeline pipelineToEnforce = castedResultPipelineObject.get(0).getPipelineObject();
 
+                                    pipelineToEnforce.setAssociatedRequest_id(associatedRequest_id);
                                     pipelineToEnforce.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(10, TimeUnit.SECONDS));
                                     Map<String, String> qooParams = new HashMap<>();
                                     qooParams.put("min_value","-50.0");

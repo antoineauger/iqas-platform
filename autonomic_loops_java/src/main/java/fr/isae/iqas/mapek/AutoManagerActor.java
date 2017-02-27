@@ -70,12 +70,13 @@ public class AutoManagerActor extends UntypedActor {
         }
         else if (message instanceof Request) {
             // TODO
+            Request requestTemp = (Request) message;
             if (processingActivated) {
-                planActor.tell(new MAPEKInternalMsg.RFCMsg("none"), getSelf());
+                planActor.tell(new MAPEKInternalMsg.RFCMsg("none", requestTemp.getRequest_id()), getSelf());
                 processingActivated = false;
             }
             else {
-                planActor.tell(new MAPEKInternalMsg.RFCMsg("testGraph"), getSelf());
+                planActor.tell(new MAPEKInternalMsg.RFCMsg("testGraph", requestTemp.getRequest_id()), getSelf());
                 processingActivated = true;
             }
         }

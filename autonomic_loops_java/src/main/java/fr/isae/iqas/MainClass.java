@@ -56,13 +56,10 @@ public class MainClass extends AllDirectives{
 
             // MongoController to perform management queries (requests, mapek logging)
             MongoRESTController mongoRESTController = new MongoRESTController(database);
+            mongoRESTController.getController().dropIQASDatabase();
 
             // FusekiController to perform SPARQL queries (sensors, pipelines)
             FusekiRESTController fusekiRESTController = new FusekiRESTController(prop, getContext(), pathPipelineWatcherActor);
-
-            // TODO: only for sensors, sensor insertion
-            mongoRESTController.getController().dropIQASDatabase();
-            //mongoRESTController.getController().putSensorsFromFileIntoDB("templates/sensors.json");
 
             // Watcher for dynamic QoO pipelines addition / removal
             final ActorRef pipelineWatcherActor = getContext().actorOf(Props.create(PipelineWatcherActor.class, prop), "pipelineWatcherActor");

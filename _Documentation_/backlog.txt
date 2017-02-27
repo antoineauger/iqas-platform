@@ -9,8 +9,6 @@ Implementation
 -Class for Symptoms > Plans
 -Class for Executions (according to the MAPE-K loop RD / Info)
 -Define RFC for each MAPE-K loop
--Notification Service (actor)
--iQAS monitoring service (pour MAPE-K, Kafka and cluster metrics only)
 
 +++ Consumers +++
 -Real-time consuming (graph, pie charts?)

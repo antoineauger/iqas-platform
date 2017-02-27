@@ -63,11 +63,11 @@ public class PlanActor extends UntypedActor {
                 ActorRef actorRefToStop = execActorsRefs.get(actorNameToResolve);
                 gracefulStop(actorRefToStop);
 
-                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicsToPullFrom, topicToPublish, remedyToPlan));
+                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicsToPullFrom, topicToPublish, remedyToPlan, receivedRFCMsg.getAssociatedRequest_id()));
                 execActorsRefs.put(actorNameToResolve, actorRefToStart);
                 log.info("Successfully started " + actorRefToStart.path());
             } else {
-                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicsToPullFrom, topicToPublish, remedyToPlan));
+                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicsToPullFrom, topicToPublish, remedyToPlan, receivedRFCMsg.getAssociatedRequest_id()));
                 execActorsRefs.put(actorNameToResolve, actorRefToStart);
                 log.info("Successfully started " + actorRefToStart.path());
             }

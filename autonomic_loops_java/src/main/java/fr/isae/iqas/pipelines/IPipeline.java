@@ -29,7 +29,8 @@ import java.util.concurrent.CompletionStage;
  * Created by an.auger on 31/01/2017.
  */
 
-@JsonIgnoreProperties({"pipelineName", "pipelineID", "params"})
+@JsonIgnoreProperties({"logger", "monitorActor", "flowToComputeObsRate", "computeAttributeHelper", "pipelineName",
+        "pipelineID", "params", "qooParams", "reportFrequency", "associatedRequest_id"})
 public interface IPipeline {
     ActorRef getMonitorActor();
 
@@ -103,4 +104,8 @@ public interface IPipeline {
     boolean setCustomizableParameter(String param, String value);
 
     Map<String, String> getQooParams();
+
+    String getAssociatedRequest_id();
+
+    void setAssociatedRequest_id(String associatedRequest_id);
 }

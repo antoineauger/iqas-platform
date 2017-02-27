@@ -84,7 +84,7 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                             });
 
                     if (askedLevelFinal == RAW_DATA) {
-                        //TODO
+                        //TODO: code logic for Raw Data for SimpleFilteringPipeline
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
                                 .viaFanOut(bcast)
@@ -101,7 +101,7 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                                 .toInlet(sinkGraph);
                     }
                     else if (askedLevelFinal == KNOWLEDGE) {
-                        //TODO
+                        //TODO: code logic for Knowledge for SimpleFilteringPipeline
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
                                 .viaFanOut(bcast)
@@ -122,6 +122,7 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                             .via(builder.add(getFlowToComputeObsRate()))
                             .to(builder.add(Sink.foreach(elem -> {
                                 qoOReportObsRate.setQooAttribute(OBS_RATE.toString(), elem);
+                                qoOReportObsRate.setRequest_id(getAssociatedRequest_id());
                                 getMonitorActor().tell(qoOReportObsRate, ActorRef.noSender());
                             })));
                     final QoOReportMsg qoOReportAttributes = new QoOReportMsg(getPipelineID());
@@ -132,7 +133,8 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                                     .map(l -> l.get(l.size()-1))))
                             .to(builder.add(Sink.foreach(elem -> {
                                 Information tempInformation = (Information) elem;
-                                qoOReportAttributes.setProducer(tempInformation.getProducer());
+                                qoOReportAttributes.setProducerName(tempInformation.getProducer());
+                                qoOReportAttributes.setRequest_id(getAssociatedRequest_id());
                                 qoOReportAttributes.setQooAttribute(OBS_FRESHNESS.toString(), tempInformation.getQoOAttribute(OBS_FRESHNESS));
                                 qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), tempInformation.getQoOAttribute(OBS_ACCURACY));
                                 getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());

@@ -25,6 +25,7 @@ public abstract class AbstractPipeline {
     final FiniteDuration ONE_SECOND = FiniteDuration.create(1, TimeUnit.SECONDS);
 
     private String pipelineName;
+    private String associatedRequest_id;
     private boolean adaptable;
 
     private List<Operator> supportedOperators;
@@ -48,6 +49,7 @@ public abstract class AbstractPipeline {
         this.qooParamPrototypes = new ConcurrentHashMap<>();
         this.qooParams = new ConcurrentHashMap<>();
 
+        this.associatedRequest_id = "UNKNOWN";
         this.monitorActor = null;
         this.reportFrequency = ONE_SECOND;
         this.qooParamPrototypes = IComputeQoOAttributes.getQoOParamsForInterface();
@@ -141,5 +143,13 @@ public abstract class AbstractPipeline {
 
     public Map<String, String> getQooParams() {
         return qooParams;
+    }
+
+    public String getAssociatedRequest_id() {
+        return associatedRequest_id;
+    }
+
+    public void setAssociatedRequest_id(String associatedRequest_id) {
+        this.associatedRequest_id = associatedRequest_id;
     }
 }
