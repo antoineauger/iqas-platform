@@ -12,6 +12,7 @@ import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.quality.IComputeQoOAttributes;
 import fr.isae.iqas.model.request.Operator;
@@ -32,7 +33,7 @@ import java.util.concurrent.CompletionStage;
 public interface IPipeline {
     ActorRef getMonitorActor();
 
-    Flow<String, Integer, NotUsed> getFlowToComputeObsRate();
+    Flow<QoOReportMsg.ReportSubject, Integer, NotUsed> getFlowToComputeObsRate();
 
     void setOptionsForQoOComputation(IComputeQoOAttributes computeAttributeHelper,
                                      Map<String, String> qooParams);
@@ -101,4 +102,5 @@ public interface IPipeline {
      */
     boolean setCustomizableParameter(String param, String value);
 
+    Map<String, String> getQooParams();
 }

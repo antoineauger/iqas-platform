@@ -4,11 +4,10 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.model.message.KafkaTopicMsg;
+import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
-import scala.concurrent.duration.Duration;
 
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -34,18 +33,22 @@ public class MonitorActor extends UntypedActor {
 
     @Override
     public void onReceive(Object message) {
-        if (message.equals("tick")) {
+        /*if (message.equals("tick")) {
             // send another periodic tick after the specified delay
             getContext().system().scheduler().scheduleOnce(
                     Duration.create(10, TimeUnit.SECONDS),
                     getSelf(), "tick", getContext().dispatcher(), null);
 
             System.out.println("It works!");
-        } else if (message instanceof KafkaTopicMsg) {
+        } */
+        if (message instanceof KafkaTopicMsg) {
             log.info("Received KafkaTopicMsg message: {}", message);
             getSender().tell(message, getSelf());
         } else if (message instanceof String) {
             log.info("Received String message: {}", message);
+        } else if (message instanceof QoOReportMsg) {
+            QoOReportMsg tempQoOReportMsg = (QoOReportMsg) message;
+            log.info("QoO report message: {} {} {}", tempQoOReportMsg.getPipeline_id(), tempQoOReportMsg.getProducer(), tempQoOReportMsg.getQooAttributesMap().toString());
         } else if (message instanceof TerminatedMsg) {
             TerminatedMsg terminatedMsg = (TerminatedMsg) message;
             if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {

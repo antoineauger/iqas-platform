@@ -14,6 +14,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static fr.isae.iqas.model.message.QoOReportMsg.ReportSubject;
+import static fr.isae.iqas.model.message.QoOReportMsg.ReportSubject.KEEP_ALIVE;
+
 /**
  * Created by an.auger on 08/02/2017.
  */
@@ -28,6 +31,7 @@ public abstract class AbstractPipeline {
     private Map<String, String> params;
     private Set<String> customizableParams;
     private Map<String, Class> qooParamPrototypes;
+
     private Map<String, String> qooParams;
 
     private ActorRef monitorActor;
@@ -118,15 +122,24 @@ public abstract class AbstractPipeline {
         this.reportFrequency = reportFrequency;
     }
 
-    public Flow<String, Integer, NotUsed> getFlowToComputeObsRate() {
-        return Flow.of(String.class).keepAlive(reportFrequency.div(2), () -> "keep")
+    public Flow<ReportSubject, Integer, NotUsed> getFlowToComputeObsRate() {
+        return Flow.of(ReportSubject.class).keepAlive(reportFrequency.div(2), () -> KEEP_ALIVE)
                 .map(p -> {
-                    if (p.equals("keep")) {
+                    if (p == KEEP_ALIVE) {
                         return 0;
                     }
                     else {
                         return 1;
                     }
-                }).groupedWithin(Integer.MAX_VALUE, reportFrequency).map(i -> i.stream().mapToInt(Integer::intValue).sum());
+                }).groupedWithin(Integer.MAX_VALUE, reportFrequency)
+                .map(i -> i.stream().mapToInt(Integer::intValue).sum());
+    }
+
+    public IComputeQoOAttributes getComputeAttributeHelper() {
+        return computeAttributeHelper;
+    }
+
+    public Map<String, String> getQooParams() {
+        return qooParams;
     }
 }
