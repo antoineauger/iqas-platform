@@ -26,16 +26,15 @@ import static fr.isae.iqas.model.quality.QoOAttribute.OBS_FRESHNESS;
 import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
- * Created by an.auger on 31/01/2017.
+ * Created by an.auger on 28/02/2017.
  */
-public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeline {
+public class ForwardPipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
 
-    public SimpleFilteringPipeline() {
-        super("Simple Filtering Pipeline", true);
+    public ForwardPipeline() {
+        super("Forward Pipeline", false);
 
         addSupportedOperator(NONE);
-        setParameter("threshold_min", String.valueOf(Float.MIN_VALUE), true);
     }
 
     @Override
@@ -69,11 +68,7 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                                         Double.valueOf(getQooParams().get("max_value")));
                                 tempInformation = getComputeAttributeHelper().computeQoOFreshness(tempInformation);
                                 return tempInformation;
-                    });
-
-                    Flow<Information, Information, NotUsed> filteringMechanism =
-                            Flow.of(Information.class).filter(r ->
-                            r.getValue() < Double.valueOf(getParams().get("threshold_min")));
+                            });
 
                     Flow<Information, ProducerRecord, NotUsed> infoToProdRecord =
                             Flow.of(Information.class).map(r -> {
@@ -88,7 +83,6 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
                                 .viaFanOut(bcast)
-                                .via(builder.add(filteringMechanism))
                                 .via(builder.add(infoToProdRecord))
                                 .toInlet(sinkGraph);
                     }
@@ -96,7 +90,6 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
                                 .viaFanOut(bcast)
-                                .via(builder.add(filteringMechanism))
                                 .via(builder.add(infoToProdRecord))
                                 .toInlet(sinkGraph);
                     }
@@ -105,7 +98,6 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
                                 .viaFanOut(bcast)
-                                .via(builder.add(filteringMechanism))
                                 .via(builder.add(infoToProdRecord))
                                 .toInlet(sinkGraph);
                     }
@@ -156,3 +148,4 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
     }
 
 }
+

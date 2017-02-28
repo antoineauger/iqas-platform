@@ -1,4 +1,4 @@
-package fr.isae.iqas.pipelines;
+package fr.isae.iqas.kafka;
 
 import akka.actor.UntypedActor;
 import kafka.admin.AdminUtils;
@@ -24,9 +24,20 @@ public class KafkaAdminActor extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Throwable {
-        //createTopic("my-topic");
-        //deleteTopic("my-topic");
-        resetTopic("my-topic");
+        if (message instanceof KafkaTopicMsg) {
+            KafkaTopicMsg kafkaTopicMsg = (KafkaTopicMsg) message;
+            boolean result = false;
+            if (kafkaTopicMsg.getTopicAction() == KafkaTopicMsg.TopicAction.CREATE) {
+                result = createTopic(kafkaTopicMsg.getTopic());
+            }
+            else if (kafkaTopicMsg.getTopicAction() == KafkaTopicMsg.TopicAction.DELETE) {
+                result = deleteTopic(kafkaTopicMsg.getTopic());
+            }
+            else if (kafkaTopicMsg.getTopicAction() == KafkaTopicMsg.TopicAction.RESET) {
+                result = resetTopic(kafkaTopicMsg.getTopic());
+            }
+            getSender().tell(result, getSelf());
+        }
     }
 
     private boolean resetTopic(String kafkaTopicToReset) {
@@ -37,7 +48,7 @@ public class KafkaAdminActor extends UntypedActor {
     }
 
     private boolean createTopic(String kafkaTopicToCreate) {
-        boolean success = true;
+        boolean success = false;
 
         // Note: You must initialize the ZkClient with ZKStringSerializer.  If you don't, then
         // createTopic() will only seem to work (it will return without error).  The topic will exist in
@@ -58,13 +69,16 @@ public class KafkaAdminActor extends UntypedActor {
         if (!AdminUtils.topicExists(zkUtils, kafkaTopicToCreate)) {
             AdminUtils.createTopic(zkUtils, kafkaTopicToCreate, partitions, replication, topicConfig, null);
         }
+        if (AdminUtils.topicExists(zkUtils, kafkaTopicToCreate)) {
+            success = true;
+        }
         zkClient.close();
 
         return success;
     }
 
     private boolean deleteTopic(String kafkaTopicToDelete) {
-        boolean success = true;
+        boolean success = false;
 
         // Note: You must initialize the ZkClient with ZKStringSerializer.  If you don't, then
         // createTopic() will only seem to work (it will return without error).  The topic will exist in
@@ -80,6 +94,9 @@ public class KafkaAdminActor extends UntypedActor {
 
         if (AdminUtils.topicExists(zkUtils, kafkaTopicToDelete)) {
             AdminUtils.deleteTopic(zkUtils, kafkaTopicToDelete);
+        }
+        if (!AdminUtils.topicExists(zkUtils, kafkaTopicToDelete)) {
+            success = true;
         }
         zkClient.close();
 

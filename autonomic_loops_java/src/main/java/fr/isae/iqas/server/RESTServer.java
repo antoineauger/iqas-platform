@@ -214,7 +214,7 @@ public class RESTServer extends AllDirectives {
                                                     return CompletableFuture.supplyAsync(() ->
                                                             complete(HttpResponse.create()
                                                                     .withStatus(200)
-                                                                    .withEntity("Asked for the deletion of the request with id " + request_id)));
+                                                                    .withEntity("Asked for the deletion of request " + request_id)));
                                                 }, Function.identity())
 
                                         ))

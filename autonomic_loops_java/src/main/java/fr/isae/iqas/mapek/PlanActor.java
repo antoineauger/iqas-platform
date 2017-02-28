@@ -6,13 +6,17 @@ import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
+import fr.isae.iqas.database.FusekiController;
+import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.model.message.MAPEKInternalMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -23,16 +27,18 @@ public class PlanActor extends UntypedActor {
 
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private Properties prop = null;
-    private Set<String> topicsToPullFrom = new HashSet<>();
-    private String topicToPublish = null;
+    private Properties prop;
+    private MongoController mongoController;
+    private FusekiController fusekiController;
+    private ActorRef kafkaAdminActor;
 
     private Map<String, ActorRef> execActorsRefs = new HashMap<>();
 
-    public PlanActor(Properties prop) {
+    public PlanActor(Properties prop, MongoController mongoController, FusekiController fusekiController, ActorRef kafkaAdminActor) {
         this.prop = prop;
-        this.topicsToPullFrom.add("topic1");
-        this.topicToPublish = "topic2";
+        this.mongoController = mongoController;
+        this.fusekiController = fusekiController;
+        this.kafkaAdminActor = kafkaAdminActor;
     }
 
     @Override
@@ -41,7 +47,41 @@ public class PlanActor extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Exception {
-        if (message instanceof TerminatedMsg) {
+        /**
+         * ActionMsg messages
+         */
+        if (message instanceof MAPEKInternalMsg.ActionMsg) {
+            log.info("Received RFCMsg message: {}", message);
+
+            MAPEKInternalMsg.ActionMsg receivedActionMsg = (MAPEKInternalMsg.ActionMsg) message;
+
+            if (execActorsRefs.containsKey(actorNameToResolve)) { // if reference found, the corresponding actor has been started
+                ActorRef actorRefToStop = execActorsRefs.get(actorNameToResolve);
+                gracefulStop(actorRefToStop);
+
+                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
+                        prop,
+                        receivedActionMsg.getAttachedObject1(),
+                        receivedActionMsg.getAttachedObject2(),
+                        receivedActionMsg.getAttachedObject3(),
+                        receivedActionMsg.getAssociatedRequest_id()));
+                execActorsRefs.put(actorNameToResolve, actorRefToStart);
+                log.info("Successfully started " + actorRefToStart.path());
+            } else {
+                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
+                        prop,
+                        receivedActionMsg.getAttachedObject1(),
+                        receivedActionMsg.getAttachedObject2(),
+                        receivedActionMsg.getAttachedObject3(),
+                        receivedActionMsg.getAssociatedRequest_id()));
+                execActorsRefs.put(actorNameToResolve, actorRefToStart);
+                log.info("Successfully started " + actorRefToStart.path());
+            }
+        }
+        /**
+         * TerminatedMsg messages
+         */
+        else if (message instanceof TerminatedMsg) {
             TerminatedMsg terminatedMsg = (TerminatedMsg) message;
             ActorRef actorRefToStop = terminatedMsg.getTargetToStop();
             if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
@@ -51,25 +91,6 @@ public class PlanActor extends UntypedActor {
             else {
                 gracefulStop(actorRefToStop);
                 execActorsRefs.remove(actorNameToResolve);
-            }
-        } else if (message instanceof MAPEKInternalMsg.RFCMsg) {
-            log.info("Received RFCMsg message: {}", message);
-
-            //TODO for now the remedyToPlan is hardcoded!
-            MAPEKInternalMsg.RFCMsg receivedRFCMsg = (MAPEKInternalMsg.RFCMsg) message;
-            String remedyToPlan = "SimpleFilteringPipeline";
-
-            if (execActorsRefs.containsKey(actorNameToResolve)) { // if reference found, the corresponding actor has been started
-                ActorRef actorRefToStop = execActorsRefs.get(actorNameToResolve);
-                gracefulStop(actorRefToStop);
-
-                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicsToPullFrom, topicToPublish, remedyToPlan, receivedRFCMsg.getAssociatedRequest_id()));
-                execActorsRefs.put(actorNameToResolve, actorRefToStart);
-                log.info("Successfully started " + actorRefToStart.path());
-            } else {
-                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class, prop, topicsToPullFrom, topicToPublish, remedyToPlan, receivedRFCMsg.getAssociatedRequest_id()));
-                execActorsRefs.put(actorNameToResolve, actorRefToStart);
-                log.info("Successfully started " + actorRefToStart.path());
             }
         }
     }

@@ -61,11 +61,11 @@ public class ExecuteActor extends UntypedActor {
 
     private ActorMaterializer materializer = null;
     private RunnableGraph myRunnableGraph = null;
-    private String remedyToPlan = null;
+    private String pipeline_id = null;
     private String topicToPublish = null;
     private String associatedRequest_id = "UNKNOWN";
 
-    public ExecuteActor(Properties prop, Set<String> topicsToPullFrom, String topicToPublish, String remedyToPlan, String associatedRequest_id) {
+    public ExecuteActor(Properties prop, String pipeline_id, Set<String> topicsToPullFrom, String topicToPublish, String associatedRequest_id) {
         this.context = getContext();
 
         ConsumerSettings consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
@@ -88,7 +88,7 @@ public class ExecuteActor extends UntypedActor {
         this.kafkaSink = Producer.plainSink(producerSettings);
 
         // Retrieval of available QoO pipelines
-        this.remedyToPlan = remedyToPlan;
+        this.pipeline_id = pipeline_id;
         this.topicToPublish = topicToPublish;
         this.associatedRequest_id = associatedRequest_id;
 
@@ -107,7 +107,7 @@ public class ExecuteActor extends UntypedActor {
                 if (t != null) {
                     log.error("Unable to find the PipelineWatcherActor: " + t.toString());
                 } else {
-                    ask(pipelineWatcherActor, new PipelineRequestMsg(remedyToPlan), new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {
+                    ask(pipelineWatcherActor, new PipelineRequestMsg(pipeline_id), new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {
                         @Override
                         public void onComplete(Throwable t, Object pipelineObject) throws Throwable {
                             if (t != null) {
@@ -116,7 +116,7 @@ public class ExecuteActor extends UntypedActor {
                             } else {
                                 ArrayList<Pipeline> castedResultPipelineObject = (ArrayList<Pipeline>) pipelineObject;
                                 if (castedResultPipelineObject.size() == 0) {
-                                    log.error("Unable to retrieve the specified QoO pipeline " + remedyToPlan);
+                                    log.error("Unable to retrieve the specified QoO pipeline " + pipeline_id);
                                     askParentForTermination();
                                 } else {
                                     IPipeline pipelineToEnforce = castedResultPipelineObject.get(0).getPipelineObject();

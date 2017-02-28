@@ -59,7 +59,7 @@ public interface IPipeline {
                                                       Operator operatorToApply);
 
     /**
-     * @return the pipeline ID corresponding to the Class name .class
+     * @return the pipeline ID ([.class name] or [.class name + request_id])
      */
     String getPipelineID();
 

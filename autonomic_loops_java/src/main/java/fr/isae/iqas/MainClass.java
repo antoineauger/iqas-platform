@@ -23,7 +23,6 @@ import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.database.FusekiRESTController;
 import fr.isae.iqas.database.MongoRESTController;
 import fr.isae.iqas.model.message.TerminatedMsg;
-import fr.isae.iqas.pipelines.KafkaAdminActor;
 import fr.isae.iqas.pipelines.PipelineWatcherActor;
 import fr.isae.iqas.server.APIGatewayActor;
 import fr.isae.iqas.server.RESTServer;
@@ -123,9 +122,6 @@ public class MainClass extends AllDirectives{
         final Http http = Http.get(system);
         final Materializer materializer = ActorMaterializer.create(system);
         final ActorRef localMaster = system.actorOf(Props.create(LocalMaster.class, prop, system, http, materializer), "LocalMasterActor");
-
-        final ActorRef kafkaAct = system.actorOf(Props.create(KafkaAdminActor.class, prop), "KafkaAdminActor");
-        kafkaAct.tell("test", ActorRef.noSender());
     }
 
 }

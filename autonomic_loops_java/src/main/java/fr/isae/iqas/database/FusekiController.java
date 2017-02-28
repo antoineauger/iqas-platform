@@ -49,7 +49,7 @@ public class FusekiController {
      * Sensors
      */
 
-    VirtualSensorList _findAllSensors() {
+    public VirtualSensorList _findAllSensors() {
         Map<String, VirtualSensor> processedSensors = new ConcurrentHashMap<>();
         QuerySolution binding;
         VirtualSensorList sensorList = new VirtualSensorList();
@@ -131,7 +131,7 @@ public class FusekiController {
         }
     }
 
-    VirtualSensor _findSpecificSensor(String sensor_id) {
+    public VirtualSensor _findSpecificSensor(String sensor_id) {
         QuerySolution binding = null;
         VirtualSensor sensor = null;
 
@@ -202,11 +202,105 @@ public class FusekiController {
         }
     }
 
+    public VirtualSensorList _findAllSensorsWithConditions(String locationNearTo, String topic_id) {
+        Map<String, VirtualSensor> processedSensors = new ConcurrentHashMap<>();
+        QuerySolution binding;
+        VirtualSensorList sensorList = new VirtualSensorList();
+        sensorList.sensors = new ArrayList<>();
+
+        String req = baseStringForRequests +
+                "SELECT ?sensor ?topic ?url ?interfaceType ?interfaceDescription ?longitude ?latitude ?alt ?altRelative ?relativeLocation\n" +
+                "WHERE {\n" +
+                "?sensor rdf:type ssn:Sensor .\n" +
+                "?sensor ssn:madeObservation ?o .\n" +
+                "?o ssn:observedProperty ?topic .\n" +
+                "?sensor iot-lite:exposedBy ?s .\n";
+
+        if (!topic_id.equals("ALL")) {
+            req += topic_id + " rdf:type ssn:Property .\n" +
+                    topic_id + " qoo:canBeRetrievedThrough ?s .\n";
+        }
+
+        req += "?topic qoo:canBeRetrievedThrough ?s .\n" +
+                "?s iot-lite:endpoint ?url .\n" +
+                "?s iot-lite:interfaceType ?interfaceType .\n" +
+                "?s iot-lite:interfaceDescription ?interfaceDescription .\n" +
+                "?area rdf:type geo:Point .\n";
+
+        if (!locationNearTo.equals("ALL")) {
+            req += "?area iot-lite:relativeLocation \"" + locationNearTo + "\" .\n";
+        }
+
+        req += "?sensor geo:location ?pos .\n" +
+                "?pos geo:long ?longitude .\n" +
+                "?pos geo:lat ?latitude .\n" +
+                "?pos iot-lite:relativeLocation ?relativeLocation .\n" +
+                "?pos iot-lite:altRelative ?altRelative .\n" +
+                "?pos geo:alt ?alt\n" +
+                "}";
+
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
+
+                Resource id = (Resource) binding.get("sensor");
+                Resource topic = (Resource) binding.get("topic");
+                Literal url = binding.getLiteral("url");
+                Literal interfaceType = binding.getLiteral("interfaceType");
+                Literal interfaceDescription = binding.getLiteral("interfaceDescription");
+                Literal longitude = binding.getLiteral("longitude");
+                Literal latitude = binding.getLiteral("latitude");
+                Literal alt = binding.getLiteral("alt");
+                Literal altRelative = binding.getLiteral("altRelative");
+                Literal relativeLocation = binding.getLiteral("relativeLocation");
+
+                VirtualSensor sensorTemp;
+
+                if (processedSensors.containsKey(id.getURI())) {
+                    sensorTemp = processedSensors.get(id.getURI());
+                }
+                else {
+                    sensorTemp = new VirtualSensor();
+                    sensorTemp.sensor_id = id.getURI();
+
+                    Location locTemp = new Location();
+                    locTemp.latitude = latitude.getString();
+                    locTemp.longitude = longitude.getString();
+                    locTemp.altitude = alt.getString();
+                    locTemp.relative_altitude = altRelative.getString();
+                    locTemp.relative_location = relativeLocation.getString();
+
+                    sensorTemp.endpoints = new ArrayList<>();
+                    sensorTemp.location = locTemp;
+                }
+
+                ServiceEndpoint endpointTemp = new ServiceEndpoint();
+                endpointTemp.topic = topic.getURI();
+                endpointTemp.url = url.getString();
+                endpointTemp.if_type = interfaceType.getString();
+                endpointTemp.description = interfaceDescription.getString();
+                sensorTemp.endpoints.add(endpointTemp);
+
+                processedSensors.put(id.getURI(), sensorTemp);
+            }
+
+            sensorList.sensors.addAll(processedSensors.values());
+        }
+
+        if (sensorList.sensors.size() == 0) {
+            return null;
+        }
+        else {
+            return sensorList;
+        }
+    }
+
     /**
      * Topics
      */
 
-    TopicList _findAllTopics() {
+    public TopicList _findAllTopics() {
         QuerySolution binding;
         TopicList topicList = new TopicList();
         topicList.topics = new ArrayList<>();
@@ -239,7 +333,7 @@ public class FusekiController {
         }
     }
 
-    ServiceEndpointList _findSpecificTopic(String topic_id) {
+    public ServiceEndpointList _findSpecificTopic(String topic_id) {
         QuerySolution binding = null;
         ServiceEndpointList endpointsForTopic = new ServiceEndpointList();
         endpointsForTopic.serviceEndpoints = new ArrayList<>();
@@ -285,7 +379,7 @@ public class FusekiController {
      * Places
      */
 
-    LocationList _findAllPlaces() {
+    public LocationList _findAllPlaces() {
         QuerySolution binding = null;
         LocationList locationList = new LocationList();
         locationList.locations = new ArrayList<>();
@@ -332,7 +426,7 @@ public class FusekiController {
         }
     }
 
-    LocationList _findPlacesNearTo(String location) {
+    public LocationList _findPlacesNearTo(String location) {
         QuerySolution binding = null;
         LocationList locationList = new LocationList();
         locationList.locations = new ArrayList<>();
@@ -386,7 +480,7 @@ public class FusekiController {
      * QoO attributes
      */
 
-    QoOAttributeList _findAllQoOAttributes() {
+    public QoOAttributeList _findAllQoOAttributes() {
         QuerySolution binding = null;
         QoOAttributeList qoOAttributeList = new QoOAttributeList();
         qoOAttributeList.qoo_attributes = new ArrayList<>();
@@ -426,7 +520,7 @@ public class FusekiController {
      * QoO customizable parameters
      */
 
-    QoOCustomizableParamList _findAllQoOCustomizableParameters() {
+    public QoOCustomizableParamList _findAllQoOCustomizableParameters() {
         QuerySolution binding = null;
         QoOCustomizableParamList customizableParamList = new QoOCustomizableParamList();
         customizableParamList.customizable_params = new ArrayList<>();

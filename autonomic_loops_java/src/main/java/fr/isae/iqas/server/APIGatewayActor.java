@@ -7,17 +7,18 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
+import fr.isae.iqas.kafka.KafkaAdminActor;
 import fr.isae.iqas.mapek.AutoManagerActor;
 import fr.isae.iqas.model.message.RESTRequestMsg;
 import fr.isae.iqas.model.request.Request;
-import fr.isae.iqas.model.request.State;
 
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.*;
-import static fr.isae.iqas.model.request.State.Status.*;
+import static fr.isae.iqas.model.request.State.Status.REMOVED;
 
 /**
  * Created by an.auger on 20/09/2016.
@@ -32,10 +33,9 @@ public class APIGatewayActor extends UntypedActor {
     private Properties prop;
     private MongoController mongoController;
     private FusekiController fusekiController;
-    private ActorRef autoManager;
 
-    //TODO: to remove, only for testing with randomness
-    private Random randomGenerator;
+    private ActorRef autoManager;
+    private ActorRef kafkaAdminActor;
 
     public APIGatewayActor(Properties prop, MongoController mongoController, FusekiController fusekiController) {
         this.prop = prop;
@@ -43,16 +43,10 @@ public class APIGatewayActor extends UntypedActor {
         this.fusekiController = fusekiController;
         this.registeredRequestsByApp = new ConcurrentHashMap<>();
 
-        this.autoManager = getContext()
-                .actorOf(Props.create(AutoManagerActor.class, this.prop, this.mongoController, this.fusekiController), "autoManager");
 
-        //TODO: to remove, only for testing with randomness
-        /*
-        randomGenerator  = new Random();
-        int randomInt = randomGenerator.nextInt(2);
-        if (randomInt == 0) {
-            incomingRequest.updateState(Status.DONE);
-        }*/
+        this.kafkaAdminActor = getContext().actorOf(Props.create(KafkaAdminActor.class, prop), "KafkaAdminActor");
+        this.autoManager = getContext()
+                .actorOf(Props.create(AutoManagerActor.class, this.prop, this.kafkaAdminActor, this.mongoController, this.fusekiController), "autoManager");
     }
 
     @Override
@@ -67,89 +61,49 @@ public class APIGatewayActor extends UntypedActor {
 
             log.info("Received " + requestSubject + " action for request with id " + incomingRequest.getRequest_id());
 
-            List<State.Status> statusesToRetrieve = new ArrayList<>();
-            statusesToRetrieve.add(CREATED);
-            statusesToRetrieve.add(ENFORCED);
-            statusesToRetrieve.add(SUBMITTED);
-
-            /*ArrayList<Request> registeredRequestsForApp = mongoController
-                    .getFilteredRequestsByApp(incomingRequest.getApplication_id(), statusesToRetrieve).get();
-
-            log.info("Application " + incomingRequest.getApplication_id() +
-                    " has " + registeredRequestsForApp.size() + " registered requests.");*/
-
             if (requestSubject.equals(POST)) { // Creation
-                CompletableFuture<Boolean> insertSuccess = mongoController.putRequest(incomingRequest);
-                insertSuccess.whenComplete((result, throwable) -> {
+                mongoController.putRequest(incomingRequest).whenComplete((result, throwable) -> {
                     if (result) {
                         autoManager.tell(incomingRequest, getSelf());
                     }
                     else {
                         log.error("Insert of the Request " + incomingRequest.getRequest_id() + " has failed. " +
-                                "Not telling anything to Autonomic Managers...");
+                                "Not telling anything to Autonomic Managers.");
                     }
                 });
             }
             else if (requestSubject.equals(PUT)) { // Update
-                // TODO
+                // TODO update request logic
             }
             else if (requestSubject.equals(GET)) {
                 log.error("This should never happen: GET responsibility is directly handled by RESTServer");
             }
             else if (requestSubject.equals(DELETE)) { // Deletion
-                CompletableFuture<Boolean> test = mongoController.deleteRequest(incomingRequest.getRequest_id());
-                test.thenApply((result) -> {
-                    if (result) {
-                        log.info("Request with id " + incomingRequest.getRequest_id() + " successfully deleted!");
-                        // TODO: warn auto manager to free resources
+                mongoController.getSpecificRequest(incomingRequest.getRequest_id()).whenComplete((result, throwable) -> {
+                    if (throwable == null && result.size() == 1) {
+                        Request retrievedRequest = result.get(0);
+                        retrievedRequest.addLog("Request deleted by the user.");
+                        retrievedRequest.updateState(REMOVED);
+                        mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result2, throwable2) -> {
+                            if (result2) {
+                                log.info("Request with id " + retrievedRequest.getRequest_id() + " successfully marked for deletion.");
+                                autoManager.tell(retrievedRequest, getSelf());
+                            }
+                            else {
+                                log.warning("Unable to mark request " + retrievedRequest.getRequest_id() + " for deletion. " +
+                                        "Operation skipped!");
+                            }
+                        });
                     }
                     else {
-                        log.warning("Unable to delete request with id " + incomingRequest.getRequest_id() + ". " +
+                        log.warning("Unable to retrieve request " + incomingRequest.getRequest_id() + ". " +
                                 "Operation skipped!");
                     }
-                    return result;
                 });
-                // TODO: remove request from here
             }
             else {
                 log.error("Unknown REST verb (" + requestSubject + ") for request with id " + incomingRequest.getRequest_id());
             }
         }
-
-        /*if (message instanceof Request) { // Requests are received from RESTServer through the MongoRESTController
-            log.info("Received Request: {}", message.toString());
-
-            Request incomingRequest = (Request) message;
-
-            List<State.Status> statusesToRetrieve = new ArrayList<>();
-            statusesToRetrieve.add(State.Status.CREATED);
-            statusesToRetrieve.add(State.Status.ENFORCED);
-            statusesToRetrieve.add(State.Status.SUBMITTED);
-
-            ArrayList<Request> registeredRequestsForApp = mongoController
-                    .getFilteredRequestsByApp(incomingRequest.getApplication_id(), statusesToRetrieve).get();
-
-            log.info("Application " + incomingRequest.getApplication_id() +
-                    " has " + registeredRequestsForApp.size() + " registered requests.");
-
-            if (registeredRequestsForApp.contains(incomingRequest)) {
-                log.info("Request " + incomingRequest.getRequest_id() + " has already been inserted!");
-            }
-            else {
-                log.info("Request " + incomingRequest.getRequest_id() + " has not been inserted yet.");
-
-                boolean insertSuccess = mongoController.putRequest(incomingRequest).get();
-                if (insertSuccess) {
-                    // For now, all requests are forwarded to the AM
-                    autoManager.tell(incomingRequest, getSelf());
-                }
-                else {
-                    log.error("Insert of the Request " + incomingRequest.getRequest_id() + " has failed. " +
-                            "Not telling anything to Autonomic Managers...");
-                }
-            }
-
-            // We do not acknowledge the message since it was coming from REST server
-        }*/
     }
 }

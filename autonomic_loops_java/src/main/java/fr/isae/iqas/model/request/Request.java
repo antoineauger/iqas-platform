@@ -80,7 +80,6 @@ public class Request {
         this.location = bsonDocument.getString("location");
 
         Document qooDoc = (Document) bsonDocument.get("qoo");
-
         this.qooConstraints = new QoORequirements(
                 qooDoc.getString("operator"),
                 qooDoc.getString("sla_level"),
@@ -124,6 +123,7 @@ public class Request {
         docToReturn.put("logs", logs);
 
         Document qooDoc = new Document();
+
         qooDoc.put("sla_level", qooConstraints.getSla_level().toString());
         qooDoc.put("operator", qooConstraints.getOperator().toString());
         qooDoc.put("additional_params", qooConstraints.getAdditional_params());
@@ -186,7 +186,12 @@ public class Request {
      * @return the current Status object
      */
     public State.Status getCurrent_status() {
-        return statesList.get(statesList.size() - 1).getStatus();
+        if (statesList.size() > 0) {
+            return statesList.get(statesList.size() - 1).getStatus();
+        }
+        else {
+            return statesList.get(0).getStatus();
+        }
     }
 
     /**
@@ -208,7 +213,9 @@ public class Request {
      */
     public void updateState(State.Status newStatus) {
         Date currentDate = new Date();
-        statesList.get(statesList.size() - 1).setEnd_date(currentDate);
+        if (statesList.size() > 0) {
+            statesList.get(statesList.size() - 1).setEnd_date(currentDate);
+        }
         statesList.add(new State(newStatus, currentDate));
     }
 
@@ -221,7 +228,16 @@ public class Request {
         return logs;
     }
 
+    @JsonProperty("qoo")
     public QoORequirements getQooConstraints() {
         return qooConstraints;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public String getLocation() {
+        return location;
     }
 }

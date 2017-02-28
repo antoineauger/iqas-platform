@@ -11,7 +11,8 @@ public class State {
         SUBMITTED,
         ENFORCED,
         DONE,
-        REJECTED
+        REJECTED,
+        REMOVED
     }
 
     private Status status;
