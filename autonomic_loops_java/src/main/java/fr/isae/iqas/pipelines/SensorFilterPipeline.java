@@ -31,7 +31,7 @@ public class SensorFilterPipeline extends AbstractPipeline implements IPipeline 
     private Graph runnableGraph = null;
 
     public SensorFilterPipeline() {
-        super("Sensor Filter Pipeline", true);
+        super("Sensor Filter Pipeline", "SensorFilterPipeline", true);
 
         setParameter("allowed_sensors", "", true);
         addSupportedOperator(NONE);

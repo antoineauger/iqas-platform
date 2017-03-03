@@ -29,7 +29,7 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
     private Graph runnableGraph = null;
 
     public SimpleFilteringPipeline() {
-        super("Simple Filtering Pipeline", true);
+        super("Simple Filtering Pipeline", "SimpleFilteringPipeline", true);
 
         addSupportedOperator(NONE);
         setParameter("threshold_min", String.valueOf(Float.MIN_VALUE), true);

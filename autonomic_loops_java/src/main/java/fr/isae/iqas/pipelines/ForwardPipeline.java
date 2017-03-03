@@ -8,6 +8,7 @@ import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.observation.Information;
@@ -17,6 +18,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.concurrent.CompletionStage;
 
 import static fr.isae.iqas.model.observation.ObservationLevel.*;
@@ -29,7 +31,7 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
 
     public ForwardPipeline() {
-        super("Forward Pipeline", false);
+        super("Forward Pipeline", "ForwardPipeline", false);
 
         addSupportedOperator(NONE);
     }
@@ -56,10 +58,19 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
                     Flow<ConsumerRecord, Information, NotUsed> consumRecordToInfo =
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                return new Information(
+                                Information informationTemp =  new Information(
                                         sensorDataObject.getString("timestamp"),
                                         sensorDataObject.getString("value"),
                                         sensorDataObject.getString("producer"));
+
+                                ObjectMapper mapper = new ObjectMapper();
+                                TypeReference<HashMap<String,String>> typeRef = new TypeReference<HashMap<String,String>>(){};
+                                HashMap<String,String> qooAttributes = mapper.readValue(sensorDataObject.get("qoOAttributeValues").toString(), typeRef);
+                                if (qooAttributes != null) {
+                                    informationTemp.setQoOAttributeValuesFromJSON(qooAttributes);
+                                }
+
+                                return informationTemp;
                             });
 
                     Flow<Information, ProducerRecord, NotUsed> infoToProdRecord =

@@ -3,7 +3,6 @@ package fr.isae.iqas.mapek;
 import akka.Done;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.kafka.ConsumerSettings;
@@ -17,7 +16,6 @@ import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.RunnableGraph;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
-import akka.util.Timeout;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.pipelines.IPipeline;
@@ -91,7 +89,9 @@ public class ExecuteActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        myRunnableGraph = RunnableGraph.fromGraph(pipelineToEnforce.getPipelineGraph(kafkaSource,
+        //TODO decide if RD, I or Knowledge!
+        myRunnableGraph = RunnableGraph.fromGraph(pipelineToEnforce.getPipelineGraph(
+                kafkaSource,
                 kafkaSink,
                 topicToPublish,
                 ObservationLevel.INFORMATION,

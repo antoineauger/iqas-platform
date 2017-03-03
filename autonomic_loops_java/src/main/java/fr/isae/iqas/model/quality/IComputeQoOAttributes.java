@@ -14,8 +14,8 @@ import java.util.Map;
 public interface IComputeQoOAttributes {
     @QoOParam(name = "min_value", type = Double.class)
     @QoOParam(name = "max_value", type = Double.class)
-    Information computeQoOAccuracy(Information information, Double min_value, Double max_value);
-    Information computeQoOFreshness(Information information);
+    Double computeQoOAccuracy(Information information, Map<String, Map<String, String>> qooParams);
+    Double computeQoOFreshness(Information information);
 
     // Static method to retrieve annotations
     static Map<String, Class> getQoOParamsForInterface() {

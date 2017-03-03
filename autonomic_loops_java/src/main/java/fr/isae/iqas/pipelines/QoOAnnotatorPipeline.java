@@ -16,13 +16,11 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
-import static fr.isae.iqas.model.message.QoOReportMsg.ReportSubject.OBS_RATE;
-import static fr.isae.iqas.model.message.QoOReportMsg.ReportSubject.REPORT;
-import static fr.isae.iqas.model.observation.ObservationLevel.INFORMATION;
-import static fr.isae.iqas.model.observation.ObservationLevel.KNOWLEDGE;
-import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
+import static fr.isae.iqas.model.observation.ObservationLevel.*;
 import static fr.isae.iqas.model.quality.QoOAttribute.OBS_ACCURACY;
 import static fr.isae.iqas.model.quality.QoOAttribute.OBS_FRESHNESS;
 import static fr.isae.iqas.model.request.Operator.NONE;
@@ -34,7 +32,7 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
     private Graph runnableGraph = null;
 
     public QoOAnnotatorPipeline() {
-        super("QoO Annotator Pipeline", true);
+        super("QoO Annotator Pipeline", "QoOAnnotatorPipeline", true);
 
         addSupportedOperator(NONE);
     }
@@ -53,7 +51,7 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
                     final Outlet<ConsumerRecord<byte[], String>> sourceGraph = builder.add(kafkaSource).out();
                     final Inlet<ProducerRecord> sinkGraph = builder.add(kafkaSink).in();
                     // Definition of the broadcast for the MAPE-K monitoring
-                    final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(3));
+                    final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
 
 
                     // ################################# YOUR CODE GOES HERE #################################
@@ -65,16 +63,10 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
                                         sensorDataObject.getString("timestamp"),
                                         sensorDataObject.getString("value"),
                                         sensorDataObject.getString("producer"));
-                                tempInformation = getComputeAttributeHelper().computeQoOAccuracy(tempInformation,
-                                        Double.valueOf(getQooParams().get("temperature").get("min_value")),
-                                        Double.valueOf(getQooParams().get("temperature").get("max_value")));
-                                tempInformation = getComputeAttributeHelper().computeQoOFreshness(tempInformation);
+                                tempInformation.setQoOAttribute(OBS_ACCURACY, String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(tempInformation, getQooParams())));
+                                tempInformation.setQoOAttribute(OBS_FRESHNESS, String.valueOf(getComputeAttributeHelper().computeQoOFreshness(tempInformation)));
                                 return tempInformation;
                     });
-
-                    Flow<Information, Information, NotUsed> filteringMechanism =
-                            Flow.of(Information.class).filter(r ->
-                            r.getValue() < Double.valueOf(getParams().get("threshold_min")));
 
                     Flow<Information, ProducerRecord, NotUsed> infoToProdRecord =
                             Flow.of(Information.class).map(r -> {
@@ -92,7 +84,6 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
                                 .viaFanOut(bcast)
-                                .via(builder.add(filteringMechanism))
                                 .via(builder.add(infoToProdRecord))
                                 .toInlet(sinkGraph);
                     }
@@ -104,32 +95,31 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
                         return null;
                     }
 
-
                     // ################################# END OF YOUR CODE #################################
                     // Do not remove - useful for MAPE-K monitoring
-                    final QoOReportMsg qoOReportObsRate = new QoOReportMsg(getPipelineID());
                     builder.from(bcast.out(1))
-                            .via(builder.add(Flow.of(Information.class).map(p -> REPORT)))
-                            .via(builder.add(getFlowToComputeObsRate()))
-                            .to(builder.add(Sink.foreach(elem -> {
-                                qoOReportObsRate.setQooAttribute(OBS_RATE.toString(), elem);
-                                qoOReportObsRate.setRequest_id(getAssociatedRequest_id());
-                                getMonitorActor().tell(qoOReportObsRate, ActorRef.noSender());
-                            })));
-                    final QoOReportMsg qoOReportAttributes = new QoOReportMsg(getPipelineID());
-                    builder.from(bcast.out(2))
                             .via(builder.add(Flow.of(Information.class)
                                     .groupedWithin(Integer.MAX_VALUE, getReportFrequency())
-                                    //TODO: emit QoO report message for each distinct producer
-                                    .map(l -> l.get(l.size()-1))))
+                                    .map(l -> {
+                                        Map<String, Information> relevantInfoForAllProducers = new HashMap<>();
+                                        for (Information i :l) {
+                                            relevantInfoForAllProducers.put(i.getProducer(), i);
+                                        }
+                                        return relevantInfoForAllProducers;
+                                    }))
+                            )
                             .to(builder.add(Sink.foreach(elem -> {
-                                Information tempInformation = (Information) elem;
-                                qoOReportAttributes.setProducerName(tempInformation.getProducer());
-                                qoOReportAttributes.setRequest_id(getAssociatedRequest_id());
-                                qoOReportAttributes.setQooAttribute(OBS_FRESHNESS.toString(), tempInformation.getQoOAttribute(OBS_FRESHNESS));
-                                qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), tempInformation.getQoOAttribute(OBS_ACCURACY));
-                                getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
+                                Map<String, Information> infoMapTemp = (Map<String, Information>) elem;
+                                infoMapTemp.forEach((k,v) -> {
+                                    final QoOReportMsg qoOReportAttributes = new QoOReportMsg(getUniqueID());
+                                    qoOReportAttributes.setProducerName(k);
+                                    qoOReportAttributes.setRequestID(getAssociatedRequest_id());
+                                    qoOReportAttributes.setQooAttribute(OBS_FRESHNESS.toString(), v.getQoOAttribute(OBS_FRESHNESS));
+                                    qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), v.getQoOAttribute(OBS_ACCURACY));
+                                    getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
+                                });
                             })));
+
                     return ClosedShape.getInstance();
                 });
 

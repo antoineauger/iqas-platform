@@ -108,7 +108,12 @@ public class MonitorActor extends UntypedActor {
          */
         else if (message instanceof QoOReportMsg) {
             QoOReportMsg tempQoOReportMsg = (QoOReportMsg) message;
-            log.info("QoO report message: {} {} {} {}", tempQoOReportMsg.getPipeline_id(), tempQoOReportMsg.getProducer(), tempQoOReportMsg.getRequest_id(), tempQoOReportMsg.getQooAttributesMap().toString());
+            if (tempQoOReportMsg.getQooAttributesMap().size() > 0) {
+                log.info("QoO report message: {} {} {} {}", tempQoOReportMsg.getUniquePipelineID(), tempQoOReportMsg.getProducer(), tempQoOReportMsg.getRequestID(), tempQoOReportMsg.getQooAttributesMap().toString());
+            }
+            if (tempQoOReportMsg.getObsRateByTopic().size() > 0) {
+                log.info("QoO report message: {} {}", tempQoOReportMsg.getUniquePipelineID(), tempQoOReportMsg.getObsRateByTopic().toString());
+            }
         }
         /**
          * TerminatedMsg messages

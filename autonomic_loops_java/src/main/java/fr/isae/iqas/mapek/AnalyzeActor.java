@@ -12,7 +12,6 @@ import fr.isae.iqas.kafka.RequestMappings;
 import fr.isae.iqas.kafka.TopicEntity;
 import fr.isae.iqas.model.jsonld.Topic;
 import fr.isae.iqas.model.jsonld.TopicList;
-import fr.isae.iqas.model.jsonld.VirtualSensor;
 import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.request.Request;
@@ -81,27 +80,17 @@ public class AnalyzeActor extends UntypedActor {
                                         //TODO resolve QoO
 
                                         VirtualSensorList listTemp = fusekiController._findAllSensorsWithConditions(requestTemp.getLocation(), requestTemp.getTopic());
-                                        for (VirtualSensor v : listTemp.sensors) {
-                                            System.err.println(v.sensor_id.split("#")[1]);
-                                        }
-
-
                                         String tempIDForPipelines = new ObjectId().toString();
 
                                         RequestMappings requestMappings = new RequestMappings();
                                         requestMappings.addAssociatedRequest(requestTemp);
 
-
-                                        if (requestTemp.getLocation().equals("ALL") && requestTemp.getTopic().equals("ALL")) {
-
+                                        if (requestTemp.getLocation().equals("ALL") && requestTemp.getTopic().equals("ALL")) { // (Location = ALL, Topic = ALL)
+                                            //TODO
                                         }
                                         else if (requestTemp.getTopic().equals("ALL")) { // (Location = x, Topic = ALL)
                                             TopicEntity topicInt = new TopicEntity(requestTemp.getTopic() + "_" + requestTemp.getLocation());
                                             requestMappings.getAllTopics().put(topicInt.getName(), topicInt);
-
-                                            TopicEntity sinkForApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id());
-                                            sinkForApp.setSink(requestTemp.getApplication_id());
-                                            requestMappings.getAllTopics().put(sinkForApp.getName(), sinkForApp);
 
                                             TopicList topicList = fusekiController._findAllTopics();
                                             for (Topic topicObject : topicList.topics) {
@@ -114,7 +103,19 @@ public class AnalyzeActor extends UntypedActor {
                                                 requestMappings.addLink(topicBase.getName(), topicInt.getName(), "SensorFilterPipeline_" + tempIDForPipelines);
                                             }
 
-                                            requestMappings.addLink(topicInt.getName(), sinkForApp.getName(), "ForwardPipeline_" + tempIDForPipelines);
+                                            TopicEntity topicObsRate = new TopicEntity(requestTemp.getTopic() + "_" + requestTemp.getLocation() + "_OBSRATE");
+                                            requestMappings.getAllTopics().put(topicObsRate.getName(), topicObsRate);
+
+                                            TopicEntity sinkForApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id());
+                                            sinkForApp.setSink(requestTemp.getApplication_id());
+                                            requestMappings.getAllTopics().put(sinkForApp.getName(), sinkForApp);
+
+                                            TopicEntity sinkQoObeforeApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO");
+                                            requestMappings.getAllTopics().put(sinkQoObeforeApp.getName(), sinkQoObeforeApp);
+
+                                            requestMappings.addLink(topicInt.getName(), topicObsRate.getName(), "ObsRatePipeline_" + tempIDForPipelines);
+                                            requestMappings.addLink(topicObsRate.getName(), sinkQoObeforeApp.getName(), "QoOAnnotatorPipeline_" + tempIDForPipelines);
+                                            requestMappings.addLink(sinkQoObeforeApp.getName(), sinkForApp.getName(), "ForwardPipeline_" + tempIDForPipelines);
 
                                         }
                                         else if (requestTemp.getLocation().equals("ALL")) { // (Location = ALL, Topic = x)
@@ -122,18 +123,26 @@ public class AnalyzeActor extends UntypedActor {
                                             topicBase.setSource(requestTemp.getTopic());
                                             requestMappings.getAllTopics().put(topicBase.getName(), topicBase);
 
+                                            TopicEntity topicObsRate = new TopicEntity(requestTemp.getTopic() + "_ALL" + "_OBSRATE");
+                                            requestMappings.getAllTopics().put(topicObsRate.getName(), topicObsRate);
+
                                             TopicEntity topicInt = new TopicEntity(requestTemp.getTopic() + "_ALL");
                                             requestMappings.getAllTopics().put(topicInt.getName(), topicInt);
 
                                             TopicEntity sinkForApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id());
-                                            sinkForApp.setSource(requestTemp.getApplication_id());
+                                            sinkForApp.setSink(requestTemp.getApplication_id());
                                             requestMappings.getAllTopics().put(sinkForApp.getName(), sinkForApp);
 
-                                            requestMappings.addLink(topicBase.getName(), topicInt.getName(), "ForwardPipeline_" + tempIDForPipelines);
-                                            requestMappings.addLink(topicInt.getName(), sinkForApp.getName(), "ForwardPipeline_" + tempIDForPipelines);
-                                        }
-                                        else {
+                                            TopicEntity sinkQoObeforeApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO");
+                                            requestMappings.getAllTopics().put(sinkQoObeforeApp.getName(), sinkQoObeforeApp);
 
+                                            requestMappings.addLink(topicBase.getName(), topicInt.getName(), "SensorFilterPipeline_" + tempIDForPipelines);
+                                            requestMappings.addLink(topicInt.getName(), topicObsRate.getName(), "ObsRatePipeline_" + tempIDForPipelines);
+                                            requestMappings.addLink(topicObsRate.getName(), sinkQoObeforeApp.getName(), "QoOAnnotatorPipeline_" + tempIDForPipelines);
+                                            requestMappings.addLink(sinkQoObeforeApp.getName(), sinkForApp.getName(), "ForwardPipeline_" + tempIDForPipelines);
+                                        }
+                                        else { // (Location = x, Topic = y)
+                                            //TODO
                                         }
 
                                         planActor.tell(new RFCMsg(RFCMAPEK.CREATE, EntityMAPEK.REQUEST, requestTemp, requestMappings), getSelf());

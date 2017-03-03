@@ -123,16 +123,18 @@ public class PlanActor extends UntypedActor {
                             pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep);
                         }
 
-                        pipeline.setAssociatedRequest_id(rfcMsg.getAssociatedRequest_id());
+                        pipeline.setAssociatedRequestID(rfcMsg.getAssociatedRequest_id());
                         pipeline.setTempID(finalTempID);
 
                         //TODO resolve dynamically
                         pipeline.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(10, TimeUnit.SECONDS));
                         Map<String, Map<String, String>> qooParamsForAllTopics = new HashMap<>();
-                        qooParamsForAllTopics.put("temperature",new HashMap<>());
-                        qooParamsForAllTopics.put("visibility",new HashMap<>());
-                        qooParamsForAllTopics.get("temperature").put("min_value","-50.0");
-                        qooParamsForAllTopics.get("temperature").put("min_value","+50.0");
+                        qooParamsForAllTopics.put("sensor01",new HashMap<>());
+                        qooParamsForAllTopics.put("sensor02",new HashMap<>());
+                        qooParamsForAllTopics.get("sensor01").put("min_value","-50.0");
+                        qooParamsForAllTopics.get("sensor01").put("max_value","+50.0");
+                        qooParamsForAllTopics.get("sensor02").put("min_value","0.0");
+                        qooParamsForAllTopics.get("sensor02").put("max_value","+50.0");
                         pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
                         pipeline.setCustomizableParameter("threshold_min", "0.0");
@@ -150,15 +152,12 @@ public class PlanActor extends UntypedActor {
 
                 // Building the rest of the graph
                 String currTopicName = finalNextTopicName;
-                String finalSinkTopicName = rfcMsg.getRequestMappings().getFinalSink().getName();
 
-                while(!currTopicName.equals(finalSinkTopicName)) {
+                while(rfcMsg.getRequestMappings().getAllTopics().get(currTopicName).getChildren().size() > 0) {
                     TopicEntity currTopic = rfcMsg.getRequestMappings().getAllTopics().get(currTopicName);
                     Set<String> currTopicSet = new HashSet<>();
                     currTopicSet.add(currTopic.getName());
                     TopicEntity childrenTopic = currTopic.getChildren().get(0);
-
-                    System.err.println("Binding: " + currTopicName);
 
                     final String pipelineIDInt = currTopic.getEnforcedPipelines().get(childrenTopic).split("_")[0];
                     final String tempIDInt = currTopic.getEnforcedPipelines().get(childrenTopic).split("_")[1];
@@ -167,16 +166,18 @@ public class PlanActor extends UntypedActor {
                             log.error("ERROR");
                         }
                         else {
-                            pipeline.setAssociatedRequest_id(rfcMsg.getAssociatedRequest_id());
+                            pipeline.setAssociatedRequestID(rfcMsg.getAssociatedRequest_id());
                             pipeline.setTempID(tempIDInt);
 
                             //TODO resolve dynamically
                             pipeline.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(10, TimeUnit.SECONDS));
                             Map<String, Map<String, String>> qooParamsForAllTopics = new HashMap<>();
-                            qooParamsForAllTopics.put("temperature",new HashMap<>());
-                            qooParamsForAllTopics.put("visibility",new HashMap<>());
-                            qooParamsForAllTopics.get("temperature").put("min_value","-50.0");
-                            qooParamsForAllTopics.get("temperature").put("min_value","+50.0");
+                            qooParamsForAllTopics.put("sensor01",new HashMap<>());
+                            qooParamsForAllTopics.put("sensor02",new HashMap<>());
+                            qooParamsForAllTopics.get("sensor01").put("min_value","-50.0");
+                            qooParamsForAllTopics.get("sensor01").put("max_value","+50.0");
+                            qooParamsForAllTopics.get("sensor02").put("min_value","0.0");
+                            qooParamsForAllTopics.get("sensor02").put("max_value","+50.0");
                             pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
                             pipeline.setCustomizableParameter("threshold_min", "0.0");

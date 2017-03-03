@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by an.auger on 08/02/2017.
  */
 public class Information extends RawData {
-    private Map<QoOAttribute, Object> qoOAttributeValues;
+    private Map<QoOAttribute, String> qoOAttributeValues;
 
     public Information(RawData rawData) {
         super(rawData);
@@ -36,24 +36,24 @@ public class Information extends RawData {
      * Getters and setters for a specific QoO attribute
      */
 
-    public void setQoOAttribute(String attribute, Object value) {
+    public void setQoOAttribute(String attribute, String value) {
         qoOAttributeValues.put(QoOAttribute.valueOf(attribute), value);
     }
 
-    public Object getQoOAttribute(String attribute) {
-        Object attributeValue = null;
+    public String getQoOAttribute(String attribute) {
+        String attributeValue = "";
         if (qoOAttributeValues.containsKey(QoOAttribute.valueOf(attribute))) {
             attributeValue = qoOAttributeValues.get(QoOAttribute.valueOf(attribute));
         }
         return attributeValue;
     }
 
-    public void setQoOAttribute(QoOAttribute attribute, Object value) {
+    public void setQoOAttribute(QoOAttribute attribute, String value) {
         qoOAttributeValues.put(attribute, value);
     }
 
-    public Object getQoOAttribute(QoOAttribute attribute) {
-        Object attributeValue = null;
+    public String getQoOAttribute(QoOAttribute attribute) {
+        String attributeValue = "";
         if (qoOAttributeValues.containsKey(attribute)) {
             attributeValue = qoOAttributeValues.get(attribute);
         }
@@ -64,11 +64,17 @@ public class Information extends RawData {
      * Getters and setters for attributes
      */
 
-    public Map<QoOAttribute, Object> getQoOAttributeValues() {
+    public Map<QoOAttribute, String> getQoOAttributeValues() {
         return qoOAttributeValues;
     }
 
-    public void setQoOAttributeValues(Map<QoOAttribute, Object> qoOAttributeValues) {
+    public void setQoOAttributeValues(Map<QoOAttribute, String> qoOAttributeValues) {
         this.qoOAttributeValues = qoOAttributeValues;
+    }
+
+    public void setQoOAttributeValuesFromJSON(Map<String, String> qoOAttributeValues) {
+        qoOAttributeValues.forEach( (k,v) -> {
+            this.qoOAttributeValues.put(QoOAttribute.valueOf(k), v);
+        });
     }
 }

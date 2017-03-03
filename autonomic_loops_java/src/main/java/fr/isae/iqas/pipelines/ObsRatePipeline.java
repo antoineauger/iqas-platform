@@ -16,10 +16,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
 
+import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
-import static fr.isae.iqas.model.message.QoOReportMsg.ReportSubject.OBS_RATE;
-import static fr.isae.iqas.model.message.QoOReportMsg.ReportSubject.REPORT;
 import static fr.isae.iqas.model.observation.ObservationLevel.*;
 import static fr.isae.iqas.model.request.Operator.NONE;
 
@@ -30,7 +29,7 @@ public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
 
     public ObsRatePipeline() {
-        super("Obs Rate Pipeline", true);
+        super("Obs Rate Pipeline", "ObsRatePipeline", true);
 
         addSupportedOperator(NONE);
     }
@@ -49,7 +48,7 @@ public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
                     final Outlet<ConsumerRecord<byte[], String>> sourceGraph = builder.add(kafkaSource).out();
                     final Inlet<ProducerRecord> sinkGraph = builder.add(kafkaSink).in();
                     // Definition of the broadcast for the MAPE-K monitoring
-                    final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(3));
+                    final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
 
 
                     // ################################# YOUR CODE GOES HERE #################################
@@ -61,16 +60,8 @@ public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
                                         sensorDataObject.getString("timestamp"),
                                         sensorDataObject.getString("value"),
                                         sensorDataObject.getString("producer"));
-                                tempInformation = getComputeAttributeHelper().computeQoOAccuracy(tempInformation,
-                                        Double.valueOf(getQooParams().get("temperature").get("min_value")),
-                                        Double.valueOf(getQooParams().get("temperature").get("max_value")));
-                                tempInformation = getComputeAttributeHelper().computeQoOFreshness(tempInformation);
                                 return tempInformation;
                     });
-
-                    Flow<Information, Information, NotUsed> filteringMechanism =
-                            Flow.of(Information.class).filter(r ->
-                            r.getValue() < Double.valueOf(getParams().get("threshold_min")));
 
                     Flow<Information, ProducerRecord, NotUsed> infoToProdRecord =
                             Flow.of(Information.class).map(r -> {
@@ -88,7 +79,6 @@ public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
                                 .viaFanOut(bcast)
-                                .via(builder.add(filteringMechanism))
                                 .via(builder.add(infoToProdRecord))
                                 .toInlet(sinkGraph);
                     }
@@ -103,13 +93,14 @@ public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
 
                     // ################################# END OF YOUR CODE #################################
                     // Do not remove - useful for MAPE-K monitoring
-                    final QoOReportMsg qoOReportObsRate = new QoOReportMsg(getPipelineID());
+                    final QoOReportMsg qoOReportObsRate = new QoOReportMsg(getUniqueID());
                     builder.from(bcast.out(1))
-                            .via(builder.add(Flow.of(Information.class).map(p -> REPORT)))
+                            .via(builder.add(Flow.of(Information.class).map(p -> p.getProducer())))
                             .via(builder.add(getFlowToComputeObsRate()))
                             .to(builder.add(Sink.foreach(elem -> {
-                                qoOReportObsRate.setQooAttribute(OBS_RATE.toString(), elem);
-                                qoOReportObsRate.setRequest_id(getAssociatedRequest_id());
+                                Map<String,Integer> obsRateByTopic = (Map<String, Integer>) elem;
+                                qoOReportObsRate.setObsRateByTopic(obsRateByTopic);
+                                qoOReportObsRate.setRequestID(getAssociatedRequest_id());
                                 getMonitorActor().tell(qoOReportObsRate, ActorRef.noSender());
                             })));
                     return ClosedShape.getInstance();

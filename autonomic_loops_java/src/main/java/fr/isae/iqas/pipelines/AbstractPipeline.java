@@ -14,9 +14,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import static fr.isae.iqas.model.message.QoOReportMsg.ReportSubject;
-import static fr.isae.iqas.model.message.QoOReportMsg.ReportSubject.KEEP_ALIVE;
-
 /**
  * Created by an.auger on 08/02/2017.
  */
@@ -25,6 +22,7 @@ public abstract class AbstractPipeline {
     final FiniteDuration ONE_SECOND = FiniteDuration.create(1, TimeUnit.SECONDS);
 
     private String pipelineName;
+    private String pipelineID;
     private String associatedRequest_id;
     private String tempID;
     private boolean adaptable;
@@ -40,9 +38,11 @@ public abstract class AbstractPipeline {
     private FiniteDuration reportFrequency;
     private IComputeQoOAttributes computeAttributeHelper;
 
-    public AbstractPipeline(String pipelineName, boolean adaptable) {
+    public AbstractPipeline(String pipelineName, String pipelineID, boolean adaptable) {
         this.pipelineName = pipelineName;
+        this.pipelineID = pipelineID;
         this.adaptable = adaptable;
+
         this.tempID = "UNKNOWN";
         this.associatedRequest_id = "UNKNOWN";
 
@@ -130,17 +130,22 @@ public abstract class AbstractPipeline {
         this.reportFrequency = reportFrequency;
     }
 
-    public Flow<ReportSubject, Integer, NotUsed> getFlowToComputeObsRate() {
-        return Flow.of(ReportSubject.class).keepAlive(reportFrequency.div(2), () -> KEEP_ALIVE)
-                .map(p -> {
-                    if (p == KEEP_ALIVE) {
-                        return 0;
+    public Flow<String, Map<String,Integer>, NotUsed> getFlowToComputeObsRate() {
+        return Flow.of(String.class).keepAlive(reportFrequency.div(2), "KEEP_ALIVE"::toString)
+                .groupedWithin(Integer.MAX_VALUE, reportFrequency)
+                .map(obsProducerList -> {
+                    Map<String, Integer> obsRateByTopic = new HashMap<>();
+                    for (String p : obsProducerList) {
+                        if (!p.equals("KEEP_ALIVE")) {
+                            if (obsRateByTopic.get(p) == null) {
+                                obsRateByTopic.put(p, 1);
+                            } else {
+                                obsRateByTopic.put(p, obsRateByTopic.get(p) + 1);
+                            }
+                        }
                     }
-                    else {
-                        return 1;
-                    }
-                }).groupedWithin(Integer.MAX_VALUE, reportFrequency)
-                .map(i -> i.stream().mapToInt(Integer::intValue).sum());
+                    return obsRateByTopic;
+                });
     }
 
     public IComputeQoOAttributes getComputeAttributeHelper() {
@@ -155,7 +160,7 @@ public abstract class AbstractPipeline {
         return associatedRequest_id;
     }
 
-    public void setAssociatedRequest_id(String associatedRequest_id) {
+    public void setAssociatedRequestID(String associatedRequest_id) {
         this.associatedRequest_id = associatedRequest_id;
     }
 
@@ -168,6 +173,6 @@ public abstract class AbstractPipeline {
     }
 
     public String getUniqueID() {
-        return this.pipelineName + "_" + this.tempID;
+        return this.pipelineID + "_" + this.tempID;
     }
 }

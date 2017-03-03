@@ -136,7 +136,7 @@ public class AutoManagerActor extends UntypedActor {
                                 "SimpleFilteringPipeline",
                                 topicToPullFrom,
                                 "topic2",
-                                requestTemp.getRequest_id()
+                                requestTemp.getRequestID()
                         ), ActorRef.noSender());
                 processingActivated = false;
             }
@@ -147,7 +147,7 @@ public class AutoManagerActor extends UntypedActor {
                                 "SimpleFilteringPipeline",
                                 topicToPullFrom,
                                 "topic2",
-                                requestTemp.getRequest_id()
+                                requestTemp.getRequestID()
                         ), ActorRef.noSender());
                 processingActivated = true;
             }*/
