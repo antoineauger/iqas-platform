@@ -48,7 +48,7 @@ public class KafkaAdminActor extends UntypedActor {
     }
 
     private boolean createTopic(String kafkaTopicToCreate) {
-        boolean success = false;
+        boolean success = true;
 
         // Note: You must initialize the ZkClient with ZKStringSerializer.  If you don't, then
         // createTopic() will only seem to work (it will return without error).  The topic will exist in
@@ -68,9 +68,6 @@ public class KafkaAdminActor extends UntypedActor {
 
         if (!AdminUtils.topicExists(zkUtils, kafkaTopicToCreate)) {
             AdminUtils.createTopic(zkUtils, kafkaTopicToCreate, partitions, replication, topicConfig, null);
-        }
-        if (AdminUtils.topicExists(zkUtils, kafkaTopicToCreate)) {
-            success = true;
         }
         zkClient.close();
 
@@ -96,7 +93,7 @@ public class KafkaAdminActor extends UntypedActor {
             AdminUtils.deleteTopic(zkUtils, kafkaTopicToDelete);
         }
         if (!AdminUtils.topicExists(zkUtils, kafkaTopicToDelete)) {
-            success = true;
+            AdminUtils.deleteTopic(zkUtils, kafkaTopicToDelete);
         }
         zkClient.close();
 

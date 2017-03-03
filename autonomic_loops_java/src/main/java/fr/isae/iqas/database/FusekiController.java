@@ -217,8 +217,8 @@ public class FusekiController {
                 "?sensor iot-lite:exposedBy ?s .\n";
 
         if (!topic_id.equals("ALL")) {
-            req += topic_id + " rdf:type ssn:Property .\n" +
-                    topic_id + " qoo:canBeRetrievedThrough ?s .\n";
+            req += "qoo:" + topic_id + " rdf:type ssn:Property .\n" +
+                    "qoo:" + topic_id + " qoo:canBeRetrievedThrough ?s .\n";
         }
 
         req += "?topic qoo:canBeRetrievedThrough ?s .\n" +
@@ -341,8 +341,8 @@ public class FusekiController {
         String req = baseStringForRequests +
                 "SELECT ?topic ?service ?url ?interfaceType ?interfaceDescription\n" +
                 "WHERE {\n" +
-                topic_id + " rdf:type ssn:Property .\n" +
-                topic_id + " qoo:canBeRetrievedThrough ?service .\n" +
+                "qoo:" + topic_id + " rdf:type ssn:Property .\n" +
+                "qoo:" + topic_id + " qoo:canBeRetrievedThrough ?service .\n" +
                 "?service iot-lite:endpoint ?url .\n" +
                 "?service iot-lite:interfaceType ?interfaceType .\n" +
                 "?service iot-lite:interfaceDescription ?interfaceDescription\n" +

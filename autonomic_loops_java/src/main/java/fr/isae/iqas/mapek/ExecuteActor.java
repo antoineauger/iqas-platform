@@ -4,7 +4,6 @@ import akka.Done;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
-import akka.dispatch.OnComplete;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.kafka.ConsumerSettings;
@@ -19,12 +18,9 @@ import akka.stream.javadsl.RunnableGraph;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import akka.util.Timeout;
-import fr.isae.iqas.model.message.PipelineRequestMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.observation.ObservationLevel;
-import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
 import fr.isae.iqas.pipelines.IPipeline;
-import fr.isae.iqas.pipelines.Pipeline;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -33,17 +29,17 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.bson.types.ObjectId;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-import scala.concurrent.duration.FiniteDuration;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -52,26 +48,24 @@ import static akka.pattern.Patterns.ask;
 public class ExecuteActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private UntypedActorContext context;
     private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = null;
     private Sink<ProducerRecord, CompletionStage<Done>> kafkaSink = null;
 
-    private ActorRef monitorActor = null;
     private ActorRef kafkaActor = null;
 
     private ActorMaterializer materializer = null;
     private RunnableGraph myRunnableGraph = null;
-    private String pipeline_id = null;
+    private IPipeline pipelineToEnforce = null;
     private String topicToPublish = null;
-    private String associatedRequest_id = "UNKNOWN";
 
-    public ExecuteActor(Properties prop, String pipeline_id, Set<String> topicsToPullFrom, String topicToPublish, String associatedRequest_id) {
-        this.context = getContext();
+    public ExecuteActor(Properties prop, IPipeline pipelineToEnforce, Set<String> topicsToPullFrom, String topicToPublish) {
+
+        String test = new ObjectId().toString();
 
         ConsumerSettings consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
-                .withGroupId("groupInfoPlan")
-                .withClientId("clientInfoPlan")
+                .withGroupId("group" + test)
+                .withClientId("client" + test)
                 .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
         ProducerSettings producerSettings = ProducerSettings
@@ -88,12 +82,8 @@ public class ExecuteActor extends UntypedActor {
         this.kafkaSink = Producer.plainSink(producerSettings);
 
         // Retrieval of available QoO pipelines
-        this.pipeline_id = pipeline_id;
+        this.pipelineToEnforce = pipelineToEnforce;
         this.topicToPublish = topicToPublish;
-        this.associatedRequest_id = associatedRequest_id;
-
-        // ActorRef to log to the monitor actor of the MAPE-K loop
-        this.monitorActor = getContext().actorFor(getContext().parent().path().parent().child("monitorActor"));
 
         // Materializer to run graphs (QoO pipelines)
         this.materializer = ActorMaterializer.create(getContext().system());
@@ -101,50 +91,14 @@ public class ExecuteActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        getPipelineWatcherActor().onComplete(new OnComplete<ActorRef>() {
-            @Override
-            public void onComplete(Throwable t, ActorRef pipelineWatcherActor) throws Throwable {
-                if (t != null) {
-                    log.error("Unable to find the PipelineWatcherActor: " + t.toString());
-                } else {
-                    ask(pipelineWatcherActor, new PipelineRequestMsg(pipeline_id), new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {
-                        @Override
-                        public void onComplete(Throwable t, Object pipelineObject) throws Throwable {
-                            if (t != null) {
-                                log.error("Unable to find the PipelineWatcherActor: " + t.toString());
-                                askParentForTermination();
-                            } else {
-                                ArrayList<Pipeline> castedResultPipelineObject = (ArrayList<Pipeline>) pipelineObject;
-                                if (castedResultPipelineObject.size() == 0) {
-                                    log.error("Unable to retrieve the specified QoO pipeline " + pipeline_id);
-                                    askParentForTermination();
-                                } else {
-                                    IPipeline pipelineToEnforce = castedResultPipelineObject.get(0).getPipelineObject();
-
-                                    pipelineToEnforce.setAssociatedRequest_id(associatedRequest_id);
-                                    pipelineToEnforce.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(10, TimeUnit.SECONDS));
-                                    Map<String, String> qooParams = new HashMap<>();
-                                    qooParams.put("min_value","-50.0");
-                                    qooParams.put("max_value","+50.0");
-                                    pipelineToEnforce.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParams);
-
-                                    pipelineToEnforce.setCustomizableParameter("threshold_min", "0.0");
-
-                                    myRunnableGraph = RunnableGraph.fromGraph(pipelineToEnforce.getPipelineGraph(kafkaSource,
-                                            kafkaSink,
-                                            topicToPublish,
-                                            ObservationLevel.INFORMATION,
-                                            null));
-                                    if (myRunnableGraph != null) {
-                                        myRunnableGraph.run(materializer);
-                                    }
-                                }
-                            }
-                        }
-                    }, context.dispatcher());
-                }
-            }
-        }, context.dispatcher());
+        myRunnableGraph = RunnableGraph.fromGraph(pipelineToEnforce.getPipelineGraph(kafkaSource,
+                kafkaSink,
+                topicToPublish,
+                ObservationLevel.INFORMATION,
+                null));
+        if (myRunnableGraph != null) {
+            myRunnableGraph.run(materializer);
+        }
     }
 
     @Override
@@ -177,12 +131,12 @@ public class ExecuteActor extends UntypedActor {
         // clean up resources here ...
     }
 
-    private void askParentForTermination() {
+    /*private void askParentForTermination() {
         context.parent().tell(new TerminatedMsg(getSelf()), getSelf());
     }
 
     private Future<ActorRef> getPipelineWatcherActor() {
         return context.actorSelection(getSelf().path().parent().parent().parent().parent()
                 + "/" + "pipelineWatcherActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
-    }
+    }*/
 }

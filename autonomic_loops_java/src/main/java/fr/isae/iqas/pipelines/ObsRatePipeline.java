@@ -1,3 +1,5 @@
+package fr.isae.iqas.pipelines;
+
 import akka.Done;
 import akka.NotUsed;
 import akka.actor.ActorRef;
@@ -10,8 +12,6 @@ import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.request.Operator;
-import fr.isae.iqas.pipelines.AbstractPipeline;
-import fr.isae.iqas.pipelines.IPipeline;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
@@ -21,18 +21,16 @@ import java.util.concurrent.CompletionStage;
 import static fr.isae.iqas.model.message.QoOReportMsg.ReportSubject.OBS_RATE;
 import static fr.isae.iqas.model.message.QoOReportMsg.ReportSubject.REPORT;
 import static fr.isae.iqas.model.observation.ObservationLevel.*;
-import static fr.isae.iqas.model.quality.QoOAttribute.OBS_ACCURACY;
-import static fr.isae.iqas.model.quality.QoOAttribute.OBS_FRESHNESS;
 import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
- * Created by an.auger on 28/02/2017.
+ * Created by an.auger on 03/03/2017.
  */
-public class ForwardPipeline extends AbstractPipeline implements IPipeline {
+public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
 
-    public ForwardPipeline() {
-        super("Forward Pipeline", false);
+    public ObsRatePipeline() {
+        super("Obs Rate Pipeline", true);
 
         addSupportedOperator(NONE);
     }
@@ -64,11 +62,15 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
                                         sensorDataObject.getString("value"),
                                         sensorDataObject.getString("producer"));
                                 tempInformation = getComputeAttributeHelper().computeQoOAccuracy(tempInformation,
-                                        Double.valueOf(getQooParams().get("min_value")),
-                                        Double.valueOf(getQooParams().get("max_value")));
+                                        Double.valueOf(getQooParams().get("temperature").get("min_value")),
+                                        Double.valueOf(getQooParams().get("temperature").get("max_value")));
                                 tempInformation = getComputeAttributeHelper().computeQoOFreshness(tempInformation);
                                 return tempInformation;
-                            });
+                    });
+
+                    Flow<Information, Information, NotUsed> filteringMechanism =
+                            Flow.of(Information.class).filter(r ->
+                            r.getValue() < Double.valueOf(getParams().get("threshold_min")));
 
                     Flow<Information, ProducerRecord, NotUsed> infoToProdRecord =
                             Flow.of(Information.class).map(r -> {
@@ -79,27 +81,20 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
                             });
 
                     if (askedLevelFinal == RAW_DATA) {
-                        //TODO: code logic for Raw Data for SimpleFilteringPipeline
-                        builder.from(sourceGraph)
-                                .via(builder.add(consumRecordToInfo))
-                                .viaFanOut(bcast)
-                                .via(builder.add(infoToProdRecord))
-                                .toInlet(sinkGraph);
+                        // Annotated observations with QoO attributes cannot be Raw Data!
+                        return null;
                     }
                     else if (askedLevelFinal == INFORMATION) {
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
                                 .viaFanOut(bcast)
+                                .via(builder.add(filteringMechanism))
                                 .via(builder.add(infoToProdRecord))
                                 .toInlet(sinkGraph);
                     }
                     else if (askedLevelFinal == KNOWLEDGE) {
                         //TODO: code logic for Knowledge for SimpleFilteringPipeline
-                        builder.from(sourceGraph)
-                                .via(builder.add(consumRecordToInfo))
-                                .viaFanOut(bcast)
-                                .via(builder.add(infoToProdRecord))
-                                .toInlet(sinkGraph);
+                        return null;
                     }
                     else { // other observation levels are not supported
                         return null;
@@ -117,20 +112,6 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
                                 qoOReportObsRate.setRequest_id(getAssociatedRequest_id());
                                 getMonitorActor().tell(qoOReportObsRate, ActorRef.noSender());
                             })));
-                    final QoOReportMsg qoOReportAttributes = new QoOReportMsg(getPipelineID());
-                    builder.from(bcast.out(2))
-                            .via(builder.add(Flow.of(Information.class)
-                                    .groupedWithin(Integer.MAX_VALUE, getReportFrequency())
-                                    //TODO: emit QoO report message for each distinct producer
-                                    .map(l -> l.get(l.size()-1))))
-                            .to(builder.add(Sink.foreach(elem -> {
-                                Information tempInformation = (Information) elem;
-                                qoOReportAttributes.setProducerName(tempInformation.getProducer());
-                                qoOReportAttributes.setRequest_id(getAssociatedRequest_id());
-                                qoOReportAttributes.setQooAttribute(OBS_FRESHNESS.toString(), tempInformation.getQoOAttribute(OBS_FRESHNESS));
-                                qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), tempInformation.getQoOAttribute(OBS_ACCURACY));
-                                getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
-                            })));
                     return ClosedShape.getInstance();
                 });
 
@@ -139,13 +120,7 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
 
     @Override
     public String getPipelineID() {
-        if (getAssociatedRequest_id().equals("UNKNOWN")) {
-            return getClass().getName();
-        }
-        else {
-            return getClass().getName() + "_" + getAssociatedRequest_id();
-        }
+        return getClass().getSimpleName();
     }
 
 }
-

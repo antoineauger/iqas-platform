@@ -62,7 +62,9 @@ public class AutoManagerActor extends UntypedActor {
         TopicList topicList = fusekiController._findAllTopics();
         for (Topic t : topicList.topics) {
             String topicName = t.topic.split("#")[1];
-            allTopics.put(topicName, new TopicEntity(topicName, topicName));
+            TopicEntity topicEntityTemp = new TopicEntity(topicName);
+            topicEntityTemp.setSource(topicName);
+            allTopics.put(topicName, topicEntityTemp);
 
             ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.CREATE, topicName), new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {
                 @Override

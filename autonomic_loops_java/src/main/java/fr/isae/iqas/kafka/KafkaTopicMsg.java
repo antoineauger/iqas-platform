@@ -8,7 +8,8 @@ public class KafkaTopicMsg {
     public enum TopicAction {
         CREATE,
         DELETE,
-        RESET
+        RESET,
+        GET
     }
 
     private TopicAction topicAction;

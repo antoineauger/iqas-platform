@@ -39,6 +39,15 @@ public class PipelineWatcherActor extends UntypedActor {
         qooPipelinesDir = prop.getProperty("qoo_pipelines_dir");
         md5Pipelines = new ConcurrentHashMap<>();
         pipelineObjects = new ConcurrentHashMap<>();
+
+        try {
+            pipelineObjects.put(ObsRatePipeline.class.getSimpleName(), ObsRatePipeline.class.newInstance());
+            pipelineObjects.put(ForwardPipeline.class.getSimpleName(), ForwardPipeline.class.newInstance());
+            pipelineObjects.put(SensorFilterPipeline.class.getSimpleName(), SensorFilterPipeline.class.newInstance());
+            pipelineObjects.put(QoOAnnotatorPipeline.class.getSimpleName(), QoOAnnotatorPipeline.class.newInstance());
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

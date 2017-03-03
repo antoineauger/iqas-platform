@@ -240,4 +240,14 @@ public class Request {
     public String getLocation() {
         return location;
     }
+
+    @Override
+    public boolean equals(Object other){
+        if (other == null) return false;
+        if (other == this) return true;
+        if (!(other instanceof Request))return false;
+        Request otherMyClass = (Request) other;
+
+        return (otherMyClass.getLocation().equals(this.location) && otherMyClass.getTopic().equals(this.topic));
+    }
 }

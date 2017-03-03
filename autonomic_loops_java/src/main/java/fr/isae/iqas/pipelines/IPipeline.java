@@ -37,7 +37,7 @@ public interface IPipeline {
     Flow<QoOReportMsg.ReportSubject, Integer, NotUsed> getFlowToComputeObsRate();
 
     void setOptionsForQoOComputation(IComputeQoOAttributes computeAttributeHelper,
-                                     Map<String, String> qooParams);
+                                     Map<String,Map<String, String>> qooParams);
 
     void setOptionsForMAPEKReporting(ActorRef monitorActor,
                                      FiniteDuration reportFrequency);
@@ -103,9 +103,15 @@ public interface IPipeline {
      */
     boolean setCustomizableParameter(String param, String value);
 
-    Map<String, String> getQooParams();
+    Map<String,Map<String, String>> getQooParams();
 
     String getAssociatedRequest_id();
 
     void setAssociatedRequest_id(String associatedRequest_id);
+
+    void setTempID(String tempID);
+
+    String getTempID();
+
+    String getUniqueID();
 }

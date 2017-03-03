@@ -26,6 +26,7 @@ public abstract class AbstractPipeline {
 
     private String pipelineName;
     private String associatedRequest_id;
+    private String tempID;
     private boolean adaptable;
 
     private List<Operator> supportedOperators;
@@ -33,7 +34,7 @@ public abstract class AbstractPipeline {
     private Set<String> customizableParams;
     private Map<String, Class> qooParamPrototypes;
 
-    private Map<String, String> qooParams;
+    private Map<String,Map<String, String>> qooParams;
 
     private ActorRef monitorActor;
     private FiniteDuration reportFrequency;
@@ -42,6 +43,8 @@ public abstract class AbstractPipeline {
     public AbstractPipeline(String pipelineName, boolean adaptable) {
         this.pipelineName = pipelineName;
         this.adaptable = adaptable;
+        this.tempID = "UNKNOWN";
+        this.associatedRequest_id = "UNKNOWN";
 
         this.params = new ConcurrentHashMap<>();
         this.customizableParams = new HashSet<>();
@@ -49,19 +52,22 @@ public abstract class AbstractPipeline {
         this.qooParamPrototypes = new ConcurrentHashMap<>();
         this.qooParams = new ConcurrentHashMap<>();
 
-        this.associatedRequest_id = "UNKNOWN";
         this.monitorActor = null;
         this.reportFrequency = ONE_SECOND;
         this.qooParamPrototypes = IComputeQoOAttributes.getQoOParamsForInterface();
     }
 
     public void setOptionsForQoOComputation(IComputeQoOAttributes computeAttributeHelper,
-                                            Map<String, String> qooParams) {
+                                            Map<String,Map<String, String>> qooParams) {
         this.computeAttributeHelper = computeAttributeHelper;
-        for (String s : qooParams.keySet()) {
-            if (qooParamPrototypes.containsKey(s)) {
-                this.qooParams.put(s, qooParams.get(s));
+        for (String topic : qooParams.keySet()) {
+            Map<String, String> qooParamForTopic = new ConcurrentHashMap<>();
+            for (String param : qooParams.get(topic).keySet()) {
+                if (qooParamPrototypes.containsKey(param)) {
+                    qooParamForTopic.put(param, qooParams.get(topic).get(param));
+                }
             }
+            this.qooParams.put(topic, qooParamForTopic);
         }
     }
 
@@ -141,7 +147,7 @@ public abstract class AbstractPipeline {
         return computeAttributeHelper;
     }
 
-    public Map<String, String> getQooParams() {
+    public Map<String,Map<String, String>> getQooParams() {
         return qooParams;
     }
 
@@ -151,5 +157,17 @@ public abstract class AbstractPipeline {
 
     public void setAssociatedRequest_id(String associatedRequest_id) {
         this.associatedRequest_id = associatedRequest_id;
+    }
+
+    public String getTempID() {
+        return tempID;
+    }
+
+    public void setTempID(String tempID) {
+        this.tempID = tempID;
+    }
+
+    public String getUniqueID() {
+        return this.pipelineName + "_" + this.tempID;
     }
 }
