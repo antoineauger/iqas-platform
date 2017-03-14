@@ -18,6 +18,7 @@ import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
+import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.pipelines.IPipeline;
 import fr.isae.iqas.pipelines.Pipeline;
@@ -78,6 +79,7 @@ public class PlanActor extends UntypedActor {
             RFCMsg rfcMsg = (RFCMsg) message;
 
             if (rfcMsg.getRfc() == RFCMAPEK.CREATE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
+                Request incomingRequest = rfcMsg.getRequest();
                 RequestMapping requestMapping = rfcMsg.getRequestMapping();
 
                 // Creation of all topics
@@ -92,7 +94,7 @@ public class PlanActor extends UntypedActor {
                     }
                 });
 
-                if (requestMapping.getConstructedFromRequest().equals("")) { // The request does not depend on any existing request
+                if (requestMapping.getConstructedFromRequest().equals("")) { // The incoming request has no common points with the enforced ones
                     // Primary sources and filtering by sensors
                     String pipelineID = "";
                     String tempID = "";
@@ -117,7 +119,7 @@ public class PlanActor extends UntypedActor {
                         }
                         else {
                             if (pipeline.getPipelineID().equals("SensorFilterPipeline")) {
-                                VirtualSensorList vList = fusekiController._findAllSensorsWithConditions(rfcMsg.getRequest().getLocation(), rfcMsg.getRequest().getTopic());
+                                VirtualSensorList vList = fusekiController._findAllSensorsWithConditions(incomingRequest.getLocation(), incomingRequest.getTopic());
                                 String sensorsToKeep = "";
                                 for (VirtualSensor v : vList.sensors) {
                                     sensorsToKeep += v.sensor_id.split("#")[1] + ";";
@@ -157,7 +159,6 @@ public class PlanActor extends UntypedActor {
 
                     // Building the rest of the graph
                     String currTopicName = finalNextTopicName;
-
                     while (requestMapping.getAllTopics().get(currTopicName).getChildren().size() > 0) {
                         TopicEntity currTopic = requestMapping.getAllTopics().get(currTopicName);
                         Set<String> currTopicSet = new HashSet<>();
@@ -202,7 +203,7 @@ public class PlanActor extends UntypedActor {
                         currTopicName = childrenTopic.getName();
                     }
                 }
-                else { // The request depends on another request
+                else { // The incoming request may reuse existing enforced requests
                     TopicEntity beforeLastTopic = requestMapping.getPrimarySources().get(0);
                     Set<String> currTopicSet = new HashSet<>();
                     currTopicSet.add(beforeLastTopic.getName());
@@ -228,12 +229,44 @@ public class PlanActor extends UntypedActor {
                     });
                 }
 
-                rfcMsg.getRequest().updateState(State.Status.ENFORCED);
-                mongoController.updateRequest(rfcMsg.getRequest().getRequest_id(), rfcMsg.getRequest()).whenComplete((result, throwable) -> {
+                incomingRequest.addLog("Successfully created pipeline graph without any QoO constraints.");
+                incomingRequest.updateState(State.Status.ENFORCED);
+                mongoController.updateRequest(incomingRequest.getRequest_id(), incomingRequest).whenComplete((result, throwable) -> {
                     if (throwable != null) {
-                        log.error("Update of the Request " + rfcMsg.getRequest().getRequest_id() + " has failed");
+                        log.error("Update of the Request " + incomingRequest.getRequest_id() + " has failed");
                     }
                 });
+            }
+            else if (rfcMsg.getRfc() == RFCMAPEK.REMOVE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) { // Request deleted by the user
+                Request requestToDelete = rfcMsg.getRequest();
+
+                Set<ActorRef> actorsToShutDown = new HashSet<>();
+                Set<String> kafkaTopicsToDelete = new HashSet<>();
+                for (String s : actorPathRefs.get(requestToDelete.getRequest_id())) {
+                    execActorsCount.put(s, execActorsCount.get(s) - 1);
+                    if (execActorsCount.get(s) == 0) { // this means that resources can be released
+                        String topicTemp = getKeyByValue(mappingTopicsActors, s);
+                        kafkaTopicsToDelete.add(topicTemp);
+                        actorsToShutDown.add(execActorsRefs.get(s));
+                    }
+                }
+
+                // We stop the workers that enforce the different pipelines
+                for (ActorRef actorRef : actorsToShutDown) {
+                    gracefulStop(actorRef);
+                    execActorsCount.remove(actorRef.path().name());
+                    execActorsRefs.remove(actorRef.path().name());
+                }
+
+                // We clean up the unused topics
+                for (String topic : kafkaTopicsToDelete) {
+                    performAction(new ActionMsg(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
+                    mappingTopicsActors.remove(topic);
+                }
+
+                // Removal of the corresponding RequestMapping
+                actorPathRefs.remove(requestToDelete.getRequest_id());
+                mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
             }
         }
         /**
@@ -314,7 +347,7 @@ public class PlanActor extends UntypedActor {
             execActorsCount.computeIfAbsent(actorRefToStart.path().name(), k -> 0);
             execActorsCount.put(actorRefToStart.path().name(), execActorsCount.get(actorRefToStart.path().name()) + 1);
 
-            if (!actionMAPEK.getConstructedFromRequest().equals("")) {
+            if (!actionMAPEK.getConstructedFromRequest().equals("")) { // Additional steps to perform if the request depends on another one
                 mongoController.getSpecificRequestMapping(actionMAPEK.getConstructedFromRequest()).whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         RequestMapping ancestorReqMapping = result.get(0);
@@ -348,12 +381,30 @@ public class PlanActor extends UntypedActor {
                 return false;
             }
         }
+        else if (actionMAPEK.getAction() == ActionMAPEK.DELETE && actionMAPEK.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
+            Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+            Future<Object> future = Patterns.ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.DELETE, actionMAPEK.getKafkaTopicID()), timeout);
+            try {
+                return (boolean) (Boolean) Await.result(future, timeout.duration());
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
 
         return true;
     }
 
     private Future<ActorRef> getPipelineWatcherActor() {
-        return getContext().actorSelection(getSelf().path().parent().parent().parent()
-                + "/" + "pipelineWatcherActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
+        return getContext().actorSelection(getSelf().path().parent().parent().parent() + "/pipelineWatcherActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
+    }
+
+    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
+        for (Map.Entry<T, E> entry : map.entrySet()) {
+            if (Objects.equals(value, entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 }

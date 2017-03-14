@@ -72,35 +72,20 @@ public class MonitorActor extends UntypedActor {
             Request requestTemp = (Request) message;
             log.info("Received Request : {}", requestTemp.getRequest_id());
 
-            SymptomMsg symptomMsgToForward = null;
             if (requestTemp.getCurrent_status() == State.Status.SUBMITTED) { // Valid Request
                 //TODO check if request is new or it is an update
-
-                symptomMsgToForward = new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.REQUEST, requestTemp);
+                SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.REQUEST, requestTemp);
+                forwardToAnalyzeActor(symptomMsgToForward);
             }
             else if (requestTemp.getCurrent_status() == State.Status.REMOVED) { // Request deleted by the user
-                symptomMsgToForward = new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestTemp);
+                SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestTemp);
+                forwardToAnalyzeActor(symptomMsgToForward);
             }
             else if (requestTemp.getCurrent_status() == State.Status.REJECTED) {
                 // Do nothing since the Request has already been rejected
             }
             else { // Other cases should raise an error
                 log.error("Unknown state for request " + requestTemp.getRequest_id() + " at this stage");
-            }
-
-            if (symptomMsgToForward != null) {
-                SymptomMsg finalSymptomMsgToForward = symptomMsgToForward;
-                getAnalyzeActor().onComplete(new OnComplete<ActorRef>() {
-                    @Override
-                    public void onComplete(Throwable t, ActorRef analyzeActor) throws Throwable {
-                        if (t != null) {
-                            log.error("Unable to find the AnalyzeActor: " + t.toString());
-                        }
-                        else {
-                            analyzeActor.tell(finalSymptomMsgToForward, getSelf());
-                        }
-                    }
-                }, getContext().dispatcher());
             }
         }
         /**
@@ -137,6 +122,21 @@ public class MonitorActor extends UntypedActor {
     private Future<ActorRef> getAnalyzeActor() {
         return getContext().actorSelection(getSelf().path().parent()
                 + "/" + "analyzeActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
+    }
+
+    private void forwardToAnalyzeActor(SymptomMsg symptomMsgToForward) {
+        SymptomMsg finalSymptomMsgToForward = symptomMsgToForward;
+        getAnalyzeActor().onComplete(new OnComplete<ActorRef>() {
+            @Override
+            public void onComplete(Throwable t, ActorRef analyzeActor) throws Throwable {
+                if (t != null) {
+                    log.error("Unable to find the AnalyzeActor: " + t.toString());
+                }
+                else {
+                    analyzeActor.tell(finalSymptomMsgToForward, getSelf());
+                }
+            }
+        }, getContext().dispatcher());
     }
 
 }

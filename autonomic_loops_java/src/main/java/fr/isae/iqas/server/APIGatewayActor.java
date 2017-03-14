@@ -18,6 +18,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.*;
+import static fr.isae.iqas.model.request.State.Status.ENFORCED;
 import static fr.isae.iqas.model.request.State.Status.REMOVED;
 
 /**
@@ -82,18 +83,19 @@ public class APIGatewayActor extends UntypedActor {
                 mongoController.getSpecificRequest(incomingRequest.getRequest_id()).whenComplete((result, throwable) -> {
                     if (throwable == null && result.size() == 1) {
                         Request retrievedRequest = result.get(0);
-                        retrievedRequest.addLog("Request deleted by the user.");
-                        retrievedRequest.updateState(REMOVED);
-                        mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result2, throwable2) -> {
-                            if (result2) {
-                                log.info("Request with id " + retrievedRequest.getRequest_id() + " successfully marked for deletion.");
-                                autoManager.tell(retrievedRequest, getSelf());
-                            }
-                            else {
-                                log.warning("Unable to mark request " + retrievedRequest.getRequest_id() + " for deletion. " +
-                                        "Operation skipped!");
-                            }
-                        });
+                        if (retrievedRequest.isInState(ENFORCED)) {
+                            retrievedRequest.addLog("Request deleted by the user.");
+                            retrievedRequest.updateState(REMOVED);
+                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result2, throwable2) -> {
+                                if (result2) {
+                                    log.info("Request with id " + retrievedRequest.getRequest_id() + " successfully marked for deletion.");
+                                    autoManager.tell(retrievedRequest, getSelf());
+                                } else {
+                                    log.warning("Unable to mark request " + retrievedRequest.getRequest_id() + " for deletion. " +
+                                            "Operation skipped!");
+                                }
+                            });
+                        }
                     }
                     else {
                         log.warning("Unable to retrieve request " + incomingRequest.getRequest_id() + ". " +

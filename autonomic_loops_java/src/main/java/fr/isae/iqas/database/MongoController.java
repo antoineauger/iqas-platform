@@ -99,23 +99,28 @@ public class MongoController extends AllDirectives {
         collection.replaceOne(eq("request_id", associated_request_id), newReq, callback);
     }
 
+    void _deleteRequestMapping(String associated_request_id, final SingleResultCallback<DeleteResult> callback) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("request_mappings");
+        collection.deleteOne(eq("request_id", associated_request_id), callback);
+    }
+
     // ######### Exposed mongoDB methods #########
 
     public CompletableFuture<Boolean> deleteRequest(String request_id) {
-        final CompletableFuture<Boolean> deleteddRequest = new CompletableFuture<>();
+        final CompletableFuture<Boolean> deletedRequest = new CompletableFuture<>();
         _deleteRequest(request_id, new SingleResultCallback<DeleteResult>() {
             @Override
             public void onResult(final DeleteResult result, final Throwable t) {
                 if (result.getDeletedCount() == 1) {
-                    deleteddRequest.complete(true);
+                    deletedRequest.complete(true);
                 }
                 else {
                     log.error("Unable to delete request " + request_id + ": " + t.toString());
-                    deleteddRequest.complete(false);
+                    deletedRequest.complete(false);
                 }
             }
         });
-        return deleteddRequest;
+        return deletedRequest;
     }
 
     /**
@@ -322,6 +327,23 @@ public class MongoController extends AllDirectives {
             }
         });
         return updatedRequest;
+    }
+
+    public CompletableFuture<Boolean> deleteRequestMapping(String request_id) {
+        final CompletableFuture<Boolean> deletedRequest = new CompletableFuture<>();
+        _deleteRequestMapping(request_id, new SingleResultCallback<DeleteResult>() {
+            @Override
+            public void onResult(final DeleteResult result, final Throwable t) {
+                if (result.getDeletedCount() == 1) {
+                    deletedRequest.complete(true);
+                }
+                else {
+                    log.error("Unable to delete RequestMapping for request " + request_id + ": " + t.toString());
+                    deletedRequest.complete(false);
+                }
+            }
+        });
+        return deletedRequest;
     }
 
     /**

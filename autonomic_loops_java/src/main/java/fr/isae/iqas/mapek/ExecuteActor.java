@@ -133,10 +133,6 @@ public class ExecuteActor extends UntypedActor {
 
     /*private void askParentForTermination() {
         context.parent().tell(new TerminatedMsg(getSelf()), getSelf());
-    }
-
-    private Future<ActorRef> getPipelineWatcherActor() {
-        return context.actorSelection(getSelf().path().parent().parent().parent().parent()
-                + "/" + "pipelineWatcherActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }*/
+
 }

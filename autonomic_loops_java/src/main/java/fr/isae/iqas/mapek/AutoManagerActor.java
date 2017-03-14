@@ -125,32 +125,6 @@ public class AutoManagerActor extends UntypedActor {
             else { // Other cases should raise an error
                 log.error("Unknown state for request " + incomingReq.getRequest_id() + " at this stage");
             }
-
-            /*Set<String> topicToPullFrom = new HashSet<>();
-            topicToPullFrom.add("topic1");
-
-            if (processingActivated) {
-                planActor.tell(
-                        new MAPEKInternalMsg.ActionMsg(MAPEKInternalMsg.ActionMAPEK.DELETE,
-                                MAPEKInternalMsg.EntityMAPEK.PIPELINE,
-                                "SimpleFilteringPipeline",
-                                topicToPullFrom,
-                                "topic2",
-                                requestTemp.getRequestID()
-                        ), ActorRef.noSender());
-                processingActivated = false;
-            }
-            else {
-                planActor.tell(
-                        new MAPEKInternalMsg.ActionMsg(MAPEKInternalMsg.ActionMAPEK.APPLY,
-                                MAPEKInternalMsg.EntityMAPEK.PIPELINE,
-                                "SimpleFilteringPipeline",
-                                topicToPullFrom,
-                                "topic2",
-                                requestTemp.getRequestID()
-                        ), ActorRef.noSender());
-                processingActivated = true;
-            }*/
         }
     }
 }

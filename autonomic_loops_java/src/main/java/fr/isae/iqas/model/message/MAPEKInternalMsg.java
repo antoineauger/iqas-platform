@@ -152,6 +152,14 @@ public class MAPEKInternalMsg {
             this.associatedRequest_id = request.getRequest_id();
         }
 
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request) { // REMOVE for Requests
+            this.creationDate = new Timestamp(System.currentTimeMillis());
+            this.rfc = rfc;
+            this.about = about;
+            this.request = request;
+            this.associatedRequest_id = request.getRequest_id();
+        }
+
         public RFCMAPEK getRfc() {
             return rfc;
         }
