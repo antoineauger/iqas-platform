@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
+import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.request.Operator;
 import fr.isae.iqas.pipelines.AbstractPipeline;
 import fr.isae.iqas.pipelines.IPipeline;
@@ -24,6 +25,9 @@ import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
  * Created by an.auger on 31/01/2017.
+ *
+ * SimpleFilteringPipeline is an example of QoO pipeline provided by the iQAS platform.
+ * It can be modified according to user needs.
  */
 public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
@@ -52,17 +56,38 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
 
                     // ################################# YOUR CODE GOES HERE #################################
 
-                    Flow<ConsumerRecord, Information, NotUsed> consumRecordToInfo =
+                    // Raw Data
+                    Flow<ConsumerRecord, RawData, NotUsed> consumRecordToRawData =
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                Information tempInformation = new Information(
+                                return new RawData(
                                         sensorDataObject.getString("timestamp"),
                                         sensorDataObject.getString("value"),
                                         sensorDataObject.getString("producer"));
-                                return tempInformation;
+                            });
+
+                    Flow<RawData, ProducerRecord, NotUsed> rawDataToProdRecord =
+                            Flow.of(RawData.class).map(r -> {
+                                ObjectMapper mapper = new ObjectMapper();
+                                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                                return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                            });
+
+                    Flow<RawData, RawData, NotUsed> filteringMechanismRawData =
+                            Flow.of(RawData.class).filter(r ->
+                                    r.getValue() < Double.valueOf(getParams().get("threshold_min")));
+
+                    // Information
+                    Flow<ConsumerRecord, Information, NotUsed> consumRecordToInfo =
+                            Flow.of(ConsumerRecord.class).map(r -> {
+                                JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                                return new Information(
+                                        sensorDataObject.getString("timestamp"),
+                                        sensorDataObject.getString("value"),
+                                        sensorDataObject.getString("producer"));
                     });
 
-                    Flow<Information, Information, NotUsed> filteringMechanism =
+                    Flow<Information, Information, NotUsed> filteringMechanismInformation =
                             Flow.of(Information.class).filter(r ->
                             r.getValue() < Double.valueOf(getParams().get("threshold_min")));
 
@@ -75,13 +100,16 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                             });
 
                     if (askedLevelFinal == RAW_DATA) {
-                        //TODO: code logic for Raw Data for SimpleFilteringPipeline
-                        return null;
+                        builder.from(sourceGraph)
+                                .via(builder.add(consumRecordToRawData))
+                                .via(builder.add(filteringMechanismRawData))
+                                .via(builder.add(rawDataToProdRecord))
+                                .toInlet(sinkGraph);
                     }
                     else if (askedLevelFinal == INFORMATION) {
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
-                                .via(builder.add(filteringMechanism))
+                                .via(builder.add(filteringMechanismInformation))
                                 .via(builder.add(infoToProdRecord))
                                 .toInlet(sinkGraph);
                     }
@@ -92,7 +120,6 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                     else { // other observation levels are not supported
                         return null;
                     }
-
 
                     // ################################# END OF YOUR CODE #################################
                     // Do not remove - useful for MAPE-K monitoring

@@ -147,6 +147,7 @@ public class PlanActor extends UntypedActor {
                             ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
                                     EntityMAPEK.PIPELINE,
                                     pipeline,
+                                    incomingRequest.getObs_level(),
                                     topicBaseToPullFrom,
                                     finalNextTopicName,
                                     requestMapping.getRequest_id(),
@@ -191,6 +192,7 @@ public class PlanActor extends UntypedActor {
                                 ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
                                         EntityMAPEK.PIPELINE,
                                         pipeline,
+                                        incomingRequest.getObs_level(),
                                         currTopicSet,
                                         childrenTopic.getName(),
                                         requestMapping.getRequest_id(),
@@ -218,6 +220,7 @@ public class PlanActor extends UntypedActor {
                             ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
                                     EntityMAPEK.PIPELINE,
                                     pipeline,
+                                    incomingRequest.getObs_level(),
                                     currTopicSet,
                                     finalSinkForApp.getName(),
                                     requestMapping.getRequest_id(),
@@ -246,7 +249,9 @@ public class PlanActor extends UntypedActor {
                     execActorsCount.put(s, execActorsCount.get(s) - 1);
                     if (execActorsCount.get(s) == 0) { // this means that resources can be released
                         String topicTemp = getKeyByValue(mappingTopicsActors, s);
-                        kafkaTopicsToDelete.add(topicTemp);
+                        if (topicTemp != null) {
+                            kafkaTopicsToDelete.add(topicTemp);
+                        }
                         actorsToShutDown.add(execActorsRefs.get(s));
                     }
                 }
@@ -261,6 +266,7 @@ public class PlanActor extends UntypedActor {
                 // We clean up the unused topics
                 for (String topic : kafkaTopicsToDelete) {
                     performAction(new ActionMsg(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
+                    log.error("Removing: " + topic);
                     mappingTopicsActors.remove(topic);
                 }
 
@@ -274,15 +280,9 @@ public class PlanActor extends UntypedActor {
          */
         else if (message instanceof TerminatedMsg) {
             TerminatedMsg terminatedMsg = (TerminatedMsg) message;
-            ActorRef actorRefToStop = terminatedMsg.getTargetToStop();
             if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
                 log.info("Received TerminatedMsg message: {}", message);
                 getContext().stop(self());
-            }
-            else {
-                gracefulStop(actorRefToStop);
-                // TODO
-                //execActorsRefs.remove(actorRefToStop);
             }
         }
     }
@@ -332,11 +332,11 @@ public class PlanActor extends UntypedActor {
     private boolean performAction(ActionMsg actionMAPEK) {
         log.info("Processing ActionMsg: {} {}", actionMAPEK.getAction(), actionMAPEK.getAbout());
 
-        //TODO delete request
         if (actionMAPEK.getAction() == ActionMAPEK.APPLY && actionMAPEK.getAbout() == EntityMAPEK.PIPELINE) {
             ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
                     prop,
                     actionMAPEK.getPipelineToEnforce(),
+                    actionMAPEK.getAskedObsLevel(),
                     actionMAPEK.getTopicsToPullFrom(),
                     actionMAPEK.getTopicToPublish()));
 
@@ -399,7 +399,7 @@ public class PlanActor extends UntypedActor {
         return getContext().actorSelection(getSelf().path().parent().parent().parent() + "/pipelineWatcherActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
-    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
+    private static <T, E> T getKeyByValue(Map<T, E> map, E value) {
         for (Map.Entry<T, E> entry : map.entrySet()) {
             if (Objects.equals(value, entry.getValue())) {
                 return entry.getKey();

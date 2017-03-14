@@ -48,6 +48,7 @@ public class ExecuteActor extends UntypedActor {
 
     private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = null;
     private Sink<ProducerRecord, CompletionStage<Done>> kafkaSink = null;
+    private ObservationLevel askedObsLevel = ObservationLevel.RAW_DATA;
 
     private ActorRef kafkaActor = null;
 
@@ -56,14 +57,13 @@ public class ExecuteActor extends UntypedActor {
     private IPipeline pipelineToEnforce = null;
     private String topicToPublish = null;
 
-    public ExecuteActor(Properties prop, IPipeline pipelineToEnforce, Set<String> topicsToPullFrom, String topicToPublish) {
-
-        String test = new ObjectId().toString();
+    public ExecuteActor(Properties prop, IPipeline pipelineToEnforce, ObservationLevel askedObsLevel, Set<String> topicsToPullFrom, String topicToPublish) {
+        String randomNumber = new ObjectId().toString();
 
         ConsumerSettings consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
-                .withGroupId("group" + test)
-                .withClientId("client" + test)
+                .withGroupId("group" + randomNumber)
+                .withClientId("client" + randomNumber)
                 .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
         ProducerSettings producerSettings = ProducerSettings
@@ -79,6 +79,9 @@ public class ExecuteActor extends UntypedActor {
         // Sinks
         this.kafkaSink = Producer.plainSink(producerSettings);
 
+        // Required observation level
+        this.askedObsLevel = askedObsLevel;
+
         // Retrieval of available QoO pipelines
         this.pipelineToEnforce = pipelineToEnforce;
         this.topicToPublish = topicToPublish;
@@ -89,14 +92,14 @@ public class ExecuteActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        //TODO decide if RD, I or Knowledge!
         myRunnableGraph = RunnableGraph.fromGraph(pipelineToEnforce.getPipelineGraph(
                 kafkaSource,
                 kafkaSink,
                 topicToPublish,
-                ObservationLevel.INFORMATION,
+                askedObsLevel,
                 null));
         if (myRunnableGraph != null) {
+
             myRunnableGraph.run(materializer);
         }
     }
@@ -130,9 +133,5 @@ public class ExecuteActor extends UntypedActor {
     public void postStop() {
         // clean up resources here ...
     }
-
-    /*private void askParentForTermination() {
-        context.parent().tell(new TerminatedMsg(getSelf()), getSelf());
-    }*/
 
 }

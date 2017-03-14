@@ -10,8 +10,8 @@ import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
+import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -26,6 +26,9 @@ import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
  * Created by an.auger on 28/02/2017.
+ *
+ * SensorFilterPipeline is a QoO pipeline provided by the iQAS platform.
+ * It should not be modified.
  */
 public class SensorFilterPipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
@@ -53,49 +56,36 @@ public class SensorFilterPipeline extends AbstractPipeline implements IPipeline 
 
                     // ################################# YOUR CODE GOES HERE #################################
 
-                    // TODO Raw Data
-
-                    Flow<ConsumerRecord, Information, NotUsed> consumRecordToInfo =
+                    Flow<ConsumerRecord, RawData, NotUsed> consumRecordToInfo =
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                Information tempInformation = new Information(
+                                return new RawData(
                                         sensorDataObject.getString("timestamp"),
                                         sensorDataObject.getString("value"),
                                         sensorDataObject.getString("producer"));
-                                return tempInformation;
                             });
 
-                    Flow<Information, Information, NotUsed> filteredInformationBySensor =
-                            Flow.of(Information.class).filter(
+                    Flow<RawData, RawData, NotUsed> filteredInformationBySensor =
+                            Flow.of(RawData.class).filter(
                                 r -> {
                                     String[] allowedSensors = getParams().get("allowed_sensors").split(";");
                                     List<String> allowedSensorList = Arrays.asList(allowedSensors);
                                     return allowedSensorList.contains(r.getProducer());
                                 });
 
-                    Flow<Information, ProducerRecord, NotUsed> infoToProdRecord =
-                            Flow.of(Information.class).map(r -> {
+                    Flow<RawData, ProducerRecord, NotUsed> infoToProdRecord =
+                            Flow.of(RawData.class).map(r -> {
                                 ObjectMapper mapper = new ObjectMapper();
                                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
                                 return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
                             });
 
-                    // TODO Knowledge
-
-                    if (askedLevelFinal == RAW_DATA) {
-                        //TODO: code logic for Raw Data for SimpleFilteringPipeline
-                        return null;
-                    }
-                    else if (askedLevelFinal == INFORMATION) {
+                    if (askedLevelFinal == RAW_DATA || askedLevelFinal == INFORMATION || askedLevelFinal == KNOWLEDGE) {
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
                                 .via(builder.add(filteredInformationBySensor))
                                 .via(builder.add(infoToProdRecord))
                                 .toInlet(sinkGraph);
-                    }
-                    else if (askedLevelFinal == KNOWLEDGE) {
-                        //TODO: code logic for Knowledge for SimpleFilteringPipeline
-                        return null;
                     }
                     else { // other observation levels are not supported
                         return null;

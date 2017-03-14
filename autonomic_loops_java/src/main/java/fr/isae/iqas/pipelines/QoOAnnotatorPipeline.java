@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
+import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -27,6 +28,9 @@ import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
  * Created by an.auger on 03/03/2017.
+ *
+ * QoOAnnotatorPipeline is a QoO pipeline provided by the iQAS platform.
+ * It should not be modified.
  */
 public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
@@ -50,12 +54,27 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
                     // Definition of kafka topics for Source and Sink
                     final Outlet<ConsumerRecord<byte[], String>> sourceGraph = builder.add(kafkaSource).out();
                     final Inlet<ProducerRecord> sinkGraph = builder.add(kafkaSink).in();
-                    // Definition of the broadcast for the MAPE-K monitoring
-                    final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
 
+                    // ################################# START OF THE RAW_DATA / INFORMATION / KNOWLEDGE LOGIC #################################
 
-                    // ################################# YOUR CODE GOES HERE #################################
+                    // Raw Data
+                    Flow<ConsumerRecord, RawData, NotUsed> consumRecordToRawData =
+                            Flow.of(ConsumerRecord.class).map(r -> {
+                                JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                                return new RawData(
+                                        sensorDataObject.getString("timestamp"),
+                                        sensorDataObject.getString("value"),
+                                        sensorDataObject.getString("producer"));
+                            });
 
+                    Flow<RawData, ProducerRecord, NotUsed> rawDataToProdRecord =
+                            Flow.of(RawData.class).map(r -> {
+                                ObjectMapper mapper = new ObjectMapper();
+                                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                                return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                            });
+
+                    // Information
                     Flow<ConsumerRecord, Information, NotUsed> consumRecordToInfo =
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
@@ -77,15 +96,43 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
                             });
 
                     if (askedLevelFinal == RAW_DATA) {
-                        // Annotated observations with QoO attributes cannot be Raw Data!
-                        return null;
+                        builder.from(sourceGraph)
+                                .via(builder.add(consumRecordToRawData))
+                                .via(builder.add(rawDataToProdRecord))
+                                .toInlet(sinkGraph);
                     }
                     else if (askedLevelFinal == INFORMATION) {
+                        // Definition of the broadcast for the MAPE-K monitoring
+                        final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
+
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
                                 .viaFanOut(bcast)
                                 .via(builder.add(infoToProdRecord))
                                 .toInlet(sinkGraph);
+
+                        builder.from(bcast.out(1))
+                                .via(builder.add(Flow.of(Information.class)
+                                        .groupedWithin(Integer.MAX_VALUE, getReportFrequency())
+                                        .map(l -> {
+                                            Map<String, Information> relevantInfoForAllProducers = new HashMap<>();
+                                            for (Information i : l) {
+                                                relevantInfoForAllProducers.put(i.getProducer(), i);
+                                            }
+                                            return relevantInfoForAllProducers;
+                                        }))
+                                )
+                                .to(builder.add(Sink.foreach(elem -> {
+                                    Map<String, Information> infoMapTemp = (Map<String, Information>) elem;
+                                    infoMapTemp.forEach((k, v) -> {
+                                        final QoOReportMsg qoOReportAttributes = new QoOReportMsg(getUniqueID());
+                                        qoOReportAttributes.setProducerName(k);
+                                        qoOReportAttributes.setRequestID(getAssociatedRequest_id());
+                                        qoOReportAttributes.setQooAttribute(OBS_FRESHNESS.toString(), v.getQoOAttribute(OBS_FRESHNESS));
+                                        qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), v.getQoOAttribute(OBS_ACCURACY));
+                                        getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
+                                    });
+                                })));
                     }
                     else if (askedLevelFinal == KNOWLEDGE) {
                         //TODO: code logic for Knowledge for SimpleFilteringPipeline
@@ -95,30 +142,7 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
                         return null;
                     }
 
-                    // ################################# END OF YOUR CODE #################################
-                    // Do not remove - useful for MAPE-K monitoring
-                    builder.from(bcast.out(1))
-                            .via(builder.add(Flow.of(Information.class)
-                                    .groupedWithin(Integer.MAX_VALUE, getReportFrequency())
-                                    .map(l -> {
-                                        Map<String, Information> relevantInfoForAllProducers = new HashMap<>();
-                                        for (Information i :l) {
-                                            relevantInfoForAllProducers.put(i.getProducer(), i);
-                                        }
-                                        return relevantInfoForAllProducers;
-                                    }))
-                            )
-                            .to(builder.add(Sink.foreach(elem -> {
-                                Map<String, Information> infoMapTemp = (Map<String, Information>) elem;
-                                infoMapTemp.forEach((k,v) -> {
-                                    final QoOReportMsg qoOReportAttributes = new QoOReportMsg(getUniqueID());
-                                    qoOReportAttributes.setProducerName(k);
-                                    qoOReportAttributes.setRequestID(getAssociatedRequest_id());
-                                    qoOReportAttributes.setQooAttribute(OBS_FRESHNESS.toString(), v.getQoOAttribute(OBS_FRESHNESS));
-                                    qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), v.getQoOAttribute(OBS_ACCURACY));
-                                    getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
-                                });
-                            })));
+                    // ################################# END OF THE RAW_DATA / INFORMATION / KNOWLEDGE LOGIC #################################
 
                     return ClosedShape.getInstance();
                 });

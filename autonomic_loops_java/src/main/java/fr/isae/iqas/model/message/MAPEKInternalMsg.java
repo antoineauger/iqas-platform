@@ -2,6 +2,7 @@ package fr.isae.iqas.model.message;
 
 import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.model.jsonld.QoOAttribute;
+import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.pipelines.IPipeline;
 
@@ -200,6 +201,7 @@ public class MAPEKInternalMsg {
         private Set<String> topicsToPullFrom;
         private String topicToPublish;
         private IPipeline pipelineToEnforce;
+        private ObservationLevel askedObsLevel;
         private String associatedRequest_id;
         private String kafkaTopicID;
         private Map<String, String> paramsToUpdate;
@@ -217,6 +219,7 @@ public class MAPEKInternalMsg {
         public ActionMsg(ActionMAPEK action,
                          EntityMAPEK about,
                          IPipeline pipelineToEnforce,
+                         ObservationLevel askedObsLevel,
                          Set<String> topicsToPullFrom,
                          String topicToPublish,
                          String associatedRequest_id,
@@ -225,6 +228,7 @@ public class MAPEKInternalMsg {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.action = action;
             this.about = about;
+            this.askedObsLevel = askedObsLevel;
             this.pipelineToEnforce = pipelineToEnforce;
             this.topicsToPullFrom = topicsToPullFrom;
             this.topicToPublish = topicToPublish;
@@ -296,6 +300,10 @@ public class MAPEKInternalMsg {
 
         public int getMaxLevelDepth() {
             return maxLevelDepth;
+        }
+
+        public ObservationLevel getAskedObsLevel() {
+            return askedObsLevel;
         }
     }
 

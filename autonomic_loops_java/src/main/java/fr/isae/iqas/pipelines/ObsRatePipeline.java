@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
+import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -24,6 +25,9 @@ import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
  * Created by an.auger on 03/03/2017.
+ *
+ * ObsRatePipeline is a QoO pipeline provided by the iQAS platform.
+ * It should not be modified.
  */
 public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
@@ -48,43 +52,33 @@ public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
                     final Outlet<ConsumerRecord<byte[], String>> sourceGraph = builder.add(kafkaSource).out();
                     final Inlet<ProducerRecord> sinkGraph = builder.add(kafkaSink).in();
                     // Definition of the broadcast for the MAPE-K monitoring
-                    final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
-
+                    final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
                     // ################################# YOUR CODE GOES HERE #################################
 
-                    Flow<ConsumerRecord, Information, NotUsed> consumRecordToInfo =
+                    Flow<ConsumerRecord, RawData, NotUsed> consumRecordToInfo =
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                Information tempInformation = new Information(
+                                return (RawData) new Information(
                                         sensorDataObject.getString("timestamp"),
                                         sensorDataObject.getString("value"),
                                         sensorDataObject.getString("producer"));
-                                return tempInformation;
                     });
 
-                    Flow<Information, ProducerRecord, NotUsed> infoToProdRecord =
-                            Flow.of(Information.class).map(r -> {
+                    Flow<RawData, ProducerRecord, NotUsed> infoToProdRecord =
+                            Flow.of(RawData.class).map(r -> {
                                 ObjectMapper mapper = new ObjectMapper();
                                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
                                 return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
 
                             });
 
-                    if (askedLevelFinal == RAW_DATA) {
-                        // Annotated observations with QoO attributes cannot be Raw Data!
-                        return null;
-                    }
-                    else if (askedLevelFinal == INFORMATION) {
+                    if (askedLevel == RAW_DATA || askedLevelFinal == INFORMATION || askedLevelFinal == KNOWLEDGE) {
                         builder.from(sourceGraph)
                                 .via(builder.add(consumRecordToInfo))
                                 .viaFanOut(bcast)
                                 .via(builder.add(infoToProdRecord))
                                 .toInlet(sinkGraph);
-                    }
-                    else if (askedLevelFinal == KNOWLEDGE) {
-                        //TODO: code logic for Knowledge for SimpleFilteringPipeline
-                        return null;
                     }
                     else { // other observation levels are not supported
                         return null;
@@ -94,15 +88,16 @@ public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
                     // ################################# END OF YOUR CODE #################################
                     // Do not remove - useful for MAPE-K monitoring
                     final QoOReportMsg qoOReportObsRate = new QoOReportMsg(getUniqueID());
-                    builder.from(bcast.out(1))
-                            .via(builder.add(Flow.of(Information.class).map(p -> p.getProducer())))
-                            .via(builder.add(getFlowToComputeObsRate()))
-                            .to(builder.add(Sink.foreach(elem -> {
-                                Map<String,Integer> obsRateByTopic = (Map<String, Integer>) elem;
-                                qoOReportObsRate.setObsRateByTopic(obsRateByTopic);
-                                qoOReportObsRate.setRequestID(getAssociatedRequest_id());
-                                getMonitorActor().tell(qoOReportObsRate, ActorRef.noSender());
-                            })));
+                        builder.from(bcast.out(1))
+                                .via(builder.add(Flow.of(RawData.class).map(p -> p.getProducer())))
+                                .via(builder.add(getFlowToComputeObsRate()))
+                                .to(builder.add(Sink.foreach(elem -> {
+                                    Map<String, Integer> obsRateByTopic = (Map<String, Integer>) elem;
+                                    qoOReportObsRate.setObsRateByTopic(obsRateByTopic);
+                                    qoOReportObsRate.setRequestID(getAssociatedRequest_id());
+                                    getMonitorActor().tell(qoOReportObsRate, ActorRef.noSender());
+                                })));
+
                     return ClosedShape.getInstance();
                 });
 

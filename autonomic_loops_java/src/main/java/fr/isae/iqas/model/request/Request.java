@@ -3,6 +3,7 @@ package fr.isae.iqas.model.request;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.quality.QoOAttribute;
 import org.bson.Document;
 
@@ -24,6 +25,7 @@ public class Request {
     private String application_id;
     private String topic;
     private String location;
+    private ObservationLevel obs_level;
     private QoORequirements qooConstraints;
     private @JsonIgnore ArrayList<State> statesList;
 
@@ -34,10 +36,12 @@ public class Request {
                    @JsonProperty("application_id") String application_id,
                    @JsonProperty("topic") String topic,
                    @JsonProperty("location") String location,
+                   @JsonProperty("obs_level") String obs_level,
                    @JsonProperty("qoo") QoORequirements qooConstraints) {
         this.request_id = request_id;
         this.application_id = application_id;
         this.topic = topic;
+        this.obs_level = ObservationLevel.valueOf(obs_level);
         this.location = location;
 
         this.qooConstraints = qooConstraints;
@@ -78,6 +82,7 @@ public class Request {
         this.application_id = bsonDocument.getString("application_id");
         this.topic = bsonDocument.getString("topic");
         this.location = bsonDocument.getString("location");
+        this.obs_level = ObservationLevel.valueOf(bsonDocument.getString("obs_level"));
 
         Document qooDoc = (Document) bsonDocument.get("qoo");
         this.qooConstraints = new QoORequirements(
@@ -120,6 +125,7 @@ public class Request {
         docToReturn.put("application_id", application_id);
         docToReturn.put("topic", topic);
         docToReturn.put("location", location);
+        docToReturn.put("obs_level", obs_level.toString());
         docToReturn.put("logs", logs);
 
         Document qooDoc = new Document();
@@ -248,9 +254,14 @@ public class Request {
         if (!(other instanceof Request)) return false;
         Request otherMyClass = (Request) other;
 
-        // Two requests are considered the same if they have the same topic / location / qooConstraints
+        // Two requests are considered the same if they have the same topic / obsLevel / location / qooConstraints
         return (otherMyClass.getLocation().equals(this.location)
                 && otherMyClass.getTopic().equals(this.topic)
+                && otherMyClass.getObs_level().equals(this.obs_level)
                 && otherMyClass.getQooConstraints().equals(this.qooConstraints));
+    }
+
+    public ObservationLevel getObs_level() {
+        return obs_level;
     }
 }

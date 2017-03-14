@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
+import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -26,6 +27,9 @@ import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
  * Created by an.auger on 28/02/2017.
+ *
+ * ForwardPipeline is a QoO pipeline provided by the iQAS platform.
+ * It should not be modified.
  */
 public class ForwardPipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
@@ -52,7 +56,22 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
 
                     // ################################# YOUR CODE GOES HERE #################################
 
-                    // TODO Raw Data
+                    // Raw Data
+                    Flow<ConsumerRecord, RawData, NotUsed> consumRecordToRawData =
+                            Flow.of(ConsumerRecord.class).map(r -> {
+                                JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                                return new RawData(
+                                        sensorDataObject.getString("timestamp"),
+                                        sensorDataObject.getString("value"),
+                                        sensorDataObject.getString("producer"));
+                            });
+
+                    Flow<RawData, ProducerRecord, NotUsed> rawDataToProdRecord =
+                            Flow.of(RawData.class).map(r -> {
+                                ObjectMapper mapper = new ObjectMapper();
+                                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                                return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                            });
 
                     // Information
                     Flow<ConsumerRecord, Information, NotUsed> consumRecordToInfo =
@@ -83,8 +102,10 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
                     // TODO Knowledge
 
                     if (askedLevelFinal == RAW_DATA) {
-                        //TODO: code logic for Raw Data for SimpleFilteringPipeline
-                        return null;
+                        builder.from(sourceGraph)
+                                .via(builder.add(consumRecordToRawData))
+                                .via(builder.add(rawDataToProdRecord))
+                                .toInlet(sinkGraph);
                     }
                     else if (askedLevelFinal == INFORMATION) {
                         builder.from(sourceGraph)
