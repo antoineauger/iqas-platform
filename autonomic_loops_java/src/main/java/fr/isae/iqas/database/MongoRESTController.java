@@ -9,7 +9,7 @@ import com.mongodb.async.client.MongoDatabase;
 import fr.isae.iqas.model.request.Request;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -43,7 +43,7 @@ public class MongoRESTController extends AllDirectives {
     public CompletableFuture<Route> getRequest(String request_id, Executor ctx) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
+        final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
 
         controller._findSpecificRequest("request_id", request_id, (result, t) -> {
             if (t == null) {
@@ -65,7 +65,7 @@ public class MongoRESTController extends AllDirectives {
     public CompletableFuture<Route> getRequestsByApplication(String application_id) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
+        final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
 
         controller._findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
@@ -87,7 +87,7 @@ public class MongoRESTController extends AllDirectives {
     public CompletableFuture<Route> getAllRequests(Executor ctx) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
+        final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
 
         controller._findAllRequests((result, t) -> {
             if (t == null) {

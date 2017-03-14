@@ -245,9 +245,12 @@ public class Request {
     public boolean equals(Object other){
         if (other == null) return false;
         if (other == this) return true;
-        if (!(other instanceof Request))return false;
+        if (!(other instanceof Request)) return false;
         Request otherMyClass = (Request) other;
 
-        return (otherMyClass.getLocation().equals(this.location) && otherMyClass.getTopic().equals(this.topic));
+        // Two requests are considered the same if they have the same topic / location / qooConstraints
+        return (otherMyClass.getLocation().equals(this.location)
+                && otherMyClass.getTopic().equals(this.topic)
+                && otherMyClass.getQooConstraints().equals(this.qooConstraints));
     }
 }

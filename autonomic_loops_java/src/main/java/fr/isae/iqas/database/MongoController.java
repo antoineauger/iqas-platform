@@ -7,6 +7,7 @@ import com.mongodb.async.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import fr.isae.iqas.MainClass;
+import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import org.bson.Document;
@@ -54,12 +55,12 @@ public class MongoController extends AllDirectives {
      * Requests
      */
 
-    void _findSpecificRequest(String field, String value, final SingleResultCallback<ArrayList<Request>> callback) {
+    void _findSpecificRequest(String field, String value, final SingleResultCallback<List<Request>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
         collection.find(eq(field, value)).map(myDoc -> new Request(myDoc)).into(new ArrayList<>(), callback);
     }
 
-    void _findAllRequests(final SingleResultCallback<ArrayList<Request>> callback) {
+    void _findAllRequests(final SingleResultCallback<List<Request>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
         collection.find().map(myDoc -> new Request(myDoc)).into(new ArrayList<>(), callback);
     }
@@ -83,6 +84,21 @@ public class MongoController extends AllDirectives {
      * Request Mappings
      */
 
+    void _findAllRequestMappings(final SingleResultCallback<List<RequestMapping>> callback) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("request_mappings");
+        collection.find().map(myDoc -> new RequestMapping(myDoc)).into(new ArrayList<>(), callback);
+    }
+
+    void _putRequestMapping(Document req, final SingleResultCallback<Void> callback) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("request_mappings");
+        collection.insertOne(req, callback);
+    }
+
+    void _updateRequestMapping(String associated_request_id, Document newReq, final SingleResultCallback<UpdateResult> callback) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("request_mappings");
+        collection.replaceOne(eq("request_id", associated_request_id), newReq, callback);
+    }
+
     // ######### Exposed mongoDB methods #########
 
     public CompletableFuture<Boolean> deleteRequest(String request_id) {
@@ -94,6 +110,7 @@ public class MongoController extends AllDirectives {
                     deleteddRequest.complete(true);
                 }
                 else {
+                    log.error("Unable to delete request " + request_id + ": " + t.toString());
                     deleteddRequest.complete(false);
                 }
             }
@@ -105,15 +122,16 @@ public class MongoController extends AllDirectives {
      * Method to get all Requests for a specific application
      *
      * @param application_id String, the ID of the application
-     * @return a CompletableFuture that will be completed with either an ArrayList of Requests or a Throwable
+     * @return a CompletableFuture that will be completed with either a list of Requests or a Throwable
      */
-    public CompletableFuture<ArrayList<Request>> getAllRequestsByApp(String application_id) {
-        final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
+    public CompletableFuture<List<Request>> getAllRequestsByApp(String application_id) {
+        final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
         _findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
                 requests.complete(result);
             }
             else {
+                log.error("Unable to retrieve all requests: " + t.toString());
                 requests.completeExceptionally(t);
             }
         });
@@ -124,34 +142,68 @@ public class MongoController extends AllDirectives {
      * Method to get all Requests with specific statuses and for a specific application
      *
      * @param application_id String, the ID of the application
-     * @param filters        an ArrayList of Status objects. Only return Requests with one of these statuses.
-     * @return a CompletableFuture that will be completed with either an ArrayList of Requests or a Throwable
+     * @param filters        an list of Status objects. Only return Requests with one of these statuses.
+     * @return a CompletableFuture that will be completed with either an list of Requests or a Throwable
      */
-    public CompletableFuture<ArrayList<Request>> getFilteredRequestsByApp(String application_id, List<State.Status> filters) {
-        final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
+    public CompletableFuture<List<Request>> getFilteredRequestsByApp(String application_id, List<State.Status> filters) {
+        final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
         _findSpecificRequest("application_id", application_id, (result, t) -> {
             if (t == null) {
-                ArrayList<Request> requestTempList = result.stream()
+                List<Request> requestTempList = result.stream()
                         .filter(r -> filters.contains(r.getCurrent_status()))
                         .collect(Collectors.toCollection(ArrayList::new));
                 requests.complete(requestTempList);
             }
             else {
+                log.error("Unable to retrieve requests by application: " + t.toString());
                 requests.completeExceptionally(t);
             }
         });
         return requests;
     }
 
-    public CompletableFuture<ArrayList<Request>> getSpecificRequest(String request_id) {
-        final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
+    /**
+     *
+     *
+     * @param request_id
+     * @return
+     */
+    public CompletableFuture<List<Request>> getSpecificRequest(String request_id) {
+        final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
         _findSpecificRequest("request_id", request_id, (result, t) -> {
             if (t == null) {
-                ArrayList<Request> requestTempList = result.stream()
+                List<Request> requestTempList = result.stream()
                         .collect(Collectors.toCollection(ArrayList::new));
                 requests.complete(requestTempList);
             }
             else {
+                log.error("Unable to retrieve specific request: " + t.toString());
+                requests.completeExceptionally(t);
+            }
+        });
+        return requests;
+    }
+
+    /**
+     * Method to get similar requests with same topic / location / qooConstraints
+     *
+     * @param request
+     * @return
+     */
+    public CompletableFuture<List<Request>> getExactSameRequestsAs(Request request) {
+        final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
+        _findAllRequests((result, t) -> {
+            if (t == null) {
+                List<Request> requestTempList = new ArrayList<>();
+                result.forEach(r -> {
+                    if (!r.getRequest_id().equals(request.getRequest_id()) && r.equals(request) && r.isInState(State.Status.ENFORCED)) {
+                        requestTempList.add(r);
+                    }
+                });
+                requests.complete(requestTempList);
+            }
+            else {
+                log.error("Unable to retrieve similar requests: " + t.toString());
                 requests.completeExceptionally(t);
             }
         });
@@ -161,21 +213,21 @@ public class MongoController extends AllDirectives {
     /**
      * Method to get all Requests from database
      *
-     * @return a CompletableFuture that will be completed with either an ArrayList of Requests or a Throwable
+     * @return a CompletableFuture that will be completed with either an list of Requests or a Throwable
      */
-    public CompletableFuture<ArrayList<Request>> getAllRequests() {
-        final CompletableFuture<ArrayList<Request>> requests = new CompletableFuture<>();
+    public CompletableFuture<List<Request>> getAllRequests() {
+        final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
         _findAllRequests((result, t) -> {
             if (t == null) {
                 requests.complete(result);
             }
             else {
+                log.error("Unable to retrieve all requests: " + t.toString());
                 requests.completeExceptionally(t);
             }
         });
         return requests;
     }
-
 
     /**
      * Method to insert a Request into database
@@ -198,6 +250,12 @@ public class MongoController extends AllDirectives {
         return insertedRequest;
     }
 
+    /**
+     *
+     * @param request_id
+     * @param newRequest
+     * @return
+     */
     public CompletableFuture<Boolean> updateRequest(String request_id, Request newRequest) {
         final CompletableFuture<Boolean> updatedRequest = new CompletableFuture<>();
         _updateRequest(request_id, newRequest.toBSON(), (result, t) -> {
@@ -214,7 +272,56 @@ public class MongoController extends AllDirectives {
     }
 
     // TODO : putRequests useful ?
-    // ArrayList<Document> documents = requests.stream().map(Request::toBSON).collect(Collectors.toCollection(ArrayList::new));
+    // List<Document> documents = requests.stream().map(Request::toBSON).collect(Collectors.toCollection(ArrayList::new));
+
+    public CompletableFuture<Boolean> putRequestMapping(RequestMapping request) {
+        final CompletableFuture<Boolean> insertedRequest = new CompletableFuture<>();
+        _putRequestMapping(request.toBSON(), (result, t) -> {
+            if (t == null) {
+                insertedRequest.complete(true);
+            }
+            else {
+                log.error("Error when inserting RequestMapping into database: " + t.toString());
+                insertedRequest.complete(false);
+            }
+        });
+        return insertedRequest;
+    }
+
+    public CompletableFuture<List<RequestMapping>> getSpecificRequestMapping(String request_id) {
+        final CompletableFuture<List<RequestMapping>> requestMappings = new CompletableFuture<>();
+        _findAllRequestMappings((result, t) -> {
+            if (t == null) {
+                List<RequestMapping> requestTempList = new ArrayList<>();
+                for (RequestMapping r : result) {
+                    if (r.getRequest_id().contains(request_id) && r.getConstructedFromRequest().equals("")) { // We only select "root" requests
+                        requestTempList.add(r);
+                    }
+                }
+                requestMappings.complete(requestTempList);
+            }
+            else {
+                log.error("Error when fetching Request Mapping concerning request " + request_id + ": " + t.toString());
+                requestMappings.completeExceptionally(t);
+            }
+        });
+        return requestMappings;
+    }
+
+    public CompletableFuture<Boolean> updateRequestMapping(String associated_request_id, RequestMapping newRequestMapping) {
+        final CompletableFuture<Boolean> updatedRequest = new CompletableFuture<>();
+        _updateRequestMapping(associated_request_id, newRequestMapping.toBSON(), (result, t) -> {
+            if (t == null) {
+                log.info("Successfully updated RequestMapping for request " + associated_request_id + "");
+                updatedRequest.complete(true);
+            }
+            else {
+                log.error("Unable to update RequestMapping for request " + associated_request_id + ": " + t.toString());
+                updatedRequest.complete(false);
+            }
+        });
+        return updatedRequest;
+    }
 
     /**
      * Method to drop the whole iQAS database

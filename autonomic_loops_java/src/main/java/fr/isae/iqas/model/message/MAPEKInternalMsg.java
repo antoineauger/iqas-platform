@@ -1,6 +1,7 @@
 package fr.isae.iqas.model.message;
 
-import fr.isae.iqas.kafka.RequestMappings;
+import fr.isae.iqas.kafka.RequestMapping;
+import fr.isae.iqas.model.jsonld.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.pipelines.IPipeline;
 
@@ -95,13 +96,13 @@ public class MAPEKInternalMsg {
         private Timestamp creationDate;
         private SymptomMAPEK symptom;
         private EntityMAPEK about;
-        private Object attachedObject;
+        private Request attachedRequest;
 
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Object attachedObject) { // Only 1 constructor
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Request attachedRequest) { // Only 1 constructor
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.symptom = symptom;
             this.about = about;
-            this.attachedObject = attachedObject;
+            this.attachedRequest = attachedRequest;
         }
 
         public Timestamp getCreationDate() {
@@ -116,8 +117,8 @@ public class MAPEKInternalMsg {
             return about;
         }
 
-        public Object getAttachedObject() {
-            return attachedObject;
+        public Request getAttachedRequest() {
+            return attachedRequest;
         }
     }
 
@@ -130,34 +131,25 @@ public class MAPEKInternalMsg {
         private RFCMAPEK rfc;
         private EntityMAPEK about;
         private Request request;
-        private RequestMappings requestMappings;
-        private Object attachedObject1;
-        private Object attachedObject2;
+        private QoOAttribute qoOAttribute;
+        private RequestMapping requestMapping;
         private String associatedRequest_id;
 
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Object attachedObject1, String associatedRequest_id) { // INCREASE / DECREASE for QoOAttributes
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, QoOAttribute qoOAttribute, String associatedRequest_id) { // INCREASE / DECREASE for QoOAttributes
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
             this.about = about;
-            this.attachedObject1 = attachedObject1;
+            this.qoOAttribute = qoOAttribute;
             this.associatedRequest_id = associatedRequest_id;
         }
 
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request, RequestMappings requestMappings) { // CREATE for Requests
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request, RequestMapping requestMapping) { // CREATE for Requests
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
             this.about = about;
             this.request = request;
-            this.requestMappings = requestMappings;
+            this.requestMapping = requestMapping;
             this.associatedRequest_id = request.getRequest_id();
-        }
-
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Object attachedObject1) { // Useful?
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.rfc = rfc;
-            this.about = about;
-            this.attachedObject1 = attachedObject1;
-            this.associatedRequest_id = "UNKNOWN";
         }
 
         public RFCMAPEK getRfc() {
@@ -176,20 +168,16 @@ public class MAPEKInternalMsg {
             return about;
         }
 
-        public Object getAttachedObject1() {
-            return attachedObject1;
-        }
-
-        public Object getAttachedObject2() {
-            return attachedObject2;
-        }
-
         public Request getRequest() {
             return request;
         }
 
-        public RequestMappings getRequestMappings() {
-            return requestMappings;
+        public RequestMapping getRequestMapping() {
+            return requestMapping;
+        }
+
+        public QoOAttribute getQoOAttribute() {
+            return qoOAttribute;
         }
     }
 
@@ -201,12 +189,13 @@ public class MAPEKInternalMsg {
         private Timestamp creationDate;
         private ActionMAPEK action;
         private EntityMAPEK about;
-        private Object attachedObject1;
-        private Object attachedObject2;
-        private Object attachedObject3;
+        private Set<String> topicsToPullFrom;
+        private String topicToPublish;
         private IPipeline pipelineToEnforce;
         private String associatedRequest_id;
         private String kafkaTopicID;
+        private Map<String, String> paramsToUpdate;
+        private String pipeline_id;
 
         public ActionMsg(ActionMAPEK action, EntityMAPEK about, String kafkaTopicID) { // CREATE / DELETE / RESET KafkaTopic
             this.creationDate = new Timestamp(System.currentTimeMillis());
@@ -220,8 +209,8 @@ public class MAPEKInternalMsg {
             this.action = action;
             this.about = about;
             this.pipelineToEnforce = pipelineToEnforce;
-            this.attachedObject2 = topicsToPullFrom;
-            this.attachedObject3 = topicToPublish;
+            this.topicsToPullFrom = topicsToPullFrom;
+            this.topicToPublish = topicToPublish;
             this.associatedRequest_id = associatedRequest_id;
         }
 
@@ -229,9 +218,7 @@ public class MAPEKInternalMsg {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.action = action;
             this.about = about;
-            this.attachedObject1 = pipeline_id;
-            this.attachedObject2 = null;
-            this.attachedObject3 = null;
+            this.pipeline_id = pipeline_id;
             this.associatedRequest_id = pipeline_id.split("_")[1];
         }
 
@@ -239,9 +226,8 @@ public class MAPEKInternalMsg {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.action = action;
             this.about = about;
-            this.attachedObject1 = pipeline_id;
-            this.attachedObject2 = paramsToUpdate;
-            this.attachedObject3 = null;
+            this.pipeline_id = pipeline_id;
+            this.paramsToUpdate = paramsToUpdate;
             this.associatedRequest_id = pipeline_id.split("_")[1];
         }
 
@@ -253,14 +239,6 @@ public class MAPEKInternalMsg {
             return about;
         }
 
-        public Object getAttachedObject1() {
-            return attachedObject1;
-        }
-
-        public Object getAttachedObject2() {
-            return attachedObject2;
-        }
-
         public String getAssociatedRequest_id() {
             return associatedRequest_id;
         }
@@ -269,16 +247,28 @@ public class MAPEKInternalMsg {
             return action;
         }
 
-        public Object getAttachedObject3() {
-            return attachedObject3;
-        }
-
         public String getKafkaTopicID() {
             return kafkaTopicID;
         }
 
         public IPipeline getPipelineToEnforce() {
             return pipelineToEnforce;
+        }
+
+        public Set<String> getTopicsToPullFrom() {
+            return topicsToPullFrom;
+        }
+
+        public String getTopicToPublish() {
+            return topicToPublish;
+        }
+
+        public Map<String, String> getParamsToUpdate() {
+            return paramsToUpdate;
+        }
+
+        public String getPipeline_id() {
+            return pipeline_id;
         }
     }
 

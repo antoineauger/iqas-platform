@@ -63,4 +63,23 @@ public class QoORequirements {
     public Map<String, String> getAdditional_params() {
         return additional_params;
     }
+
+    @Override
+    public boolean equals(Object other){
+        if (other == null) return false;
+        if (other == this) return true;
+        if (!(other instanceof QoORequirements)) return false;
+        QoORequirements otherMyClass = (QoORequirements) other;
+        if (otherMyClass.getInterested_in().size() != this.interested_in.size()) return false;
+
+        for (int i=0 ; i<this.interested_in.size() ; i++) {
+            if (!this.interested_in.get(i).equals(otherMyClass.getInterested_in().get(i))) {
+                return false;
+            }
+        }
+
+        return (otherMyClass.getSla_level().equals(this.sla_level)
+                && otherMyClass.getOperator().equals(this.operator)
+                && otherMyClass.getAdditional_params().entrySet().equals(this.additional_params.entrySet()));
+    }
 }

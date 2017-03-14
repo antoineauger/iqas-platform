@@ -11,13 +11,14 @@ import akka.util.Timeout;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.KafkaTopicMsg;
-import fr.isae.iqas.kafka.RequestMappings;
+import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
 import fr.isae.iqas.model.jsonld.VirtualSensor;
 import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
+import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.pipelines.IPipeline;
 import fr.isae.iqas.pipelines.Pipeline;
 import scala.concurrent.Await;
@@ -36,8 +37,6 @@ import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
  * Created by an.auger on 13/09/2016.
  */
 public class PlanActor extends UntypedActor {
-    private String actorNameToResolve = "executeActor";
-
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private Properties prop;
@@ -46,10 +45,8 @@ public class PlanActor extends UntypedActor {
 
     private ActorRef kafkaAdminActor;
     private ActorRef monitorActor;
-
-    //TODO maintain global list
-    //private Map<String, ActorRef> execActorsRefs = new ConcurrentHashMap<>();
-    private Map<String, ActorRef> execActorsRefs = new ConcurrentHashMap<>(); // Contains all active enforcedPipelines
+    private Map<String, List<String>> actorPathRefs; // Requests <-> [ActorPathNames]
+    private Map<String, ActorRef> execActorsRefs; // ActorPathNames <-> ActorRefs
 
     public PlanActor(Properties prop, MongoController mongoController, FusekiController fusekiController, ActorRef kafkaAdminActor) {
         this.prop = prop;
@@ -58,6 +55,8 @@ public class PlanActor extends UntypedActor {
         this.kafkaAdminActor = kafkaAdminActor;
 
         this.monitorActor = getContext().actorFor(getContext().parent().path().child("monitorActor"));
+        this.actorPathRefs = new ConcurrentHashMap<>();
+        this.execActorsRefs = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -74,126 +73,153 @@ public class PlanActor extends UntypedActor {
             RFCMsg rfcMsg = (RFCMsg) message;
 
             if (rfcMsg.getRfc() == RFCMAPEK.CREATE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
-                RequestMappings requestMappings = rfcMsg.getRequestMappings();
-                ActionMsg action;
+                RequestMapping requestMapping = rfcMsg.getRequestMapping();
 
                 // Creation of all topics
-                for (Object o : requestMappings.getAllTopics().entrySet()) {
-                    Map.Entry pair = (Map.Entry) o;
-                    TopicEntity topicEntityTemp = (TopicEntity) pair.getValue();
-                    if (!topicEntityTemp.isSource()) {
-                        System.out.println(pair.getKey() + " = " + topicEntityTemp);
-                        action = new ActionMsg(ActionMAPEK.CREATE,
+                requestMapping.getAllTopics().forEach((key, value) -> {
+                    if (!value.isSource()) {
+                        ActionMsg action = new ActionMsg(ActionMAPEK.CREATE,
                                 EntityMAPEK.KAFKA_TOPIC,
-                                String.valueOf(pair.getKey()));
+                                String.valueOf(key));
                         performAction(action);
-                    }
-                }
-
-                // Primary sources and filtering by sensors
-                String pipelineID = "";
-                String tempID = "";
-                Set<String> topicBaseToPullFrom = new HashSet<>();
-                TopicEntity nextTopic = null;
-                for (TopicEntity t : requestMappings.getPrimarySources()) {
-                    topicBaseToPullFrom.add(t.getName());
-                    if (nextTopic == null) {
-                        nextTopic = t.getChildren().get(0);
-                        if (pipelineID.equals("")) {
-                            pipelineID = t.getEnforcedPipelines().get(nextTopic).split("_")[0];
-                            tempID = t.getEnforcedPipelines().get(nextTopic).split("_")[1];
-                        }
-                    }
-                }
-
-                String finalNextTopicName = nextTopic.getName();
-                String finalTempID = tempID;
-                retrievePipeline(pipelineID).whenComplete((pipeline, t) -> {
-                    if (t != null) {
-                        log.error("ERROR");
-                    }
-                    else {
-                        if (pipeline.getPipelineID().equals("SensorFilterPipeline")) {
-                            VirtualSensorList vList = fusekiController._findAllSensorsWithConditions(rfcMsg.getRequest().getLocation(), rfcMsg.getRequest().getTopic());
-                            String sensorsToKeep = "";
-                            for (VirtualSensor v : vList.sensors) {
-                                sensorsToKeep += v.sensor_id.split("#")[1] + ";";
-                            }
-                            sensorsToKeep = sensorsToKeep.substring(0, sensorsToKeep.length()-1);
-                            pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep);
-                        }
-
-                        pipeline.setAssociatedRequestID(rfcMsg.getAssociatedRequest_id());
-                        pipeline.setTempID(finalTempID);
-
-                        //TODO resolve dynamically
-                        pipeline.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(10, TimeUnit.SECONDS));
-                        Map<String, Map<String, String>> qooParamsForAllTopics = new HashMap<>();
-                        qooParamsForAllTopics.put("sensor01",new HashMap<>());
-                        qooParamsForAllTopics.put("sensor02",new HashMap<>());
-                        qooParamsForAllTopics.get("sensor01").put("min_value","-50.0");
-                        qooParamsForAllTopics.get("sensor01").put("max_value","+50.0");
-                        qooParamsForAllTopics.get("sensor02").put("min_value","0.0");
-                        qooParamsForAllTopics.get("sensor02").put("max_value","+50.0");
-                        pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
-
-                        pipeline.setCustomizableParameter("threshold_min", "0.0");
-
-                        ActionMsg action2 = new ActionMsg(ActionMAPEK.APPLY,
-                                EntityMAPEK.PIPELINE,
-                                pipeline,
-                                topicBaseToPullFrom,
-                                finalNextTopicName,
-                                rfcMsg.getAssociatedRequest_id());
-
-                        performAction(action2);
                     }
                 });
 
-                // Building the rest of the graph
-                String currTopicName = finalNextTopicName;
+                if (requestMapping.getConstructedFromRequest().equals("")) { // The request does not depend on any existing request
+                    // Primary sources and filtering by sensors
+                    String pipelineID = "";
+                    String tempID = "";
+                    Set<String> topicBaseToPullFrom = new HashSet<>();
+                    TopicEntity nextTopic = null;
+                    for (TopicEntity t : requestMapping.getPrimarySources()) {
+                        topicBaseToPullFrom.add(t.getName());
+                        if (nextTopic == null) {
+                            nextTopic = requestMapping.getAllTopics().get(t.getChildren().get(0));
+                            if (pipelineID.equals("")) {
+                                pipelineID = t.getEnforcedPipelines().get(nextTopic.getName()).split("_")[0];
+                                tempID = t.getEnforcedPipelines().get(nextTopic.getName()).split("_")[1];
+                            }
+                        }
+                    }
 
-                while(rfcMsg.getRequestMappings().getAllTopics().get(currTopicName).getChildren().size() > 0) {
-                    TopicEntity currTopic = rfcMsg.getRequestMappings().getAllTopics().get(currTopicName);
-                    Set<String> currTopicSet = new HashSet<>();
-                    currTopicSet.add(currTopic.getName());
-                    TopicEntity childrenTopic = currTopic.getChildren().get(0);
-
-                    final String pipelineIDInt = currTopic.getEnforcedPipelines().get(childrenTopic).split("_")[0];
-                    final String tempIDInt = currTopic.getEnforcedPipelines().get(childrenTopic).split("_")[1];
-                    retrievePipeline(pipelineIDInt).whenComplete((pipeline, t) -> {
-                        if (t != null) {
-                            log.error("ERROR");
+                    String finalNextTopicName = nextTopic.getName();
+                    String finalTempID = tempID;
+                    retrievePipeline(pipelineID).whenComplete((pipeline, throwable) -> {
+                        if (throwable != null) {
+                            log.error(throwable.toString());
                         }
                         else {
+                            if (pipeline.getPipelineID().equals("SensorFilterPipeline")) {
+                                VirtualSensorList vList = fusekiController._findAllSensorsWithConditions(rfcMsg.getRequest().getLocation(), rfcMsg.getRequest().getTopic());
+                                String sensorsToKeep = "";
+                                for (VirtualSensor v : vList.sensors) {
+                                    sensorsToKeep += v.sensor_id.split("#")[1] + ";";
+                                }
+                                sensorsToKeep = sensorsToKeep.substring(0, sensorsToKeep.length() - 1);
+                                pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep);
+                            }
+
                             pipeline.setAssociatedRequestID(rfcMsg.getAssociatedRequest_id());
-                            pipeline.setTempID(tempIDInt);
+                            pipeline.setTempID(finalTempID);
 
                             //TODO resolve dynamically
                             pipeline.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(10, TimeUnit.SECONDS));
                             Map<String, Map<String, String>> qooParamsForAllTopics = new HashMap<>();
-                            qooParamsForAllTopics.put("sensor01",new HashMap<>());
-                            qooParamsForAllTopics.put("sensor02",new HashMap<>());
-                            qooParamsForAllTopics.get("sensor01").put("min_value","-50.0");
-                            qooParamsForAllTopics.get("sensor01").put("max_value","+50.0");
-                            qooParamsForAllTopics.get("sensor02").put("min_value","0.0");
-                            qooParamsForAllTopics.get("sensor02").put("max_value","+50.0");
+                            qooParamsForAllTopics.put("sensor01", new HashMap<>());
+                            qooParamsForAllTopics.put("sensor02", new HashMap<>());
+                            qooParamsForAllTopics.get("sensor01").put("min_value", "-50.0");
+                            qooParamsForAllTopics.get("sensor01").put("max_value", "+50.0");
+                            qooParamsForAllTopics.get("sensor02").put("min_value", "0.0");
+                            qooParamsForAllTopics.get("sensor02").put("max_value", "+50.0");
                             pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
                             pipeline.setCustomizableParameter("threshold_min", "0.0");
 
-                            ActionMsg action2 = new ActionMsg(ActionMAPEK.APPLY,
+                            ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
+                                    EntityMAPEK.PIPELINE,
+                                    pipeline,
+                                    topicBaseToPullFrom,
+                                    finalNextTopicName,
+                                    rfcMsg.getAssociatedRequest_id());
+
+                            performAction(action);
+                        }
+                    });
+
+                    // Building the rest of the graph
+                    String currTopicName = finalNextTopicName;
+
+                    while (requestMapping.getAllTopics().get(currTopicName).getChildren().size() > 0) {
+                        TopicEntity currTopic = requestMapping.getAllTopics().get(currTopicName);
+                        Set<String> currTopicSet = new HashSet<>();
+                        currTopicSet.add(currTopic.getName());
+                        TopicEntity childrenTopic = requestMapping.getAllTopics().get(currTopic.getChildren().get(0));
+
+                        final String pipelineIDInt = currTopic.getEnforcedPipelines().get(childrenTopic.getName()).split("_")[0];
+                        final String tempIDInt = currTopic.getEnforcedPipelines().get(childrenTopic.getName()).split("_")[1];
+                        retrievePipeline(pipelineIDInt).whenComplete((pipeline, throwable) -> {
+                            if (throwable != null) {
+                                log.error(throwable.toString());
+                            }
+                            else {
+                                pipeline.setAssociatedRequestID(rfcMsg.getAssociatedRequest_id());
+                                pipeline.setTempID(tempIDInt);
+
+                                //TODO resolve dynamically
+                                pipeline.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(10, TimeUnit.SECONDS));
+                                Map<String, Map<String, String>> qooParamsForAllTopics = new HashMap<>();
+                                qooParamsForAllTopics.put("sensor01", new HashMap<>());
+                                qooParamsForAllTopics.put("sensor02", new HashMap<>());
+                                qooParamsForAllTopics.get("sensor01").put("min_value", "-50.0");
+                                qooParamsForAllTopics.get("sensor01").put("max_value", "+50.0");
+                                qooParamsForAllTopics.get("sensor02").put("min_value", "0.0");
+                                qooParamsForAllTopics.get("sensor02").put("max_value", "+50.0");
+                                pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
+
+                                pipeline.setCustomizableParameter("threshold_min", "0.0");
+
+                                ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
+                                        EntityMAPEK.PIPELINE,
+                                        pipeline,
+                                        currTopicSet,
+                                        childrenTopic.getName(),
+                                        rfcMsg.getAssociatedRequest_id());
+
+                                performAction(action);
+                            }
+                        });
+                        currTopicName = childrenTopic.getName();
+                    }
+                }
+                else { // The request depends on another request
+                    TopicEntity beforeLastTopic = requestMapping.getPrimarySources().get(0);
+                    Set<String> currTopicSet = new HashSet<>();
+                    currTopicSet.add(beforeLastTopic.getName());
+                    TopicEntity childrenTopic = requestMapping.getFinalSink();
+
+                    retrievePipeline("ForwardPipeline").whenComplete((pipeline, throwable) -> {
+                        if (throwable != null) {
+                            log.error(throwable.toString());
+                        }
+                        else {
+                            ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
                                     EntityMAPEK.PIPELINE,
                                     pipeline,
                                     currTopicSet,
                                     childrenTopic.getName(),
                                     rfcMsg.getAssociatedRequest_id());
 
-                            performAction(action2);
+                            performAction(action);
                         }
                     });
-                    currTopicName = childrenTopic.getName();
                 }
+
+                rfcMsg.getRequest().updateState(State.Status.ENFORCED);
+                mongoController.updateRequest(rfcMsg.getRequest().getRequest_id(), rfcMsg.getRequest()).whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Update of the Request " + rfcMsg.getRequest().getRequest_id() + " has failed");
+                    }
+                });
             }
         }
         /**
@@ -208,7 +234,8 @@ public class PlanActor extends UntypedActor {
             }
             else {
                 gracefulStop(actorRefToStop);
-                execActorsRefs.remove(actorNameToResolve);
+                // TODO
+                //execActorsRefs.remove(actorRefToStop);
             }
         }
     }
@@ -275,10 +302,18 @@ public class PlanActor extends UntypedActor {
                 ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
                         prop,
                         actionMAPEK.getPipelineToEnforce(),
-                        actionMAPEK.getAttachedObject2(),
-                        actionMAPEK.getAttachedObject3()));
-                //execActorsRefs.put(actorNameToResolve, actorRefToStart);
-                log.info("Successfully started " + actorRefToStart.path());
+                        actionMAPEK.getTopicsToPullFrom(),
+                        actionMAPEK.getTopicToPublish()));
+
+            actorPathRefs.computeIfAbsent(actionMAPEK.getAssociatedRequest_id(), k -> new ArrayList<>());
+            actorPathRefs.get(actionMAPEK.getAssociatedRequest_id()).add(actorRefToStart.path().name());
+            execActorsRefs.put(actorRefToStart.path().name(), actorRefToStart);
+
+            log.info("Successfully started " + actorRefToStart.path());
+
+            // TODO
+            /*System.err.println(actorPathRefs.toString());
+            System.err.println(execActorsRefs.toString());*/
             //}
         }
         else if (actionMAPEK.getAction() == ActionMAPEK.CREATE && actionMAPEK.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
