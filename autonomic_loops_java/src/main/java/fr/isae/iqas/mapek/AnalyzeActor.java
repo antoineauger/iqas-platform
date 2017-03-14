@@ -59,13 +59,15 @@ public class AnalyzeActor extends UntypedActor {
                         if (throwable != null) {
                             log.error(throwable.toString());
                         }
-                        else if (result.size() > 0) {
+                        else if (result.size() > 0) { // The incoming request may reuse existing enforced requests
                             String tempIDForPipelines = new ObjectId().toString();
                             Request similarRequest = result.get(0);
 
                             mongoController.getSpecificRequestMapping(similarRequest.getRequest_id()).whenComplete((result2, throwable2) -> {
                                 if (throwable2 != null || result2.size() <= 0) {
-                                    log.error(throwable2.toString());
+                                    if (throwable2 != null) {
+                                        log.error(throwable2.toString());
+                                    }
                                 }
                                 else {
                                     RequestMapping similarMappings = result2.get(0);
@@ -83,6 +85,9 @@ public class AnalyzeActor extends UntypedActor {
                                     requestMapping.getAllTopics().put(sinkForApp.getName(), sinkForApp);
                                     sinkForApp.setSink(requestTemp.getApplication_id());
 
+                                    // Cleaning retrieved TopicEntity object
+                                    fromTopic.getChildren().clear();
+                                    fromTopic.getEnforcedPipelines().clear();
                                     requestMapping.addLink(fromTopic.getName(), sinkForApp.getName(), "ForwardPipeline_" + tempIDForPipelines);
 
                                     mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
@@ -93,7 +98,7 @@ public class AnalyzeActor extends UntypedActor {
                                 }
                             });
                         }
-                        else {
+                        else {  // The incoming request has no common points with the enforced ones
                             String tempIDForPipelines = new ObjectId().toString();
                             RequestMapping requestMapping = new RequestMapping(requestTemp.getRequest_id());
 
@@ -120,6 +125,7 @@ public class AnalyzeActor extends UntypedActor {
                                 requestMapping.getAllTopics().put(sinkForApp.getName(), sinkForApp);
 
                                 requestMapping.addLink(topicInt.getName(), topicObsRate.getName(), "ObsRatePipeline_" + tempIDForPipelines);
+
                                 if (RAW_DATA_ASKED) {
                                     requestMapping.addLink(topicObsRate.getName(), sinkForApp.getName(), "ForwardPipeline_" + tempIDForPipelines);
                                 }
@@ -184,8 +190,7 @@ public class AnalyzeActor extends UntypedActor {
     }
 
     private Future<ActorRef> getPlanActor() {
-        return getContext().actorSelection(getSelf().path().parent()
-                + "/" + "planActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
+        return getContext().actorSelection(getSelf().path().parent() + "/planActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
     private void tellToPlanActor(RFCMsg rfcMsg) {

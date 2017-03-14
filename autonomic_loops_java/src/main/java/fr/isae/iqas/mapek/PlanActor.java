@@ -45,8 +45,11 @@ public class PlanActor extends UntypedActor {
 
     private ActorRef kafkaAdminActor;
     private ActorRef monitorActor;
+
     private Map<String, List<String>> actorPathRefs; // Requests <-> [ActorPathNames]
+    private Map<String, Integer> execActorsCount; // ActorPathNames <-> # uses
     private Map<String, ActorRef> execActorsRefs; // ActorPathNames <-> ActorRefs
+    private Map<String, String> mappingTopicsActors; // DestinationTopic <-> ActorPathNames
 
     public PlanActor(Properties prop, MongoController mongoController, FusekiController fusekiController, ActorRef kafkaAdminActor) {
         this.prop = prop;
@@ -57,6 +60,8 @@ public class PlanActor extends UntypedActor {
         this.monitorActor = getContext().actorFor(getContext().parent().path().child("monitorActor"));
         this.actorPathRefs = new ConcurrentHashMap<>();
         this.execActorsRefs = new ConcurrentHashMap<>();
+        this.execActorsCount = new ConcurrentHashMap<>();
+        this.mappingTopicsActors = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -78,9 +83,11 @@ public class PlanActor extends UntypedActor {
                 // Creation of all topics
                 requestMapping.getAllTopics().forEach((key, value) -> {
                     if (!value.isSource()) {
+
                         ActionMsg action = new ActionMsg(ActionMAPEK.CREATE,
                                 EntityMAPEK.KAFKA_TOPIC,
                                 String.valueOf(key));
+
                         performAction(action);
                     }
                 });
@@ -140,7 +147,9 @@ public class PlanActor extends UntypedActor {
                                     pipeline,
                                     topicBaseToPullFrom,
                                     finalNextTopicName,
-                                    rfcMsg.getAssociatedRequest_id());
+                                    requestMapping.getRequest_id(),
+                                    requestMapping.getConstructedFromRequest(),
+                                    -1);
 
                             performAction(action);
                         }
@@ -183,7 +192,9 @@ public class PlanActor extends UntypedActor {
                                         pipeline,
                                         currTopicSet,
                                         childrenTopic.getName(),
-                                        rfcMsg.getAssociatedRequest_id());
+                                        requestMapping.getRequest_id(),
+                                        requestMapping.getConstructedFromRequest(),
+                                        -1);
 
                                 performAction(action);
                             }
@@ -195,7 +206,8 @@ public class PlanActor extends UntypedActor {
                     TopicEntity beforeLastTopic = requestMapping.getPrimarySources().get(0);
                     Set<String> currTopicSet = new HashSet<>();
                     currTopicSet.add(beforeLastTopic.getName());
-                    TopicEntity childrenTopic = requestMapping.getFinalSink();
+                    final int finalmaxLevelDepth = beforeLastTopic.getLevel();
+                    TopicEntity finalSinkForApp = requestMapping.getFinalSink();
 
                     retrievePipeline("ForwardPipeline").whenComplete((pipeline, throwable) -> {
                         if (throwable != null) {
@@ -206,8 +218,10 @@ public class PlanActor extends UntypedActor {
                                     EntityMAPEK.PIPELINE,
                                     pipeline,
                                     currTopicSet,
-                                    childrenTopic.getName(),
-                                    rfcMsg.getAssociatedRequest_id());
+                                    finalSinkForApp.getName(),
+                                    requestMapping.getRequest_id(),
+                                    requestMapping.getConstructedFromRequest(),
+                                    finalmaxLevelDepth);
 
                             performAction(action);
                         }
@@ -285,36 +299,44 @@ public class PlanActor extends UntypedActor {
     private boolean performAction(ActionMsg actionMAPEK) {
         log.info("Processing ActionMsg: {} {}", actionMAPEK.getAction(), actionMAPEK.getAbout());
 
+        //TODO delete request
         if (actionMAPEK.getAction() == ActionMAPEK.APPLY && actionMAPEK.getAbout() == EntityMAPEK.PIPELINE) {
-            /*if (execActorsRefs.containsKey(actorNameToResolve)) { // if reference found, the corresponding actor has been started
-                ActorRef actorRefToStop = execActorsRefs.get(actorNameToResolve);
-                gracefulStop(actorRefToStop);
+            ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
+                    prop,
+                    actionMAPEK.getPipelineToEnforce(),
+                    actionMAPEK.getTopicsToPullFrom(),
+                    actionMAPEK.getTopicToPublish()));
 
-                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
-                        prop,
-                        actionMAPEK.getAttachedObject1(),
-                        actionMAPEK.getAttachedObject2(),
-                        actionMAPEK.getAttachedObject3(),
-                        actionMAPEK.getAssociatedRequest_id()));
-                execActorsRefs.put(actorNameToResolve, actorRefToStart);
-                log.info("Successfully started " + actorRefToStart.path());
-            } else {*/
-                ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
-                        prop,
-                        actionMAPEK.getPipelineToEnforce(),
-                        actionMAPEK.getTopicsToPullFrom(),
-                        actionMAPEK.getTopicToPublish()));
-
+            mappingTopicsActors.put(actionMAPEK.getTopicToPublish(), actorRefToStart.path().name());
             actorPathRefs.computeIfAbsent(actionMAPEK.getAssociatedRequest_id(), k -> new ArrayList<>());
             actorPathRefs.get(actionMAPEK.getAssociatedRequest_id()).add(actorRefToStart.path().name());
             execActorsRefs.put(actorRefToStart.path().name(), actorRefToStart);
+            execActorsCount.computeIfAbsent(actorRefToStart.path().name(), k -> 0);
+            execActorsCount.put(actorRefToStart.path().name(), execActorsCount.get(actorRefToStart.path().name()) + 1);
+
+            if (!actionMAPEK.getConstructedFromRequest().equals("")) {
+                mongoController.getSpecificRequestMapping(actionMAPEK.getConstructedFromRequest()).whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        RequestMapping ancestorReqMapping = result.get(0);
+                        for (Object o : ancestorReqMapping.getAllTopics().entrySet()) {
+                            Map.Entry pair = (Map.Entry) o;
+                            TopicEntity topicEntityTemp = (TopicEntity) pair.getValue();
+                            if (topicEntityTemp.getLevel() < actionMAPEK.getMaxLevelDepth() + 1) {
+                                if (mappingTopicsActors.containsKey(topicEntityTemp.getName())) {
+                                    ActorRef tempActor = execActorsRefs.get(mappingTopicsActors.get(topicEntityTemp.getName()));
+                                    actorPathRefs.get(actionMAPEK.getAssociatedRequest_id()).add(tempActor.path().name());
+                                    execActorsCount.put(mappingTopicsActors.get(topicEntityTemp.getName()), execActorsCount.get(mappingTopicsActors.get(topicEntityTemp.getName())) + 1);
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        log.error(throwable.toString());
+                    }
+                });
+            }
 
             log.info("Successfully started " + actorRefToStart.path());
-
-            // TODO
-            /*System.err.println(actorPathRefs.toString());
-            System.err.println(execActorsRefs.toString());*/
-            //}
         }
         else if (actionMAPEK.getAction() == ActionMAPEK.CREATE && actionMAPEK.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
             Timeout timeout = new Timeout(Duration.create(5, "seconds"));
@@ -325,7 +347,6 @@ public class PlanActor extends UntypedActor {
                 e.printStackTrace();
                 return false;
             }
-
         }
 
         return true;

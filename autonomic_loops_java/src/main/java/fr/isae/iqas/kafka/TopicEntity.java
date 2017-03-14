@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by an.auger on 28/02/2017.
  */
 public class TopicEntity {
+    private int level;
     private String name;
     private String forTopic;
     private String forApplication;
@@ -28,6 +29,7 @@ public class TopicEntity {
 
     @JsonCreator
     public TopicEntity(@JsonProperty("name") String name) {
+        this.level = 0;
         this.name = name;
         this.isSource = false;
         this.isSink = false;
@@ -44,6 +46,7 @@ public class TopicEntity {
     public @JsonIgnore Document toBSON() {
         Document docToReturn = new Document();
         docToReturn.put("name", name);
+        docToReturn.put("level", level);
         docToReturn.put("isSource", isSource);
         docToReturn.put("isSink", isSink);
         docToReturn.put("observation_level", observationLevel.toString());
@@ -56,6 +59,7 @@ public class TopicEntity {
     }
 
     public TopicEntity(Document bsonDocument) {
+        this.level = bsonDocument.getInteger("level");
         this.name = bsonDocument.getString("name");
         this.isSource = bsonDocument.getBoolean("isSource");
         this.isSink = bsonDocument.getBoolean("isSink");
@@ -129,5 +133,13 @@ public class TopicEntity {
     @JsonProperty("for_application")
     public String getForApplication() {
         return forApplication;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
     }
 }

@@ -192,19 +192,20 @@ public class MongoController extends AllDirectives {
      */
     public CompletableFuture<List<Request>> getExactSameRequestsAs(Request request) {
         final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
-        _findAllRequests((result, t) -> {
-            if (t == null) {
+        _findAllRequests((result, throwable) -> {
+            if (throwable == null) {
                 List<Request> requestTempList = new ArrayList<>();
-                result.forEach(r -> {
+                for (Request r : result) {
                     if (!r.getRequest_id().equals(request.getRequest_id()) && r.equals(request) && r.isInState(State.Status.ENFORCED)) {
                         requestTempList.add(r);
+                        break;
                     }
-                });
+                }
                 requests.complete(requestTempList);
             }
             else {
-                log.error("Unable to retrieve similar requests: " + t.toString());
-                requests.completeExceptionally(t);
+                log.error("Unable to retrieve similar requests: " + throwable.toString());
+                requests.completeExceptionally(throwable);
             }
         });
         return requests;
@@ -294,7 +295,7 @@ public class MongoController extends AllDirectives {
             if (t == null) {
                 List<RequestMapping> requestTempList = new ArrayList<>();
                 for (RequestMapping r : result) {
-                    if (r.getRequest_id().contains(request_id) && r.getConstructedFromRequest().equals("")) { // We only select "root" requests
+                    if (r.getRequest_id().contains(request_id)) {
                         requestTempList.add(r);
                     }
                 }

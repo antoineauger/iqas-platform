@@ -196,6 +196,8 @@ public class MAPEKInternalMsg {
         private String kafkaTopicID;
         private Map<String, String> paramsToUpdate;
         private String pipeline_id;
+        private String constructedFromRequest;
+        private int maxLevelDepth;
 
         public ActionMsg(ActionMAPEK action, EntityMAPEK about, String kafkaTopicID) { // CREATE / DELETE / RESET KafkaTopic
             this.creationDate = new Timestamp(System.currentTimeMillis());
@@ -204,7 +206,14 @@ public class MAPEKInternalMsg {
             this.kafkaTopicID = kafkaTopicID;
         }
 
-        public ActionMsg(ActionMAPEK action, EntityMAPEK about, IPipeline pipelineToEnforce, Set<String> topicsToPullFrom, String topicToPublish, String associatedRequest_id) { // APPLY Pipeline
+        public ActionMsg(ActionMAPEK action,
+                         EntityMAPEK about,
+                         IPipeline pipelineToEnforce,
+                         Set<String> topicsToPullFrom,
+                         String topicToPublish,
+                         String associatedRequest_id,
+                         String constructedFromRequest,
+                         int maxLevelDepth) { // APPLY Pipeline
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.action = action;
             this.about = about;
@@ -212,6 +221,8 @@ public class MAPEKInternalMsg {
             this.topicsToPullFrom = topicsToPullFrom;
             this.topicToPublish = topicToPublish;
             this.associatedRequest_id = associatedRequest_id;
+            this.constructedFromRequest = constructedFromRequest;
+            this.maxLevelDepth = maxLevelDepth;
         }
 
         public ActionMsg(ActionMAPEK action, EntityMAPEK about, String pipeline_id, boolean force) { // DELETE Pipeline
@@ -269,6 +280,14 @@ public class MAPEKInternalMsg {
 
         public String getPipeline_id() {
             return pipeline_id;
+        }
+
+        public String getConstructedFromRequest() {
+            return constructedFromRequest;
+        }
+
+        public int getMaxLevelDepth() {
+            return maxLevelDepth;
         }
     }
 

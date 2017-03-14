@@ -68,6 +68,11 @@ public class RequestMapping {
             TopicEntity t1 = allTopics.get(topic1);
             TopicEntity t2 = allTopics.get(topic2);
 
+            if (!t1.isSource() && t1.getParents().size() > 0) {
+                t1.setLevel(allTopics.get(t1.getParents().get(0)).getLevel() + 1);
+            }
+            t2.setLevel(t1.getLevel() + 1);
+
             t2.getParents().add(t1.getName());
             t1.getChildren().add(t2.getName());
             t1.getEnforcedPipelines().put(t2.getName(), pipeline_id);
