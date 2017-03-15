@@ -18,9 +18,7 @@ import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static akka.pattern.Patterns.ask;
@@ -34,9 +32,6 @@ public class AutoManagerActor extends UntypedActor {
 
     private MongoController mongoController;
     private FusekiController fusekiController;
-
-    private Map<String, TopicEntity> allTopics;
-    private boolean processingActivated;
 
     private ActorRef kafkaAdminActor = null;
     private ActorRef monitorActor = null;
@@ -52,9 +47,6 @@ public class AutoManagerActor extends UntypedActor {
         this.monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop, mongoController, fusekiController), "monitorActor");
         this.analyzeActor = getContext().actorOf(Props.create(AnalyzeActor.class, prop, mongoController, fusekiController), "analyzeActor");
         this.planActor = getContext().actorOf(Props.create(PlanActor.class, prop, mongoController, fusekiController, kafkaAdminActor), "planActor");
-
-        this.allTopics = new ConcurrentHashMap<>();
-        this.processingActivated = false;
     }
 
     @Override
@@ -64,7 +56,6 @@ public class AutoManagerActor extends UntypedActor {
             String topicName = t.topic.split("#")[1];
             TopicEntity topicEntityTemp = new TopicEntity(topicName);
             topicEntityTemp.setSource(topicName);
-            allTopics.put(topicName, topicEntityTemp);
 
             ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.CREATE, topicName), new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {
                 @Override

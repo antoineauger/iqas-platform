@@ -12,10 +12,7 @@ import fr.isae.iqas.mapek.AutoManagerActor;
 import fr.isae.iqas.model.message.RESTRequestMsg;
 import fr.isae.iqas.model.request.Request;
 
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.*;
 import static fr.isae.iqas.model.request.State.Status.ENFORCED;
@@ -29,8 +26,6 @@ import static fr.isae.iqas.model.request.State.Status.REMOVED;
 public class APIGatewayActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private Map<String, ArrayList<Request>> registeredRequestsByApp;
-
     private Properties prop;
     private MongoController mongoController;
     private FusekiController fusekiController;
@@ -42,8 +37,6 @@ public class APIGatewayActor extends UntypedActor {
         this.prop = prop;
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
-        this.registeredRequestsByApp = new ConcurrentHashMap<>();
-
 
         this.kafkaAdminActor = getContext().actorOf(Props.create(KafkaAdminActor.class, prop), "KafkaAdminActor");
         this.autoManager = getContext()

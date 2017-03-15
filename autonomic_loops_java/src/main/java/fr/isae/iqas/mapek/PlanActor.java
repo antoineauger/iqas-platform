@@ -273,6 +273,12 @@ public class PlanActor extends UntypedActor {
                 // Removal of the corresponding RequestMapping
                 actorPathRefs.remove(requestToDelete.getRequest_id());
                 mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
+                /*.whenComplete((r, t) -> {
+                    log.error(mappingTopicsActors.toString());
+                    log.error(actorPathRefs.toString());
+                    log.error(execActorsCount.toString());
+                    log.error(execActorsRefs.toString());
+                });*/
             }
         }
         /**

@@ -121,10 +121,12 @@ public class PipelineWatcherActor extends UntypedActor {
 
         if (dirToScan.exists() && dirToScan.isDirectory()) {
             String[] allFiles = dirToScan.list();
-            for (String f : allFiles) {
-                // only consider files ending in ".class" equals to the wanted pipeline
-                if (f.endsWith(".class")) {
-                    filesToReturn.add(f.substring(0, f.indexOf(".")));
+            if (allFiles != null) {
+                for (String f : allFiles) {
+                    // only consider files ending in ".class" equals to the wanted pipeline
+                    if (f.endsWith(".class")) {
+                        filesToReturn.add(f.substring(0, f.indexOf(".")));
+                    }
                 }
             }
         }
@@ -156,22 +158,24 @@ public class PipelineWatcherActor extends UntypedActor {
         ClassLoader cl = new PipelineClassLoader(qooPipelinesDir);
         if (dirToScan.exists() && dirToScan.isDirectory()) {
             String[] allFiles = dirToScan.list();
-            for (String f : allFiles) {
-                // only consider files ending in ".class" equals to the wanted pipeline
-                if (f.equals(pipelineName + ".class")) {
-                    try {
-                        Class aClass = cl.loadClass(f.substring(0, f.indexOf(".")));
-                        Class[] intf = aClass.getInterfaces();
-                        for (Class anIntf : intf) {
-                            if (anIntf.getName().equals("fr.isae.iqas.pipelines.IPipeline")) {
-                                IPipeline pipelineToLoad = (IPipeline) aClass.newInstance();
-                                pipelineObjects.put(pipelineName, pipelineToLoad);
-                                log.info("QoO pipeline " + pipelineName + " successfully loaded from bytecode " + pipelineName + ".class");
+            if (allFiles != null) {
+                for (String f : allFiles) {
+                    // only consider files ending in ".class" equals to the wanted pipeline
+                    if (f.equals(pipelineName + ".class")) {
+                        try {
+                            Class aClass = cl.loadClass(f.substring(0, f.indexOf(".")));
+                            Class[] intf = aClass.getInterfaces();
+                            for (Class anIntf : intf) {
+                                if (anIntf.getName().equals("fr.isae.iqas.pipelines.IPipeline")) {
+                                    IPipeline pipelineToLoad = (IPipeline) aClass.newInstance();
+                                    pipelineObjects.put(pipelineName, pipelineToLoad);
+                                    log.info("QoO pipeline " + pipelineName + " successfully loaded from bytecode " + pipelineName + ".class");
+                                }
                             }
+                        } catch (Exception e) {
+                            log.error("File " + f + " does not contain a valid IPipeline class!");
+                            log.error(e.toString());
                         }
-                    } catch (Exception e) {
-                        log.error("File " + f + " does not contain a valid IPipeline class!");
-                        log.error(e.toString());
                     }
                 }
             }
