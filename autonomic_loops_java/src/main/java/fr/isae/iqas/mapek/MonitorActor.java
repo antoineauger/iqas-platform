@@ -12,8 +12,13 @@ import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
+import org.apache.commons.collections.Buffer;
+import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import scala.concurrent.Future;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +31,9 @@ import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
 public class MonitorActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+    //private Buffer test = new CircularFifoBuffer(4);
+    private Map<String, Buffer> obsRateBuffer;
+    private Map<String, Buffer> qooQualityBuffer;
     private Properties prop;
     private MongoController mongoController;
     private FusekiController fusekiController;
@@ -34,6 +42,9 @@ public class MonitorActor extends UntypedActor {
         this.prop = prop;
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
+
+        this.obsRateBuffer = new HashMap<>();
+        this.qooQualityBuffer = new HashMap<>();
     }
 
     @Override
@@ -95,10 +106,30 @@ public class MonitorActor extends UntypedActor {
             QoOReportMsg tempQoOReportMsg = (QoOReportMsg) message;
             if (tempQoOReportMsg.getQooAttributesMap().size() > 0) {
                 log.info("QoO report message: {} {} {} {}", tempQoOReportMsg.getUniquePipelineID(), tempQoOReportMsg.getProducer(), tempQoOReportMsg.getRequestID(), tempQoOReportMsg.getQooAttributesMap().toString());
+                if (!qooQualityBuffer.containsKey(tempQoOReportMsg.getRequestID())) {
+                    qooQualityBuffer.put(tempQoOReportMsg.getRequestID(), new CircularFifoBuffer(5));
+                }
+                qooQualityBuffer.get(tempQoOReportMsg.getRequestID()).add(tempQoOReportMsg);
             }
             if (tempQoOReportMsg.getObsRateByTopic().size() > 0) {
                 log.info("QoO report message: {} {}", tempQoOReportMsg.getUniquePipelineID(), tempQoOReportMsg.getObsRateByTopic().toString());
+                if (!obsRateBuffer.containsKey(tempQoOReportMsg.getUniquePipelineID())) {
+                    obsRateBuffer.put(tempQoOReportMsg.getUniquePipelineID(), new CircularFifoBuffer(5));
+                }
+                obsRateBuffer.get(tempQoOReportMsg.getUniquePipelineID()).add(tempQoOReportMsg);
             }
+
+            // TODO to remove
+            System.err.println("Quality Buffer:");
+            qooQualityBuffer.forEach((k, v) -> {
+                System.err.print(k + ": ");
+                Iterator it = v.iterator();
+                while (it.hasNext()) {
+                    QoOReportMsg m = (QoOReportMsg) it.next();
+                    System.err.println(m.getUniquePipelineID() + " | " + m.getQooAttributesMap().toString() + " | " + m.getProducer() + " | " + m.getRequestID());
+                }
+            });
+            System.err.println("------------------");
         }
         /**
          * TerminatedMsg messages

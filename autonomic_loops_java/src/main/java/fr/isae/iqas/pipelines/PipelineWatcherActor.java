@@ -28,7 +28,7 @@ public class PipelineWatcherActor extends UntypedActor {
     private String qooPipelinesDir = null;
     private Map<String, String> md5Pipelines = null;
     private Set<String> filesToCheck = null;
-    private Map<String, IPipeline> pipelineObjects = null;
+    private Map<String, Class> pipelineObjects = null;
 
     public PipelineWatcherActor(Properties prop) {
         try {
@@ -40,14 +40,10 @@ public class PipelineWatcherActor extends UntypedActor {
         md5Pipelines = new ConcurrentHashMap<>();
         pipelineObjects = new ConcurrentHashMap<>();
 
-        try {
-            pipelineObjects.put(ObsRatePipeline.class.getSimpleName(), ObsRatePipeline.class.newInstance());
-            pipelineObjects.put(ForwardPipeline.class.getSimpleName(), ForwardPipeline.class.newInstance());
-            pipelineObjects.put(SensorFilterPipeline.class.getSimpleName(), SensorFilterPipeline.class.newInstance());
-            pipelineObjects.put(QoOAnnotatorPipeline.class.getSimpleName(), QoOAnnotatorPipeline.class.newInstance());
-        } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        pipelineObjects.put(ObsRatePipeline.class.getSimpleName(), ObsRatePipeline.class);
+        pipelineObjects.put(ForwardPipeline.class.getSimpleName(), ForwardPipeline.class);
+        pipelineObjects.put(SensorFilterPipeline.class.getSimpleName(), SensorFilterPipeline.class);
+        pipelineObjects.put(QoOAnnotatorPipeline.class.getSimpleName(), QoOAnnotatorPipeline.class);
     }
 
     @Override
@@ -100,14 +96,19 @@ public class PipelineWatcherActor extends UntypedActor {
             PipelineRequestMsg request = (PipelineRequestMsg) message;
             if (request.isGetAllPipelines()) {
                 log.info("PipelineRequestMsg: all available and concrete pipelines have been asked");
-                for (IPipeline p : pipelineObjects.values()) {
-                    objectToReturn.add(new Pipeline(p.getPipelineID(), p.getPipelineName(), p));
-                }
+                pipelineObjects.forEach((k, v) -> {
+                    try {
+                        IPipeline pipelineTemp = (IPipeline) v.newInstance();
+                        objectToReturn.add(new Pipeline(pipelineTemp.getPipelineID(), pipelineTemp.getPipelineName(), pipelineTemp));
+                    } catch (InstantiationException | IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                });
             }
             else {
                 if (pipelineObjects.containsKey(request.getSpecificPipelineToGet())) {
                     log.info("PipelineRequestMsg: concrete pipeline with id \"" + request.getSpecificPipelineToGet() + "\" has been asked");
-                    IPipeline pipelineTemp = pipelineObjects.get(request.getSpecificPipelineToGet());
+                    IPipeline pipelineTemp = (IPipeline) pipelineObjects.get(request.getSpecificPipelineToGet()).newInstance();
                     objectToReturn.add(new Pipeline(pipelineTemp.getPipelineID(), pipelineTemp.getPipelineName(), pipelineTemp));
                 }
             }
@@ -167,8 +168,7 @@ public class PipelineWatcherActor extends UntypedActor {
                             Class[] intf = aClass.getInterfaces();
                             for (Class anIntf : intf) {
                                 if (anIntf.getName().equals("fr.isae.iqas.pipelines.IPipeline")) {
-                                    IPipeline pipelineToLoad = (IPipeline) aClass.newInstance();
-                                    pipelineObjects.put(pipelineName, pipelineToLoad);
+                                    pipelineObjects.put(pipelineName, aClass);
                                     log.info("QoO pipeline " + pipelineName + " successfully loaded from bytecode " + pipelineName + ".class");
                                 }
                             }
