@@ -10,7 +10,7 @@ public class State {
         CREATED,
         SUBMITTED,
         ENFORCED,
-        DONE,
+        UPDATED,
         REJECTED,
         REMOVED
     }

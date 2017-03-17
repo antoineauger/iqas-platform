@@ -170,8 +170,11 @@ public class AnalyzeActor extends UntypedActor {
                             });
                         }
                     });
-
-                } else if (requestTemp.getCurrent_status() == State.Status.REMOVED) { // Request deleted by the user
+                }
+                else if (requestTemp.getCurrent_status() == State.Status.UPDATED) { // Existing Request updated by the user
+                    // TODO Request update
+                }
+                else if (requestTemp.getCurrent_status() == State.Status.REMOVED) { // Request deleted by the user
                     tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, requestTemp));
                 }
             }

@@ -16,12 +16,12 @@ import fr.isae.iqas.model.jsonld.TopicList;
 import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.request.Request;
-import fr.isae.iqas.model.request.State;
 
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static akka.pattern.Patterns.ask;
+import static fr.isae.iqas.model.request.State.Status.*;
 
 /**
  * Created by an.auger on 25/09/2016.
@@ -92,14 +92,14 @@ public class AutoManagerActor extends UntypedActor {
         else if (message instanceof Request) {
             Request incomingReq = (Request) message;
 
-            if (incomingReq.getCurrent_status() == State.Status.CREATED) { // A Request has just been submitted, we check if we can satisfy it
+            if (incomingReq.getCurrent_status() == CREATED) { // A Request has just been submitted, we check if we can satisfy it
                 VirtualSensorList virtualSensorList = fusekiController._findAllSensorsWithConditions(incomingReq.getLocation(), incomingReq.getTopic());
                 if (virtualSensorList.sensors.size() > 0) {
                     incomingReq.addLog("Found couple (" + incomingReq.getTopic() + " / " + incomingReq.getLocation() + "), forwarding request to Monitor.");
-                    incomingReq.updateState(State.Status.SUBMITTED);
+                    incomingReq.updateState(SUBMITTED);
                 } else {
                     incomingReq.addLog("No sensor found for (" + incomingReq.getTopic() + " / " + incomingReq.getLocation() + ").");
-                    incomingReq.updateState(State.Status.REJECTED);
+                    incomingReq.updateState(REJECTED);
                 }
                 mongoController.updateRequest(incomingReq.getRequest_id(), incomingReq).whenComplete((result, throwable) -> {
                     if (result) {
@@ -110,7 +110,10 @@ public class AutoManagerActor extends UntypedActor {
                     }
                 });
             }
-            else if (incomingReq.getCurrent_status() == State.Status.REMOVED) {
+            else if (incomingReq.getCurrent_status() == UPDATED) {
+                monitorActor.tell(incomingReq, getSelf());
+            }
+            else if (incomingReq.getCurrent_status() == REMOVED) {
                 monitorActor.tell(incomingReq, getSelf());
             }
             else { // Other cases should raise an error

@@ -18,8 +18,7 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import static akka.http.javadsl.server.PathMatchers.segment;
-import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.DELETE;
-import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.POST;
+import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.*;
 
 /**
  * Created by an.auger on 16/09/2016.
@@ -197,6 +196,26 @@ public class RESTServer extends AllDirectives {
                                                                     completeOK(myRequest, Jackson.marshaller()), ctx);
                                                         }, Function.identity())
                                                 )
+                                        ).orElse(
+                                                complete(HttpResponse.create()
+                                                        .withStatus(400)
+                                                        .withEntity("Malformed request submitted!")
+                                                )
+                                        )
+                                )
+                        )),
+                        put(() -> route(
+                                path(segment("requests").slash(segment()), request_id ->
+                                        entity(Jackson.unmarshaller(Request.class), myRequest ->
+                                            extractExecutionContext(ctx ->
+                                                    onSuccess(() -> {
+                                                        myRequest.setRequest_id(request_id);
+                                                        RESTRequestMsg m = new RESTRequestMsg(PUT, myRequest); // construction of a special actor message
+                                                        apiGatewayActor.tell(m, ActorRef.noSender()); // PUT request forwarded to APIGatewayActor
+                                                        return CompletableFuture.supplyAsync(() ->
+                                                                completeOK(myRequest, Jackson.marshaller()), ctx);
+                                                    }, Function.identity())
+                                            )
                                         ).orElse(
                                                 complete(HttpResponse.create()
                                                         .withStatus(400)

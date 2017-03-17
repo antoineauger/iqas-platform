@@ -8,6 +8,7 @@ import akka.stream.*;
 import akka.stream.javadsl.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import fr.isae.iqas.model.message.ObsRateReportMsg;
 import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
@@ -87,15 +88,14 @@ public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
 
                     // ################################# END OF YOUR CODE #################################
                     // Do not remove - useful for MAPE-K monitoring
-                    final QoOReportMsg qoOReportObsRate = new QoOReportMsg(getUniqueID());
+                    final ObsRateReportMsg obsRateReportMsg = new ObsRateReportMsg(getUniqueID());
                         builder.from(bcast.out(1))
                                 .via(builder.add(Flow.of(RawData.class).map(p -> p.getProducer())))
                                 .via(builder.add(getFlowToComputeObsRate()))
                                 .to(builder.add(Sink.foreach(elem -> {
                                     Map<String, Integer> obsRateByTopic = (Map<String, Integer>) elem;
-                                    qoOReportObsRate.setObsRateByTopic(obsRateByTopic);
-                                    qoOReportObsRate.setRequestID(getAssociatedRequest_id());
-                                    getMonitorActor().tell(qoOReportObsRate, ActorRef.noSender());
+                                    obsRateReportMsg.setObsRateByTopic(obsRateByTopic);
+                                    getMonitorActor().tell(obsRateReportMsg, ActorRef.noSender());
                                 })));
 
                     return ClosedShape.getInstance();

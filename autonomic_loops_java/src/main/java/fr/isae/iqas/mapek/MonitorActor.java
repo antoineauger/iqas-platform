@@ -8,10 +8,10 @@ import akka.event.LoggingAdapter;
 import akka.util.Timeout;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
+import fr.isae.iqas.model.message.ObsRateReportMsg;
 import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.request.Request;
-import fr.isae.iqas.model.request.State;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import scala.concurrent.Future;
@@ -23,6 +23,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
+import static fr.isae.iqas.model.request.State.Status.*;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -31,7 +32,6 @@ import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
 public class MonitorActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    //private Buffer test = new CircularFifoBuffer(4);
     private Map<String, Buffer> obsRateBuffer;
     private Map<String, Buffer> qooQualityBuffer;
     private Properties prop;
@@ -83,21 +83,49 @@ public class MonitorActor extends UntypedActor {
             Request requestTemp = (Request) message;
             log.info("Received Request : {}", requestTemp.getRequest_id());
 
-            if (requestTemp.getCurrent_status() == State.Status.SUBMITTED) { // Valid Request
-                //TODO check if request is new or it is an update
+            if (requestTemp.getCurrent_status() == SUBMITTED) { // Valid Request
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.REQUEST, requestTemp);
                 forwardToAnalyzeActor(symptomMsgToForward);
             }
-            else if (requestTemp.getCurrent_status() == State.Status.REMOVED) { // Request deleted by the user
+            else if (requestTemp.getCurrent_status() == REMOVED) { // Request deleted by the user
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestTemp);
                 forwardToAnalyzeActor(symptomMsgToForward);
             }
-            else if (requestTemp.getCurrent_status() == State.Status.REJECTED) {
+            else if (requestTemp.getCurrent_status() == UPDATED) { // Existing Request updated by the user
+                SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.UPDATED, EntityMAPEK.REQUEST, requestTemp);
+                forwardToAnalyzeActor(symptomMsgToForward);
+            }
+            else if (requestTemp.getCurrent_status() == REJECTED) {
                 // Do nothing since the Request has already been rejected
             }
             else { // Other cases should raise an error
                 log.error("Unknown state for request " + requestTemp.getRequest_id() + " at this stage");
             }
+        }
+        /**
+         * ObsRateReportMsg messages
+         */
+        else if (message instanceof ObsRateReportMsg) {
+            ObsRateReportMsg tempObsRateReportMsg = (ObsRateReportMsg) message;
+            if (tempObsRateReportMsg.getObsRateByTopic().size() > 0) {
+                log.info("QoO report message: {} {}", tempObsRateReportMsg.getUniquePipelineID(), tempObsRateReportMsg.getObsRateByTopic().toString());
+                if (!obsRateBuffer.containsKey(tempObsRateReportMsg.getUniquePipelineID())) {
+                    obsRateBuffer.put(tempObsRateReportMsg.getUniquePipelineID(), new CircularFifoBuffer(5));
+                }
+                obsRateBuffer.get(tempObsRateReportMsg.getUniquePipelineID()).add(tempObsRateReportMsg);
+            }
+
+            // TODO to remove
+            System.err.println("Obs Rate Buffer:");
+            obsRateBuffer.forEach((k, v) -> {
+                System.err.print(k + ": ");
+                Iterator it = v.iterator();
+                while (it.hasNext()) {
+                    ObsRateReportMsg m = (ObsRateReportMsg) it.next();
+                    System.err.println(m.getUniquePipelineID() + " | " + m.getObsRateByTopic().toString());
+                }
+            });
+            System.err.println("------------------");
         }
         /**
          * QoOReportMsg messages
@@ -110,13 +138,6 @@ public class MonitorActor extends UntypedActor {
                     qooQualityBuffer.put(tempQoOReportMsg.getRequestID(), new CircularFifoBuffer(5));
                 }
                 qooQualityBuffer.get(tempQoOReportMsg.getRequestID()).add(tempQoOReportMsg);
-            }
-            if (tempQoOReportMsg.getObsRateByTopic().size() > 0) {
-                log.info("QoO report message: {} {}", tempQoOReportMsg.getUniquePipelineID(), tempQoOReportMsg.getObsRateByTopic().toString());
-                if (!obsRateBuffer.containsKey(tempQoOReportMsg.getUniquePipelineID())) {
-                    obsRateBuffer.put(tempQoOReportMsg.getUniquePipelineID(), new CircularFifoBuffer(5));
-                }
-                obsRateBuffer.get(tempQoOReportMsg.getUniquePipelineID()).add(tempQoOReportMsg);
             }
 
             // TODO to remove

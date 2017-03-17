@@ -137,7 +137,7 @@ public abstract class AbstractPipeline {
                     Map<String, Integer> obsRateByTopic = new HashMap<>();
                     for (String p : obsProducerList) {
                         if (!p.equals("KEEP_ALIVE")) {
-                            if (obsRateByTopic.get(p) == null) {
+                            if (!obsRateByTopic.containsKey(p)) {
                                 obsRateByTopic.put(p, 1);
                             } else {
                                 obsRateByTopic.put(p, obsRateByTopic.get(p) + 1);

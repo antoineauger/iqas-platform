@@ -14,9 +14,8 @@ import fr.isae.iqas.model.request.Request;
 
 import java.util.Properties;
 
+import static fr.isae.iqas.model.request.State.Status.*;
 import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.*;
-import static fr.isae.iqas.model.request.State.Status.ENFORCED;
-import static fr.isae.iqas.model.request.State.Status.REMOVED;
 
 /**
  * Created by an.auger on 20/09/2016.
@@ -67,7 +66,15 @@ public class APIGatewayActor extends UntypedActor {
                 });
             }
             else if (requestSubject.equals(PUT)) { // Update
-                // TODO update request logic
+                incomingRequest.updateState(UPDATED);
+                mongoController.getSpecificRequest(incomingRequest.getRequest_id()).whenComplete((result, throwable) -> {
+                    if (throwable == null && result.size() == 1) {
+                        autoManager.tell(incomingRequest, getSelf());
+                    }
+                    else {
+                        log.warning("Unable to retrieve request " + incomingRequest.getRequest_id() + ". Operation skipped!");
+                    }
+                });
             }
             else if (requestSubject.equals(GET)) {
                 log.error("This should never happen: GET responsibility is directly handled by RESTServer");
@@ -91,8 +98,7 @@ public class APIGatewayActor extends UntypedActor {
                         }
                     }
                     else {
-                        log.warning("Unable to retrieve request " + incomingRequest.getRequest_id() + ". " +
-                                "Operation skipped!");
+                        log.warning("Unable to retrieve request " + incomingRequest.getRequest_id() + ". Operation skipped!");
                     }
                 });
             }

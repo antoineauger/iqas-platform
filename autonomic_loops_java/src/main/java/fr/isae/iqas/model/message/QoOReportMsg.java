@@ -7,14 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by an.auger on 27/02/2017.
  */
 public class QoOReportMsg {
-    public enum ReportSubject {
-        KEEP_ALIVE
-    }
-
     private String uniquePipelineID;
     private String requestID;
     private String producer;
-    private Map<String,Integer> obsRateByTopic;
     private Map<String,String> qooAttributesMap;
 
     public QoOReportMsg(String uniquePipelineID) {
@@ -22,7 +17,6 @@ public class QoOReportMsg {
         this.producer = "UNKNOWN";
         this.requestID = "UNKNOWN";
         this.qooAttributesMap = new ConcurrentHashMap<>();
-        this.obsRateByTopic = new ConcurrentHashMap<>();
     }
 
     public void setProducerName(String producer) {
@@ -55,13 +49,5 @@ public class QoOReportMsg {
 
     public void setQooAttributesMap(Map<String, String> qooAttributesMap) {
         this.qooAttributesMap = qooAttributesMap;
-    }
-
-    public Map<String, Integer> getObsRateByTopic() {
-        return obsRateByTopic;
-    }
-
-    public void setObsRateByTopic(Map<String, Integer> obsRateByTopic) {
-        this.obsRateByTopic = obsRateByTopic;
     }
 }
