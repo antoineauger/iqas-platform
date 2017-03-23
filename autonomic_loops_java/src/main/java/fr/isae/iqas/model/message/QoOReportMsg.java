@@ -19,6 +19,13 @@ public class QoOReportMsg {
         this.qooAttributesMap = new ConcurrentHashMap<>();
     }
 
+    public QoOReportMsg(QoOReportMsg msgToClone) {
+        this.uniquePipelineID = msgToClone.getUniquePipelineID();
+        this.producer = msgToClone.getProducer();
+        this.requestID = msgToClone.getRequestID();
+        this.qooAttributesMap = msgToClone.getQooAttributesMap();
+    }
+
     public void setProducerName(String producer) {
         this.producer = producer;
     }

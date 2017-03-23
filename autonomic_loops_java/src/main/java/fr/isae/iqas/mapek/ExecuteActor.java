@@ -13,7 +13,9 @@ import akka.kafka.javadsl.Consumer;
 import akka.kafka.javadsl.Producer;
 import akka.pattern.Patterns;
 import akka.stream.ActorMaterializer;
-import akka.stream.javadsl.RunnableGraph;
+import akka.stream.KillSwitches;
+import akka.stream.UniqueKillSwitch;
+import akka.stream.javadsl.Keep;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import fr.isae.iqas.model.message.TerminatedMsg;
@@ -47,13 +49,13 @@ public class ExecuteActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = null;
-    private Sink<ProducerRecord, CompletionStage<Done>> kafkaSink = null;
+    private Sink<ProducerRecord<byte[], String>, CompletionStage<Done>> kafkaSink = null;
     private ObservationLevel askedObsLevel = ObservationLevel.RAW_DATA;
 
+    private UniqueKillSwitch stream = null;
     private ActorRef kafkaActor = null;
 
     private ActorMaterializer materializer = null;
-    private RunnableGraph myRunnableGraph = null;
     private IPipeline pipelineToEnforce = null;
     private String topicToPublish = null;
 
@@ -92,16 +94,14 @@ public class ExecuteActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        myRunnableGraph = RunnableGraph.fromGraph(pipelineToEnforce.getPipelineGraph(
-                kafkaSource,
-                kafkaSink,
-                topicToPublish,
-                askedObsLevel,
-                null));
-        if (myRunnableGraph != null) {
-
-            myRunnableGraph.run(materializer);
-        }
+        stream = kafkaSource
+                .viaMat(KillSwitches.single(), Keep.right())
+                .via(pipelineToEnforce.getPipelineGraph(
+                        topicToPublish,
+                        askedObsLevel,
+                null))
+                .to(kafkaSink)
+                .run(materializer);
     }
 
     @Override
@@ -110,6 +110,9 @@ public class ExecuteActor extends UntypedActor {
             TerminatedMsg terminatedMsg = (TerminatedMsg) message;
             if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
                 log.info("Received TerminatedMsg message: {}", message);
+                if (stream != null) {
+                    stream.shutdown();
+                }
                 if (kafkaActor != null) {
                     log.info("Trying to stop " + kafkaActor.path().name());
                     try {
@@ -124,8 +127,19 @@ public class ExecuteActor extends UntypedActor {
                 getContext().stop(getSelf());
             }
         }
-        else if (message instanceof String) {
-            log.info("Received String message: {}", message);
+        else if (message instanceof IPipeline) { //TODO test this feature
+            IPipeline newPipelineToEnforce = (IPipeline) message;
+            log.info("Updating pipeline " + newPipelineToEnforce.getPipelineName() + " with QoO params " + newPipelineToEnforce.getQooParams().toString());
+
+            stream.shutdown();
+            stream = kafkaSource
+                    .viaMat(KillSwitches.single(), Keep.right())
+                    .via(newPipelineToEnforce.getPipelineGraph(
+                            topicToPublish,
+                            askedObsLevel,
+                            null))
+                    .to(kafkaSink)
+                    .run(materializer);
         }
     }
 

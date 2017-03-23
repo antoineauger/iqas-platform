@@ -50,6 +50,7 @@ public class PlanActor extends UntypedActor {
     private Map<String, List<String>> actorPathRefs; // Requests <-> [ActorPathNames]
     private Map<String, Integer> execActorsCount; // ActorPathNames <-> # uses
     private Map<String, ActorRef> execActorsRefs; // ActorPathNames <-> ActorRefs
+    private Map<String, IPipeline> enforcedPipelines; // ActorPathNames <-> IPipeline objects
     private Map<String, String> mappingTopicsActors; // DestinationTopic <-> ActorPathNames
 
     public PlanActor(Properties prop, MongoController mongoController, FusekiController fusekiController, ActorRef kafkaAdminActor) {
@@ -63,6 +64,7 @@ public class PlanActor extends UntypedActor {
         this.execActorsRefs = new ConcurrentHashMap<>();
         this.execActorsCount = new ConcurrentHashMap<>();
         this.mappingTopicsActors = new ConcurrentHashMap<>();
+        this.enforcedPipelines = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -261,6 +263,8 @@ public class PlanActor extends UntypedActor {
                     gracefulStop(actorRef);
                     execActorsCount.remove(actorRef.path().name());
                     execActorsRefs.remove(actorRef.path().name());
+                    monitorActor.tell(new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRef.path().name()).getUniqueID()), getSelf());
+                    enforcedPipelines.remove(actorRef.path().name());
                 }
 
                 // We clean up the unused topics
@@ -339,13 +343,21 @@ public class PlanActor extends UntypedActor {
         log.info("Processing ActionMsg: {} {}", actionMAPEK.getAction(), actionMAPEK.getAbout());
 
         if (actionMAPEK.getAction() == ActionMAPEK.APPLY && actionMAPEK.getAbout() == EntityMAPEK.PIPELINE) {
-            ActorRef actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
-                    prop,
-                    actionMAPEK.getPipelineToEnforce(),
-                    actionMAPEK.getAskedObsLevel(),
-                    actionMAPEK.getTopicsToPullFrom(),
-                    actionMAPEK.getTopicToPublish()));
 
+            ActorRef actorRefToStart;
+            if (!mappingTopicsActors.containsKey(actionMAPEK.getTopicToPublish())) {
+                actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
+                        prop,
+                        actionMAPEK.getPipelineToEnforce(),
+                        actionMAPEK.getAskedObsLevel(),
+                        actionMAPEK.getTopicsToPullFrom(),
+                        actionMAPEK.getTopicToPublish()));
+            }
+            else {
+                actorRefToStart = execActorsRefs.get(mappingTopicsActors.get(actionMAPEK.getTopicToPublish()));
+            }
+
+            enforcedPipelines.put(actorRefToStart.path().name(), actionMAPEK.getPipelineToEnforce());
             mappingTopicsActors.put(actionMAPEK.getTopicToPublish(), actorRefToStart.path().name());
             actorPathRefs.computeIfAbsent(actionMAPEK.getAssociatedRequest_id(), k -> new ArrayList<>());
             actorPathRefs.get(actionMAPEK.getAssociatedRequest_id()).add(actorRefToStart.path().name());

@@ -1,11 +1,8 @@
-import akka.Done;
-import akka.NotUsed;
-import akka.kafka.javadsl.Consumer;
-import akka.stream.*;
+import akka.stream.FlowShape;
+import akka.stream.Graph;
+import akka.stream.Materializer;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
-import akka.stream.javadsl.Sink;
-import akka.stream.javadsl.Source;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.observation.Information;
@@ -17,8 +14,6 @@ import fr.isae.iqas.pipelines.IPipeline;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
-
-import java.util.concurrent.CompletionStage;
 
 import static fr.isae.iqas.model.observation.ObservationLevel.*;
 import static fr.isae.iqas.model.request.Operator.NONE;
@@ -40,78 +35,75 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
     }
 
     @Override
-    public Graph<ClosedShape, Materializer> getPipelineGraph(Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource,
-                                                             Sink<ProducerRecord, CompletionStage<Done>> kafkaSink,
-                                                             String topicToPublish,
-                                                             ObservationLevel askedLevel,
-                                                             Operator operatorToApply) {
+    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph(String topicToPublish,
+                                                                                                                           ObservationLevel askedLevel,
+                                                                                                                           Operator operatorToApply) {
 
         final ObservationLevel askedLevelFinal = askedLevel;
         runnableGraph = GraphDSL
                 .create(builder -> {
-                    // Definition of kafka topics for Source and Sink
-                    final Outlet<ConsumerRecord<byte[], String>> sourceGraph = builder.add(kafkaSource).out();
-                    final Inlet<ProducerRecord> sinkGraph = builder.add(kafkaSink).in();
-
 
                     // ################################# YOUR CODE GOES HERE #################################
 
                     // Raw Data
-                    Flow<ConsumerRecord, RawData, NotUsed> consumRecordToRawData =
+                    final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                 return new RawData(
                                         sensorDataObject.getString("timestamp"),
                                         sensorDataObject.getString("value"),
                                         sensorDataObject.getString("producer"));
-                            });
+                            })
+                    );
 
-                    Flow<RawData, ProducerRecord, NotUsed> rawDataToProdRecord =
+                    final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
                             Flow.of(RawData.class).map(r -> {
                                 ObjectMapper mapper = new ObjectMapper();
                                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
                                 return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
-                            });
+                            })
+                    );
 
-                    Flow<RawData, RawData, NotUsed> filteringMechanismRawData =
-                            Flow.of(RawData.class).filter(r ->
-                                    r.getValue() < Double.valueOf(getParams().get("threshold_min")));
+                    final FlowShape<RawData, RawData> filteringMechanismRawData = builder.add(
+                            Flow.of(RawData.class).filter(r -> r.getValue() < Double.valueOf(getParams().get("threshold_min")))
+                    );
 
                     // Information
-                    Flow<ConsumerRecord, Information, NotUsed> consumRecordToInfo =
+                    final FlowShape<ConsumerRecord, Information> consumRecordToInfo = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                 return new Information(
                                         sensorDataObject.getString("timestamp"),
                                         sensorDataObject.getString("value"),
                                         sensorDataObject.getString("producer"));
-                    });
+                            })
+                    );
 
-                    Flow<Information, Information, NotUsed> filteringMechanismInformation =
-                            Flow.of(Information.class).filter(r ->
-                            r.getValue() < Double.valueOf(getParams().get("threshold_min")));
-
-                    Flow<Information, ProducerRecord, NotUsed> infoToProdRecord =
+                    final FlowShape<Information, ProducerRecord> infoToProdRecord = builder.add(
                             Flow.of(Information.class).map(r -> {
                                 ObjectMapper mapper = new ObjectMapper();
                                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
                                 return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                            })
+                    );
 
-                            });
+                    final FlowShape<Information, Information> filteringMechanismInformation = builder.add(
+                            Flow.of(Information.class).filter(r -> r.getValue() < Double.valueOf(getParams().get("threshold_min")))
+                    );
 
                     if (askedLevelFinal == RAW_DATA) {
-                        builder.from(sourceGraph)
-                                .via(builder.add(consumRecordToRawData))
-                                .via(builder.add(filteringMechanismRawData))
-                                .via(builder.add(rawDataToProdRecord))
-                                .toInlet(sinkGraph);
+                        builder.from(consumRecordToRawData.out())
+                                .via(filteringMechanismRawData)
+                                .toInlet(rawDataToProdRecord.in());
+
+                        return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
                     }
                     else if (askedLevelFinal == INFORMATION) {
-                        builder.from(sourceGraph)
-                                .via(builder.add(consumRecordToInfo))
-                                .via(builder.add(filteringMechanismInformation))
-                                .via(builder.add(infoToProdRecord))
-                                .toInlet(sinkGraph);
+                        builder.from(consumRecordToInfo.out())
+                                .via(filteringMechanismInformation)
+                                .toInlet(infoToProdRecord.in());
+
+                        return new FlowShape<>(consumRecordToInfo.in(), infoToProdRecord.out());
                     }
                     else if (askedLevelFinal == KNOWLEDGE) {
                         //TODO: code logic for Knowledge for SimpleFilteringPipeline
@@ -124,7 +116,6 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                     // ################################# END OF YOUR CODE #################################
                     // Do not remove - useful for MAPE-K monitoring
 
-                    return ClosedShape.getInstance();
                 });
 
         return runnableGraph;

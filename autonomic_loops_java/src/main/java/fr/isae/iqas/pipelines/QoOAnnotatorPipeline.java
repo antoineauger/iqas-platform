@@ -1,11 +1,14 @@
 package fr.isae.iqas.pipelines;
 
-import akka.Done;
-import akka.NotUsed;
 import akka.actor.ActorRef;
-import akka.kafka.javadsl.Consumer;
-import akka.stream.*;
-import akka.stream.javadsl.*;
+import akka.stream.FlowShape;
+import akka.stream.Graph;
+import akka.stream.Materializer;
+import akka.stream.UniformFanOutShape;
+import akka.stream.javadsl.Broadcast;
+import akka.stream.javadsl.Flow;
+import akka.stream.javadsl.GraphDSL;
+import akka.stream.javadsl.Sink;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.message.QoOReportMsg;
@@ -19,7 +22,6 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletionStage;
 
 import static fr.isae.iqas.model.observation.ObservationLevel.*;
 import static fr.isae.iqas.model.quality.QoOAttribute.OBS_ACCURACY;
@@ -42,76 +44,70 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
     }
 
     @Override
-    public Graph<ClosedShape, Materializer> getPipelineGraph(Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource,
-                                                             Sink<ProducerRecord, CompletionStage<Done>> kafkaSink,
-                                                             String topicToPublish,
-                                                             ObservationLevel askedLevel,
-                                                             Operator operatorToApply) {
+    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph(String topicToPublish,
+                                                                                                                           ObservationLevel askedLevel,
+                                                                                                                           Operator operatorToApply) {
 
         final ObservationLevel askedLevelFinal = askedLevel;
         runnableGraph = GraphDSL
                 .create(builder -> {
-                    // Definition of kafka topics for Source and Sink
-                    final Outlet<ConsumerRecord<byte[], String>> sourceGraph = builder.add(kafkaSource).out();
-                    final Inlet<ProducerRecord> sinkGraph = builder.add(kafkaSink).in();
 
                     // ################################# START OF THE RAW_DATA / INFORMATION / KNOWLEDGE LOGIC #################################
 
-                    // Raw Data
-                    Flow<ConsumerRecord, RawData, NotUsed> consumRecordToRawData =
-                            Flow.of(ConsumerRecord.class).map(r -> {
-                                JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                return new RawData(
-                                        sensorDataObject.getString("timestamp"),
-                                        sensorDataObject.getString("value"),
-                                        sensorDataObject.getString("producer"));
-                            });
-
-                    Flow<RawData, ProducerRecord, NotUsed> rawDataToProdRecord =
-                            Flow.of(RawData.class).map(r -> {
-                                ObjectMapper mapper = new ObjectMapper();
-                                mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
-                            });
-
-                    // Information
-                    Flow<ConsumerRecord, Information, NotUsed> consumRecordToInfo =
-                            Flow.of(ConsumerRecord.class).map(r -> {
-                                JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                Information tempInformation = new Information(
-                                        sensorDataObject.getString("timestamp"),
-                                        sensorDataObject.getString("value"),
-                                        sensorDataObject.getString("producer"));
-                                tempInformation.setQoOAttribute(OBS_ACCURACY, String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(tempInformation, getQooParams())));
-                                tempInformation.setQoOAttribute(OBS_FRESHNESS, String.valueOf(getComputeAttributeHelper().computeQoOFreshness(tempInformation)));
-                                return tempInformation;
-                    });
-
-                    Flow<Information, ProducerRecord, NotUsed> infoToProdRecord =
-                            Flow.of(Information.class).map(r -> {
-                                ObjectMapper mapper = new ObjectMapper();
-                                mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
-
-                            });
-
                     if (askedLevelFinal == RAW_DATA) {
-                        builder.from(sourceGraph)
-                                .via(builder.add(consumRecordToRawData))
-                                .via(builder.add(rawDataToProdRecord))
-                                .toInlet(sinkGraph);
+                        final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
+                                Flow.of(ConsumerRecord.class).map(r -> {
+                                    JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                                    return new RawData(
+                                            sensorDataObject.getString("timestamp"),
+                                            sensorDataObject.getString("value"),
+                                            sensorDataObject.getString("producer"));
+                                })
+                        );
+
+                        final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
+                                Flow.of(RawData.class).map(r -> {
+                                    ObjectMapper mapper = new ObjectMapper();
+                                    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                                    return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                                })
+                        );
+
+                        builder.from(consumRecordToRawData.out())
+                                .toInlet(rawDataToProdRecord.in());
+
+                        return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
                     }
                     else if (askedLevelFinal == INFORMATION) {
                         // Definition of the broadcast for the MAPE-K monitoring
                         final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
 
-                        builder.from(sourceGraph)
-                                .via(builder.add(consumRecordToInfo))
-                                .viaFanOut(bcast)
-                                .via(builder.add(infoToProdRecord))
-                                .toInlet(sinkGraph);
+                        final FlowShape<ConsumerRecord, Information> consumRecordToInfo = builder.add(
+                                Flow.of(ConsumerRecord.class).map(r -> {
+                                    JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                                    Information tempInformation = new Information(
+                                            sensorDataObject.getString("timestamp"),
+                                            sensorDataObject.getString("value"),
+                                            sensorDataObject.getString("producer"));
+                                    tempInformation.setQoOAttribute(OBS_ACCURACY, String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(tempInformation, getQooParams())));
+                                    tempInformation.setQoOAttribute(OBS_FRESHNESS, String.valueOf(getComputeAttributeHelper().computeQoOFreshness(tempInformation)));
+                                    return tempInformation;
+                                })
+                        );
 
-                        builder.from(bcast.out(1))
+                        final FlowShape<Information, ProducerRecord> infoToProdRecord = builder.add(
+                                Flow.of(Information.class).map(r -> {
+                                    ObjectMapper mapper = new ObjectMapper();
+                                    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                                    return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                                })
+                        );
+
+                        builder.from(consumRecordToInfo.out())
+                                .viaFanOut(bcast)
+                                .toInlet(infoToProdRecord.in());
+
+                        builder.from(bcast)
                                 .via(builder.add(Flow.of(Information.class)
                                         .groupedWithin(Integer.MAX_VALUE, getReportFrequency())
                                         .map(l -> {
@@ -133,6 +129,8 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
                                         getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
                                     });
                                 })));
+
+                        return new FlowShape<>(consumRecordToInfo.in(), infoToProdRecord.out());
                     }
                     else if (askedLevelFinal == KNOWLEDGE) {
                         //TODO: code logic for Knowledge for SimpleFilteringPipeline
@@ -144,7 +142,6 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
 
                     // ################################# END OF THE RAW_DATA / INFORMATION / KNOWLEDGE LOGIC #################################
 
-                    return ClosedShape.getInstance();
                 });
 
         return runnableGraph;

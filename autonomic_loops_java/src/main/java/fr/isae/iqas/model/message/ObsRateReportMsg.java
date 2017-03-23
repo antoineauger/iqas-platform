@@ -15,6 +15,11 @@ public class ObsRateReportMsg {
         this.obsRateByTopic = new ConcurrentHashMap<>();
     }
 
+    public ObsRateReportMsg(ObsRateReportMsg msgToClone) {
+        this.uniquePipelineID = msgToClone.getUniquePipelineID();
+        this.obsRateByTopic = msgToClone.getObsRateByTopic();
+    }
+
     public String getUniquePipelineID() {
         return uniquePipelineID;
     }

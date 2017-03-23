@@ -98,12 +98,20 @@ public class MAPEKInternalMsg {
         private SymptomMAPEK symptom;
         private EntityMAPEK about;
         private Request attachedRequest;
+        private String uniqueIDRemovedPipeline;
 
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Request attachedRequest) { // Only 1 constructor
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Request attachedRequest) { // For Requests
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.symptom = symptom;
             this.about = about;
             this.attachedRequest = attachedRequest;
+        }
+
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String uniqueIDRemovedPipeline) { // For removed Pipelines (cleanup)
+            this.creationDate = new Timestamp(System.currentTimeMillis());
+            this.symptom = symptom;
+            this.about = about;
+            this.uniqueIDRemovedPipeline = uniqueIDRemovedPipeline;
         }
 
         public Timestamp getCreationDate() {
@@ -120,6 +128,10 @@ public class MAPEKInternalMsg {
 
         public Request getAttachedRequest() {
             return attachedRequest;
+        }
+
+        public String getUniqueIDRemovedPipeline() {
+            return uniqueIDRemovedPipeline;
         }
     }
 

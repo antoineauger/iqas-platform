@@ -88,6 +88,9 @@ public class MonitorActor extends UntypedActor {
                 forwardToAnalyzeActor(symptomMsgToForward);
             }
             else if (requestTemp.getCurrent_status() == REMOVED) { // Request deleted by the user
+                if (qooQualityBuffer.containsKey(requestTemp.getRequest_id())) {
+                    qooQualityBuffer.remove(requestTemp.getRequest_id());
+                }
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestTemp);
                 forwardToAnalyzeActor(symptomMsgToForward);
             }
@@ -109,23 +112,23 @@ public class MonitorActor extends UntypedActor {
             ObsRateReportMsg tempObsRateReportMsg = (ObsRateReportMsg) message;
             if (tempObsRateReportMsg.getObsRateByTopic().size() > 0) {
                 log.info("QoO report message: {} {}", tempObsRateReportMsg.getUniquePipelineID(), tempObsRateReportMsg.getObsRateByTopic().toString());
-                if (!obsRateBuffer.containsKey(tempObsRateReportMsg.getUniquePipelineID())) {
-                    obsRateBuffer.put(tempObsRateReportMsg.getUniquePipelineID(), new CircularFifoBuffer(5));
-                }
-                obsRateBuffer.get(tempObsRateReportMsg.getUniquePipelineID()).add(tempObsRateReportMsg);
             }
+            if (!obsRateBuffer.containsKey(tempObsRateReportMsg.getUniquePipelineID())) {
+                obsRateBuffer.put(tempObsRateReportMsg.getUniquePipelineID(), new CircularFifoBuffer(5));
+            }
+            obsRateBuffer.get(tempObsRateReportMsg.getUniquePipelineID()).add(new ObsRateReportMsg(tempObsRateReportMsg));
 
             // TODO to remove
-            System.err.println("Obs Rate Buffer:");
+            log.info("Obs Rate Buffer:");
             obsRateBuffer.forEach((k, v) -> {
-                System.err.print(k + ": ");
+                //log.info(k + ": ");
                 Iterator it = v.iterator();
                 while (it.hasNext()) {
                     ObsRateReportMsg m = (ObsRateReportMsg) it.next();
-                    System.err.println(m.getUniquePipelineID() + " | " + m.getObsRateByTopic().toString());
+                    log.info(m.getUniquePipelineID() + " | " + m.getObsRateByTopic().toString());
                 }
             });
-            System.err.println("------------------");
+            log.info("------------------");
         }
         /**
          * QoOReportMsg messages
@@ -137,20 +140,30 @@ public class MonitorActor extends UntypedActor {
                 if (!qooQualityBuffer.containsKey(tempQoOReportMsg.getRequestID())) {
                     qooQualityBuffer.put(tempQoOReportMsg.getRequestID(), new CircularFifoBuffer(5));
                 }
-                qooQualityBuffer.get(tempQoOReportMsg.getRequestID()).add(tempQoOReportMsg);
+                qooQualityBuffer.get(tempQoOReportMsg.getRequestID()).add(new QoOReportMsg(tempQoOReportMsg));
             }
 
             // TODO to remove
-            System.err.println("Quality Buffer:");
+            log.info("Quality Buffer:");
             qooQualityBuffer.forEach((k, v) -> {
-                System.err.print(k + ": ");
+                //log.info(k + ": ");
                 Iterator it = v.iterator();
                 while (it.hasNext()) {
                     QoOReportMsg m = (QoOReportMsg) it.next();
-                    System.err.println(m.getUniquePipelineID() + " | " + m.getQooAttributesMap().toString() + " | " + m.getProducer() + " | " + m.getRequestID());
+                    log.info(m.getUniquePipelineID() + " | " + m.getQooAttributesMap().toString() + " | " + m.getProducer() + " | " + m.getRequestID());
                 }
             });
-            System.err.println("------------------");
+            log.info("------------------");
+        }
+        /**
+         * SymptomMsg messages (only for cleaning)
+         */
+        else if (message instanceof SymptomMsg) {
+            SymptomMsg symptomMAPEKMsg = (SymptomMsg) message;
+            if (obsRateBuffer.containsKey(symptomMAPEKMsg.getUniqueIDRemovedPipeline())) {
+                log.info("ObsRatePipeline " + symptomMAPEKMsg.getUniqueIDRemovedPipeline() + " is no longer active, removing it");
+                obsRateBuffer.remove(symptomMAPEKMsg.getUniqueIDRemovedPipeline());
+            }
         }
         /**
          * TerminatedMsg messages
@@ -173,7 +186,7 @@ public class MonitorActor extends UntypedActor {
 
     private Future<ActorRef> getAnalyzeActor() {
         return getContext().actorSelection(getSelf().path().parent()
-                + "/" + "analyzeActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
+                + "/analyzeActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
     private void forwardToAnalyzeActor(SymptomMsg symptomMsgToForward) {

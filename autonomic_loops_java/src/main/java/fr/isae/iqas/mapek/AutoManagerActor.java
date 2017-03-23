@@ -94,7 +94,7 @@ public class AutoManagerActor extends UntypedActor {
 
             if (incomingReq.getCurrent_status() == CREATED) { // A Request has just been submitted, we check if we can satisfy it
                 VirtualSensorList virtualSensorList = fusekiController._findAllSensorsWithConditions(incomingReq.getLocation(), incomingReq.getTopic());
-                if (virtualSensorList.sensors.size() > 0) {
+                if (virtualSensorList != null && virtualSensorList.sensors.size() > 0) {
                     incomingReq.addLog("Found couple (" + incomingReq.getTopic() + " / " + incomingReq.getLocation() + "), forwarding request to Monitor.");
                     incomingReq.updateState(SUBMITTED);
                 } else {

@@ -134,14 +134,13 @@ public abstract class AbstractPipeline {
         return Flow.of(String.class).keepAlive(reportFrequency.div(2), "KEEP_ALIVE"::toString)
                 .groupedWithin(Integer.MAX_VALUE, reportFrequency)
                 .map(obsProducerList -> {
-                    Map<String, Integer> obsRateByTopic = new HashMap<>();
+                    Map<String, Integer> obsRateByTopic = new ConcurrentHashMap<>();
                     for (String p : obsProducerList) {
                         if (!p.equals("KEEP_ALIVE")) {
                             if (!obsRateByTopic.containsKey(p)) {
-                                obsRateByTopic.put(p, 1);
-                            } else {
-                                obsRateByTopic.put(p, obsRateByTopic.get(p) + 1);
+                                obsRateByTopic.put(p, 0);
                             }
+                            obsRateByTopic.put(p, obsRateByTopic.get(p) + 1);
                         }
                     }
                     return obsRateByTopic;

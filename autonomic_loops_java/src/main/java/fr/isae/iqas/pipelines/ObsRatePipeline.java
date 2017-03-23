@@ -1,25 +1,27 @@
 package fr.isae.iqas.pipelines;
 
-import akka.Done;
-import akka.NotUsed;
 import akka.actor.ActorRef;
-import akka.kafka.javadsl.Consumer;
-import akka.stream.*;
-import akka.stream.javadsl.*;
+import akka.stream.FlowShape;
+import akka.stream.Graph;
+import akka.stream.Materializer;
+import akka.stream.UniformFanOutShape;
+import akka.stream.javadsl.Broadcast;
+import akka.stream.javadsl.Flow;
+import akka.stream.javadsl.GraphDSL;
+import akka.stream.javadsl.Sink;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.message.ObsRateReportMsg;
-import fr.isae.iqas.model.message.QoOReportMsg;
-import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.concurrent.CompletionStage;
 
 import static fr.isae.iqas.model.observation.ObservationLevel.*;
 import static fr.isae.iqas.model.request.Operator.NONE;
@@ -31,6 +33,7 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * It should not be modified.
  */
 public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
+    private Logger logger = LoggerFactory.getLogger(ObsRatePipeline.class);
     private Graph runnableGraph = null;
 
     public ObsRatePipeline() {
@@ -40,65 +43,59 @@ public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
     }
 
     @Override
-    public Graph<ClosedShape, Materializer> getPipelineGraph(Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource,
-                                                             Sink<ProducerRecord, CompletionStage<Done>> kafkaSink,
-                                                             String topicToPublish,
-                                                             ObservationLevel askedLevel,
-                                                             Operator operatorToApply) {
+    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph(String topicToPublish,
+                                                                                                                           ObservationLevel askedLevel,
+                                                                                                                           Operator operatorToApply) {
 
         final ObservationLevel askedLevelFinal = askedLevel;
         runnableGraph = GraphDSL
                 .create(builder -> {
-                    // Definition of kafka topics for Source and Sink
-                    final Outlet<ConsumerRecord<byte[], String>> sourceGraph = builder.add(kafkaSource).out();
-                    final Inlet<ProducerRecord> sinkGraph = builder.add(kafkaSink).in();
                     // Definition of the broadcast for the MAPE-K monitoring
                     final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
                     // ################################# YOUR CODE GOES HERE #################################
 
-                    Flow<ConsumerRecord, RawData, NotUsed> consumRecordToInfo =
+                    final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                return (RawData) new Information(
+                                return new RawData(
                                         sensorDataObject.getString("timestamp"),
                                         sensorDataObject.getString("value"),
                                         sensorDataObject.getString("producer"));
-                    });
+                            })
+                    );
 
-                    Flow<RawData, ProducerRecord, NotUsed> infoToProdRecord =
+                    final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
                             Flow.of(RawData.class).map(r -> {
                                 ObjectMapper mapper = new ObjectMapper();
                                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
                                 return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
-
-                            });
+                            })
+                    );
 
                     if (askedLevel == RAW_DATA || askedLevelFinal == INFORMATION || askedLevelFinal == KNOWLEDGE) {
-                        builder.from(sourceGraph)
-                                .via(builder.add(consumRecordToInfo))
+                        builder.from(consumRecordToRawData.out())
                                 .viaFanOut(bcast)
-                                .via(builder.add(infoToProdRecord))
-                                .toInlet(sinkGraph);
+                                .toInlet(rawDataToProdRecord.in());
                     }
                     else { // other observation levels are not supported
                         return null;
                     }
 
-
                     // ################################# END OF YOUR CODE #################################
                     // Do not remove - useful for MAPE-K monitoring
-                    final ObsRateReportMsg obsRateReportMsg = new ObsRateReportMsg(getUniqueID());
-                        builder.from(bcast.out(1))
-                                .via(builder.add(Flow.of(RawData.class).map(p -> p.getProducer())))
-                                .via(builder.add(getFlowToComputeObsRate()))
-                                .to(builder.add(Sink.foreach(elem -> {
-                                    Map<String, Integer> obsRateByTopic = (Map<String, Integer>) elem;
-                                    obsRateReportMsg.setObsRateByTopic(obsRateByTopic);
-                                    getMonitorActor().tell(obsRateReportMsg, ActorRef.noSender());
-                                })));
 
-                    return ClosedShape.getInstance();
+                    builder.from(bcast)
+                            .via(builder.add(Flow.of(RawData.class).map(p -> p.getProducer())))
+                            .via(builder.add(getFlowToComputeObsRate()))
+                            .to(builder.add(Sink.foreach(elem -> {
+                                Map<String, Integer> obsRateByTopic = (Map<String, Integer>) elem;
+                                ObsRateReportMsg obsRateReportMsg = new ObsRateReportMsg(getUniqueID());
+                                obsRateReportMsg.setObsRateByTopic(obsRateByTopic);
+                                getMonitorActor().tell(obsRateReportMsg, ActorRef.noSender());
+                            })));
+
+                    return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
                 });
 
         return runnableGraph;
