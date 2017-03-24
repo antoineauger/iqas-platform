@@ -27,7 +27,7 @@ import static fr.isae.iqas.model.request.State.Status.*;
  * Created by an.auger on 25/09/2016.
  */
 
-public class AutoManagerActor extends UntypedActor {
+public class AutonomicManagerActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private MongoController mongoController;
@@ -39,7 +39,7 @@ public class AutoManagerActor extends UntypedActor {
     private ActorRef planActor = null;
     private ActorRef executeActor = null;
 
-    public AutoManagerActor(Properties prop, ActorRef kafkaAdminActor, MongoController mongoController, FusekiController fusekiController) {
+    public AutonomicManagerActor(Properties prop, ActorRef kafkaAdminActor, MongoController mongoController, FusekiController fusekiController) {
         this.kafkaAdminActor = kafkaAdminActor;
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;

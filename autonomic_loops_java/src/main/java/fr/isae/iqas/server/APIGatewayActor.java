@@ -8,7 +8,7 @@ import akka.event.LoggingAdapter;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.KafkaAdminActor;
-import fr.isae.iqas.mapek.AutoManagerActor;
+import fr.isae.iqas.mapek.AutonomicManagerActor;
 import fr.isae.iqas.model.message.RESTRequestMsg;
 import fr.isae.iqas.model.request.Request;
 
@@ -39,7 +39,7 @@ public class APIGatewayActor extends UntypedActor {
 
         this.kafkaAdminActor = getContext().actorOf(Props.create(KafkaAdminActor.class, prop), "KafkaAdminActor");
         this.autoManager = getContext()
-                .actorOf(Props.create(AutoManagerActor.class, this.prop, this.kafkaAdminActor, this.mongoController, this.fusekiController), "autoManager");
+                .actorOf(Props.create(AutonomicManagerActor.class, this.prop, this.kafkaAdminActor, this.mongoController, this.fusekiController), "autoManager");
     }
 
     @Override
