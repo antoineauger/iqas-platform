@@ -15,3 +15,7 @@ jena_test_java/.idea
 jena_test_java/target
 autonomic_loops_java/logs
 iQAS_ontology/config_fuseki_tdb/qoo-onto-sauv
+_old_/flink_resources/flink-filtering-module/.idea
+_old_/kafka_streams/.idea
+_old_/flink_resources/flink-filtering-module/target
+_old_/kafka_streams/target
