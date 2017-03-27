@@ -56,18 +56,18 @@
       "iot-lite:interfaceDescription": "First service to get temperature measurements from s01."
     },
     {
-      "@id": "qoo:serv_sensor01_visib",
-      "@type": "iot-lite:Service",
-      "iot-lite:interfaceType": "REST",
-      "iot-lite:endpoint": "http://127.0.0.1:9092/s01",
-      "iot-lite:interfaceDescription": "Second service to get visibility measurements from s01."
-    },
-    {
       "@id": "qoo:serv_sensor02_visib",
       "@type": "iot-lite:Service",
       "iot-lite:interfaceType": "REST",
-      "iot-lite:endpoint": "http://127.0.0.1:9093/s02",
-      "iot-lite:interfaceDescription": "Third service to get visibility measurements from s02."
+      "iot-lite:endpoint": "http://127.0.0.1:9092/s02",
+      "iot-lite:interfaceDescription": "Second service to get visibility measurements from s02."
+    },
+    {
+      "@id": "qoo:serv_sensor03_visib",
+      "@type": "iot-lite:Service",
+      "iot-lite:interfaceType": "REST",
+      "iot-lite:endpoint": "http://127.0.0.1:9093/s03",
+      "iot-lite:interfaceDescription": "Third service to get visibility measurements from s03."
     },
     {
       "@id": "qoo:sensor01",
@@ -87,13 +87,6 @@
               "qoo:canBeRetrievedThrough": {
                 "@id": "qoo:serv_sensor01_temp"
               }
-            },
-            {
-              "@id": "qoo:visibility",
-              "@type": "ssn:Property",
-              "qoo:canBeRetrievedThrough": {
-                "@id": "qoo:serv_sensor01_visib"
-              }
             }
           ]   
         }
@@ -101,9 +94,6 @@
       "iot-lite:exposedBy": [
         {
           "@id": "qoo:serv_sensor01_temp"
-        },
-        {
-          "@id": "qoo:serv_sensor01_visib"
         }
       ],
       "ssn:hasMeasurementCapability": [
@@ -120,20 +110,6 @@
           "ssn:forProperty": {
             "@id": "qoo:temperature"
           }
-        },
-        {
-          "@id": "qoo:capa_visib_sensor01",
-          "ssn:hasMeasurementProperty": [
-            {
-              "@id": "qoo:range_temp_sensor01",
-              "@type": "ssn:MeasurementRange",
-              "qoo:hasMinValue": "0.0",
-              "qoo:hasMaxValue": "+INF"
-            }
-          ],
-          "ssn:forProperty": {
-            "@id": "qoo:visibility"
-          }
         }
       ]
     },
@@ -142,7 +118,7 @@
       "@type": "ssn:Sensor",
       "iot-lite:id": "sensor02",
       "geo:location": {
-        "@id": "qoo:loc_jardin"
+        "@id": "qoo:loc_portet"
       },
       "qoo:sensorStateValue": "CONNECTED",
       "ssn:madeObservation": [
@@ -182,6 +158,50 @@
       ]
     },
     {
+      "@id": "qoo:sensor03",
+      "@type": "ssn:Sensor",
+      "iot-lite:id": "sensor03",
+      "geo:location": {
+        "@id": "qoo:loc_jardin"
+      },
+      "qoo:sensorStateValue": "CONNECTED",
+      "ssn:madeObservation": [
+        {
+          "@id": "qoo:obs_sensor03",
+          "ssn:observedProperty": [
+            {
+              "@id": "qoo:visibility",
+              "@type": "ssn:Property",
+              "qoo:canBeRetrievedThrough": {
+                "@id": "qoo:serv_sensor03_visib"
+              }
+            }
+          ]
+        }
+      ],
+      "iot-lite:exposedBy": [
+        {
+          "@id": "qoo:serv_sensor03_visib"
+        }
+      ],
+      "ssn:hasMeasurementCapability": [
+        {
+          "@id": "qoo:capa_visib_sensor03",
+          "ssn:hasMeasurementProperty": [
+            {
+              "@id": "qoo:range_visib_sensor03",
+              "@type": "ssn:MeasurementRange",
+              "qoo:hasMinValue": "0.0",
+              "qoo:hasMaxValue": "+INF"
+            }
+          ],
+          "ssn:forProperty": {
+            "@id": "qoo:visibility"
+          }
+        }
+      ]
+    },
+    {
       "@id": "qoo:iQAS",
       "@type": "ssn:Platform",
       "ssn:attachedSystem": [
@@ -190,6 +210,9 @@
         },
         {
           "@id": "qoo:sensor02"
+        },
+        {
+          "@id": "qoo:sensor03"
         }
       ],
       "qoo:considers": [
