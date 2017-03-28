@@ -134,14 +134,17 @@ public class PlanActor extends UntypedActor {
                             pipeline.setTempID(finalTempID);
 
                             //TODO resolve dynamically
-                            pipeline.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(10, TimeUnit.SECONDS));
+                            pipeline.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(Long.valueOf(prop.getProperty("report_interval_seconds")), TimeUnit.SECONDS));
                             Map<String, Map<String, String>> qooParamsForAllTopics = new HashMap<>();
                             qooParamsForAllTopics.put("sensor01", new HashMap<>());
                             qooParamsForAllTopics.put("sensor02", new HashMap<>());
+                            qooParamsForAllTopics.put("sensor03", new HashMap<>());
                             qooParamsForAllTopics.get("sensor01").put("min_value", "-50.0");
                             qooParamsForAllTopics.get("sensor01").put("max_value", "+50.0");
                             qooParamsForAllTopics.get("sensor02").put("min_value", "0.0");
                             qooParamsForAllTopics.get("sensor02").put("max_value", "+50.0");
+                            qooParamsForAllTopics.get("sensor03").put("min_value", "0.0");
+                            qooParamsForAllTopics.get("sensor03").put("max_value", "+50.0");
                             pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
                             pipeline.setCustomizableParameter("threshold_min", "0.0");
@@ -179,14 +182,17 @@ public class PlanActor extends UntypedActor {
                                 pipeline.setTempID(tempIDInt);
 
                                 //TODO resolve dynamically
-                                pipeline.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(10, TimeUnit.SECONDS));
+                                pipeline.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(Long.valueOf(prop.getProperty("report_interval_seconds")), TimeUnit.SECONDS));
                                 Map<String, Map<String, String>> qooParamsForAllTopics = new HashMap<>();
                                 qooParamsForAllTopics.put("sensor01", new HashMap<>());
                                 qooParamsForAllTopics.put("sensor02", new HashMap<>());
+                                qooParamsForAllTopics.put("sensor03", new HashMap<>());
                                 qooParamsForAllTopics.get("sensor01").put("min_value", "-50.0");
                                 qooParamsForAllTopics.get("sensor01").put("max_value", "+50.0");
                                 qooParamsForAllTopics.get("sensor02").put("min_value", "0.0");
                                 qooParamsForAllTopics.get("sensor02").put("max_value", "+50.0");
+                                qooParamsForAllTopics.get("sensor03").put("min_value", "0.0");
+                                qooParamsForAllTopics.get("sensor03").put("max_value", "+50.0");
                                 pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
                                 pipeline.setCustomizableParameter("threshold_min", "0.0");
@@ -339,43 +345,53 @@ public class PlanActor extends UntypedActor {
         return pipelineCompletableFuture;
     }
 
-    private boolean performAction(ActionMsg actionMAPEK) {
-        log.info("Processing ActionMsg: {} {}", actionMAPEK.getAction(), actionMAPEK.getAbout());
+    private boolean performAction(ActionMsg actionMsg) {
+        log.info("Processing ActionMsg: {} {}", actionMsg.getAction(), actionMsg.getAbout());
 
-        if (actionMAPEK.getAction() == ActionMAPEK.APPLY && actionMAPEK.getAbout() == EntityMAPEK.PIPELINE) {
+        if (actionMsg.getAction() == ActionMAPEK.APPLY && actionMsg.getAbout() == EntityMAPEK.PIPELINE) {
 
             ActorRef actorRefToStart;
-            if (!mappingTopicsActors.containsKey(actionMAPEK.getTopicToPublish())) {
+            if (actionMsg.getPipelineToEnforce().getPipelineID().equals("ObsRatePipeline")) {
                 actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
                         prop,
-                        actionMAPEK.getPipelineToEnforce(),
-                        actionMAPEK.getAskedObsLevel(),
-                        actionMAPEK.getTopicsToPullFrom(),
-                        actionMAPEK.getTopicToPublish()));
+                        actionMsg.getPipelineToEnforce(),
+                        actionMsg.getAskedObsLevel(),
+                        actionMsg.getTopicsToPullFrom(),
+                        actionMsg.getTopicToPublish())
+                        .withDispatcher("dispatchers.pipelines.obsRate"));
             }
             else {
-                actorRefToStart = execActorsRefs.get(mappingTopicsActors.get(actionMAPEK.getTopicToPublish()));
+                actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
+                        prop,
+                        actionMsg.getPipelineToEnforce(),
+                        actionMsg.getAskedObsLevel(),
+                        actionMsg.getTopicsToPullFrom(),
+                        actionMsg.getTopicToPublish()));
             }
 
-            enforcedPipelines.put(actorRefToStart.path().name(), actionMAPEK.getPipelineToEnforce());
-            mappingTopicsActors.put(actionMAPEK.getTopicToPublish(), actorRefToStart.path().name());
-            actorPathRefs.computeIfAbsent(actionMAPEK.getAssociatedRequest_id(), k -> new ArrayList<>());
-            actorPathRefs.get(actionMAPEK.getAssociatedRequest_id()).add(actorRefToStart.path().name());
+            enforcedPipelines.put(actorRefToStart.path().name(), actionMsg.getPipelineToEnforce());
+            mappingTopicsActors.put(actionMsg.getTopicToPublish(), actorRefToStart.path().name());
             execActorsRefs.put(actorRefToStart.path().name(), actorRefToStart);
-            execActorsCount.computeIfAbsent(actorRefToStart.path().name(), k -> 0);
+            actorPathRefs.computeIfAbsent(actionMsg.getAssociatedRequest_id(), k -> new ArrayList<>());
+            actorPathRefs.get(actionMsg.getAssociatedRequest_id()).add(actorRefToStart.path().name());
+            execActorsCount.putIfAbsent(actorRefToStart.path().name(), 0);
             execActorsCount.put(actorRefToStart.path().name(), execActorsCount.get(actorRefToStart.path().name()) + 1);
 
-            if (!actionMAPEK.getConstructedFromRequest().equals("")) { // Additional steps to perform if the request depends on another one
-                mongoController.getSpecificRequestMapping(actionMAPEK.getConstructedFromRequest()).whenComplete((result, throwable) -> {
+            if (actionMsg.getPipelineToEnforce().getPipelineID().equals("ObsRatePipeline")) {
+                monitorActor.tell(new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRefToStart.path().name()).getUniqueID(), actionMsg.getAssociatedRequest_id()), getSelf());
+            }
+
+            if (!actionMsg.getConstructedFromRequest().equals("")) { // Additional steps to perform if the request depends on another one
+                mongoController.getSpecificRequestMapping(actionMsg.getConstructedFromRequest()).whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         RequestMapping ancestorReqMapping = result.get(0);
                         for (Object o : ancestorReqMapping.getAllTopics().entrySet()) {
                             Map.Entry pair = (Map.Entry) o;
                             TopicEntity topicEntityTemp = (TopicEntity) pair.getValue();
-                            if (topicEntityTemp.getLevel() < actionMAPEK.getMaxLevelDepth() + 1) {
+                            if (topicEntityTemp.getLevel() < actionMsg.getMaxLevelDepth() + 1) {
                                 if (mappingTopicsActors.containsKey(topicEntityTemp.getName())) {
                                     ActorRef tempActor = execActorsRefs.get(mappingTopicsActors.get(topicEntityTemp.getName()));
-                                    actorPathRefs.get(actionMAPEK.getAssociatedRequest_id()).add(tempActor.path().name());
+                                    actorPathRefs.get(actionMsg.getAssociatedRequest_id()).add(tempActor.path().name());
                                     execActorsCount.put(mappingTopicsActors.get(topicEntityTemp.getName()), execActorsCount.get(mappingTopicsActors.get(topicEntityTemp.getName())) + 1);
                                 }
                             }
@@ -389,9 +405,9 @@ public class PlanActor extends UntypedActor {
 
             log.info("Successfully started " + actorRefToStart.path());
         }
-        else if (actionMAPEK.getAction() == ActionMAPEK.CREATE && actionMAPEK.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
+        else if (actionMsg.getAction() == ActionMAPEK.CREATE && actionMsg.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
             Timeout timeout = new Timeout(Duration.create(5, "seconds"));
-            Future<Object> future = Patterns.ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.CREATE, actionMAPEK.getKafkaTopicID()), timeout);
+            Future<Object> future = Patterns.ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.CREATE, actionMsg.getKafkaTopicID()), timeout);
             try {
                 return (boolean) (Boolean) Await.result(future, timeout.duration());
             } catch (Exception e) {
@@ -399,9 +415,9 @@ public class PlanActor extends UntypedActor {
                 return false;
             }
         }
-        else if (actionMAPEK.getAction() == ActionMAPEK.DELETE && actionMAPEK.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
+        else if (actionMsg.getAction() == ActionMAPEK.DELETE && actionMsg.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
             Timeout timeout = new Timeout(Duration.create(5, "seconds"));
-            Future<Object> future = Patterns.ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.DELETE, actionMAPEK.getKafkaTopicID()), timeout);
+            Future<Object> future = Patterns.ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.DELETE, actionMsg.getKafkaTopicID()), timeout);
             try {
                 return (boolean) (Boolean) Await.result(future, timeout.duration());
             } catch (Exception e) {

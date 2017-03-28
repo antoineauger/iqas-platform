@@ -225,6 +225,11 @@
           "@id": "qoo:OBS_FRESHNESS",
           "@type": "qoo:QoOAttribute",
           "qoo:shouldBe": "LOW"
+        },
+        {
+          "@id": "qoo:OBS_RATE",
+          "@type": "qoo:QoOAttribute",
+          "qoo:shouldBe": "HIGH"
         }
       ],
       "qoo:provides": [
@@ -263,6 +268,50 @@
                       "@id": "qoo:OBS_FRESHNESS"
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "qoo:allowsToSet": [
+        {
+          "@id": "qoo:obsRate_min",
+          "@type": "qoo:QoOCustomizableParameter",
+          "qoo:documentation": "A string that indicates the lowest admissible observation rate under the format int/unit. Accepted units: s, min, hour. E.g., '1/s', '3/hour'",
+          "qoo:has": [
+            {
+              "@id": "qoo:General_obsRate_min_effect_1",
+              "@type": "qoo:QoOEffect",
+              "qoo:capabilityVariation": "CONSTANT",
+              "qoo:qooAttributeVariation": "CONSTANT",
+              "qoo:impacts": [
+                {
+                  "@id": "qoo:OBS_RATE"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "qoo:allowsToSet": [
+        {
+          "@id": "qoo:obsRate_max",
+          "@type": "qoo:QoOCustomizableParameter",
+          "qoo:documentation": "A string that indicates the maximum admissible observation rate under the format int/unit. Accepted units: s, min, hour. E.g., '1/s', '3/hour'. If both obsRate_min and obsRate_max are specified, only obsRate_max is considered.",
+          "qoo:has": [
+            {
+              "@id": "qoo:General_obsRate_max_effect_1",
+              "@type": "qoo:QoOEffect",
+              "qoo:capabilityVariation": "CONSTANT",
+              "qoo:qooAttributeVariation": "CONSTANT",
+              "qoo:impacts": [
+                {
+                  "@id": "qoo:OBS_RATE"
                 }
               ]
             }

@@ -7,6 +7,7 @@ import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.pipelines.IPipeline;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -94,11 +95,13 @@ public class MAPEKInternalMsg {
      */
 
     public static class SymptomMsg {
+        private List<String> concernedRequests;
         private Timestamp creationDate;
         private SymptomMAPEK symptom;
         private EntityMAPEK about;
         private Request attachedRequest;
-        private String uniqueIDRemovedPipeline;
+        private String uniqueIDPipeline;
+        private String requestID;
 
         public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Request attachedRequest) { // For Requests
             this.creationDate = new Timestamp(System.currentTimeMillis());
@@ -111,14 +114,30 @@ public class MAPEKInternalMsg {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.symptom = symptom;
             this.about = about;
-            this.uniqueIDRemovedPipeline = uniqueIDRemovedPipeline;
+            this.uniqueIDPipeline = uniqueIDRemovedPipeline;
+        }
+
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String concernedUniqueIDPipeline, List<String> concernedRequests) { // For OBS_RATE too low
+            this.creationDate = new Timestamp(System.currentTimeMillis());
+            this.symptom = symptom;
+            this.about = about;
+            this.uniqueIDPipeline = concernedUniqueIDPipeline;
+            this.concernedRequests = concernedRequests;
+        }
+
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String uniqueIDPipeline, String requestID) { // For Pipeline creation (to notice Monitor)
+            this.creationDate = new Timestamp(System.currentTimeMillis());
+            this.symptom = symptom;
+            this.about = about;
+            this.uniqueIDPipeline = uniqueIDPipeline;
+            this.requestID = requestID;
         }
 
         public Timestamp getCreationDate() {
             return creationDate;
         }
 
-        public SymptomMAPEK getMsgType() {
+        public SymptomMAPEK getSymptom() {
             return symptom;
         }
 
@@ -130,8 +149,16 @@ public class MAPEKInternalMsg {
             return attachedRequest;
         }
 
-        public String getUniqueIDRemovedPipeline() {
-            return uniqueIDRemovedPipeline;
+        public String getUniqueIDPipeline() {
+            return uniqueIDPipeline;
+        }
+
+        public String getRequestID() {
+            return requestID;
+        }
+
+        public List<String> getConcernedRequests() {
+            return concernedRequests;
         }
     }
 
@@ -316,6 +343,10 @@ public class MAPEKInternalMsg {
 
         public ObservationLevel getAskedObsLevel() {
             return askedObsLevel;
+        }
+
+        public void setPipelineToEnforce(IPipeline pipelineToEnforce) {
+            this.pipelineToEnforce = pipelineToEnforce;
         }
     }
 

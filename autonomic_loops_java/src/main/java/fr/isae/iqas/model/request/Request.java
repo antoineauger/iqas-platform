@@ -264,4 +264,21 @@ public class Request {
     public ObservationLevel getObs_level() {
         return obs_level;
     }
+
+    public @JsonIgnore String getAbbrvObsLevel() {
+        switch (obs_level) {
+            case RAW_DATA:
+                return "RD";
+            case INFORMATION:
+                return "INFO";
+            case KNOWLEDGE:
+                return "KNOW";
+            default:
+                return "RD";
+        }
+    }
+
+    public @JsonIgnore boolean isInterestedIn(QoOAttribute attribute) {
+        return this.getQooConstraints().getInterested_in().contains(attribute);
+    }
 }

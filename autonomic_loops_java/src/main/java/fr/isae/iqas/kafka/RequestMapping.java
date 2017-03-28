@@ -27,6 +27,13 @@ public class RequestMapping {
         this.allTopics = new ConcurrentHashMap<>();
     }
 
+    public  @JsonIgnore RequestMapping(RequestMapping requestMappingToClone) {
+        this.request_id = requestMappingToClone.request_id;
+        this.constructedFromRequest = requestMappingToClone.constructedFromRequest;
+        this.dependentRequests = requestMappingToClone.dependentRequests;
+        this.allTopics = requestMappingToClone.allTopics;
+    }
+
     public RequestMapping(Document bsonDocument) {
         this.request_id = bsonDocument.getString("request_id");
         this.constructedFromRequest = bsonDocument.getString("constructed_from");

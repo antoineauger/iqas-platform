@@ -21,6 +21,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static akka.pattern.Patterns.ask;
+import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 import static fr.isae.iqas.model.request.State.Status.*;
 
 /**
@@ -54,7 +55,7 @@ public class AutonomicManagerActor extends UntypedActor {
         TopicList topicList = fusekiController._findAllTopics();
         for (Topic t : topicList.topics) {
             String topicName = t.topic.split("#")[1];
-            TopicEntity topicEntityTemp = new TopicEntity(topicName);
+            TopicEntity topicEntityTemp = new TopicEntity(topicName, RAW_DATA);
             topicEntityTemp.setSource(topicName);
 
             ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.CREATE, topicName), new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {

@@ -1,8 +1,5 @@
 package fr.isae.iqas.kafka;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import org.bson.Document;
 
@@ -27,13 +24,27 @@ public class TopicEntity {
     private List<String> children;
     private Map<String, String> enforcedPipelines; // EnforcedPipelines with uniqueID
 
-    @JsonCreator
-    public TopicEntity(@JsonProperty("name") String name) {
+    public TopicEntity(TopicEntity topicEntityToClone) { // To clone TopicEntity object
+        this.level = topicEntityToClone.level;
+        this.name = topicEntityToClone.name;
+        this.isSource = topicEntityToClone.isSource;
+        this.isSink = topicEntityToClone.isSink;
+        this.observationLevel = topicEntityToClone.observationLevel;
+
+        this.parents = topicEntityToClone.parents;
+        this.children = topicEntityToClone.parents;
+        this.enforcedPipelines = topicEntityToClone.enforcedPipelines;
+
+        this.forTopic = topicEntityToClone.forTopic;
+        this.forApplication = topicEntityToClone.forApplication;
+    }
+
+    public TopicEntity(String name, ObservationLevel observation_level) {
         this.level = 0;
         this.name = name;
         this.isSource = false;
         this.isSink = false;
-        this.observationLevel = ObservationLevel.INFORMATION; //TODO make this dynamic
+        this.observationLevel = observation_level;
 
         this.parents = new ArrayList<>();
         this.children = new ArrayList<>();
@@ -43,7 +54,7 @@ public class TopicEntity {
         this.forApplication = "";
     }
 
-    public @JsonIgnore Document toBSON() {
+    public Document toBSON() {
         Document docToReturn = new Document();
         docToReturn.put("name", name);
         docToReturn.put("level", level);
@@ -103,11 +114,10 @@ public class TopicEntity {
         return isSink;
     }
 
-    public @JsonIgnore ObservationLevel getObservationLevel() {
+    public ObservationLevel getObservationLevel() {
         return observationLevel;
     }
 
-    @JsonProperty("observation_level")
     public String getObservationLevelString() {
         return observationLevel.toString();
     }
@@ -120,17 +130,14 @@ public class TopicEntity {
         return children;
     }
 
-    @JsonProperty("enforced_pipelines")
     public Map<String, String> getEnforcedPipelines() {
         return enforcedPipelines;
     }
 
-    @JsonProperty("for_topic")
     public String getForTopic() {
         return forTopic;
     }
 
-    @JsonProperty("for_application")
     public String getForApplication() {
         return forApplication;
     }
@@ -141,5 +148,9 @@ public class TopicEntity {
 
     public void setLevel(int level) {
         this.level = level;
+    }
+
+    public void setObservationLevel(ObservationLevel observationLevel) {
+        this.observationLevel = observationLevel;
     }
 }
