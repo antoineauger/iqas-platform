@@ -511,15 +511,21 @@ public class FusekiController {
      */
 
     public QoOCustomizableParamList _findAllQoOCustomizableParameters() {
+        Map<String, QoOCustomizableParam> processedParams = new ConcurrentHashMap<>();
+
         QuerySolution binding = null;
         QoOCustomizableParamList customizableParamList = new QoOCustomizableParamList();
         customizableParamList.customizable_params = new ArrayList<>();
 
         final String req = baseStringForRequests +
-                "SELECT ?param ?doc\n" +
+                "SELECT ?param ?doc ?impact ?capaVariation ?attrVariation\n" +
                 "WHERE {\n" +
                 "?param rdf:type qoo:QoOCustomizableParameter .\n" +
-                "?param qoo:documentation ?doc\n" +
+                "?param qoo:documentation ?doc .\n" +
+                "?param qoo:has ?effect .\n" +
+                "?effect qoo:impacts ?impact .\n" +
+                "?effect qoo:capabilityVariation ?capaVariation .\n" +
+                "?effect qoo:qooAttributeVariation ?attrVariation\n" +
                 "}";
 
         QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
@@ -531,12 +537,33 @@ public class FusekiController {
             String paramName = param.getURI().split("#")[1];
             Literal doc = binding.getLiteral("doc");
 
-            QoOCustomizableParam paramTemp = new QoOCustomizableParam();
-            paramTemp.param_name = paramName;
-            paramTemp.details = doc.getString();
+            Resource impact = (Resource) binding.get("impact");
+            String impactName = impact.getURI().split("#")[1];
+            Literal capaVariation = binding.getLiteral("capaVariation");
+            Literal attrVariation = binding.getLiteral("attrVariation");
 
-            customizableParamList.customizable_params.add(paramTemp);
+            QoOCustomizableParam paramTemp;
+            if (!processedParams.containsKey(paramName)) {
+                paramTemp = new QoOCustomizableParam();
+                paramTemp.param_name = paramName;
+                paramTemp.details = doc.getString();
+                paramTemp.has = new ArrayList<>();
+            }
+            else {
+                paramTemp = processedParams.get(paramName);
+            }
+            QoOEffect qoOEffect = new QoOEffect();
+            qoOEffect.impacts = impactName;
+            qoOEffect.capabilityVariation = capaVariation.getString();
+            qoOEffect.qooAttributeVariation = attrVariation.getString();
+            paramTemp.has.add(qoOEffect);
+
+            processedParams.put(paramName, paramTemp);
         }
+
+        processedParams.forEach((k, v) -> {
+            customizableParamList.customizable_params.add(v);
+        });
 
         if (binding == null) {
             return null;

@@ -42,15 +42,31 @@ public class MonitorActor extends UntypedActor {
 
     private FiniteDuration tickMAPEK = null;
     private int nbEventsBeforeSymptom = 5;
+    private Map<String, Set<String>> mappingPipelinesRequests; // PipelineUniqueIDs <-> [concerned Request IDs]
 
-    private Map<String, Integer> obsRateBuffer; // Request ID <-> #Symptoms
-    private Map<String, Buffer> qooQualityBuffer; // Request ID <-> [QoOReportMessages]
-    private Map<String, Long> startDateCount; // Request ID <-> Timestamps
-    private Map<String, Integer> countByRequest; // Request ID <-> count (int)
-    private Map<String, Set<String>> mappingPipelinesRequests; // PipelineUniqueID <-> [concerned Request IDs]
-    private Map<String, ObservationRate> minObsRateByRequest; // Request ID <-> Durations
-    private Map<String, ObservationRate> maxObsRateByRequest; // Request ID <-> Durations
+    // For ObsRate reporting
+    private Map<String, Integer> numberObservedSymptomsObsRate; // RequestIDs <-> #Symptoms for ObsRate
+    private Map<String, Long> startDateCount; // RequestIDs <-> Timestamps
+    private Map<String, Integer> countByRequest; // RequestIDs <-> count (int)
+    private Map<String, ObservationRate> minObsRateByRequest; // RequestIDs <-> Durations
+    private Map<String, ObservationRate> maxObsRateByRequest; // RequestIDs <-> Durations
 
+    // For QoO reporting
+    private Map<String, Buffer> qooQualityBuffer; // RequestIDs <-> [QoOReportMessages]
+    private Map<String, Long> maxAgeByRequest; // RequestIDs <-> Maximum admissible age (long)
+
+    /**
+     * Monitor actor for the MAPE-K loop of the iQAS platform
+     *
+     * Emits symptoms for:
+     *      -insufficient observation rate (parameter: obsRate_min) <-> OBS_RATE
+     *      -expired observations (parameter: age_max) <-> OBS_FRESHNESS
+     *      -inaccurate observations regarding sensor capabilities (inferred from the iQAS QoO-ontology) <-> OBS_ACCURACY
+     *
+     * @param prop
+     * @param mongoController
+     * @param fusekiController
+     */
     public MonitorActor(Properties prop, MongoController mongoController, FusekiController fusekiController) {
         this.prop = prop;
         this.mongoController = mongoController;
@@ -58,14 +74,16 @@ public class MonitorActor extends UntypedActor {
 
         this.tickMAPEK = new FiniteDuration(Long.valueOf(prop.getProperty("tick_mapek_seconds")), TimeUnit.SECONDS);
         this.nbEventsBeforeSymptom = Integer.parseInt(prop.getProperty("nb_events_before_symptom"));
+        this.mappingPipelinesRequests = new ConcurrentHashMap<>();
 
-        this.qooQualityBuffer = new ConcurrentHashMap<>();
+        this.numberObservedSymptomsObsRate = new ConcurrentHashMap<>();
         this.startDateCount = new ConcurrentHashMap<>();
         this.countByRequest = new ConcurrentHashMap<>();
-        this.obsRateBuffer = new ConcurrentHashMap<>();
-        this.mappingPipelinesRequests = new ConcurrentHashMap<>();
         this.minObsRateByRequest = new ConcurrentHashMap<>();
         this.maxObsRateByRequest = new ConcurrentHashMap<>();
+
+        this.qooQualityBuffer = new ConcurrentHashMap<>();
+        this.maxAgeByRequest = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -91,18 +109,20 @@ public class MonitorActor extends UntypedActor {
             Map<String, List<String>> requestsWithInsuficientObsRate = new ConcurrentHashMap<>(); // UniquePipelineIDs <-> [ImpactedRequests]
             mappingPipelinesRequests.forEach((k, v) -> {
                 for (String s : v) {
-                    long step = new FiniteDuration(1, minObsRateByRequest.get(s).getUnit()).toMillis();
-                    if (System.currentTimeMillis() - startDateCount.get(s) > step) {
-                        if (countByRequest.get(s) < minObsRateByRequest.get(s).getValue()) {
-                            obsRateBuffer.put(s, obsRateBuffer.get(s) + 1);
-                            if (obsRateBuffer.get(s) >= nbEventsBeforeSymptom) {
-                                requestsWithInsuficientObsRate.putIfAbsent(k, new ArrayList<>());
-                                requestsWithInsuficientObsRate.get(k).add(s);
-                                obsRateBuffer.put(s, 0);
+                    if (minObsRateByRequest.containsKey(s)) { // If there was no formatting problem
+                        long step = new FiniteDuration(1, minObsRateByRequest.get(s).getUnit()).toMillis();
+                        if (System.currentTimeMillis() - startDateCount.get(s) > step) {
+                            if (countByRequest.get(s) < minObsRateByRequest.get(s).getValue()) {
+                                numberObservedSymptomsObsRate.put(s, numberObservedSymptomsObsRate.get(s) + 1);
+                                if (numberObservedSymptomsObsRate.get(s) >= nbEventsBeforeSymptom) {
+                                    requestsWithInsuficientObsRate.putIfAbsent(k, new ArrayList<>());
+                                    requestsWithInsuficientObsRate.get(k).add(s);
+                                    numberObservedSymptomsObsRate.put(s, 0);
+                                }
                             }
+                            startDateCount.put(s, System.currentTimeMillis());
+                            countByRequest.put(s, 0);
                         }
-                        startDateCount.put(s, System.currentTimeMillis());
-                        countByRequest.put(s, 0);
                     }
                 }
             });
@@ -120,10 +140,10 @@ public class MonitorActor extends UntypedActor {
 
             if (requestTemp.getCurrent_status() == SUBMITTED) { // Valid Request
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.REQUEST, requestTemp);
-
+                storeFreshnessRequirements(requestTemp);
                 storeObsRateRequirements(requestTemp);
                 qooQualityBuffer.put(requestTemp.getRequest_id(), new CircularFifoBuffer(nbEventsBeforeSymptom));
-                obsRateBuffer.put(requestTemp.getRequest_id(), 0);
+                numberObservedSymptomsObsRate.put(requestTemp.getRequest_id(), 0);
                 startDateCount.put(requestTemp.getRequest_id(), System.currentTimeMillis());
                 countByRequest.put(requestTemp.getRequest_id(), 0);
 
@@ -135,7 +155,7 @@ public class MonitorActor extends UntypedActor {
                 qooQualityBuffer.remove(requestTemp.getRequest_id());
                 minObsRateByRequest.remove(requestTemp.getRequest_id());
                 maxObsRateByRequest.remove(requestTemp.getRequest_id());
-                obsRateBuffer.remove(requestTemp.getRequest_id());
+                numberObservedSymptomsObsRate.remove(requestTemp.getRequest_id());
                 startDateCount.remove(requestTemp.getRequest_id());
                 countByRequest.remove(requestTemp.getRequest_id());
 
@@ -144,6 +164,7 @@ public class MonitorActor extends UntypedActor {
             }
             else if (requestTemp.getCurrent_status() == UPDATED) { // Existing Request updated by the user
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.UPDATED, EntityMAPEK.REQUEST, requestTemp);
+                storeFreshnessRequirements(requestTemp);
                 storeObsRateRequirements(requestTemp);
                 forwardToAnalyzeActor(symptomMsgToForward);
             }
@@ -205,7 +226,7 @@ public class MonitorActor extends UntypedActor {
             }
             else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.REMOVED && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline removal
                 log.info("ObsRatePipeline " + symptomMAPEKMsg.getUniqueIDPipeline() + " is no longer active, removing it");
-                obsRateBuffer.remove(symptomMAPEKMsg.getUniqueIDPipeline());
+                numberObservedSymptomsObsRate.remove(symptomMAPEKMsg.getUniqueIDPipeline());
                 mappingPipelinesRequests.remove(symptomMAPEKMsg.getUniqueIDPipeline());
             }
         }
@@ -263,30 +284,38 @@ public class MonitorActor extends UntypedActor {
                 if (k.startsWith("obsRate_")) {
                     // We parse the obsRate according the pattern int/unit
                     String[] unitValue = v.split("/");
-                    long obsRateVal = Long.parseLong(unitValue[0]);
-                    TimeUnit obsRateUnit = null;
-                    if (unitValue.length == 2 && unitValue[1].equals("s")) {
-                        obsRateUnit = TimeUnit.SECONDS;
-                    }
-                    else if (unitValue.length == 2 && unitValue[1].equals("min")) {
-                        obsRateUnit = TimeUnit.MINUTES;
-                    }
-                    else if (unitValue.length == 2 && unitValue[1].equals("hour")) {
-                        obsRateUnit = TimeUnit.HOURS;
-                    }
-                    else {
-                        return;
-                    }
 
-                    // min or max obsRate requirement ?
-                    String[] keyType = k.split("_");
-                    if (keyType.length == 2 && keyType[1].equals("min")) {
-                        obsRateMinVal = obsRateVal;
-                        obsRateMinUnit = obsRateUnit;
-                    }
-                    else if (keyType.length == 2 && keyType[1].equals("max")) {
-                        obsRateMaxVal = obsRateVal;
-                        obsRateMaxUnit = obsRateUnit;
+                    try {
+                        long obsRateVal = Long.parseLong(unitValue[0]);
+                        TimeUnit obsRateUnit = null;
+                        if (unitValue.length == 2 && unitValue[1].equals("s")) {
+                            obsRateUnit = TimeUnit.SECONDS;
+                        }
+                        else if (unitValue.length == 2 && unitValue[1].equals("min")) {
+                            obsRateUnit = TimeUnit.MINUTES;
+                        }
+                        else if (unitValue.length == 2 && unitValue[1].equals("hour")) {
+                            obsRateUnit = TimeUnit.HOURS;
+                        }
+                        else {
+                            return;
+                        }
+
+                        // min or max obsRate requirement ?
+                        String[] keyType = k.split("_");
+                        if (keyType.length == 2 && keyType[1].equals("min")) {
+                            obsRateMinVal = obsRateVal;
+                            obsRateMinUnit = obsRateUnit;
+                        }
+                        else if (keyType.length == 2 && keyType[1].equals("max")) {
+                            obsRateMaxVal = obsRateVal;
+                            obsRateMaxUnit = obsRateUnit;
+                        }
+                    } catch (NumberFormatException | NullPointerException e) { // To avoid malformed QoO requirements
+                        log.error("Error when trying to parse " + k + " parameter: " + e.toString());
+                        obsRateMaxUnit = null;
+                        obsRateMinUnit = null;
+                        break;
                     }
                 }
             }
@@ -299,6 +328,25 @@ public class MonitorActor extends UntypedActor {
             }
             else if (obsRateMinUnit != null && obsRateMaxUnit != null) {
                 maxObsRateByRequest.put(incomingRequest.getRequest_id(), new ObservationRate(obsRateMaxVal, obsRateMaxUnit));
+            }
+        }
+    }
+
+    private void storeFreshnessRequirements(Request incomingRequest) {
+        if (incomingRequest.isInterestedIn(QoOAttribute.OBS_FRESHNESS)) { // if it expresses interest in OBS_FRESHNESS
+            for (Object o : incomingRequest.getQooConstraints().getAdditional_params().entrySet()) {
+                Map.Entry pair = (Map.Entry) o;
+                String k = (String) pair.getKey();
+                String v = (String) pair.getValue();
+                if (k.equals("age_max")) {
+                    try {
+                        long maxAge = Long.parseLong(v);
+                        maxAgeByRequest.put(incomingRequest.getRequest_id(), maxAge);
+                        break;
+                    } catch (NumberFormatException | NullPointerException e) { // To avoid malformed QoO requirements
+                        log.error("Error when trying to parse age_max parameter: " + e.toString());
+                    }
+                }
             }
         }
     }

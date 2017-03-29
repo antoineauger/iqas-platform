@@ -3,6 +3,8 @@ package fr.isae.iqas.model.jsonld;
 import ioinformarics.oss.jackson.module.jsonld.annotation.JsonldProperty;
 import ioinformarics.oss.jackson.module.jsonld.annotation.JsonldType;
 
+import java.util.List;
+
 /**
  * Created by an.auger on 15/02/2017.
  */
@@ -13,4 +15,6 @@ public class QoOCustomizableParam {
 
     @JsonldProperty("http://isae.fr/iqas/qoo-ontology#documentation")
     public String details;
+
+    public List<QoOEffect> has;
 }
