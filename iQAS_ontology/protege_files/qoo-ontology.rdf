@@ -1009,12 +1009,6 @@
         </rdfs:subClassOf>
         <rdfs:subClassOf>
             <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#impacts"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-            </owl:Restriction>
-        </rdfs:subClassOf>
-        <rdfs:subClassOf>
-            <owl:Restriction>
                 <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#associatedTo"/>
                 <owl:allValuesFrom>
                     <owl:Class>
@@ -1030,6 +1024,13 @@
             <owl:Restriction>
                 <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#impacts"/>
                 <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#impacts"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
             </owl:Restriction>
         </rdfs:subClassOf>
     </owl:Class>
@@ -1795,6 +1796,14 @@
     
 
 
+    <!-- http://isae.fr/iqas/qoo-ontology#OBS_ACCURACY -->
+
+    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#OBS_ACCURACY">
+        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+    </owl:NamedIndividual>
+    
+
+
     <!-- http://isae.fr/iqas/qoo-ontology#OBS_FRESHNESS -->
 
     <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#OBS_FRESHNESS">
@@ -1803,9 +1812,9 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#OBS_ACCURACY -->
+    <!-- http://isae.fr/iqas/qoo-ontology#OBS_RATE -->
 
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#OBS_ACCURACY">
+    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#OBS_RATE">
         <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
     </owl:NamedIndividual>
     

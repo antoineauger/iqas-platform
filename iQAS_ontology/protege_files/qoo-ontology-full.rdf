@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<rdf:RDF xmlns="http://isae.fr/iqas/qoo-ontology#"
-     xml:base="http://isae.fr/iqas/qoo-ontology"
+<rdf:RDF xmlns="http://www.isae.fr/iqas/qoo-ontology#"
+     xml:base="http://www.isae.fr/iqas/qoo-ontology"
      xmlns:iot-lite="http://purl.oclc.org/NET/UNIS/fiware/iot-lite#"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:owl="http://www.w3.org/2002/07/owl#"
@@ -9,7 +9,7 @@
      xmlns:wgs84_pos="http://www.w3.org/2003/01/geo/wgs84_pos#"
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
      xmlns:dc="http://purl.org/dc/elements/1.1/">
-    <owl:Ontology rdf:about="http://isae.fr/iqas/qoo-ontology">
+    <owl:Ontology rdf:about="http://www.isae.fr/iqas/qoo-ontology">
         <rdfs:label xml:lang="en">qoo-ontology</rdfs:label>
         <dc:description xml:lang="en">The qoo-ontology is a lightweight ontology based on IoT-Lite and SSN to describe and characterized sensors, observations and Quality of Observation (QoO).</dc:description>
         <owl:versionInfo xml:lang="en">1.0.0</owl:versionInfo>
@@ -292,6 +292,7 @@
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#impacts">
         <owl:inverseOf rdf:resource="http://isae.fr/iqas/qoo-ontology#isImpactedBy"/>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
         <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
         <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
     </owl:ObjectProperty>
@@ -310,6 +311,7 @@
     <!-- http://isae.fr/iqas/qoo-ontology#isImpactedBy -->
 
     <owl:ObjectProperty rdf:about="http://isae.fr/iqas/qoo-ontology#isImpactedBy">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#InverseFunctionalProperty"/>
         <rdfs:domain rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
         <rdfs:range rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOEffect"/>
     </owl:ObjectProperty>
@@ -936,12 +938,6 @@
         </rdfs:subClassOf>
         <rdfs:subClassOf>
             <owl:Restriction>
-                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#impacts"/>
-                <owl:someValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
-            </owl:Restriction>
-        </rdfs:subClassOf>
-        <rdfs:subClassOf>
-            <owl:Restriction>
                 <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#associatedTo"/>
                 <owl:allValuesFrom>
                     <owl:Class>
@@ -957,6 +953,13 @@
             <owl:Restriction>
                 <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#impacts"/>
                 <owl:allValuesFrom rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://isae.fr/iqas/qoo-ontology#impacts"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
             </owl:Restriction>
         </rdfs:subClassOf>
     </owl:Class>
@@ -1725,6 +1728,15 @@
     
 
 
+    <!-- http://isae.fr/iqas/qoo-ontology#OBS_ACCURACY -->
+
+    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#OBS_ACCURACY">
+        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
+        <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
+    </owl:NamedIndividual>
+    
+
+
     <!-- http://isae.fr/iqas/qoo-ontology#OBS_FRESHNESS -->
 
     <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#OBS_FRESHNESS">
@@ -1734,9 +1746,9 @@
     
 
 
-    <!-- http://isae.fr/iqas/qoo-ontology#OBS_ACCURACY -->
+    <!-- http://isae.fr/iqas/qoo-ontology#OBS_RATE -->
 
-    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#OBS_ACCURACY">
+    <owl:NamedIndividual rdf:about="http://isae.fr/iqas/qoo-ontology#OBS_RATE">
         <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QoOAttribute"/>
         <rdf:type rdf:resource="http://isae.fr/iqas/qoo-ontology#QualityofObservation"/>
     </owl:NamedIndividual>

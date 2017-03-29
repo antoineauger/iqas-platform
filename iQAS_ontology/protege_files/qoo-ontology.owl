@@ -93,10 +93,10 @@
         <ObjectProperty IRI="requiresQoO"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:Latency"/>
+        <ObjectProperty abbreviatedIRI="ssn:observationResult"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:observationResult"/>
+        <Class abbreviatedIRI="ssn:Latency"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="geo:long"/>
@@ -270,9 +270,6 @@
         <AnnotationProperty abbreviatedIRI="geo:alt"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="OBS_ACCURACY"/>
-    </Declaration>
-    <Declaration>
         <ObjectProperty IRI="increases"/>
     </Declaration>
     <Declaration>
@@ -313,6 +310,9 @@
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="offers"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="OBS_ACCURACY"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:Resolution"/>
@@ -420,6 +420,9 @@
         <DataProperty IRI="hasMinValue"/>
     </Declaration>
     <Declaration>
+        <NamedIndividual IRI="OBS_RATE"/>
+    </Declaration>
+    <Declaration>
         <ObjectProperty IRI="canBeRetrievedThrough"/>
     </Declaration>
     <Declaration>
@@ -525,13 +528,6 @@
     </SubClassOf>
     <SubClassOf>
         <Class IRI="QoOEffect"/>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="impacts"/>
-            <Class IRI="QoOAttribute"/>
-        </ObjectSomeValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class IRI="QoOEffect"/>
         <ObjectAllValuesFrom>
             <ObjectProperty IRI="associatedTo"/>
             <ObjectUnionOf>
@@ -546,6 +542,13 @@
             <ObjectProperty IRI="impacts"/>
             <Class IRI="QoOAttribute"/>
         </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="QoOEffect"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty IRI="impacts"/>
+            <Class IRI="QoOAttribute"/>
+        </ObjectExactCardinality>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="QoOParameter"/>
@@ -1183,11 +1186,15 @@
     </ClassAssertion>
     <ClassAssertion>
         <Class IRI="QoOAttribute"/>
+        <NamedIndividual IRI="OBS_ACCURACY"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="QoOAttribute"/>
         <NamedIndividual IRI="OBS_FRESHNESS"/>
     </ClassAssertion>
     <ClassAssertion>
         <Class IRI="QoOAttribute"/>
-        <NamedIndividual IRI="OBS_ACCURACY"/>
+        <NamedIndividual IRI="OBS_RATE"/>
     </ClassAssertion>
     <InverseObjectProperties>
         <ObjectProperty IRI="associatedTo"/>

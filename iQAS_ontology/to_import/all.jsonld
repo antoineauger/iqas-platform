@@ -252,22 +252,18 @@
                   "@type": "qoo:QoOEffect",
                   "qoo:capabilityVariation": "CONSTANT",
                   "qoo:qooAttributeVariation": "HIGH",
-                  "qoo:impacts": [
-                    {
-                      "@id": "qoo:OBS_ACCURACY"
-                    }
-                  ]
+                  "qoo:impacts": {
+                    "@id": "qoo:OBS_ACCURACY"
+                  }
                 },
                 {
                   "@id": "qoo:SimpleFilteringPipeline_threshold_min_effect_2",
                   "@type": "qoo:QoOEffect",
                   "qoo:capabilityVariation": "CONSTANT",
                   "qoo:qooAttributeVariation": "CONSTANT",
-                  "qoo:impacts": [
-                    {
-                      "@id": "qoo:OBS_FRESHNESS"
-                    }
-                  ]
+                  "qoo:impacts": {
+                    "@id": "qoo:OBS_FRESHNESS"
+                  }
                 }
               ]
             }
@@ -287,11 +283,9 @@
               "@type": "qoo:QoOEffect",
               "qoo:capabilityVariation": "CONSTANT",
               "qoo:qooAttributeVariation": "CONSTANT",
-              "qoo:impacts": [
-                {
-                  "@id": "qoo:OBS_RATE"
-                }
-              ]
+              "qoo:impacts": {
+                "@id": "qoo:OBS_RATE"
+              }
             }
           ]
         }
@@ -309,11 +303,29 @@
               "@type": "qoo:QoOEffect",
               "qoo:capabilityVariation": "CONSTANT",
               "qoo:qooAttributeVariation": "CONSTANT",
-              "qoo:impacts": [
-                {
-                  "@id": "qoo:OBS_RATE"
-                }
-              ]
+              "qoo:impacts": {
+                "@id": "qoo:OBS_RATE"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "qoo:allowsToSet": [
+        {
+          "@id": "qoo:age_max",
+          "@type": "qoo:QoOCustomizableParameter",
+          "qoo:documentation": "A string (int) that indicates the maximum admissible age (expressed in seconds) of observations for this Request.",
+          "qoo:has": [
+            {
+              "@id": "qoo:General_ageMax_effect_1",
+              "@type": "qoo:QoOEffect",
+              "qoo:capabilityVariation": "CONSTANT",
+              "qoo:qooAttributeVariation": "CONSTANT",
+              "qoo:impacts": {
+                "@id": "qoo:OBS_FRESHNESS"
+              }
             }
           ]
         }
