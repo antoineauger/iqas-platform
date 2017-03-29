@@ -20,10 +20,9 @@ public class MySpecificQoOAttributeComputation implements IComputeQoOAttributes 
         Double currentValue = information.getValue();
         Double accuracy = 0.0;
 
-        if (qooParams.get(information.getProducer()) != null) {
-
-            if (qooParams.get(information.getProducer()).get("min_value") != null &&
-                    qooParams.get(information.getProducer()).get("max_value") != null) {
+        if (qooParams.containsKey(information.getProducer())) {
+            if (qooParams.get(information.getProducer()).containsKey("min_value") &&
+                    qooParams.get(information.getProducer()).containsKey("max_value")) {
                 Double min_value = Double.valueOf(qooParams.get(information.getProducer()).get("min_value"));
                 Double max_value = Double.valueOf(qooParams.get(information.getProducer()).get("max_value"));
 

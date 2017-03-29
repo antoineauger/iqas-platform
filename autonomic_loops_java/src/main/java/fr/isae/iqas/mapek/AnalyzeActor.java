@@ -12,13 +12,19 @@ import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
 import fr.isae.iqas.model.jsonld.Topic;
 import fr.isae.iqas.model.jsonld.TopicList;
+import fr.isae.iqas.model.message.MAPEKSymptomMsgWithDate;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
+import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.bson.types.ObjectId;
 import scala.concurrent.Future;
+import scala.concurrent.duration.FiniteDuration;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
@@ -34,14 +40,46 @@ public class AnalyzeActor extends UntypedActor {
     private MongoController mongoController;
     private FusekiController fusekiController;
 
+    private FiniteDuration tickMAPEK = null;
+    private FiniteDuration symptomLifetime = null;
+    private Map<String, CircularFifoBuffer> receivedObsRateSymptoms; // UniquePipelineIDs <-> [<SymptomMsg,received date>]
+    private Map<String, CircularFifoBuffer> receivedQoOSymptoms; // RequestIDs <-> [<SymptomMsg,received date>]
+
     public AnalyzeActor(Properties prop, MongoController mongoController, FusekiController fusekiController) {
         this.prop = prop;
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
+
+        this.tickMAPEK = new FiniteDuration(Long.valueOf(prop.getProperty("tick_mapek_seconds")), TimeUnit.SECONDS);
+        this.symptomLifetime = new FiniteDuration(Long.valueOf(prop.getProperty("symptom_lifetime_seconds")), TimeUnit.SECONDS);
+
+        this.receivedObsRateSymptoms = new ConcurrentHashMap<>();
+        this.receivedQoOSymptoms = new ConcurrentHashMap<>();
+    }
+
+    @Override
+    public void preStart() {
+        getContext().system().scheduler().scheduleOnce(
+                tickMAPEK,
+                getSelf(), "tick", getContext().dispatcher(), getSelf());
+    }
+
+    // override postRestart so we don't call preStart and schedule a new message
+    @Override
+    public void postRestart(Throwable reason) {
     }
 
     @Override
     public void onReceive(Object message) throws Exception {
+        if (message.equals("tick")) {
+            // send another periodic tick after the specified delay
+            getContext().system().scheduler().scheduleOnce(
+                    tickMAPEK,
+                    getSelf(), "tick", getContext().dispatcher(), getSelf());
+
+            clearExpiredSymptoms(receivedObsRateSymptoms, symptomLifetime);
+            clearExpiredSymptoms(receivedQoOSymptoms, symptomLifetime);
+        }
         /**
          * SymptomMsg messages received from MonitorActor
          */
@@ -190,6 +228,8 @@ public class AnalyzeActor extends UntypedActor {
             // Requests
             else if (symptomMsg.getAbout() == EntityMAPEK.OBS_RATE) {
                 log.info("Received Symptom : {} {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getUniqueIDPipeline(), symptomMsg.getConcernedRequests().toString());
+                receivedObsRateSymptoms.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new CircularFifoBuffer(5));
+                receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).add(new MAPEKSymptomMsgWithDate(symptomMsg));
             }
         }
         /**
@@ -220,5 +260,25 @@ public class AnalyzeActor extends UntypedActor {
                 }
             }
         }, getContext().dispatcher());
+    }
+
+    /**
+     * This method is called at each MAPE-K tick in order to delete the expired Symptom messages stored in buffers
+     * @param mapToCheck
+     * @param symptomLifetime
+     */
+    private void clearExpiredSymptoms(Map<String,CircularFifoBuffer> mapToCheck, FiniteDuration symptomLifetime) {
+        FiniteDuration now = new FiniteDuration(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+        for (Iterator<Map.Entry<String, CircularFifoBuffer>> it = mapToCheck.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<String, CircularFifoBuffer> pair = it.next();
+            CircularFifoBuffer buffer = pair.getValue();
+            buffer.removeIf(o -> {
+                MAPEKSymptomMsgWithDate msg = (MAPEKSymptomMsgWithDate) o;
+                return now.minus(msg.getSymptomCreationDate()).gt(symptomLifetime);
+            });
+            if (buffer.size() == 0) {
+                it.remove();
+            }
+        }
     }
 }

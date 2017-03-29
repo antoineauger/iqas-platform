@@ -125,7 +125,7 @@ public class MAPEKInternalMsg {
             this.concernedRequests = concernedRequests;
         }
 
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String uniqueIDPipeline, String requestID) { // For Pipeline creation (to notice Monitor)
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String uniqueIDPipeline, String requestID) { // For Pipeline creation (Plan -> Monitor)
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.symptom = symptom;
             this.about = about;

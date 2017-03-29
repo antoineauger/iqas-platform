@@ -17,7 +17,6 @@ import fr.isae.iqas.model.request.Request;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.util.*;
@@ -41,6 +40,9 @@ public class MonitorActor extends UntypedActor {
     private MongoController mongoController;
     private FusekiController fusekiController;
 
+    private FiniteDuration tickMAPEK = null;
+    private int nbEventsBeforeSymptom = 5;
+
     private Map<String, Integer> obsRateBuffer; // Request ID <-> #Symptoms
     private Map<String, Buffer> qooQualityBuffer; // Request ID <-> [QoOReportMessages]
     private Map<String, Long> startDateCount; // Request ID <-> Timestamps
@@ -54,6 +56,9 @@ public class MonitorActor extends UntypedActor {
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
 
+        this.tickMAPEK = new FiniteDuration(Long.valueOf(prop.getProperty("tick_mapek_seconds")), TimeUnit.SECONDS);
+        this.nbEventsBeforeSymptom = Integer.parseInt(prop.getProperty("nb_events_before_symptom"));
+
         this.qooQualityBuffer = new ConcurrentHashMap<>();
         this.startDateCount = new ConcurrentHashMap<>();
         this.countByRequest = new ConcurrentHashMap<>();
@@ -66,7 +71,7 @@ public class MonitorActor extends UntypedActor {
     @Override
     public void preStart() {
         getContext().system().scheduler().scheduleOnce(
-                Duration.create(10, TimeUnit.MILLISECONDS),
+                tickMAPEK,
                 getSelf(), "tick", getContext().dispatcher(), getSelf());
     }
 
@@ -80,7 +85,7 @@ public class MonitorActor extends UntypedActor {
         if (message.equals("tick")) {
             // send another periodic tick after the specified delay
             getContext().system().scheduler().scheduleOnce(
-                    Duration.create(1, TimeUnit.SECONDS),
+                    tickMAPEK,
                     getSelf(), "tick", getContext().dispatcher(), getSelf());
 
             Map<String, List<String>> requestsWithInsuficientObsRate = new ConcurrentHashMap<>(); // UniquePipelineIDs <-> [ImpactedRequests]
@@ -90,7 +95,7 @@ public class MonitorActor extends UntypedActor {
                     if (System.currentTimeMillis() - startDateCount.get(s) > step) {
                         if (countByRequest.get(s) < minObsRateByRequest.get(s).getValue()) {
                             obsRateBuffer.put(s, obsRateBuffer.get(s) + 1);
-                            if (obsRateBuffer.get(s) == 5) {
+                            if (obsRateBuffer.get(s) >= nbEventsBeforeSymptom) {
                                 requestsWithInsuficientObsRate.putIfAbsent(k, new ArrayList<>());
                                 requestsWithInsuficientObsRate.get(k).add(s);
                                 obsRateBuffer.put(s, 0);
@@ -117,7 +122,7 @@ public class MonitorActor extends UntypedActor {
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.REQUEST, requestTemp);
 
                 storeObsRateRequirements(requestTemp);
-                qooQualityBuffer.put(requestTemp.getRequest_id(), new CircularFifoBuffer(5));
+                qooQualityBuffer.put(requestTemp.getRequest_id(), new CircularFifoBuffer(nbEventsBeforeSymptom));
                 obsRateBuffer.put(requestTemp.getRequest_id(), 0);
                 startDateCount.put(requestTemp.getRequest_id(), System.currentTimeMillis());
                 countByRequest.put(requestTemp.getRequest_id(), 0);
@@ -169,14 +174,12 @@ public class MonitorActor extends UntypedActor {
          * QoOReportMsg messages
          */
         else if (message instanceof QoOReportMsg) {
-            /*QoOReportMsg tempQoOReportMsg = (QoOReportMsg) message;
+            QoOReportMsg tempQoOReportMsg = (QoOReportMsg) message;
             if (tempQoOReportMsg.getQooAttributesMap().size() > 0) {
                 log.info("QoO report message: {} {} {} {}", tempQoOReportMsg.getUniquePipelineID(), tempQoOReportMsg.getProducer(), tempQoOReportMsg.getRequestID(), tempQoOReportMsg.getQooAttributesMap().toString());
-                if (!qooQualityBuffer.containsKey(tempQoOReportMsg.getRequestID())) {
-                    qooQualityBuffer.put(tempQoOReportMsg.getRequestID(), new CircularFifoBuffer(5));
-                }
+                qooQualityBuffer.putIfAbsent(tempQoOReportMsg.getRequestID(), new CircularFifoBuffer(5));
                 qooQualityBuffer.get(tempQoOReportMsg.getRequestID()).add(new QoOReportMsg(tempQoOReportMsg));
-            }*/
+            }
 
             // TODO to remove
             /*log.info("Quality Buffer:");
@@ -197,9 +200,7 @@ public class MonitorActor extends UntypedActor {
             SymptomMsg symptomMAPEKMsg = (SymptomMsg) message;
             if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.NEW && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline creation
                 log.info("New ObsRatePipeline: {} {}", symptomMAPEKMsg.getUniqueIDPipeline(), symptomMAPEKMsg.getRequestID());
-                if (!mappingPipelinesRequests.containsKey(symptomMAPEKMsg.getUniqueIDPipeline())) {
-                    mappingPipelinesRequests.put(symptomMAPEKMsg.getUniqueIDPipeline(), new HashSet<>());
-                }
+                mappingPipelinesRequests.putIfAbsent(symptomMAPEKMsg.getUniqueIDPipeline(), new HashSet<>());
                 mappingPipelinesRequests.get(symptomMAPEKMsg.getUniqueIDPipeline()).add(symptomMAPEKMsg.getRequestID());
             }
             else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.REMOVED && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline removal

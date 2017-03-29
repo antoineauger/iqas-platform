@@ -13,6 +13,8 @@ import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.KafkaTopicMsg;
 import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
+import fr.isae.iqas.model.jsonld.SensorCapability;
+import fr.isae.iqas.model.jsonld.SensorCapabilityList;
 import fr.isae.iqas.model.jsonld.VirtualSensor;
 import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
@@ -32,6 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static akka.dispatch.Futures.future;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
 
 /**
@@ -43,6 +46,8 @@ public class PlanActor extends UntypedActor {
     private Properties prop;
     private MongoController mongoController;
     private FusekiController fusekiController;
+
+    private FiniteDuration reportIntervalRateAndQoO = null;
 
     private ActorRef kafkaAdminActor;
     private ActorRef monitorActor;
@@ -58,6 +63,8 @@ public class PlanActor extends UntypedActor {
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
         this.kafkaAdminActor = kafkaAdminActor;
+
+        this.reportIntervalRateAndQoO = new FiniteDuration(Long.valueOf(prop.getProperty("report_interval_seconds")), TimeUnit.SECONDS);
 
         this.monitorActor = getContext().actorFor(getContext().parent().path().child("monitorActor"));
         this.actorPathRefs = new ConcurrentHashMap<>();
@@ -87,7 +94,6 @@ public class PlanActor extends UntypedActor {
                 // Creation of all topics
                 requestMapping.getAllTopics().forEach((key, value) -> {
                     if (!value.isSource()) {
-
                         ActionMsg action = new ActionMsg(ActionMAPEK.CREATE,
                                 EntityMAPEK.KAFKA_TOPIC,
                                 String.valueOf(key));
@@ -97,121 +103,25 @@ public class PlanActor extends UntypedActor {
                 });
 
                 if (requestMapping.getConstructedFromRequest().equals("")) { // The incoming request has no common points with the enforced ones
-                    // Primary sources and filtering by sensors
-                    String pipelineID = "";
-                    String tempID = "";
-                    Set<String> topicBaseToPullFrom = new HashSet<>();
-                    TopicEntity nextTopic = null;
-                    for (TopicEntity t : requestMapping.getPrimarySources()) {
-                        topicBaseToPullFrom.add(t.getName());
-                        if (nextTopic == null) {
-                            nextTopic = requestMapping.getAllTopics().get(t.getChildren().get(0));
-                            if (pipelineID.equals("")) {
-                                pipelineID = t.getEnforcedPipelines().get(nextTopic.getName()).split("_")[0];
-                                tempID = t.getEnforcedPipelines().get(nextTopic.getName()).split("_")[1];
-                            }
-                        }
-                    }
-
-                    String finalNextTopicName = nextTopic.getName();
-                    String finalTempID = tempID;
-                    retrievePipeline(pipelineID).whenComplete((pipeline, throwable) -> {
-                        if (throwable != null) {
-                            log.error(throwable.toString());
-                        }
-                        else {
-                            if (pipeline.getPipelineID().equals("SensorFilterPipeline")) {
-                                VirtualSensorList vList = fusekiController._findAllSensorsWithConditions(incomingRequest.getLocation(), incomingRequest.getTopic());
-                                String sensorsToKeep = "";
-                                for (VirtualSensor v : vList.sensors) {
-                                    sensorsToKeep += v.sensor_id.split("#")[1] + ";";
-                                }
-                                sensorsToKeep = sensorsToKeep.substring(0, sensorsToKeep.length() - 1);
-                                pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep);
-                            }
-
-                            pipeline.setAssociatedRequestID(rfcMsg.getAssociatedRequest_id());
-                            pipeline.setTempID(finalTempID);
-
-                            //TODO resolve dynamically
-                            pipeline.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(Long.valueOf(prop.getProperty("report_interval_seconds")), TimeUnit.SECONDS));
-                            Map<String, Map<String, String>> qooParamsForAllTopics = new HashMap<>();
-                            qooParamsForAllTopics.put("sensor01", new HashMap<>());
-                            qooParamsForAllTopics.put("sensor02", new HashMap<>());
-                            qooParamsForAllTopics.put("sensor03", new HashMap<>());
-                            qooParamsForAllTopics.get("sensor01").put("min_value", "-50.0");
-                            qooParamsForAllTopics.get("sensor01").put("max_value", "+50.0");
-                            qooParamsForAllTopics.get("sensor02").put("min_value", "0.0");
-                            qooParamsForAllTopics.get("sensor02").put("max_value", "+50.0");
-                            qooParamsForAllTopics.get("sensor03").put("min_value", "0.0");
-                            qooParamsForAllTopics.get("sensor03").put("max_value", "+50.0");
-                            pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
-
-                            pipeline.setCustomizableParameter("threshold_min", "0.0");
-
-                            ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
-                                    EntityMAPEK.PIPELINE,
-                                    pipeline,
-                                    incomingRequest.getObs_level(),
-                                    topicBaseToPullFrom,
-                                    finalNextTopicName,
-                                    requestMapping.getRequest_id(),
-                                    requestMapping.getConstructedFromRequest(),
-                                    -1);
-
-                            performAction(action);
-                        }
-                    });
-
-                    // Building the rest of the graph
-                    String currTopicName = finalNextTopicName;
-                    while (requestMapping.getAllTopics().get(currTopicName).getChildren().size() > 0) {
-                        TopicEntity currTopic = requestMapping.getAllTopics().get(currTopicName);
-                        Set<String> currTopicSet = new HashSet<>();
-                        currTopicSet.add(currTopic.getName());
-                        TopicEntity childrenTopic = requestMapping.getAllTopics().get(currTopic.getChildren().get(0));
-
-                        final String pipelineIDInt = currTopic.getEnforcedPipelines().get(childrenTopic.getName()).split("_")[0];
-                        final String tempIDInt = currTopic.getEnforcedPipelines().get(childrenTopic.getName()).split("_")[1];
-                        retrievePipeline(pipelineIDInt).whenComplete((pipeline, throwable) -> {
+                    Future<SensorCapabilityList> f1 = future(() -> fusekiController._findAllSensorCapabilities(), context().dispatcher());
+                    f1.onComplete(new OnComplete<SensorCapabilityList>() {
+                        public void onComplete(Throwable throwable, SensorCapabilityList sensorCapabilityList) {
                             if (throwable != null) {
-                                log.error(throwable.toString());
+                                log.error("Error when retrieving sensor capabilities. " + throwable.toString());
                             }
                             else {
-                                pipeline.setAssociatedRequestID(rfcMsg.getAssociatedRequest_id());
-                                pipeline.setTempID(tempIDInt);
+                                Map<String, Map<String, String>> qooParamsForAllTopics = new ConcurrentHashMap<>();
+                                for (SensorCapability s : sensorCapabilityList.sensorCapabilities) {
+                                    qooParamsForAllTopics.putIfAbsent(s.sensor_id, new ConcurrentHashMap<>());
+                                    qooParamsForAllTopics.get(s.sensor_id).put("min_value", s.min_value);
+                                    qooParamsForAllTopics.get(s.sensor_id).put("max_value", s.max_value);
+                                }
 
-                                //TODO resolve dynamically
-                                pipeline.setOptionsForMAPEKReporting(monitorActor, new FiniteDuration(Long.valueOf(prop.getProperty("report_interval_seconds")), TimeUnit.SECONDS));
-                                Map<String, Map<String, String>> qooParamsForAllTopics = new HashMap<>();
-                                qooParamsForAllTopics.put("sensor01", new HashMap<>());
-                                qooParamsForAllTopics.put("sensor02", new HashMap<>());
-                                qooParamsForAllTopics.put("sensor03", new HashMap<>());
-                                qooParamsForAllTopics.get("sensor01").put("min_value", "-50.0");
-                                qooParamsForAllTopics.get("sensor01").put("max_value", "+50.0");
-                                qooParamsForAllTopics.get("sensor02").put("min_value", "0.0");
-                                qooParamsForAllTopics.get("sensor02").put("max_value", "+50.0");
-                                qooParamsForAllTopics.get("sensor03").put("min_value", "0.0");
-                                qooParamsForAllTopics.get("sensor03").put("max_value", "+50.0");
-                                pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
-
-                                pipeline.setCustomizableParameter("threshold_min", "0.0");
-
-                                ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
-                                        EntityMAPEK.PIPELINE,
-                                        pipeline,
-                                        incomingRequest.getObs_level(),
-                                        currTopicSet,
-                                        childrenTopic.getName(),
-                                        requestMapping.getRequest_id(),
-                                        requestMapping.getConstructedFromRequest(),
-                                        -1);
-
-                                performAction(action);
+                                // After having retrieved sensor capabilities, we build the graph
+                                buildGraph(requestMapping, incomingRequest, qooParamsForAllTopics);
                             }
-                        });
-                        currTopicName = childrenTopic.getName();
-                    }
+                        }
+                    }, context().dispatcher());
                 }
                 else { // The incoming request may reuse existing enforced requests
                     TopicEntity beforeLastTopic = requestMapping.getPrimarySources().get(0);
@@ -283,12 +193,6 @@ public class PlanActor extends UntypedActor {
                 // Removal of the corresponding RequestMapping
                 actorPathRefs.remove(requestToDelete.getRequest_id());
                 mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
-                /*.whenComplete((r, t) -> {
-                    log.error(mappingTopicsActors.toString());
-                    log.error(actorPathRefs.toString());
-                    log.error(execActorsCount.toString());
-                    log.error(execActorsRefs.toString());
-                });*/
             }
         }
         /**
@@ -343,6 +247,98 @@ public class PlanActor extends UntypedActor {
         }, getContext().dispatcher());
 
         return pipelineCompletableFuture;
+    }
+
+    private void buildGraph(RequestMapping requestMapping,
+                            Request incomingRequest,
+                            Map<String,Map<String,String>> qooParamsForAllTopics) {
+        // Primary sources and filtering by sensors
+        String pipelineID = "";
+        String tempID = "";
+        Set<String> topicBaseToPullFrom = new HashSet<>();
+        TopicEntity nextTopic = null;
+        for (TopicEntity t : requestMapping.getPrimarySources()) {
+            topicBaseToPullFrom.add(t.getName());
+            if (nextTopic == null) {
+                nextTopic = requestMapping.getAllTopics().get(t.getChildren().get(0));
+                if (pipelineID.equals("")) {
+                    pipelineID = t.getEnforcedPipelines().get(nextTopic.getName()).split("_")[0];
+                    tempID = t.getEnforcedPipelines().get(nextTopic.getName()).split("_")[1];
+                }
+            }
+        }
+
+        String finalNextTopicName = nextTopic.getName();
+        String finalTempID = tempID;
+        retrievePipeline(pipelineID).whenComplete((pipeline, throwable2) -> {
+            if (throwable2 != null) {
+                log.error(throwable2.toString());
+            }
+            else {
+                if (pipeline.getPipelineID().equals("SensorFilterPipeline")) {
+                    VirtualSensorList vList = fusekiController._findAllSensorsWithConditions(incomingRequest.getLocation(), incomingRequest.getTopic());
+                    String sensorsToKeep = "";
+                    for (VirtualSensor v : vList.sensors) {
+                        sensorsToKeep += v.sensor_id.split("#")[1] + ";";
+                    }
+                    sensorsToKeep = sensorsToKeep.substring(0, sensorsToKeep.length() - 1);
+                    pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep);
+                }
+
+                pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
+                pipeline.setTempID(finalTempID);
+                pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
+                pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
+
+                ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
+                        EntityMAPEK.PIPELINE,
+                        pipeline,
+                        incomingRequest.getObs_level(),
+                        topicBaseToPullFrom,
+                        finalNextTopicName,
+                        requestMapping.getRequest_id(),
+                        requestMapping.getConstructedFromRequest(),
+                        -1);
+
+                performAction(action);
+            }
+        });
+
+        // Building the rest of the graph
+        String currTopicName = finalNextTopicName;
+        while (requestMapping.getAllTopics().get(currTopicName).getChildren().size() > 0) {
+            TopicEntity currTopic = requestMapping.getAllTopics().get(currTopicName);
+            Set<String> currTopicSet = new HashSet<>();
+            currTopicSet.add(currTopic.getName());
+            TopicEntity childrenTopic = requestMapping.getAllTopics().get(currTopic.getChildren().get(0));
+
+            final String pipelineIDInt = currTopic.getEnforcedPipelines().get(childrenTopic.getName()).split("_")[0];
+            final String tempIDInt = currTopic.getEnforcedPipelines().get(childrenTopic.getName()).split("_")[1];
+            retrievePipeline(pipelineIDInt).whenComplete((pipeline, throwable3) -> {
+                if (throwable3 != null) {
+                    log.error(throwable3.toString());
+                }
+                else {
+                    pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
+                    pipeline.setTempID(tempIDInt);
+                    pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
+                    pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
+
+                    ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
+                            EntityMAPEK.PIPELINE,
+                            pipeline,
+                            incomingRequest.getObs_level(),
+                            currTopicSet,
+                            childrenTopic.getName(),
+                            requestMapping.getRequest_id(),
+                            requestMapping.getConstructedFromRequest(),
+                            -1);
+
+                    performAction(action);
+                }
+            });
+            currTopicName = childrenTopic.getName();
+        }
     }
 
     private boolean performAction(ActionMsg actionMsg) {

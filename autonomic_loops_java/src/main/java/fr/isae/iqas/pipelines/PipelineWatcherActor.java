@@ -5,7 +5,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import org.apache.commons.codec.binary.Hex;
-import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class PipelineWatcherActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+    private FiniteDuration rateToCheck = null;
     private MessageDigest md = null;
     private String qooPipelinesDir = null;
     private Map<String, String> md5Pipelines = null;
@@ -36,6 +37,7 @@ public class PipelineWatcherActor extends UntypedActor {
         } catch (NoSuchAlgorithmException e) {
             log.error(e.toString());
         }
+        rateToCheck = new FiniteDuration(Long.parseLong(prop.getProperty("frequency_rate_to_check_seconds")), TimeUnit.SECONDS);
         qooPipelinesDir = prop.getProperty("qoo_pipelines_dir");
         md5Pipelines = new ConcurrentHashMap<>();
         pipelineObjects = new ConcurrentHashMap<>();
@@ -48,8 +50,9 @@ public class PipelineWatcherActor extends UntypedActor {
 
     @Override
     public void preStart() {
+        checkPipelines();
         getContext().system().scheduler().scheduleOnce(
-                Duration.create(1, TimeUnit.SECONDS),
+                rateToCheck,
                 getSelf(), "tick", getContext().dispatcher(), null);
     }
 
@@ -63,33 +66,10 @@ public class PipelineWatcherActor extends UntypedActor {
         if (message.equals("tick")) {
             // send another periodic tick after the specified delay
             getContext().system().scheduler().scheduleOnce(
-                    Duration.create(1, TimeUnit.SECONDS),
+                    rateToCheck,
                     getSelf(), "tick", getContext().dispatcher(), null);
 
-            filesToCheck = new HashSet<>(md5Pipelines.keySet());
-            List<String> listPipelines = getAllPipelineFiles();
-
-            for (String pipelineName : listPipelines) {
-                if (md5Pipelines.containsKey(pipelineName)) { // Existing pipeline, we check for changes
-                    if (!md5Pipelines.get(pipelineName).equals(computeMD5(pipelineName))) {
-                        log.info("Content has changed for file " + pipelineName + " - reloading Pipeline");
-                        md5Pipelines.put(pipelineName, computeMD5(pipelineName));
-                        loadQoOPipeline(pipelineName);
-                    }
-                    filesToCheck.remove(pipelineName);
-                }
-                else { // Non-existing pipeline
-                    md5Pipelines.put(pipelineName, computeMD5(pipelineName));
-                    log.info("New QoO pipeline detected: " + pipelineName + " - loading Pipeline");
-                    loadQoOPipeline(pipelineName);
-                }
-            }
-
-            for (String pipelineName : filesToCheck) { // The pipelines remaining have been removed from directory
-                md5Pipelines.remove(pipelineName);
-                pipelineObjects.remove(pipelineName);
-                log.info("Missing QoO pipeline: " + pipelineName + " - removing Pipeline");
-            }
+            checkPipelines();
         }
         else if (message instanceof PipelineRequestMsg) {
             ArrayList<Pipeline> objectToReturn = new ArrayList<>();
@@ -152,6 +132,33 @@ public class PipelineWatcherActor extends UntypedActor {
         md5ToReturn = new String(Hex.encodeHex(md.digest()));
 
         return md5ToReturn;
+    }
+
+    private void checkPipelines() {
+        filesToCheck = new HashSet<>(md5Pipelines.keySet());
+        List<String> listPipelines = getAllPipelineFiles();
+
+        for (String pipelineName : listPipelines) {
+            if (md5Pipelines.containsKey(pipelineName)) { // Existing pipeline, we check for changes
+                if (!md5Pipelines.get(pipelineName).equals(computeMD5(pipelineName))) {
+                    log.info("Content has changed for file " + pipelineName + " - reloading Pipeline");
+                    md5Pipelines.put(pipelineName, computeMD5(pipelineName));
+                    loadQoOPipeline(pipelineName);
+                }
+                filesToCheck.remove(pipelineName);
+            }
+            else { // Non-existing pipeline
+                md5Pipelines.put(pipelineName, computeMD5(pipelineName));
+                log.info("New QoO pipeline detected: " + pipelineName + " - loading Pipeline");
+                loadQoOPipeline(pipelineName);
+            }
+        }
+
+        for (String pipelineName : filesToCheck) { // The pipelines remaining have been removed from directory
+            md5Pipelines.remove(pipelineName);
+            pipelineObjects.remove(pipelineName);
+            log.info("Missing QoO pipeline: " + pipelineName + " - removing Pipeline");
+        }
     }
 
     private void loadQoOPipeline(String pipelineName) {

@@ -48,7 +48,7 @@ public abstract class AbstractPipeline {
 
         this.params = new ConcurrentHashMap<>();
         this.customizableParams = new HashSet<>();
-        this.supportedOperators = Collections.synchronizedList(new ArrayList<Operator>());
+        this.supportedOperators = new ArrayList<>();
         this.qooParamPrototypes = new ConcurrentHashMap<>();
         this.qooParams = new ConcurrentHashMap<>();
 
@@ -137,9 +137,7 @@ public abstract class AbstractPipeline {
                     Map<String, Integer> obsRateByTopic = new ConcurrentHashMap<>();
                     for (String p : obsProducerList) {
                         if (!p.equals("KEEP_ALIVE")) {
-                            if (!obsRateByTopic.containsKey(p)) {
-                                obsRateByTopic.put(p, 0);
-                            }
+                            obsRateByTopic.putIfAbsent(p, 0);
                             obsRateByTopic.put(p, obsRateByTopic.get(p) + 1);
                         }
                     }
