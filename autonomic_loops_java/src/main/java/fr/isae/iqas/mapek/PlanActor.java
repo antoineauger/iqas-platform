@@ -80,13 +80,12 @@ public class PlanActor extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Exception {
-        /**
-         * RFCs messages
-         */
+        // RFCs messages
         if (message instanceof RFCMsg) {
             log.info("Received RFC message: {}", message);
             RFCMsg rfcMsg = (RFCMsg) message;
 
+            // RFCs messages - Request CREATE
             if (rfcMsg.getRfc() == RFCMAPEK.CREATE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
                 Request incomingRequest = rfcMsg.getRequest();
                 RequestMapping requestMapping = rfcMsg.getRequestMapping();
@@ -157,6 +156,7 @@ public class PlanActor extends UntypedActor {
                     }
                 });
             }
+            // RFCs messages - Request REMOVE
             else if (rfcMsg.getRfc() == RFCMAPEK.REMOVE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) { // Request deleted by the user
                 Request requestToDelete = rfcMsg.getRequest();
 
@@ -194,9 +194,7 @@ public class PlanActor extends UntypedActor {
                 mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
             }
         }
-        /**
-         * TerminatedMsg messages
-         */
+        // TerminatedMsg messages
         else if (message instanceof TerminatedMsg) {
             TerminatedMsg terminatedMsg = (TerminatedMsg) message;
             if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {

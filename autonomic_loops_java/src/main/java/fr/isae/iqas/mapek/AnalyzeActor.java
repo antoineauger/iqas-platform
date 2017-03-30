@@ -71,6 +71,7 @@ public class AnalyzeActor extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Exception {
+        // Tick messages
         if (message.equals("tick")) {
             // send another periodic tick after the specified delay
             getContext().system().scheduler().scheduleOnce(

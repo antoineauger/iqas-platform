@@ -106,6 +106,7 @@ public class ExecuteActor extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Exception {
+        // TerminatedMsg messages
         if (message instanceof TerminatedMsg) {
             TerminatedMsg terminatedMsg = (TerminatedMsg) message;
             if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
@@ -127,6 +128,7 @@ public class ExecuteActor extends UntypedActor {
                 getContext().stop(getSelf());
             }
         }
+        // IPipeline messages
         else if (message instanceof IPipeline) { //TODO test this feature
             IPipeline newPipelineToEnforce = (IPipeline) message;
             log.info("Updating pipeline " + newPipelineToEnforce.getPipelineName() + " with QoO params " + newPipelineToEnforce.getQooParams().toString());
@@ -141,11 +143,6 @@ public class ExecuteActor extends UntypedActor {
                     .to(kafkaSink)
                     .run(materializer);
         }
-    }
-
-    @Override
-    public void postStop() {
-        // clean up resources here ...
     }
 
 }

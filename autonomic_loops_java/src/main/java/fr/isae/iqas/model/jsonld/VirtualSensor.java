@@ -4,8 +4,6 @@ import ioinformarics.oss.jackson.module.jsonld.annotation.JsonldId;
 import ioinformarics.oss.jackson.module.jsonld.annotation.JsonldProperty;
 import ioinformarics.oss.jackson.module.jsonld.annotation.JsonldType;
 
-import java.util.List;
-
 /**
  * Created by an.auger on 03/02/2017.
  */

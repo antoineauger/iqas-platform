@@ -112,6 +112,7 @@ public class MonitorActor extends UntypedActor {
 
     @Override
     public void onReceive(Object message) {
+        // Tick messages
         if (message.equals("tick")) {
             // send another periodic tick after the specified delay
             getContext().system().scheduler().scheduleOnce(

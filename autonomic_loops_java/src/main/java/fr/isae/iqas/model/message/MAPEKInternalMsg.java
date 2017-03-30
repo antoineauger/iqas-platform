@@ -2,7 +2,6 @@ package fr.isae.iqas.model.message;
 
 import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.model.jsonld.QoOAttribute;
-import fr.isae.iqas.model.jsonld.VirtualSensor;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.pipelines.IPipeline;
