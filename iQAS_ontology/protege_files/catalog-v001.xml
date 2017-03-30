@@ -3,11 +3,11 @@
     <uri id="User Entered Import Resolution" name="file:/Users/an.auger/Desktop/iQAS_ontology/ssn.owl" uri="ssn.rdf"/>
     <uri id="Imports Wizard Entry" name="http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.owl"/>
     <group id="Folder Repository, directory=, recursive=true, Auto-Update=true, version=2" prefer="public" xml:base="">
-        <uri id="Automatically generated entry, Timestamp=1490803242714" name="duplicate:http://isae.fr/iqas/qoo-ontology" uri="qoo-ontology-full.rdf"/>
-        <uri id="Automatically generated entry, Timestamp=1490803242714" name="duplicate:http://isae.fr/iqas/qoo-ontology" uri="qoo-ontology.rdf"/>
-        <uri id="Automatically generated entry, Timestamp=1490803242714" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology-visu.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1490803242714" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1490803242714" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1490803242714" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.rdf"/>
+        <uri id="Automatically generated entry, Timestamp=1490873903820" name="http://isae.fr/iqas/qoo-ontology" uri="qoo-ontology.rdf"/>
+        <uri id="Automatically generated entry, Timestamp=1490873903820" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology-visu.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1490873903820" name="duplicate:http://isae.fr/iqas/qoo-ontology#" uri="qoo-ontology.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1490873903820" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1490873903820" name="duplicate:http://purl.oclc.org/NET/ssnx/ssn" uri="ssn.rdf"/>
+        <uri id="Automatically generated entry, Timestamp=1490873903820" name="http://www.isae.fr/iqas/qoo-ontology" uri="qoo-ontology-full.rdf"/>
     </group>
 </catalog>

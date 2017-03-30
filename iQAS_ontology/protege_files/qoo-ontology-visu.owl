@@ -79,10 +79,10 @@
         <DataProperty abbreviatedIRI="iot-lite:endpoint"/>
     </Declaration>
     <Declaration>
-        <DataProperty abbreviatedIRI="iot-lite:radius"/>
+        <Class abbreviatedIRI="ssn:Sensor"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:Sensor"/>
+        <DataProperty abbreviatedIRI="iot-lite:radius"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="iot-lite:Polygon"/>
@@ -91,10 +91,10 @@
         <ObjectProperty IRI="requiresQoO"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:observationResult"/>
+        <Class abbreviatedIRI="ssn:Latency"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:Latency"/>
+        <ObjectProperty abbreviatedIRI="ssn:observationResult"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="geo:long"/>
@@ -103,19 +103,19 @@
         <Class IRI="QoORequirement"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="obsLevelValue"/>
+        <Datatype IRI="variation"/>
     </Declaration>
     <Declaration>
-        <Datatype IRI="variation"/>
+        <DataProperty IRI="obsLevelValue"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="geo:Point"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:Device"/>
+        <ObjectProperty IRI="neutralFor"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="neutralFor"/>
+        <Class abbreviatedIRI="ssn:Device"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="shouldBe"/>
@@ -127,13 +127,13 @@
         <Class abbreviatedIRI="ssn:MeasurementCapability"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="givesAccessTo"/>
+        <Datatype IRI="observationLevel"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="qu:Unit"/>
     </Declaration>
     <Declaration>
-        <Datatype IRI="observationLevel"/>
+        <ObjectProperty IRI="givesAccessTo"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="considers"/>
@@ -157,10 +157,10 @@
         <ObjectProperty abbreviatedIRI="ssn:hasValue"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="MAX"/>
+        <ObjectProperty abbreviatedIRI="iot-lite:isSubSystemOf"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="iot-lite:isSubSystemOf"/>
+        <NamedIndividual IRI="MAX"/>
     </Declaration>
     <Declaration>
         <Class abbreviatedIRI="ssn:SensingDevice"/>
@@ -217,25 +217,25 @@
         <ObjectProperty IRI="requiresObservation"/>
     </Declaration>
     <Declaration>
-        <NamedIndividual IRI="MIN"/>
-    </Declaration>
-    <Declaration>
         <Class IRI="QualityofObservation"/>
     </Declaration>
     <Declaration>
-        <DataProperty IRI="target_value"/>
+        <NamedIndividual IRI="MIN"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="decreases"/>
     </Declaration>
     <Declaration>
+        <DataProperty IRI="target_value"/>
+    </Declaration>
+    <Declaration>
         <ObjectProperty IRI="isImpactedBy"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="ssn:observedProperty"/>
+        <ObjectProperty abbreviatedIRI="iot-lite:hasUnit"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty abbreviatedIRI="iot-lite:hasUnit"/>
+        <ObjectProperty abbreviatedIRI="ssn:observedProperty"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="contains"/>
@@ -262,10 +262,10 @@
         <ObjectProperty IRI="belongsTo"/>
     </Declaration>
     <Declaration>
-        <Class abbreviatedIRI="ssn:MeasurementRange"/>
+        <AnnotationProperty abbreviatedIRI="geo:alt"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty abbreviatedIRI="geo:alt"/>
+        <Class abbreviatedIRI="ssn:MeasurementRange"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="increases"/>
@@ -316,13 +316,13 @@
         <Class abbreviatedIRI="ssn:Resolution"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="allowsToSet"/>
-    </Declaration>
-    <Declaration>
         <AnnotationProperty abbreviatedIRI="dc:description"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="ssn:hasSubSystem"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="allowsToSet"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="isInTheAreaOf"/>
@@ -346,13 +346,13 @@
         <Class abbreviatedIRI="ssn:MeasurementProperty"/>
     </Declaration>
     <Declaration>
+        <AnnotationProperty abbreviatedIRI="geo:lat"/>
+    </Declaration>
+    <Declaration>
         <DataProperty abbreviatedIRI="iot-lite:interfaceDescription"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="dc:title"/>
-    </Declaration>
-    <Declaration>
-        <AnnotationProperty abbreviatedIRI="geo:lat"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="has"/>
@@ -382,10 +382,10 @@
         <Class abbreviatedIRI="ssn:Frequency"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty abbreviatedIRI="dc:creator"/>
+        <Class IRI="Operator"/>
     </Declaration>
     <Declaration>
-        <Class IRI="Operator"/>
+        <AnnotationProperty abbreviatedIRI="dc:creator"/>
     </Declaration>
     <Declaration>
         <ObjectProperty abbreviatedIRI="iot-lite:hasCoverage"/>
@@ -719,13 +719,6 @@
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Device"/>
-        <ObjectSomeValuesFrom>
-            <ObjectProperty abbreviatedIRI="iot-lite:exposedBy"/>
-            <Class abbreviatedIRI="iot-lite:Service"/>
-        </ObjectSomeValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class abbreviatedIRI="ssn:Device"/>
         <ObjectAllValuesFrom>
             <ObjectProperty IRI="contains"/>
             <Class abbreviatedIRI="ssn:Device"/>
@@ -737,6 +730,13 @@
             <ObjectProperty abbreviatedIRI="iot-lite:exposedBy"/>
             <Class abbreviatedIRI="iot-lite:Service"/>
         </ObjectAllValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Device"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty abbreviatedIRI="iot-lite:exposedBy"/>
+            <Class abbreviatedIRI="iot-lite:Service"/>
+        </ObjectExactCardinality>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Drift"/>
@@ -1005,13 +1005,6 @@
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Sensor"/>
         <ObjectSomeValuesFrom>
-            <ObjectProperty abbreviatedIRI="ssn:hasMeasurementCapability"/>
-            <Class abbreviatedIRI="ssn:MeasurementCapability"/>
-        </ObjectSomeValuesFrom>
-    </SubClassOf>
-    <SubClassOf>
-        <Class abbreviatedIRI="ssn:Sensor"/>
-        <ObjectSomeValuesFrom>
             <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
             <Class abbreviatedIRI="ssn:Observation"/>
         </ObjectSomeValuesFrom>
@@ -1040,16 +1033,23 @@
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Sensor"/>
         <ObjectAllValuesFrom>
-            <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
-            <Class abbreviatedIRI="ssn:Observation"/>
+            <ObjectProperty abbreviatedIRI="geo:location"/>
+            <Class abbreviatedIRI="geo:Point"/>
         </ObjectAllValuesFrom>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Sensor"/>
-        <ObjectAllValuesFrom>
-            <ObjectProperty abbreviatedIRI="geo:location"/>
-            <Class abbreviatedIRI="geo:Point"/>
-        </ObjectAllValuesFrom>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty abbreviatedIRI="ssn:hasMeasurementCapability"/>
+            <Class abbreviatedIRI="ssn:MeasurementCapability"/>
+        </ObjectExactCardinality>
+    </SubClassOf>
+    <SubClassOf>
+        <Class abbreviatedIRI="ssn:Sensor"/>
+        <ObjectExactCardinality cardinality="1">
+            <ObjectProperty abbreviatedIRI="ssn:madeObservation"/>
+            <Class abbreviatedIRI="ssn:Observation"/>
+        </ObjectExactCardinality>
     </SubClassOf>
     <SubClassOf>
         <Class abbreviatedIRI="ssn:Sensor"/>

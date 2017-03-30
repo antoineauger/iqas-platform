@@ -77,41 +77,33 @@
         "@id": "qoo:loc_portet"
       },
       "qoo:sensorStateValue": "CONNECTED",
-      "ssn:madeObservation": [
-        {
-          "@id": "qoo:obs_sensor01",
-          "ssn:observedProperty": [
-            {
-              "@id": "qoo:temperature",
-              "@type": "ssn:Property",
-              "qoo:canBeRetrievedThrough": {
-                "@id": "qoo:serv_sensor01_temp"
-              }
-            }
-          ]   
-        }
-      ],
-      "iot-lite:exposedBy": [
-        {
-          "@id": "qoo:serv_sensor01_temp"
-        }
-      ],
-      "ssn:hasMeasurementCapability": [
-        {
-          "@id": "qoo:capa_temp_sensor01",
-          "ssn:hasMeasurementProperty": [
-            {
-              "@id": "qoo:range_temp_sensor01",
-              "@type": "ssn:MeasurementRange",
-              "qoo:hasMinValue": "-50.0",
-              "qoo:hasMaxValue": "+50.0"
-            }
-          ],
-          "ssn:forProperty": {
-            "@id": "qoo:temperature"
+      "ssn:madeObservation": {
+        "@id": "qoo:obs_sensor01",
+        "ssn:observedProperty": {
+          "@id": "qoo:temperature",
+          "@type": "ssn:Property",
+          "qoo:canBeRetrievedThrough": {
+            "@id": "qoo:serv_sensor01_temp"
           }
+        } 
+      },
+      "iot-lite:exposedBy": {
+          "@id": "qoo:serv_sensor01_temp"
+      },
+      "ssn:hasMeasurementCapability": {
+        "@id": "qoo:capa_temp_sensor01",
+        "ssn:hasMeasurementProperty": [
+          {
+            "@id": "qoo:range_temp_sensor01",
+            "@type": "ssn:MeasurementRange",
+            "qoo:hasMinValue": "-50.0",
+            "qoo:hasMaxValue": "+50.0"
+          }
+        ],
+        "ssn:forProperty": {
+          "@id": "qoo:temperature"
         }
-      ]
+      }
     },
     {
       "@id": "qoo:sensor02",
@@ -121,41 +113,33 @@
         "@id": "qoo:loc_portet"
       },
       "qoo:sensorStateValue": "CONNECTED",
-      "ssn:madeObservation": [
-        {
-          "@id": "qoo:obs_sensor02",
-          "ssn:observedProperty": [
-            {
-              "@id": "qoo:visibility",
-              "@type": "ssn:Property",
-              "qoo:canBeRetrievedThrough": {
-                "@id": "qoo:serv_sensor02_visib"
-              }
-            }
-          ]
-        }
-      ],
-      "iot-lite:exposedBy": [
-        {
-          "@id": "qoo:serv_sensor02_visib"
-        }
-      ],
-      "ssn:hasMeasurementCapability": [
-        {
-          "@id": "qoo:capa_visib_sensor02",
-          "ssn:hasMeasurementProperty": [
-            {
-              "@id": "qoo:range_visib_sensor02",
-              "@type": "ssn:MeasurementRange",
-              "qoo:hasMinValue": "0.0",
-              "qoo:hasMaxValue": "+INF"
-            }
-          ],
-          "ssn:forProperty": {
-            "@id": "qoo:visibility"
+      "ssn:madeObservation": {
+        "@id": "qoo:obs_sensor02",
+        "ssn:observedProperty": {
+          "@id": "qoo:visibility",
+          "@type": "ssn:Property",
+          "qoo:canBeRetrievedThrough": {
+            "@id": "qoo:serv_sensor02_visib"
           }
         }
-      ]
+      },
+      "iot-lite:exposedBy": {
+        "@id": "qoo:serv_sensor02_visib"
+      },
+      "ssn:hasMeasurementCapability": {
+        "@id": "qoo:capa_visib_sensor02",
+        "ssn:hasMeasurementProperty": [
+          {
+            "@id": "qoo:range_visib_sensor02",
+            "@type": "ssn:MeasurementRange",
+            "qoo:hasMinValue": "0.0",
+            "qoo:hasMaxValue": "+INF"
+          }
+        ],
+        "ssn:forProperty": {
+          "@id": "qoo:visibility"
+        }
+      }
     },
     {
       "@id": "qoo:sensor03",
@@ -165,41 +149,33 @@
         "@id": "qoo:loc_jardin"
       },
       "qoo:sensorStateValue": "CONNECTED",
-      "ssn:madeObservation": [
-        {
-          "@id": "qoo:obs_sensor03",
-          "ssn:observedProperty": [
-            {
-              "@id": "qoo:visibility",
-              "@type": "ssn:Property",
-              "qoo:canBeRetrievedThrough": {
-                "@id": "qoo:serv_sensor03_visib"
-              }
-            }
-          ]
-        }
-      ],
-      "iot-lite:exposedBy": [
-        {
-          "@id": "qoo:serv_sensor03_visib"
-        }
-      ],
-      "ssn:hasMeasurementCapability": [
-        {
-          "@id": "qoo:capa_visib_sensor03",
-          "ssn:hasMeasurementProperty": [
-            {
-              "@id": "qoo:range_visib_sensor03",
-              "@type": "ssn:MeasurementRange",
-              "qoo:hasMinValue": "0.0",
-              "qoo:hasMaxValue": "+INF"
-            }
-          ],
-          "ssn:forProperty": {
-            "@id": "qoo:visibility"
+      "ssn:madeObservation": {
+        "@id": "qoo:obs_sensor03",
+        "ssn:observedProperty": {
+          "@id": "qoo:visibility",
+          "@type": "ssn:Property",
+          "qoo:canBeRetrievedThrough": {
+            "@id": "qoo:serv_sensor03_visib"
           }
         }
-      ]
+      },
+      "iot-lite:exposedBy": {
+        "@id": "qoo:serv_sensor03_visib"
+      },
+      "ssn:hasMeasurementCapability": {
+        "@id": "qoo:capa_visib_sensor03",
+        "ssn:hasMeasurementProperty": [
+          {
+            "@id": "qoo:range_visib_sensor03",
+            "@type": "ssn:MeasurementRange",
+            "qoo:hasMinValue": "0.0",
+            "qoo:hasMaxValue": "+INF"
+          }
+        ],
+        "ssn:forProperty": {
+          "@id": "qoo:visibility"
+        }
+      }
     },
     {
       "@id": "qoo:iQAS",
