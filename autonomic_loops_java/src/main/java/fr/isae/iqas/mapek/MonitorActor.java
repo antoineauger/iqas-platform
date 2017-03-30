@@ -8,12 +8,15 @@ import akka.event.LoggingAdapter;
 import akka.util.Timeout;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
+import fr.isae.iqas.model.jsonld.VirtualSensor;
+import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.ObsRateReportMsg;
 import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.ObservationRate;
 import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
+import fr.isae.iqas.server.HttpUtils;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import scala.concurrent.Future;
@@ -23,6 +26,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static akka.dispatch.Futures.future;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.OBS_RATE;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.PIPELINE;
@@ -43,6 +47,10 @@ public class MonitorActor extends UntypedActor {
     private FiniteDuration tickMAPEK = null;
     private int nbEventsBeforeSymptom = 5;
     private Map<String, Set<String>> mappingPipelinesRequests; // PipelineUniqueIDs <-> [concerned Request IDs]
+
+    // For pinging Virtual Sensors
+    private FiniteDuration pingSensorsInterval = null;
+    private long lastPing = System.currentTimeMillis();
 
     // For ObsRate reporting
     private Map<String, Integer> numberObservedSymptomsObsRate; // RequestIDs <-> #Symptoms for ObsRate
@@ -76,6 +84,8 @@ public class MonitorActor extends UntypedActor {
         this.nbEventsBeforeSymptom = Integer.parseInt(prop.getProperty("nb_events_before_symptom"));
         this.mappingPipelinesRequests = new ConcurrentHashMap<>();
 
+        this.pingSensorsInterval = new FiniteDuration(Long.parseLong(prop.getProperty("interval_to_ping_sensors_seconds")), TimeUnit.SECONDS);
+
         this.numberObservedSymptomsObsRate = new ConcurrentHashMap<>();
         this.startDateCount = new ConcurrentHashMap<>();
         this.countByRequest = new ConcurrentHashMap<>();
@@ -88,6 +98,8 @@ public class MonitorActor extends UntypedActor {
 
     @Override
     public void preStart() {
+        // TODO: uncomment
+        //storeVirtualSensorStates();
         getContext().system().scheduler().scheduleOnce(
                 tickMAPEK,
                 getSelf(), "tick", getContext().dispatcher(), getSelf());
@@ -109,7 +121,7 @@ public class MonitorActor extends UntypedActor {
             Map<String, List<String>> requestsWithInsuficientObsRate = new ConcurrentHashMap<>(); // UniquePipelineIDs <-> [ImpactedRequests]
             mappingPipelinesRequests.forEach((k, v) -> {
                 for (String s : v) {
-                    if (minObsRateByRequest.containsKey(s)) { // If there was no formatting problem
+                    if (minObsRateByRequest.containsKey(s)) { // If there is a minObsRate requirement for this Request
                         long step = new FiniteDuration(1, minObsRateByRequest.get(s).getUnit()).toMillis();
                         if (System.currentTimeMillis() - startDateCount.get(s) > step) {
                             if (countByRequest.get(s) < minObsRateByRequest.get(s).getValue()) {
@@ -128,12 +140,16 @@ public class MonitorActor extends UntypedActor {
             });
 
             for (Map.Entry<String, List<String>> entry : requestsWithInsuficientObsRate.entrySet()) {
-                forwardToAnalyzeActor(new SymptomMsg(TOO_LOW, OBS_RATE, entry.getKey(), entry.getValue()));
+                forwardToSpecifiedActor(new SymptomMsg(TOO_LOW, OBS_RATE, entry.getKey(), entry.getValue()), getAnalyzeActor());
+            }
+
+            if (System.currentTimeMillis() - lastPing > pingSensorsInterval.toMillis()) {
+                lastPing = System.currentTimeMillis();
+                // TODO: uncomment
+                //storeVirtualSensorStates();
             }
         }
-        /**
-         * Request messages
-         */
+        // Request messages
         else if (message instanceof Request) {
             Request requestTemp = (Request) message;
             log.info("Received Request : {}", requestTemp.getRequest_id());
@@ -147,9 +163,10 @@ public class MonitorActor extends UntypedActor {
                 startDateCount.put(requestTemp.getRequest_id(), System.currentTimeMillis());
                 countByRequest.put(requestTemp.getRequest_id(), 0);
 
+                // TODO
                 log.error("MIN OBS_RATE REQ: " + minObsRateByRequest.toString());
                 log.error("MAX OBS_RATE REQ: " + maxObsRateByRequest.toString());
-                forwardToAnalyzeActor(symptomMsgToForward);
+                forwardToSpecifiedActor(symptomMsgToForward, getAnalyzeActor());
             }
             else if (requestTemp.getCurrent_status() == REMOVED) { // Request deleted by the user
                 qooQualityBuffer.remove(requestTemp.getRequest_id());
@@ -160,13 +177,13 @@ public class MonitorActor extends UntypedActor {
                 countByRequest.remove(requestTemp.getRequest_id());
 
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestTemp);
-                forwardToAnalyzeActor(symptomMsgToForward);
+                forwardToSpecifiedActor(symptomMsgToForward, getAnalyzeActor());
             }
             else if (requestTemp.getCurrent_status() == UPDATED) { // Existing Request updated by the user
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.UPDATED, EntityMAPEK.REQUEST, requestTemp);
                 storeFreshnessRequirements(requestTemp);
                 storeObsRateRequirements(requestTemp);
-                forwardToAnalyzeActor(symptomMsgToForward);
+                forwardToSpecifiedActor(symptomMsgToForward, getAnalyzeActor());
             }
             else if (requestTemp.getCurrent_status() == REJECTED) {
                 // Do nothing since the Request has already been rejected
@@ -175,9 +192,7 @@ public class MonitorActor extends UntypedActor {
                 log.error("Unknown state for request " + requestTemp.getRequest_id() + " at this stage");
             }
         }
-        /**
-         * ObsRateReportMsg messages
-         */
+        // ObsRateReportMsg messages
         else if (message instanceof ObsRateReportMsg) {
             ObsRateReportMsg tempObsRateReportMsg = (ObsRateReportMsg) message;
             int totalObsFromSensors = 0;
@@ -191,9 +206,7 @@ public class MonitorActor extends UntypedActor {
                 }
             }
         }
-        /**
-         * QoOReportMsg messages
-         */
+        // QoOReportMsg messages
         else if (message instanceof QoOReportMsg) {
             QoOReportMsg tempQoOReportMsg = (QoOReportMsg) message;
             if (tempQoOReportMsg.getQooAttributesMap().size() > 0) {
@@ -214,9 +227,7 @@ public class MonitorActor extends UntypedActor {
             });
             log.info("------------------");*/
         }
-        /**
-         * SymptomMsg messages
-         */
+        // SymptomMsg messages
         else if (message instanceof SymptomMsg) {
             SymptomMsg symptomMAPEKMsg = (SymptomMsg) message;
             if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.NEW && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline creation
@@ -230,9 +241,7 @@ public class MonitorActor extends UntypedActor {
                 mappingPipelinesRequests.remove(symptomMAPEKMsg.getUniqueIDPipeline());
             }
         }
-        /**
-         * TerminatedMsg messages
-         */
+        // TerminatedMsg messages
         else if (message instanceof TerminatedMsg) {
             TerminatedMsg terminatedMsg = (TerminatedMsg) message;
             if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
@@ -249,21 +258,25 @@ public class MonitorActor extends UntypedActor {
     public void postStop() {
     }
 
+    private Future<ActorRef> getAutonomicManagerActor() {
+        return getContext().actorSelection(getSelf().path().parent()).resolveOne(new Timeout(5, TimeUnit.SECONDS));
+    }
+
     private Future<ActorRef> getAnalyzeActor() {
         return getContext().actorSelection(getSelf().path().parent()
                 + "/analyzeActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
-    private void forwardToAnalyzeActor(SymptomMsg symptomMsgToForward) {
+    private void forwardToSpecifiedActor(SymptomMsg symptomMsgToForward, Future<ActorRef> actorRefFuture) {
         SymptomMsg finalSymptomMsgToForward = symptomMsgToForward;
-        getAnalyzeActor().onComplete(new OnComplete<ActorRef>() {
+        actorRefFuture.onComplete(new OnComplete<ActorRef>() {
             @Override
-            public void onComplete(Throwable t, ActorRef analyzeActor) throws Throwable {
+            public void onComplete(Throwable t, ActorRef actor) throws Throwable {
                 if (t != null) {
                     log.error("Unable to find the AnalyzeActor: " + t.toString());
                 }
                 else {
-                    analyzeActor.tell(finalSymptomMsgToForward, getSelf());
+                    actor.tell(finalSymptomMsgToForward, getSelf());
                 }
             }
         }, getContext().dispatcher());
@@ -349,6 +362,26 @@ public class MonitorActor extends UntypedActor {
                 }
             }
         }
+    }
+
+    private boolean storeVirtualSensorStates() {
+        future(() -> fusekiController._findAllSensors(), context().dispatcher())
+                .onComplete(new OnComplete<VirtualSensorList>() {
+                    public void onComplete(Throwable throwable, VirtualSensorList virtualSensorList) {
+                        if (throwable == null) { // Only continue if there was no error so far
+                            Map<String, Boolean> connectedSensors = new ConcurrentHashMap<>(); // SensorIDs <-> connected (true/false)
+                            for (VirtualSensor v : virtualSensorList.sensors) {
+                                String sensor_id = v.sensor_id.split("#")[1];
+                                boolean sensorIsConnected = HttpUtils.checkIfEndpointIsAvailable(v.endpoint.url);
+                                connectedSensors.put(sensor_id, sensorIsConnected);
+                            }
+                            forwardToSpecifiedActor(new SymptomMsg(SymptomMAPEK.CONNECTION_REPORT, EntityMAPEK.SENSOR, connectedSensors), getAutonomicManagerActor());
+                            forwardToSpecifiedActor(new SymptomMsg(SymptomMAPEK.CONNECTION_REPORT, EntityMAPEK.SENSOR, connectedSensors), getAnalyzeActor());
+                        }
+                    }
+                }, context().dispatcher());
+
+        return true;
     }
 
 }

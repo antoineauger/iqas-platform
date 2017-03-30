@@ -103,25 +103,24 @@ public class PlanActor extends UntypedActor {
                 });
 
                 if (requestMapping.getConstructedFromRequest().equals("")) { // The incoming request has no common points with the enforced ones
-                    Future<SensorCapabilityList> f1 = future(() -> fusekiController._findAllSensorCapabilities(), context().dispatcher());
-                    f1.onComplete(new OnComplete<SensorCapabilityList>() {
-                        public void onComplete(Throwable throwable, SensorCapabilityList sensorCapabilityList) {
-                            if (throwable != null) {
-                                log.error("Error when retrieving sensor capabilities. " + throwable.toString());
-                            }
-                            else {
-                                Map<String, Map<String, String>> qooParamsForAllTopics = new ConcurrentHashMap<>();
-                                for (SensorCapability s : sensorCapabilityList.sensorCapabilities) {
-                                    qooParamsForAllTopics.putIfAbsent(s.sensor_id, new ConcurrentHashMap<>());
-                                    qooParamsForAllTopics.get(s.sensor_id).put("min_value", s.min_value);
-                                    qooParamsForAllTopics.get(s.sensor_id).put("max_value", s.max_value);
+                    future(() -> fusekiController._findAllSensorCapabilities(), context().dispatcher())
+                            .onComplete(new OnComplete<SensorCapabilityList>() {
+                                public void onComplete(Throwable throwable, SensorCapabilityList sensorCapabilityList) {
+                                    if (throwable != null) {
+                                        log.error("Error when retrieving sensor capabilities. " + throwable.toString());
+                                    }
+                                    else {
+                                        Map<String, Map<String, String>> qooParamsForAllTopics = new ConcurrentHashMap<>();
+                                        for (SensorCapability s : sensorCapabilityList.sensorCapabilities) {
+                                            qooParamsForAllTopics.putIfAbsent(s.sensor_id, new ConcurrentHashMap<>());
+                                            qooParamsForAllTopics.get(s.sensor_id).put("min_value", s.min_value);
+                                            qooParamsForAllTopics.get(s.sensor_id).put("max_value", s.max_value);
+                                        }
+                                        // After having retrieved sensor capabilities, we build the graph
+                                        buildGraph(requestMapping, incomingRequest, qooParamsForAllTopics);
+                                    }
                                 }
-
-                                // After having retrieved sensor capabilities, we build the graph
-                                buildGraph(requestMapping, incomingRequest, qooParamsForAllTopics);
-                            }
-                        }
-                    }, context().dispatcher());
+                            }, context().dispatcher());
                 }
                 else { // The incoming request may reuse existing enforced requests
                     TopicEntity beforeLastTopic = requestMapping.getPrimarySources().get(0);

@@ -80,13 +80,11 @@ public class AnalyzeActor extends UntypedActor {
             clearExpiredSymptoms(receivedObsRateSymptoms, symptomLifetime);
             clearExpiredSymptoms(receivedQoOSymptoms, symptomLifetime);
         }
-        /**
-         * SymptomMsg messages received from MonitorActor
-         */
+        // SymptomMsg messages [received from MonitorActor]
         if (message instanceof SymptomMsg) {
             SymptomMsg symptomMsg = (SymptomMsg) message;
 
-            // Requests
+            // SymptomMsg messages - Requests
             if (symptomMsg.getAbout() == EntityMAPEK.REQUEST) {
                 log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getAttachedRequest().toString());
                 Request requestTemp = symptomMsg.getAttachedRequest();
@@ -224,17 +222,19 @@ public class AnalyzeActor extends UntypedActor {
                 }
             }
             // TODO QoO adaptation
-
-            // Requests
+            // SymptomMsg messages - Obs Rate
             else if (symptomMsg.getAbout() == EntityMAPEK.OBS_RATE) {
                 log.info("Received Symptom : {} {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getUniqueIDPipeline(), symptomMsg.getConcernedRequests().toString());
                 receivedObsRateSymptoms.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new CircularFifoBuffer(5));
                 receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).add(new MAPEKSymptomMsgWithDate(symptomMsg));
             }
+            // SymptomMsg messages - Virtual Sensors
+            else if (symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
+                log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getConnectedSensors().toString());
+                // TODO terminate concerned Requests
+            }
         }
-        /**
-         * TerminatedMsg messages
-         */
+        // TerminatedMsg messages
         else if (message instanceof TerminatedMsg) {
             TerminatedMsg terminatedMsg = (TerminatedMsg) message;
             if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {

@@ -2,6 +2,7 @@ package fr.isae.iqas.model.message;
 
 import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.model.jsonld.QoOAttribute;
+import fr.isae.iqas.model.jsonld.VirtualSensor;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.pipelines.IPipeline;
@@ -20,7 +21,8 @@ public class MAPEKInternalMsg {
         UPDATED,
         REMOVED,
         TOO_HIGH,
-        TOO_LOW
+        TOO_LOW,
+        CONNECTION_REPORT
     }
 
     public enum EntityMAPEK {
@@ -95,6 +97,7 @@ public class MAPEKInternalMsg {
      */
 
     public static class SymptomMsg {
+        private Map<String, Boolean> connectedSensors;
         private List<String> concernedRequests;
         private Timestamp creationDate;
         private SymptomMAPEK symptom;
@@ -115,6 +118,13 @@ public class MAPEKInternalMsg {
             this.symptom = symptom;
             this.about = about;
             this.uniqueIDPipeline = uniqueIDRemovedPipeline;
+        }
+
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Map<String, Boolean> connectedSensors) { // For Virtual Sensors connection report
+            this.creationDate = new Timestamp(System.currentTimeMillis());
+            this.symptom = symptom;
+            this.about = about;
+            this.connectedSensors = connectedSensors;
         }
 
         public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String concernedUniqueIDPipeline, List<String> concernedRequests) { // For OBS_RATE too low
@@ -159,6 +169,10 @@ public class MAPEKInternalMsg {
 
         public List<String> getConcernedRequests() {
             return concernedRequests;
+        }
+
+        public Map<String, Boolean> getConnectedSensors() {
+            return connectedSensors;
         }
     }
 

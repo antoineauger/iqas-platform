@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,7 +51,6 @@ public class FusekiController {
      */
 
     public VirtualSensorList _findAllSensors() {
-        Map<String, VirtualSensor> processedSensors = new ConcurrentHashMap<>();
         QuerySolution binding;
         VirtualSensorList sensorList = new VirtualSensorList();
         sensorList.sensors = new ArrayList<>();
@@ -90,37 +90,26 @@ public class FusekiController {
             Literal altRelative = binding.getLiteral("altRelative");
             Literal relativeLocation = binding.getLiteral("relativeLocation");
 
-            VirtualSensor sensorTemp;
+            VirtualSensor sensorTemp = new VirtualSensor();
 
-            if (processedSensors.containsKey(id.getURI())) {
-                sensorTemp = processedSensors.get(id.getURI());
-            }
-            else {
-                sensorTemp = new VirtualSensor();
-                sensorTemp.sensor_id = id.getURI();
+            sensorTemp.sensor_id = id.getURI();
+            Location locTemp = new Location();
+            locTemp.latitude = latitude.getString();
+            locTemp.longitude = longitude.getString();
+            locTemp.altitude = alt.getString();
+            locTemp.relative_altitude = altRelative.getString();
+            locTemp.relative_location = relativeLocation.getString();
+            sensorTemp.location = locTemp;
 
-                Location locTemp = new Location();
-                locTemp.latitude = latitude.getString();
-                locTemp.longitude = longitude.getString();
-                locTemp.altitude = alt.getString();
-                locTemp.relative_altitude = altRelative.getString();
-                locTemp.relative_location = relativeLocation.getString();
+            sensorTemp.endpoint = new ServiceEndpoint();
+            sensorTemp.endpoint.topic = topic.getURI();
+            sensorTemp.endpoint.url = url.getString();
+            sensorTemp.endpoint.if_type = interfaceType.getString();
+            sensorTemp.endpoint.description = interfaceDescription.getString();
 
-                sensorTemp.endpoints = new ArrayList<>();
-                sensorTemp.location = locTemp;
-            }
-
-            ServiceEndpoint endpointTemp = new ServiceEndpoint();
-            endpointTemp.topic = topic.getURI();
-            endpointTemp.url = url.getString();
-            endpointTemp.if_type = interfaceType.getString();
-            endpointTemp.description = interfaceDescription.getString();
-            sensorTemp.endpoints.add(endpointTemp);
-
-            processedSensors.put(id.getURI(), sensorTemp);
+            sensorList.sensors.add(sensorTemp);
         }
 
-        sensorList.sensors.addAll(processedSensors.values());
         if (sensorList.sensors.size() == 0) {
             return null;
         }
@@ -154,7 +143,7 @@ public class FusekiController {
 
         QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
         ResultSet r = q.execSelect();
-        while (r.hasNext()) {
+        if (r.hasNext()) {
             binding = r.nextSolution();
 
             Resource id = (Resource) binding.get("sensor");
@@ -168,27 +157,22 @@ public class FusekiController {
             Literal altRelative = binding.getLiteral("altRelative");
             Literal relativeLocation = binding.getLiteral("relativeLocation");
 
-            if (sensor == null) {
-                sensor = new VirtualSensor();
-                sensor.sensor_id = id.getURI();
+            sensor = new VirtualSensor();
+            sensor.sensor_id = id.getURI();
 
-                Location locTemp = new Location();
-                locTemp.latitude = latitude.getString();
-                locTemp.longitude = longitude.getString();
-                locTemp.altitude = alt.getString();
-                locTemp.relative_altitude = altRelative.getString();
-                locTemp.relative_location = relativeLocation.getString();
-                sensor.location = locTemp;
+            Location locTemp = new Location();
+            locTemp.latitude = latitude.getString();
+            locTemp.longitude = longitude.getString();
+            locTemp.altitude = alt.getString();
+            locTemp.relative_altitude = altRelative.getString();
+            locTemp.relative_location = relativeLocation.getString();
+            sensor.location = locTemp;
 
-                sensor.endpoints = new ArrayList<>();
-            }
-
-            ServiceEndpoint endpointTemp = new ServiceEndpoint();
-            endpointTemp.topic = topic.getURI();
-            endpointTemp.url = url.getString();
-            endpointTemp.if_type = interfaceType.getString();
-            endpointTemp.description = interfaceDescription.getString();
-            sensor.endpoints.add(endpointTemp);
+            sensor.endpoint = new ServiceEndpoint();
+            sensor.endpoint.topic = topic.getURI();
+            sensor.endpoint.url = url.getString();
+            sensor.endpoint.if_type = interfaceType.getString();
+            sensor.endpoint.description = interfaceDescription.getString();
         }
 
         if (binding == null) {
@@ -200,7 +184,6 @@ public class FusekiController {
     }
 
     public VirtualSensorList _findAllSensorsWithConditions(String locationNearTo, String topic_id) {
-        Map<String, VirtualSensor> processedSensors = new ConcurrentHashMap<>();
         QuerySolution binding;
         VirtualSensorList sensorList = new VirtualSensorList();
         sensorList.sensors = new ArrayList<>();
@@ -252,37 +235,26 @@ public class FusekiController {
             Literal altRelative = binding.getLiteral("altRelative");
             Literal relativeLocation = binding.getLiteral("relativeLocation");
 
-            VirtualSensor sensorTemp;
+            VirtualSensor sensorTemp = new VirtualSensor();
 
-            if (processedSensors.containsKey(id.getURI())) {
-                sensorTemp = processedSensors.get(id.getURI());
-            }
-            else {
-                sensorTemp = new VirtualSensor();
-                sensorTemp.sensor_id = id.getURI();
+            sensorTemp.sensor_id = id.getURI();
+            Location locTemp = new Location();
+            locTemp.latitude = latitude.getString();
+            locTemp.longitude = longitude.getString();
+            locTemp.altitude = alt.getString();
+            locTemp.relative_altitude = altRelative.getString();
+            locTemp.relative_location = relativeLocation.getString();
 
-                Location locTemp = new Location();
-                locTemp.latitude = latitude.getString();
-                locTemp.longitude = longitude.getString();
-                locTemp.altitude = alt.getString();
-                locTemp.relative_altitude = altRelative.getString();
-                locTemp.relative_location = relativeLocation.getString();
+            sensorTemp.endpoint = new ServiceEndpoint();
+            sensorTemp.location = locTemp;
+            sensorTemp.endpoint.topic = topic.getURI();
+            sensorTemp.endpoint.url = url.getString();
+            sensorTemp.endpoint.if_type = interfaceType.getString();
+            sensorTemp.endpoint.description = interfaceDescription.getString();
 
-                sensorTemp.endpoints = new ArrayList<>();
-                sensorTemp.location = locTemp;
-            }
-
-            ServiceEndpoint endpointTemp = new ServiceEndpoint();
-            endpointTemp.topic = topic.getURI();
-            endpointTemp.url = url.getString();
-            endpointTemp.if_type = interfaceType.getString();
-            endpointTemp.description = interfaceDescription.getString();
-            sensorTemp.endpoints.add(endpointTemp);
-
-            processedSensors.put(id.getURI(), sensorTemp);
+            sensorList.sensors.add(sensorTemp);
         }
 
-        sensorList.sensors.addAll(processedSensors.values());
         if (sensorList.sensors.size() == 0) {
             return null;
         }
