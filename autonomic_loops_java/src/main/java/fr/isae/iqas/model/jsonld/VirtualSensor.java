@@ -17,5 +17,5 @@ public class VirtualSensor {
     @JsonldProperty("http://www.w3.org/2003/01/geo/wgs84_pos#location")
     public Location location;
 
-    public List<ServiceEndpoint> endpoints;
+    public ServiceEndpoint endpoint;
 }
