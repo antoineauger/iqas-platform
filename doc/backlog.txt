@@ -1,0 +1,38 @@
+Implementation
+
++++ Virtual Sensors +++
+-Add hazard events
+-Improve obs generation (real/adapted timestamp)
+
++++ iQAS platform +++
+-Add Knowledge layer
+-Class for Symptoms > Plans
+-Class for Executions (according to the MAPE-K loop RD / Info)
+-Define RFC for each MAPE-K loop
+
++++ Consumers +++
+-Real-time consuming (graph, pie charts?)
+
+Evaluation
+
+-Duration of service interruption in case of a sensor failure and available candidate / application disconnect
+-Computing, networking, storage, cost on application
+
+
+-Number of satisfied requests
+-Number of obs/sec delivered
+-Number of obs/s processed
+-Sensor battery with/without specific adaptation strategies
+-obs latency (mean/max/min/std)
+-Time to take into account new symptom, remedy (if class loader)
+
+
+ATTENTION ontologies: optionnel, quand on l'utilise sur la plateforme on obtiendra de meilleurs résultats que sur l'appli directement, ça a du sens, faisable.
+
+-même si pas QoO, plateforme + économe et/ou plus scalable
+-appli, scalabilité verticale => plateforme 2 (verticale + horizontale) donc plus scalable
+-plateforme = oracle, vision globale
+
+A / Ressources (appli, plat, sensor) => épuiser la batterie de l'appli, sensor
+B / QoO => applis ont des besoins différents
+C / Self-Reconfiguration => les besoins applicatifs changent en cours de route ou une appli part, un nouveau capteur arrive => on économise
