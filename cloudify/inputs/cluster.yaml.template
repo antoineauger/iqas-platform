@@ -1,7 +1,0 @@
-ip_vm_1: '10.10.1.11'
-ip_vm_2: '10.10.1.12'
-NCM_GUI_port: '8080'
-path: '/nifi'
-agent_user: 'vagrant'
-agent_private_key_path: '/home/vagrant/.ssh/id_rsa'
-nifi_version: '0.7.0'
