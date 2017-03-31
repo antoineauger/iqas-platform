@@ -59,9 +59,10 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                     return new RawData(
-                                            sensorDataObject.getString("timestamp"),
+                                            sensorDataObject.getString("date"),
                                             sensorDataObject.getString("value"),
-                                            sensorDataObject.getString("producer"));
+                                            sensorDataObject.getString("producer"),
+                                            sensorDataObject.getString("timestamps"));
                                 })
                         );
 
@@ -86,9 +87,10 @@ public class QoOAnnotatorPipeline extends AbstractPipeline implements IPipeline 
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                     Information tempInformation = new Information(
-                                            sensorDataObject.getString("timestamp"),
+                                            sensorDataObject.getString("date"),
                                             sensorDataObject.getString("value"),
-                                            sensorDataObject.getString("producer"));
+                                            sensorDataObject.getString("producer"),
+                                            sensorDataObject.getString("timestamps"));
                                     tempInformation.setQoOAttribute(OBS_ACCURACY, String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(tempInformation, getQooParams())));
                                     tempInformation.setQoOAttribute(OBS_FRESHNESS, String.valueOf(getComputeAttributeHelper().computeQoOFreshness(tempInformation)));
                                     return tempInformation;

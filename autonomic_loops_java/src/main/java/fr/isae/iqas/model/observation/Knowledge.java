@@ -9,36 +9,21 @@ import java.sql.Timestamp;
  */
 @JsonldType("http://purl.oclc.org/NET/ssnx/ssn#SensorOutput")
 public class Knowledge extends Information {
-    private Timestamp timestamp;
-    private Double value;
-    private String producer;
 
     public Knowledge(Information information) {
         super(information);
-        this.timestamp = getTimestamp();
-        this.value = getValue();
-        this.producer = getProducer();
     }
 
     public Knowledge(RawData rawData) {
         super(rawData);
-        this.timestamp = getTimestamp();
-        this.value = getValue();
-        this.producer = getProducer();
     }
 
-    public Knowledge(String timestamp, String value, String producer) {
-        super(timestamp, value, producer);
-        this.timestamp = getTimestamp();
-        this.value = getValue();
-        this.producer = getProducer();
+    public Knowledge(String date, String value, String producer, String timestamps) {
+        super(date, value, producer, timestamps);
     }
 
-    public Knowledge(Timestamp timestamp, Double value, String producer) {
-        super(timestamp, value, producer);
-        this.timestamp = getTimestamp();
-        this.value = getValue();
-        this.producer = getProducer();
+    public Knowledge(Timestamp date, Double value, String producer, String timestamps) {
+        super(date, value, producer, timestamps);
     }
 
 

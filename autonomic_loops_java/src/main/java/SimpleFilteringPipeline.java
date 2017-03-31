@@ -50,9 +50,10 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                 return new RawData(
-                                        sensorDataObject.getString("timestamp"),
+                                        sensorDataObject.getString("date"),
                                         sensorDataObject.getString("value"),
-                                        sensorDataObject.getString("producer"));
+                                        sensorDataObject.getString("producer"),
+                                        sensorDataObject.getString("timestamps"));
                             })
                     );
 
@@ -73,9 +74,10 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                 return new Information(
-                                        sensorDataObject.getString("timestamp"),
+                                        sensorDataObject.getString("date"),
                                         sensorDataObject.getString("value"),
-                                        sensorDataObject.getString("producer"));
+                                        sensorDataObject.getString("producer"),
+                                        sensorDataObject.getString("timestamps"));
                             })
                     );
 

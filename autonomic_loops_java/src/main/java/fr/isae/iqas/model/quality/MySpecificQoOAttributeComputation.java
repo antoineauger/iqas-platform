@@ -49,7 +49,7 @@ public class MySpecificQoOAttributeComputation implements IComputeQoOAttributes 
 
     @Override
     public Double computeQoOFreshness(Information information) {
-        Timestamp informationSensingDate = information.getTimestamp();
+        Timestamp informationSensingDate = information.getDate();
         Double age = (double) (System.currentTimeMillis() - informationSensingDate.getTime());
         return age;
     }

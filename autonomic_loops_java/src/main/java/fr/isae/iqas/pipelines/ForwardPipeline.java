@@ -12,6 +12,7 @@ import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.request.Operator;
+import org.apache.jena.base.Sys;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
@@ -52,9 +53,12 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                     return new RawData(
-                                            sensorDataObject.getString("timestamp"),
+                                            sensorDataObject.getString("date"),
                                             sensorDataObject.getString("value"),
-                                            sensorDataObject.getString("producer"));
+                                            sensorDataObject.getString("producer"),
+                                            sensorDataObject.getString("timestamps"),
+                                            "iQAS_out",
+                                            System.currentTimeMillis());
                                 })
                         );
 
@@ -76,9 +80,12 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                     Information informationTemp =  new Information(
-                                            sensorDataObject.getString("timestamp"),
+                                            sensorDataObject.getString("date"),
                                             sensorDataObject.getString("value"),
-                                            sensorDataObject.getString("producer"));
+                                            sensorDataObject.getString("producer"),
+                                            sensorDataObject.getString("timestamps"),
+                                            "iQAS_out",
+                                            System.currentTimeMillis());
 
                                     ObjectMapper mapper = new ObjectMapper();
                                     TypeReference<HashMap<String,String>> typeRef = new TypeReference<HashMap<String,String>>(){};

@@ -7,38 +7,56 @@ import java.sql.Timestamp;
  */
 public class RawData {
 
-    private Timestamp timestamp;
+    private Timestamp date;
     private Double value;
     private String producer;
+    private String timestamps;
 
-    public RawData(String timestamp, String value, String producer) {
-        this.timestamp = new Timestamp(Long.valueOf(timestamp));
+    public RawData(String date, String value, String producer, String timestamps) {
+        this.date = new Timestamp(Long.valueOf(date));
         this.value = Double.valueOf(value);
         this.producer = producer;
+        this.timestamps = timestamps;
     }
 
-    public RawData(Timestamp timestamp, Double value, String producer) {
-        this.timestamp = timestamp;
+    public RawData(String date, String value, String producer, String timestamps, String stepName, long timestamp) {
+        this.date = new Timestamp(Long.valueOf(date));
+        this.value = Double.valueOf(value);
+        this.producer = producer;
+        this.timestamps = timestamps;
+
+        if (this.timestamps == null || this.timestamps.equals("")) {
+            this.timestamps = stepName + ":" + String.valueOf(timestamp);
+        }
+        else {
+            this.timestamps = this.timestamps.concat(";" + stepName + ":" + String.valueOf(timestamp));
+        }
+    }
+
+    public RawData(Timestamp date, Double value, String producer, String timestamps) {
+        this.date = date;
         this.value = value;
         this.producer = producer;
+        this.timestamps = timestamps;
     }
 
     public RawData(RawData rawData) {
-        this.timestamp = rawData.getTimestamp();
+        this.date = rawData.getDate();
         this.value = rawData.getValue();
         this.producer = rawData.getProducer();
+        this.timestamps = rawData.getTimestamps();
     }
 
     /**
      * Getters and setters for attributes
      */
 
-    public Timestamp getTimestamp() {
-        return timestamp;
+    public Timestamp getDate() {
+        return date;
     }
 
-    public void setTimestamp(Timestamp timestamp) {
-        this.timestamp = timestamp;
+    public void setDate(Timestamp date) {
+        this.date = date;
     }
 
     public Double getValue() {
@@ -55,5 +73,18 @@ public class RawData {
 
     public void setProducer(String producer) {
         this.producer = producer;
+    }
+
+    public String getTimestamps() {
+        return timestamps;
+    }
+
+    public void addTimestamp(String stepName, String timestampString) {
+        if (this.timestamps.equals("")) {
+            this.timestamps = this.timestamps.concat(stepName + ":" + timestampString);
+        }
+        else {
+            this.timestamps = this.timestamps.concat(";" + stepName + ":" + timestampString);
+        }
     }
 }

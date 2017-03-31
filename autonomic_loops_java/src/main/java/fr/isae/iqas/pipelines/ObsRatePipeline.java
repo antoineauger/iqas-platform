@@ -59,9 +59,10 @@ public class ObsRatePipeline extends AbstractPipeline implements IPipeline {
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                 return new RawData(
-                                        sensorDataObject.getString("timestamp"),
+                                        sensorDataObject.getString("date"),
                                         sensorDataObject.getString("value"),
-                                        sensorDataObject.getString("producer"));
+                                        sensorDataObject.getString("producer"),
+                                        sensorDataObject.getString("timestamps"));
                             })
                     );
 

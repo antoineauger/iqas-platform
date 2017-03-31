@@ -109,15 +109,16 @@ public class AutonomicManagerActor extends UntypedActor {
                         .onComplete(new OnComplete<VirtualSensorList>() {
                             public void onComplete(Throwable throwable, VirtualSensorList virtualSensorList) {
                                 if (throwable == null) { // Only continue if there was no error so far
-                                    Iterator<VirtualSensor> it = virtualSensorList.sensors.iterator();
+                                    // TODO: uncomment
+                                    /*Iterator<VirtualSensor> it = virtualSensorList.sensors.iterator();
                                     while (it.hasNext()) {
                                         VirtualSensor sensor = it.next();
                                         String sensorID = sensor.sensor_id.split("#")[1];
                                         if (!connectedSensors.containsKey(sensorID) || !connectedSensors.get(sensorID)) { // if no info is available or if the sensor is disconnected
                                             it.remove();
                                         }
-                                    }
-                                    if (virtualSensorList != null && virtualSensorList.sensors.size() > 0) {
+                                    }*/
+                                    if (virtualSensorList.sensors.size() > 0) {
                                         incomingReq.addLog("Found couple (" + incomingReq.getTopic() + " / " + incomingReq.getLocation() + "), forwarding request to Monitor.");
                                         incomingReq.updateState(SUBMITTED);
                                     } else {

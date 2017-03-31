@@ -17,18 +17,23 @@ public class Information extends RawData {
         this.qoOAttributeValues = new ConcurrentHashMap<>();
     }
 
-    public Information(String timestamp, String value, String producer) {
-        super(timestamp, value, producer);
+    public Information(String date, String value, String producer, String timestamps, String stepName, long timestamp) {
+        super(date, value, producer, timestamps, stepName, timestamp);
         this.qoOAttributeValues = new ConcurrentHashMap<>();
     }
 
-    public Information(Timestamp timestamp, Double value, String producer) {
-        super(timestamp, value, producer);
+    public Information(String date, String value, String producer, String timestamps) {
+        super(date, value, producer, timestamps);
+        this.qoOAttributeValues = new ConcurrentHashMap<>();
+    }
+
+    public Information(Timestamp date, Double value, String producer, String timestamps) {
+        super(date, value, producer, timestamps);
         this.qoOAttributeValues = new ConcurrentHashMap<>();
     }
 
     public Information(Information information) {
-        super(information.getTimestamp(), information.getValue(), information.getProducer());
+        super(information.getDate(), information.getValue(), information.getProducer(), information.getTimestamps());
         this.qoOAttributeValues = information.getQoOAttributeValues();
     }
 
