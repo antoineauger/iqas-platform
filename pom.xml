@@ -9,8 +9,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <groupId>fr.isae.iqas.mapek</groupId>
-    <artifactId>iqas-autonomic-loops</artifactId>
+    <groupId>fr.isae.iqas</groupId>
+    <artifactId>iqas-platform</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>

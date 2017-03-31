@@ -23,3 +23,6 @@ _old_/mvel/.idea
 _old_/mvel/target
 container_settings.json
 *.pyc
+.idea
+logs
+target
