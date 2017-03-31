@@ -20,8 +20,6 @@ def usage():
     print("Module: Virtual Sensor Container")
     print("(C) 2017 Antoine Auger\n")
 
-# TODO: uncomment for final deployment
-print(sys.argv)
 if len(sys.argv) != 4:
     print('ERROR: Wrong number of parameters')
     usage()
