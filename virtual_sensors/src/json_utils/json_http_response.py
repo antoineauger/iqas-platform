@@ -14,7 +14,6 @@ def generate_sensor_representation(response, sensor):
 	dict_response['sensor_id'] = sensor.sensor_id
 	dict_response['enabled'] = sensor.enabled
 	dict_response['sensing'] = sensor.sensing
-	dict_response['endpoint'] = sensor.endpoint
 	dict_response['capabilities'] = sensor.capabilities
 	dict_response['config'] = sensor.config
 	return json.dumps(dict_response)
@@ -35,7 +34,7 @@ def generate_sensor_capabilities(response, sensor):
 	return json.dumps(dict_response)
 
 
-def generate_API_response(response, result, details, capability='', old_value='', value=''):
+def generate_api_response(response, result, details, capability='', old_value='', value=''):
 	"""
 		Useful to generate a response after modifying a sensor capability.
 		:param response: a bottle response object (only used to modify its Content-Type)

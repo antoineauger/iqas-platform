@@ -1,5 +1,4 @@
 # A shippable 'virtual sensor' for the iQAS platform
-#
 # VERSION: 1.0
 
 FROM ubuntu:16.04
@@ -25,14 +24,15 @@ RUN apt-get upgrade -y
 # install python 3 and pip3
 RUN pip3 install --upgrade pip
 RUN pip3 install bottle httplib2
+RUN pip3 install kafka-python
 
 # copy directories
 COPY . /home/bottle/virtualSensor
-ARG obsFile=raw_observations.txt
-COPY ./data/$obsFile /home/bottle/virtualSensor/data/raw_observations.txt
+ARG obsFile=data/raw_observations.txt
+COPY $obsFile /home/bottle/virtualSensor/data/raw_observations.txt
 
 # in case you'd prefer to use links, expose the port
 WORKDIR /home/bottle/virtualSensor/src
-EXPOSE 9090
-ENTRYPOINT ["/usr/bin/python3", "/home/bottle/virtualSensor/src/server.py"]
+EXPOSE 8080
+ENTRYPOINT ["/usr/bin/python3", "/home/bottle/virtualSensor/src/main.py", "sensor01", "KAFKA", "test_python"]
 USER bottle

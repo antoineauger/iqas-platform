@@ -21,3 +21,5 @@ _old_/flink_resources/flink-filtering-module/target
 _old_/kafka_streams/target
 _old_/mvel/.idea
 _old_/mvel/target
+container_settings.json
+*.pyc
