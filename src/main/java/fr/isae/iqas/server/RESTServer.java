@@ -100,7 +100,7 @@ public class RESTServer extends AllDirectives {
                 route(
                         get(() -> route(
 
-                                // Homepage, css and scripts
+                                // Homepage, images, css and scripts
                                 pathSingleSlash(() ->
                                         getFromResource("web/index.html", ContentTypes.TEXT_HTML_UTF8)
                                 ),
@@ -109,6 +109,9 @@ public class RESTServer extends AllDirectives {
                                 ),
                                 path(segment("script.js"), () ->
                                         getFromResource("web/script.js")
+                                ),
+                                path(segment("iqas_logo.png"), () ->
+                                        getFromResource("web/iqas_logo.png")
                                 ),
 
                                 // REST APIs
