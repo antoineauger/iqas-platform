@@ -62,17 +62,16 @@
     <li>/requests</li>
 </ul>
 
-For submitting a new iQAS request, the format is the following (all parameters are mandatory):<br/>
-<div style="margin-left: 30px;" class="code">
+For submitting a new iQAS request, the format is the following (bold parameters are mandatory):
+<div style="margin-top: 10px; margin-left: 30px;" class="code">
     Content-Type: application/json<br/>
     {<br/>
     <div style="margin-left: 30px;">
-        "request_id": "",<br/>
-        "application_id": "[application_id]"<br/>
-        "topic": [topic] / "ALL"<br/>
-        "location": [location] / "ALL"<br/>
-        "obs_level": "RAW_DATA" / "INFORMATION" / "KNOWLEDGE"<br/>
-        "qoo": (see below)<br/>
+        <b>"application_id"</b>: "[application_id]"<br/>
+        <b>"topic"</b>: "[topic]" / "ALL"<br/>
+        <b>"location"</b>: "[location]" / "ALL"<br/>
+        "obs_level": "RAW_DATA" / "INFORMATION" / "KNOWLEDGE" (default: RAW_DATA)<br/>
+        "qoo": (see below) (default: no QoO constraints)<br/>
     </div>
     }
 </div>
@@ -85,12 +84,12 @@ For submitting a new iQAS request, the format is the following (all parameters a
     </tr>
     <tr>
         <td width="50%">
-            Format of a "QoO Service Level Agreement" for an iQAS request:
-            <div style="margin-left: 30px;" class="code">
+            When present, the qoo parameter represents a "QoO Service Level Agreement" and should be expressed as follow:
+            <div style="margin-top: 10px; margin-left: 30px;" class="code">
                 "qoo": {<br/>
                 <div style="margin-left: 30px;">
-                    "interested_in": [QoO_attributes_list]<br/>
-                    "additional_params": {<br/>
+                    <b>"interested_in"</b>: [QoO_attributes_list]<br/>
+                    <b>"additional_params"</b>: {<br/>
                     <div style="margin-left: 30px;">
                         "[additional_param_name]": "[additional_param_value]",<br/>
                         <div style="margin-left: 30px;">
@@ -98,8 +97,8 @@ For submitting a new iQAS request, the format is the following (all parameters a
                         </div>
                     </div>
                     }<br/>
-                    "sla_level": "BEST_EFFORT" / "GUARANTEED"<br/>
-                    "operator": "NONE" / "AVG" / "MIN" / "MAX"<br/>
+                    "sla_level": "BEST_EFFORT" / "GUARANTEED" (default: BEST_EFFORT)<br/>
+                    "operator": "NONE" / "AVG" / "MIN" / "MAX" (default: NONE)<br/>
                 </div>
                 }
             </div>
@@ -107,10 +106,10 @@ For submitting a new iQAS request, the format is the following (all parameters a
         <td width="50%">
             Details:
             <ul>
-                <li><span class="code">interested_in</span> contains an ordered list
+                <li><span class="code"><b>interested_in</b></span> contains an ordered list
                     (first=very important, last=less important) of QoO attributes that matter for the given application.
                     See <a href="/qoo/attributes">/qoo/attributes</a> for the current supported QoO attributes.</li> <br/>
-                <li><span class="code">additional_params</span> can be used to specify additional QoO requirements.
+                <li><span class="code"><b>additional_params</b></span> can be used to specify additional QoO requirements.
                     Visit <a href="/qoo/parameters">/qoo/parameters</a> to see what parameters can be customized.</li>
             </ul>
         </td>

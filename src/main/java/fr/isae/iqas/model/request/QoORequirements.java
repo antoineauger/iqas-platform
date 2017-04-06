@@ -7,6 +7,7 @@ import fr.isae.iqas.model.quality.QoOAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by an.auger on 24/02/2017.
@@ -22,13 +23,37 @@ public class QoORequirements {
     private SLALevel sla_level;
     private Map<String, String> additional_params;
 
+    public QoORequirements() {
+        this.sla_level = SLALevel.BEST_EFFORT;
+        this.operator = Operator.NONE;
+        this.interested_in = new ArrayList<>();
+        this.additional_params = new ConcurrentHashMap<>();
+    }
+
+    /**
+     *
+     * @param operator is an optional parameter (default: NONE)
+     * @param sla_level is an optional parameter (default: BEST_EFFORT)
+     * @param interested_in
+     * @param additional_params
+     */
     @JsonCreator
     public QoORequirements(@JsonProperty("operator") String operator,
                            @JsonProperty("sla_level") String sla_level,
                            @JsonProperty("interested_in") List<String> interested_in,
                            @JsonProperty("additional_params") Map<String, String> additional_params) {
-        this.operator = Operator.valueOf(operator);
-        this.sla_level = SLALevel.valueOf(sla_level);
+        if (operator == null) {
+            this.operator = Operator.NONE;
+        }
+        else {
+            this.operator = Operator.valueOf(operator);
+        }
+        if (sla_level == null) {
+            this.sla_level = SLALevel.BEST_EFFORT;
+        }
+        else {
+            this.sla_level = SLALevel.valueOf(sla_level);
+        }
         this.interested_in = new ArrayList<>();
         for (String s : interested_in) {
             this.interested_in.add(QoOAttribute.valueOf(s));

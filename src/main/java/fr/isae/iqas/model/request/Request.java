@@ -31,6 +31,15 @@ public class Request {
 
     private ArrayList<String> logs;
 
+    /**
+     *
+     * @param request_id is an optional parameter (default: "")
+     * @param application_id
+     * @param topic
+     * @param location
+     * @param obs_level
+     * @param qooConstraints is an optional parameter (default: no QoO constraints)
+     */
     @JsonCreator
     public Request(@JsonProperty("request_id") String request_id,
                    @JsonProperty("application_id") String application_id,
@@ -38,13 +47,28 @@ public class Request {
                    @JsonProperty("location") String location,
                    @JsonProperty("obs_level") String obs_level,
                    @JsonProperty("qoo") QoORequirements qooConstraints) {
-        this.request_id = request_id;
+        if (request_id == null) {
+            this.request_id = "";
+        }
+        else {
+            this.request_id = request_id;
+        }
         this.application_id = application_id;
         this.topic = topic;
-        this.obs_level = ObservationLevel.valueOf(obs_level);
+        if (obs_level == null) {
+            this.obs_level = ObservationLevel.RAW_DATA;
+        }
+        else {
+            this.obs_level = ObservationLevel.valueOf(obs_level);
+        }
         this.location = location;
 
-        this.qooConstraints = qooConstraints;
+        if (qooConstraints == null) {
+            this.qooConstraints = new QoORequirements();
+        }
+        else {
+            this.qooConstraints = qooConstraints;
+        }
 
         this.statesList = new ArrayList<>();
         this.statesList.add(new State(CREATED, new Date()));
