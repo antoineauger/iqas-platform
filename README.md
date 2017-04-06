@@ -1,8 +1,8 @@
+![iqas_logo](/src/main/resources/web/iqas_logo.png?raw=true "iQAS logo")
+
 # iQAS-platform
 
 An integration platform for QoO Assessment as a Service.
-
-
 
 ## System requirements
 
