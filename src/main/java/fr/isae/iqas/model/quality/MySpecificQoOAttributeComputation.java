@@ -1,6 +1,5 @@
 package fr.isae.iqas.model.quality;
 
-import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.RawData;
 
 import java.sql.Timestamp;

@@ -1,6 +1,5 @@
 package fr.isae.iqas.model.observation;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import fr.isae.iqas.model.quality.QoOAttribute;
 
 import java.sql.Timestamp;

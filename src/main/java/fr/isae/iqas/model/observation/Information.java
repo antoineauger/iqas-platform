@@ -1,10 +1,6 @@
 package fr.isae.iqas.model.observation;
 
-import fr.isae.iqas.model.quality.QoOAttribute;
-
 import java.sql.Timestamp;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by an.auger on 08/02/2017.
