@@ -11,15 +11,21 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
+import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Operator;
 import org.apache.jena.base.Sys;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import static fr.isae.iqas.model.observation.ObservationLevel.*;
+import static fr.isae.iqas.model.quality.QoOAttribute.OBS_ACCURACY;
+import static fr.isae.iqas.model.quality.QoOAttribute.OBS_FRESHNESS;
 import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
@@ -28,12 +34,13 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * ForwardPipeline is a QoO pipeline provided by the iQAS platform.
  * It should not be modified.
  */
-public class ForwardPipeline extends AbstractPipeline implements IPipeline {
+public class OutputPipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
 
-    public ForwardPipeline() {
-        super("Forward Pipeline", "ForwardPipeline", false);
+    public OutputPipeline() {
+        super("Output Pipeline", "OutputPipeline", false);
 
+        setParameter("interested_in", "", true);
         addSupportedOperator(NONE);
     }
 
@@ -45,6 +52,11 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
         final ObservationLevel askedLevelFinal = askedLevel;
         runnableGraph = GraphDSL
                 .create(builder -> {
+                    String[] allowedSensors = getParams().get("interested_in").split(";");
+                    List<QoOAttribute> interestAttr = new ArrayList<>();
+                    for (String s : Arrays.asList(allowedSensors)) {
+                        interestAttr.add(QoOAttribute.valueOf(s));
+                    }
 
                     // ################################# YOUR CODE GOES HERE #################################
 
@@ -52,13 +64,24 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
                         final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                    return new RawData(
+                                    RawData rawDataTemp = new RawData(
                                             sensorDataObject.getString("date"),
                                             sensorDataObject.getString("value"),
                                             sensorDataObject.getString("producer"),
                                             sensorDataObject.getString("timestamps"),
                                             "iQAS_out",
                                             System.currentTimeMillis());
+
+                                    if (getQooParams().size() > 0) {
+                                        if (interestAttr.contains(OBS_ACCURACY)) {
+                                            rawDataTemp.setQoOAttribute(OBS_ACCURACY, String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(rawDataTemp, getQooParams())));
+                                        }
+                                        if (interestAttr.contains(OBS_FRESHNESS)) {
+                                            rawDataTemp.setQoOAttribute(OBS_FRESHNESS, String.valueOf(getComputeAttributeHelper().computeQoOFreshness(rawDataTemp)));
+                                        }
+                                    }
+
+                                    return rawDataTemp;
                                 })
                         );
 
@@ -87,11 +110,13 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
                                             "iQAS_out",
                                             System.currentTimeMillis());
 
-                                    ObjectMapper mapper = new ObjectMapper();
-                                    TypeReference<HashMap<String,String>> typeRef = new TypeReference<HashMap<String,String>>(){};
-                                    HashMap<String,String> qooAttributes = mapper.readValue(sensorDataObject.get("qoOAttributeValues").toString(), typeRef);
-                                    if (qooAttributes != null) {
-                                        informationTemp.setQoOAttributeValuesFromJSON(qooAttributes);
+                                    if (getQooParams().size() > 0) {
+                                        if (interestAttr.contains(OBS_ACCURACY)) {
+                                            informationTemp.setQoOAttribute(OBS_ACCURACY, String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(informationTemp, getQooParams())));
+                                        }
+                                        if (interestAttr.contains(OBS_FRESHNESS)) {
+                                            informationTemp.setQoOAttribute(OBS_FRESHNESS, String.valueOf(getComputeAttributeHelper().computeQoOFreshness(informationTemp)));
+                                        }
                                     }
 
                                     return informationTemp;
@@ -112,7 +137,7 @@ public class ForwardPipeline extends AbstractPipeline implements IPipeline {
                         return new FlowShape<>(consumRecordToInfo.in(), infoToProdRecord.out());
                     }
                     else if (askedLevelFinal == KNOWLEDGE) {
-                        //TODO: code logic for Knowledge for SimpleFilteringPipeline
+                        //TODO: code logic for Knowledge for ForwardPipeline
                         return null;
                     }
                     else { // other observation levels are not supported

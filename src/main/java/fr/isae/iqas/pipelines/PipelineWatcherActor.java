@@ -42,10 +42,8 @@ public class PipelineWatcherActor extends UntypedActor {
         md5Pipelines = new ConcurrentHashMap<>();
         pipelineObjects = new ConcurrentHashMap<>();
 
-        pipelineObjects.put(ObsRatePipeline.class.getSimpleName(), ObsRatePipeline.class);
-        pipelineObjects.put(ForwardPipeline.class.getSimpleName(), ForwardPipeline.class);
-        pipelineObjects.put(SensorFilterPipeline.class.getSimpleName(), SensorFilterPipeline.class);
-        pipelineObjects.put(QoOAnnotatorPipeline.class.getSimpleName(), QoOAnnotatorPipeline.class);
+        pipelineObjects.put(OutputPipeline.class.getSimpleName(), OutputPipeline.class);
+        pipelineObjects.put(IngestPipeline.class.getSimpleName(), IngestPipeline.class);
     }
 
     @Override

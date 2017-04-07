@@ -203,7 +203,9 @@ public class MonitorActor extends UntypedActor {
             }
             if (mappingPipelinesRequests.containsKey(tempObsRateReportMsg.getUniquePipelineID())) { // if there is a constraint on OBS_RATE for a Request using this Pipeline
                 for (String s : mappingPipelinesRequests.get(tempObsRateReportMsg.getUniquePipelineID())) { // for all concerned Requests associated with this base Pipeline
-                    countByRequest.put(s, countByRequest.get(s) + totalObsFromSensors);
+                    if (countByRequest.containsKey(s)) {
+                        countByRequest.put(s, countByRequest.get(s) + totalObsFromSensors);
+                    }
                 }
             }
         }
@@ -215,29 +217,17 @@ public class MonitorActor extends UntypedActor {
                 qooQualityBuffer.putIfAbsent(tempQoOReportMsg.getRequestID(), new CircularFifoBuffer(5));
                 qooQualityBuffer.get(tempQoOReportMsg.getRequestID()).add(new QoOReportMsg(tempQoOReportMsg));
             }
-
-            // TODO to remove
-            /*log.info("Quality Buffer:");
-            qooQualityBuffer.forEach((k, v) -> {
-                //log.info(k + ": ");
-                Iterator it = v.iterator();
-                while (it.hasNext()) {
-                    QoOReportMsg m = (QoOReportMsg) it.next();
-                    log.info(m.getUniquePipelineID() + " | " + m.getQooAttributesMap().toString() + " | " + m.getProducer() + " | " + m.getRequestID());
-                }
-            });
-            log.info("------------------");*/
         }
         // SymptomMsg messages
         else if (message instanceof SymptomMsg) {
             SymptomMsg symptomMAPEKMsg = (SymptomMsg) message;
             if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.NEW && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline creation
-                log.info("New ObsRatePipeline: {} {}", symptomMAPEKMsg.getUniqueIDPipeline(), symptomMAPEKMsg.getRequestID());
+                log.info("New IngestPipeline: {} {}", symptomMAPEKMsg.getUniqueIDPipeline(), symptomMAPEKMsg.getRequestID());
                 mappingPipelinesRequests.putIfAbsent(symptomMAPEKMsg.getUniqueIDPipeline(), new HashSet<>());
                 mappingPipelinesRequests.get(symptomMAPEKMsg.getUniqueIDPipeline()).add(symptomMAPEKMsg.getRequestID());
             }
             else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.REMOVED && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline removal
-                log.info("ObsRatePipeline " + symptomMAPEKMsg.getUniqueIDPipeline() + " is no longer active, removing it");
+                log.info("IngestPipeline " + symptomMAPEKMsg.getUniqueIDPipeline() + " is no longer active, removing it");
                 numberObservedSymptomsObsRate.remove(symptomMAPEKMsg.getUniqueIDPipeline());
                 mappingPipelinesRequests.remove(symptomMAPEKMsg.getUniqueIDPipeline());
             }
@@ -301,7 +291,7 @@ public class MonitorActor extends UntypedActor {
 
                     try {
                         long obsRateVal = Long.parseLong(unitValue[0]);
-                        TimeUnit obsRateUnit = null;
+                        TimeUnit obsRateUnit;
                         if (unitValue.length == 2 && unitValue[1].equals("s")) {
                             obsRateUnit = TimeUnit.SECONDS;
                         }

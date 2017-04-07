@@ -20,6 +20,7 @@ import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
+import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.pipelines.IPipeline;
@@ -128,7 +129,7 @@ public class PlanActor extends UntypedActor {
                     final int finalmaxLevelDepth = beforeLastTopic.getLevel();
                     TopicEntity finalSinkForApp = requestMapping.getFinalSink();
 
-                    retrievePipeline("ForwardPipeline").whenComplete((pipeline, throwable) -> {
+                    retrievePipeline("OutputPipeline").whenComplete((pipeline, throwable) -> {
                         if (throwable != null) {
                             log.error(throwable.toString());
                         }
@@ -148,7 +149,7 @@ public class PlanActor extends UntypedActor {
                     });
                 }
 
-                incomingRequest.addLog("Successfully created pipeline graph without any QoO constraints.");
+                incomingRequest.addLog("Successfully created pipeline graph without considering any QoO constraints.");
                 incomingRequest.updateState(State.Status.ENFORCED);
                 mongoController.updateRequest(incomingRequest.getRequest_id(), incomingRequest).whenComplete((result, throwable) -> {
                     if (throwable != null) {
@@ -249,6 +250,7 @@ public class PlanActor extends UntypedActor {
     private void buildGraph(RequestMapping requestMapping,
                             Request incomingRequest,
                             Map<String,Map<String,String>> qooParamsForAllTopics) {
+
         // Primary sources and filtering by sensors
         String pipelineID = "";
         String tempID = "";
@@ -272,14 +274,14 @@ public class PlanActor extends UntypedActor {
                 log.error(throwable2.toString());
             }
             else {
-                if (pipeline.getPipelineID().equals("SensorFilterPipeline")) {
+                if (pipeline.getPipelineID().equals("IngestPipeline")) {
                     VirtualSensorList vList = fusekiController._findAllSensorsWithConditions(incomingRequest.getLocation(), incomingRequest.getTopic());
-                    String sensorsToKeep = "";
+                    StringBuilder sensorsToKeep = new StringBuilder();
                     for (VirtualSensor v : vList.sensors) {
-                        sensorsToKeep += v.sensor_id.split("#")[1] + ";";
+                        sensorsToKeep.append(v.sensor_id.split("#")[1]).append(";");
                     }
-                    sensorsToKeep = sensorsToKeep.substring(0, sensorsToKeep.length() - 1);
-                    pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep);
+                    sensorsToKeep = new StringBuilder(sensorsToKeep.substring(0, sensorsToKeep.length() - 1));
+                    pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep.toString());
                 }
 
                 pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
@@ -316,6 +318,15 @@ public class PlanActor extends UntypedActor {
                     log.error(throwable3.toString());
                 }
                 else {
+                    if (pipeline.getPipelineID().equals("OutputPipeline")) {
+                        StringBuilder interestAttr = new StringBuilder();
+                        for (QoOAttribute a : incomingRequest.getQooConstraints().getInterested_in()) {
+                            interestAttr.append(a.toString()).append(";");
+                        }
+                        interestAttr = new StringBuilder(interestAttr.substring(0, interestAttr.length() - 1));
+                        pipeline.setCustomizableParameter("interested_in", interestAttr.toString());
+                    }
+
                     pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
                     pipeline.setTempID(tempIDInt);
                     pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
@@ -344,33 +355,39 @@ public class PlanActor extends UntypedActor {
         if (actionMsg.getAction() == ActionMAPEK.APPLY && actionMsg.getAbout() == EntityMAPEK.PIPELINE) {
 
             ActorRef actorRefToStart;
-            if (actionMsg.getPipelineToEnforce().getPipelineID().equals("ObsRatePipeline")) {
-                actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
-                        prop,
-                        actionMsg.getPipelineToEnforce(),
-                        actionMsg.getAskedObsLevel(),
-                        actionMsg.getTopicsToPullFrom(),
-                        actionMsg.getTopicToPublish())
-                        .withDispatcher("dispatchers.pipelines.obsRate"));
+            if (!mappingTopicsActors.containsKey(actionMsg.getTopicToPublish())) {
+                if (actionMsg.getPipelineToEnforce().getPipelineID().equals("IngestPipeline")) {
+                    actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
+                            prop,
+                            actionMsg.getPipelineToEnforce(),
+                            actionMsg.getAskedObsLevel(),
+                            actionMsg.getTopicsToPullFrom(),
+                            actionMsg.getTopicToPublish())
+                            .withDispatcher("dispatchers.pipelines.ingest"));
+                }
+                else {
+                    actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
+                            prop,
+                            actionMsg.getPipelineToEnforce(),
+                            actionMsg.getAskedObsLevel(),
+                            actionMsg.getTopicsToPullFrom(),
+                            actionMsg.getTopicToPublish()));
+                }
+
+                enforcedPipelines.put(actorRefToStart.path().name(), actionMsg.getPipelineToEnforce());
+                mappingTopicsActors.put(actionMsg.getTopicToPublish(), actorRefToStart.path().name());
+                execActorsRefs.put(actorRefToStart.path().name(), actorRefToStart);
             }
             else {
-                actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
-                        prop,
-                        actionMsg.getPipelineToEnforce(),
-                        actionMsg.getAskedObsLevel(),
-                        actionMsg.getTopicsToPullFrom(),
-                        actionMsg.getTopicToPublish()));
+                actorRefToStart = execActorsRefs.get(mappingTopicsActors.get(actionMsg.getTopicToPublish()));
             }
 
-            enforcedPipelines.put(actorRefToStart.path().name(), actionMsg.getPipelineToEnforce());
-            mappingTopicsActors.put(actionMsg.getTopicToPublish(), actorRefToStart.path().name());
-            execActorsRefs.put(actorRefToStart.path().name(), actorRefToStart);
             actorPathRefs.computeIfAbsent(actionMsg.getAssociatedRequest_id(), k -> new ArrayList<>());
             actorPathRefs.get(actionMsg.getAssociatedRequest_id()).add(actorRefToStart.path().name());
             execActorsCount.putIfAbsent(actorRefToStart.path().name(), 0);
             execActorsCount.put(actorRefToStart.path().name(), execActorsCount.get(actorRefToStart.path().name()) + 1);
 
-            if (actionMsg.getPipelineToEnforce().getPipelineID().equals("ObsRatePipeline")) {
+            if (actionMsg.getPipelineToEnforce().getPipelineID().equals("IngestPipeline")) {
                 monitorActor.tell(new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRefToStart.path().name()).getUniqueID(), actionMsg.getAssociatedRequest_id()), getSelf());
             }
 

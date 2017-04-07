@@ -5,7 +5,6 @@ import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.request.Operator;
@@ -15,7 +14,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
 
-import static fr.isae.iqas.model.observation.ObservationLevel.*;
 import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
@@ -45,7 +43,6 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
 
                     // ################################# YOUR CODE GOES HERE #################################
 
-                    // Raw Data
                     final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
@@ -69,54 +66,11 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                             Flow.of(RawData.class).filter(r -> r.getValue() < Double.valueOf(getParams().get("threshold_min")))
                     );
 
-                    // Information
-                    final FlowShape<ConsumerRecord, Information> consumRecordToInfo = builder.add(
-                            Flow.of(ConsumerRecord.class).map(r -> {
-                                JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                return new Information(
-                                        sensorDataObject.getString("date"),
-                                        sensorDataObject.getString("value"),
-                                        sensorDataObject.getString("producer"),
-                                        sensorDataObject.getString("timestamps"));
-                            })
-                    );
+                    builder.from(consumRecordToRawData.out())
+                            .via(filteringMechanismRawData)
+                            .toInlet(rawDataToProdRecord.in());
 
-                    final FlowShape<Information, ProducerRecord> infoToProdRecord = builder.add(
-                            Flow.of(Information.class).map(r -> {
-                                ObjectMapper mapper = new ObjectMapper();
-                                mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
-                            })
-                    );
-
-                    final FlowShape<Information, Information> filteringMechanismInformation = builder.add(
-                            Flow.of(Information.class).filter(r -> r.getValue() < Double.valueOf(getParams().get("threshold_min")))
-                    );
-
-                    if (askedLevelFinal == RAW_DATA) {
-                        builder.from(consumRecordToRawData.out())
-                                .via(filteringMechanismRawData)
-                                .toInlet(rawDataToProdRecord.in());
-
-                        return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
-                    }
-                    else if (askedLevelFinal == INFORMATION) {
-                        builder.from(consumRecordToInfo.out())
-                                .via(filteringMechanismInformation)
-                                .toInlet(infoToProdRecord.in());
-
-                        return new FlowShape<>(consumRecordToInfo.in(), infoToProdRecord.out());
-                    }
-                    else if (askedLevelFinal == KNOWLEDGE) {
-                        //TODO: code logic for Knowledge for SimpleFilteringPipeline
-                        return null;
-                    }
-                    else { // other observation levels are not supported
-                        return null;
-                    }
-
-                    // ################################# END OF YOUR CODE #################################
-                    // Do not remove - useful for MAPE-K monitoring
+                    return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
 
                 });
 

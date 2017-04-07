@@ -1,6 +1,7 @@
 package fr.isae.iqas.model.quality;
 
 import fr.isae.iqas.model.observation.Information;
+import fr.isae.iqas.model.observation.RawData;
 
 import java.sql.Timestamp;
 import java.util.Map;
@@ -16,15 +17,15 @@ public class MySpecificQoOAttributeComputation implements IComputeQoOAttributes 
     @Override
     @QoOParam(name = "min_value", type = Double.class)
     @QoOParam(name = "max_value", type = Double.class)
-    public Double computeQoOAccuracy(Information information, Map<String,Map<String, String>> qooParams) {
-        Double currentValue = information.getValue();
+    public Double computeQoOAccuracy(RawData observation, Map<String,Map<String, String>> qooParams) {
+        Double currentValue = observation.getValue();
         Double accuracy = 0.0;
 
-        if (qooParams.containsKey(information.getProducer())) {
-            if (qooParams.get(information.getProducer()).containsKey("min_value") &&
-                    qooParams.get(information.getProducer()).containsKey("max_value")) {
-                Double min_value = Double.valueOf(qooParams.get(information.getProducer()).get("min_value"));
-                Double max_value = Double.valueOf(qooParams.get(information.getProducer()).get("max_value"));
+        if (qooParams.containsKey(observation.getProducer())) {
+            if (qooParams.get(observation.getProducer()).containsKey("min_value") &&
+                    qooParams.get(observation.getProducer()).containsKey("max_value")) {
+                Double min_value = Double.valueOf(qooParams.get(observation.getProducer()).get("min_value"));
+                Double max_value = Double.valueOf(qooParams.get(observation.getProducer()).get("max_value"));
 
                 if (currentValue >= min_value && currentValue <= max_value) {
                     accuracy = 100.0;
@@ -48,8 +49,8 @@ public class MySpecificQoOAttributeComputation implements IComputeQoOAttributes 
     }
 
     @Override
-    public Double computeQoOFreshness(Information information) {
-        Timestamp informationSensingDate = information.getDate();
+    public Double computeQoOFreshness(RawData observation) {
+        Timestamp informationSensingDate = observation.getDate();
         Double age = (double) (System.currentTimeMillis() - informationSensingDate.getTime());
         return age;
     }

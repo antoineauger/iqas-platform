@@ -1,12 +1,17 @@
 package fr.isae.iqas.pipelines;
 
+import akka.actor.ActorRef;
 import akka.stream.FlowShape;
 import akka.stream.Graph;
 import akka.stream.Materializer;
+import akka.stream.UniformFanOutShape;
+import akka.stream.javadsl.Broadcast;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
+import akka.stream.javadsl.Sink;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import fr.isae.iqas.model.message.ObsRateReportMsg;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.request.Operator;
@@ -16,8 +21,8 @@ import org.json.JSONObject;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-import static fr.isae.iqas.model.observation.ObservationLevel.*;
 import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
@@ -26,11 +31,11 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * SensorFilterPipeline is a QoO pipeline provided by the iQAS platform.
  * It should not be modified.
  */
-public class SensorFilterPipeline extends AbstractPipeline implements IPipeline {
+public class IngestPipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
 
-    public SensorFilterPipeline() {
-        super("Sensor Filter Pipeline", "SensorFilterPipeline", true);
+    public IngestPipeline() {
+        super("Ingest Pipeline", "IngestPipeline", true);
 
         setParameter("allowed_sensors", "", true);
         addSupportedOperator(NONE);
@@ -44,7 +49,8 @@ public class SensorFilterPipeline extends AbstractPipeline implements IPipeline 
         final ObservationLevel askedLevelFinal = askedLevel;
         runnableGraph = GraphDSL
                 .create(builder -> {
-                    // ################################# YOUR CODE GOES HERE #################################
+                    // Definition of the broadcast for the MAPE-K monitoring
+                    final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
                     final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {
@@ -75,16 +81,25 @@ public class SensorFilterPipeline extends AbstractPipeline implements IPipeline 
                             })
                     );
 
-                    if (askedLevelFinal == RAW_DATA || askedLevelFinal == INFORMATION || askedLevelFinal == KNOWLEDGE) {
-                        builder.from(consumRecordToRawData.out())
-                                .via(filteredInformationBySensor)
-                                .toInlet(rawDataToProdRecord.in());
+                    builder.from(consumRecordToRawData.out())
+                            .via(filteredInformationBySensor)
+                            .viaFanOut(bcast)
+                            .toInlet(rawDataToProdRecord.in());
 
-                        return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
-                    }
-                    else { // other observation levels are not supported
-                        return null;
-                    }
+                    // ################################# END OF YOUR CODE #################################
+                    // Do not remove - useful for MAPE-K monitoring
+
+                    builder.from(bcast)
+                            .via(builder.add(Flow.of(RawData.class).map(p -> p.getProducer())))
+                            .via(builder.add(getFlowToComputeObsRate()))
+                            .to(builder.add(Sink.foreach(elem -> {
+                                Map<String, Integer> obsRateByTopic = (Map<String, Integer>) elem;
+                                ObsRateReportMsg obsRateReportMsg = new ObsRateReportMsg(getUniqueID());
+                                obsRateReportMsg.setObsRateByTopic(obsRateByTopic);
+                                getMonitorActor().tell(obsRateReportMsg, ActorRef.noSender());
+                            })));
+
+                    return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
 
                     // ################################# END OF YOUR CODE #################################
                 });

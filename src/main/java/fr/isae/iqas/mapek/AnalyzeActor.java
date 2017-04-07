@@ -124,7 +124,7 @@ public class AnalyzeActor extends UntypedActor {
                                     requestMapping.getAllTopics().put(sinkForApp.getName(), sinkForApp);
                                     sinkForApp.setSink(requestTemp.getApplication_id());
 
-                                    requestMapping.addLink(fromTopic.getName(), sinkForApp.getName(), "ForwardPipeline_" + tempIDForPipelines);
+                                    requestMapping.addLink(fromTopic.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
 
                                     mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
                                         mongoController.updateRequestMapping(similarRequest.getRequest_id(), similarMappings).whenComplete((result3, throwable3) -> {
@@ -138,76 +138,33 @@ public class AnalyzeActor extends UntypedActor {
                             String tempIDForPipelines = new ObjectId().toString();
                             RequestMapping requestMapping = new RequestMapping(requestTemp.getRequest_id());
 
-                            if (requestTemp.getTopic().equals("ALL")) { // (Location = x, Topic = ALL) or (Location = ALL, Topic = ALL)
-                                TopicEntity topicInt = new TopicEntity(requestTemp.getTopic() + "_" + requestTemp.getLocation() + "_" + requestTemp.getAbbrvObsLevel(),
-                                        requestTemp.getObs_level());
-                                requestMapping.getAllTopics().put(topicInt.getName(), topicInt);
+                            TopicEntity topicJustBeforeSink = new TopicEntity(requestTemp.getTopic() + "_" + requestTemp.getLocation() + "_" + requestTemp.getAbbrvObsLevel(),
+                                    requestTemp.getObs_level());
+                            requestMapping.getAllTopics().put(topicJustBeforeSink.getName(), topicJustBeforeSink);
 
+                            TopicEntity sinkForApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id(),
+                                    requestTemp.getObs_level());
+                            sinkForApp.setSink(requestTemp.getApplication_id());
+                            requestMapping.getAllTopics().put(sinkForApp.getName(), sinkForApp);
+
+                            if (requestTemp.getTopic().equals("ALL")) { // (Location = x, Topic = ALL) or (Location = ALL, Topic = ALL)
                                 TopicList topicList = fusekiController._findAllTopics();
                                 for (Topic topicObject : topicList.topics) {
                                     String topicName = topicObject.topic.split("#")[1];
-
                                     TopicEntity topicBase = new TopicEntity(topicName, RAW_DATA);
                                     topicBase.setSource(topicName);
                                     requestMapping.getAllTopics().put(topicName, topicBase);
-
-                                    requestMapping.addLink(topicBase.getName(), topicInt.getName(), "SensorFilterPipeline_" + tempIDForPipelines);
-                                }
-
-                                TopicEntity topicObsRate = new TopicEntity(requestTemp.getTopic() + "_" + requestTemp.getLocation() + "_OBSRATE_" + requestTemp.getAbbrvObsLevel(),
-                                        requestTemp.getObs_level());
-                                requestMapping.getAllTopics().put(topicObsRate.getName(), topicObsRate);
-
-                                TopicEntity sinkForApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id(),
-                                        requestTemp.getObs_level());
-                                sinkForApp.setSink(requestTemp.getApplication_id());
-                                requestMapping.getAllTopics().put(sinkForApp.getName(), sinkForApp);
-
-                                requestMapping.addLink(topicInt.getName(), topicObsRate.getName(), "ObsRatePipeline_" + tempIDForPipelines);
-
-                                if (requestTemp.getObs_level().equals(RAW_DATA)) {
-                                    requestMapping.addLink(topicObsRate.getName(), sinkForApp.getName(), "ForwardPipeline_" + tempIDForPipelines);
-                                }
-                                else {
-                                    TopicEntity sinkQoObeforeApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO",
-                                            requestTemp.getObs_level());
-                                    requestMapping.getAllTopics().put(sinkQoObeforeApp.getName(), sinkQoObeforeApp);
-                                    requestMapping.addLink(topicObsRate.getName(), sinkQoObeforeApp.getName(), "QoOAnnotatorPipeline_" + tempIDForPipelines);
-                                    requestMapping.addLink(sinkQoObeforeApp.getName(), sinkForApp.getName(), "ForwardPipeline_" + tempIDForPipelines);
+                                    requestMapping.addLink(topicBase.getName(), topicJustBeforeSink.getName(), "IngestPipeline_" + tempIDForPipelines);
                                 }
                             }
                             else { // (Location = x, Topic = y) or (Location = ALL, Topic = x)
                                 TopicEntity topicBase = new TopicEntity(requestTemp.getTopic(), RAW_DATA);
                                 topicBase.setSource(requestTemp.getTopic());
                                 requestMapping.getAllTopics().put(topicBase.getName(), topicBase);
-
-                                TopicEntity topicObsRate = new TopicEntity(requestTemp.getTopic() + "_" + requestTemp.getLocation() + "_OBSRATE_" + requestTemp.getAbbrvObsLevel(),
-                                        requestTemp.getObs_level());
-                                requestMapping.getAllTopics().put(topicObsRate.getName(), topicObsRate);
-
-                                TopicEntity topicInt = new TopicEntity(requestTemp.getTopic() + "_" + requestTemp.getLocation() + "_" + requestTemp.getAbbrvObsLevel(),
-                                        requestTemp.getObs_level());
-                                requestMapping.getAllTopics().put(topicInt.getName(), topicInt);
-
-                                TopicEntity sinkForApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id(),
-                                        requestTemp.getObs_level());
-                                sinkForApp.setSink(requestTemp.getApplication_id());
-                                requestMapping.getAllTopics().put(sinkForApp.getName(), sinkForApp);
-
-                                requestMapping.addLink(topicBase.getName(), topicInt.getName(), "SensorFilterPipeline_" + tempIDForPipelines);
-                                requestMapping.addLink(topicInt.getName(), topicObsRate.getName(), "ObsRatePipeline_" + tempIDForPipelines);
-
-                                if (requestTemp.getObs_level().equals(RAW_DATA)) {
-                                    requestMapping.addLink(topicObsRate.getName(), sinkForApp.getName(), "ForwardPipeline_" + tempIDForPipelines);
-                                }
-                                else {
-                                    TopicEntity sinkQoObeforeApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO",
-                                            requestTemp.getObs_level());
-                                    requestMapping.getAllTopics().put(sinkQoObeforeApp.getName(), sinkQoObeforeApp);
-                                    requestMapping.addLink(topicObsRate.getName(), sinkQoObeforeApp.getName(), "QoOAnnotatorPipeline_" + tempIDForPipelines);
-                                    requestMapping.addLink(sinkQoObeforeApp.getName(), sinkForApp.getName(), "ForwardPipeline_" + tempIDForPipelines);
-                                }
+                                requestMapping.addLink(topicBase.getName(), topicJustBeforeSink.getName(), "IngestPipeline_" + tempIDForPipelines);
                             }
+
+                            requestMapping.addLink(topicJustBeforeSink.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
 
                             mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
                                 tellToPlanActor(new RFCMsg(RFCMAPEK.CREATE, EntityMAPEK.REQUEST, requestTemp, requestMapping));

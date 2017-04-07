@@ -10,38 +10,33 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by an.auger on 08/02/2017.
  */
 public class Information extends RawData {
-    private Map<QoOAttribute, String> qoOAttributeValues;
+
 
     public Information(RawData rawData) {
         super(rawData);
-        this.qoOAttributeValues = new ConcurrentHashMap<>();
     }
 
     public Information(String date, String value, String producer, String timestamps, String stepName, long timestamp) {
         super(date, value, producer, timestamps, stepName, timestamp);
-        this.qoOAttributeValues = new ConcurrentHashMap<>();
     }
 
     public Information(String date, String value, String producer, String timestamps) {
         super(date, value, producer, timestamps);
-        this.qoOAttributeValues = new ConcurrentHashMap<>();
     }
 
     public Information(Timestamp date, Double value, String producer, String timestamps) {
         super(date, value, producer, timestamps);
-        this.qoOAttributeValues = new ConcurrentHashMap<>();
     }
 
     public Information(Information information) {
-        super(information.getDate(), information.getValue(), information.getProducer(), information.getTimestamps());
-        this.qoOAttributeValues = information.getQoOAttributeValues();
+        super(information.getDate(), information.getValue(), information.getProducer(), information.getTimestamps(), information.getQoOAttributeValues());
     }
 
     /**
      * Getters and setters for a specific QoO attribute
      */
 
-    public void setQoOAttribute(String attribute, String value) {
+    /*public void setQoOAttribute(String attribute, String value) {
         qoOAttributeValues.put(QoOAttribute.valueOf(attribute), value);
     }
 
@@ -63,13 +58,13 @@ public class Information extends RawData {
             attributeValue = qoOAttributeValues.get(attribute);
         }
         return attributeValue;
-    }
+    }*/
 
     /**
      * Getters and setters for attributes
      */
 
-    public Map<QoOAttribute, String> getQoOAttributeValues() {
+    /*public Map<QoOAttribute, String> getQoOAttributeValues() {
         return qoOAttributeValues;
     }
 
@@ -81,5 +76,5 @@ public class Information extends RawData {
         qoOAttributeValues.forEach( (k,v) -> {
             this.qoOAttributeValues.put(QoOAttribute.valueOf(k), v);
         });
-    }
+    }*/
 }

@@ -28,7 +28,6 @@ public class Request {
     private ObservationLevel obs_level;
     private QoORequirements qooConstraints;
     private @JsonIgnore ArrayList<State> statesList;
-
     private ArrayList<String> logs;
 
     /**

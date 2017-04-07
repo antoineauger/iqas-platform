@@ -1,6 +1,6 @@
 package fr.isae.iqas.model.quality;
 
-import fr.isae.iqas.model.observation.Information;
+import fr.isae.iqas.model.observation.RawData;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -14,8 +14,8 @@ import java.util.Map;
 public interface IComputeQoOAttributes {
     @QoOParam(name = "min_value", type = Double.class)
     @QoOParam(name = "max_value", type = Double.class)
-    Double computeQoOAccuracy(Information information, Map<String, Map<String, String>> qooParams);
-    Double computeQoOFreshness(Information information);
+    Double computeQoOAccuracy(RawData observation, Map<String, Map<String, String>> qooParams);
+    Double computeQoOFreshness(RawData observation);
 
     // Static method to retrieve annotations
     static Map<String, Class> getQoOParamsForInterface() {
