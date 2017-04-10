@@ -52,10 +52,12 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
         final ObservationLevel askedLevelFinal = askedLevel;
         runnableGraph = GraphDSL
                 .create(builder -> {
-                    String[] allowedSensors = getParams().get("interested_in").split(";");
                     List<QoOAttribute> interestAttr = new ArrayList<>();
-                    for (String s : Arrays.asList(allowedSensors)) {
-                        interestAttr.add(QoOAttribute.valueOf(s));
+                    if (getParams().get("interested_in") != null){
+                        String[] allowedSensors = getParams().get("interested_in").split(";");
+                        for (String s : Arrays.asList(allowedSensors)) {
+                            interestAttr.add(QoOAttribute.valueOf(s));
+                        }
                     }
 
                     // ################################# YOUR CODE GOES HERE #################################

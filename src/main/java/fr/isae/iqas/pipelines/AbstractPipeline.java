@@ -101,7 +101,9 @@ public abstract class AbstractPipeline {
         if (customizable) {
             customizableParams.add(param);
         }
-        params.put(param, newValue);
+        if (!newValue.equals("")) {
+            params.put(param, newValue);
+        }
     }
 
     public boolean setCustomizableParameter(String param, String newValue) {

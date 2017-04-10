@@ -320,11 +320,13 @@ public class PlanActor extends UntypedActor {
                 else {
                     if (pipeline.getPipelineID().equals("OutputPipeline")) {
                         StringBuilder interestAttr = new StringBuilder();
-                        for (QoOAttribute a : incomingRequest.getQooConstraints().getInterested_in()) {
-                            interestAttr.append(a.toString()).append(";");
+                        if (incomingRequest.getQooConstraints().getInterested_in().size() > 0) {
+                            for (QoOAttribute a : incomingRequest.getQooConstraints().getInterested_in()) {
+                                interestAttr.append(a.toString()).append(";");
+                            }
+                            interestAttr = new StringBuilder(interestAttr.substring(0, interestAttr.length() - 1));
+                            pipeline.setCustomizableParameter("interested_in", interestAttr.toString());
                         }
-                        interestAttr = new StringBuilder(interestAttr.substring(0, interestAttr.length() - 1));
-                        pipeline.setCustomizableParameter("interested_in", interestAttr.toString());
                     }
 
                     pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
