@@ -69,10 +69,10 @@ For submitting a new iQAS request, the format is the following (bold parameters 
     Content-Type: application/json<br/>
     {<br/>
     <div style="margin-left: 30px;">
-        <b>"application_id"</b>: "[application_id]"<br/>
-        <b>"topic"</b>: "[topic]" / "ALL"<br/>
-        <b>"location"</b>: "[location]" / "ALL"<br/>
-        "obs_level": "RAW_DATA" / "INFORMATION" / "KNOWLEDGE" (default: RAW_DATA)<br/>
+        <b>"application_id"</b>: "[application_id]",<br/>
+        <b>"topic"</b>: "[topic]" / "ALL",<br/>
+        <b>"location"</b>: "[location]" / "ALL",<br/>
+        "obs_level": "RAW_DATA" / "INFORMATION" / "KNOWLEDGE", (default: RAW_DATA)<br/>
         "qoo": (see below) (default: no QoO constraints)<br/>
     </div>
     }
@@ -90,7 +90,7 @@ For submitting a new iQAS request, the format is the following (bold parameters 
             <div style="margin-top: 10px; margin-left: 30px;" class="code">
                 "qoo": {<br/>
                 <div style="margin-left: 30px;">
-                    <b>"interested_in"</b>: [QoO_attributes_list]<br/>
+                    <b>"interested_in"</b>: [QoO_attributes_list],<br/>
                     <b>"additional_params"</b>: {<br/>
                     <div style="margin-left: 30px;">
                         "[additional_param_name]": "[additional_param_value]",<br/>
@@ -98,8 +98,8 @@ For submitting a new iQAS request, the format is the following (bold parameters 
                             ...
                         </div>
                     </div>
-                    }<br/>
-                    "sla_level": "BEST_EFFORT" / "GUARANTEED" (default: BEST_EFFORT)<br/>
+                    },<br/>
+                    "sla_level": "BEST_EFFORT" / "GUARANTEED", (default: BEST_EFFORT)<br/>
                     "operator": "NONE" / "AVG" / "MIN" / "MAX" (default: NONE)<br/>
                 </div>
                 }

@@ -14,6 +14,7 @@ import fr.isae.iqas.model.jsonld.Topic;
 import fr.isae.iqas.model.jsonld.TopicList;
 import fr.isae.iqas.model.message.MAPEKSymptomMsgWithDate;
 import fr.isae.iqas.model.message.TerminatedMsg;
+import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
@@ -164,7 +165,21 @@ public class AnalyzeActor extends UntypedActor {
                                 requestMapping.addLink(topicBase.getName(), topicJustBeforeSink.getName(), "IngestPipeline_" + tempIDForPipelines);
                             }
 
-                            requestMapping.addLink(topicJustBeforeSink.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
+                            // If there is some QoO constraints about OBS_ACCURACY, we add a FilterPipeline
+                            if (requestTemp.getQooConstraints().getInterested_in().contains(QoOAttribute.OBS_ACCURACY)
+                                    && (requestTemp.getQooConstraints().getAdditional_params().containsKey("lower_bound")
+                                    || requestTemp.getQooConstraints().getAdditional_params().containsKey("upper_bound")) ) {
+
+                                TopicEntity filteredObs = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_FILTER",
+                                        requestTemp.getObs_level());
+                                requestMapping.getAllTopics().put(filteredObs.getName(), filteredObs);
+
+                                requestMapping.addLink(topicJustBeforeSink.getName(), filteredObs.getName(), "FilterPipeline_" + tempIDForPipelines);
+                                requestMapping.addLink(filteredObs.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
+                            }
+                            else {
+                                requestMapping.addLink(topicJustBeforeSink.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
+                            }
 
                             mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
                                 tellToPlanActor(new RFCMsg(RFCMAPEK.CREATE, EntityMAPEK.REQUEST, requestTemp, requestMapping));

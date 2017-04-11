@@ -318,7 +318,15 @@ public class PlanActor extends UntypedActor {
                     log.error(throwable3.toString());
                 }
                 else {
-                    if (pipeline.getPipelineID().equals("OutputPipeline")) {
+                    if (pipeline.getPipelineID().equals("FilterPipeline")) {
+                        if (incomingRequest.getQooConstraints().getAdditional_params().containsKey("lower_bound")) {
+                            pipeline.setCustomizableParameter("lower_bound", incomingRequest.getQooConstraints().getAdditional_params().get("lower_bound"));
+                        }
+                        if (incomingRequest.getQooConstraints().getAdditional_params().containsKey("upper_bound")) {
+                            pipeline.setCustomizableParameter("upper_bound", incomingRequest.getQooConstraints().getAdditional_params().get("upper_bound"));
+                        }
+                    }
+                    else if (pipeline.getPipelineID().equals("OutputPipeline")) {
                         StringBuilder interestAttr = new StringBuilder();
                         if (incomingRequest.getQooConstraints().getInterested_in().size() > 0) {
                             for (QoOAttribute a : incomingRequest.getQooConstraints().getInterested_in()) {

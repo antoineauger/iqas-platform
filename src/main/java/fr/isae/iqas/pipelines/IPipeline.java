@@ -32,7 +32,7 @@ public interface IPipeline {
     Flow<String, Map<String,Integer>, NotUsed> getFlowToComputeObsRate();
 
     void setOptionsForQoOComputation(IComputeQoOAttributes computeAttributeHelper,
-                                     Map<String,Map<String, String>> qooParams);
+                                     Map<String, Map<String, String>> qooParams);
 
     void setOptionsForMAPEKReporting(ActorRef monitorActor,
                                      FiniteDuration reportFrequency);

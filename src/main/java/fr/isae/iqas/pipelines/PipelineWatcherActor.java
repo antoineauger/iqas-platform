@@ -42,8 +42,9 @@ public class PipelineWatcherActor extends UntypedActor {
         md5Pipelines = new ConcurrentHashMap<>();
         pipelineObjects = new ConcurrentHashMap<>();
 
-        pipelineObjects.put(OutputPipeline.class.getSimpleName(), OutputPipeline.class);
         pipelineObjects.put(IngestPipeline.class.getSimpleName(), IngestPipeline.class);
+        pipelineObjects.put(FilterPipeline.class.getSimpleName(), FilterPipeline.class);
+        pipelineObjects.put(OutputPipeline.class.getSimpleName(), OutputPipeline.class);
     }
 
     @Override
