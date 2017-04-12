@@ -16,7 +16,8 @@ import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.ObservationRate;
 import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
-import fr.isae.iqas.server.HttpUtils;
+import fr.isae.iqas.utils.ActorUtils;
+import fr.isae.iqas.utils.HttpUtils;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import scala.concurrent.Future;
@@ -141,7 +142,7 @@ public class MonitorActor extends UntypedActor {
             });
 
             for (Map.Entry<String, List<String>> entry : requestsWithInsuficientObsRate.entrySet()) {
-                forwardToSpecifiedActor(new SymptomMsg(TOO_LOW, OBS_RATE, entry.getKey(), entry.getValue()), getAnalyzeActor());
+                forwardToSpecifiedActor(new SymptomMsg(TOO_LOW, OBS_RATE, entry.getKey(), entry.getValue()), ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
 
             if (System.currentTimeMillis() - lastPing > pingSensorsInterval.toMillis()) {
@@ -167,7 +168,7 @@ public class MonitorActor extends UntypedActor {
                 // TODO
                 log.error("MIN OBS_RATE REQ: " + minObsRateByRequest.toString());
                 log.error("MAX OBS_RATE REQ: " + maxObsRateByRequest.toString());
-                forwardToSpecifiedActor(symptomMsgToForward, getAnalyzeActor());
+                forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
             else if (requestTemp.getCurrent_status() == REMOVED) { // Request deleted by the user
                 qooQualityBuffer.remove(requestTemp.getRequest_id());
@@ -178,13 +179,13 @@ public class MonitorActor extends UntypedActor {
                 countByRequest.remove(requestTemp.getRequest_id());
 
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestTemp);
-                forwardToSpecifiedActor(symptomMsgToForward, getAnalyzeActor());
+                forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
             else if (requestTemp.getCurrent_status() == UPDATED) { // Existing Request updated by the user
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.UPDATED, EntityMAPEK.REQUEST, requestTemp);
                 storeFreshnessRequirements(requestTemp);
                 storeObsRateRequirements(requestTemp);
-                forwardToSpecifiedActor(symptomMsgToForward, getAnalyzeActor());
+                forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
             else if (requestTemp.getCurrent_status() == REJECTED) {
                 // Do nothing since the Request has already been rejected
@@ -247,15 +248,6 @@ public class MonitorActor extends UntypedActor {
 
     @Override
     public void postStop() {
-    }
-
-    private Future<ActorRef> getAutonomicManagerActor() {
-        return getContext().actorSelection(getSelf().path().parent()).resolveOne(new Timeout(5, TimeUnit.SECONDS));
-    }
-
-    private Future<ActorRef> getAnalyzeActor() {
-        return getContext().actorSelection(getSelf().path().parent()
-                + "/analyzeActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
     private void forwardToSpecifiedActor(SymptomMsg symptomMsgToForward, Future<ActorRef> actorRefFuture) {
@@ -366,8 +358,10 @@ public class MonitorActor extends UntypedActor {
                                 boolean sensorIsConnected = HttpUtils.checkIfEndpointIsAvailable(v.endpoint.url);
                                 connectedSensors.put(sensor_id, sensorIsConnected);
                             }
-                            forwardToSpecifiedActor(new SymptomMsg(SymptomMAPEK.CONNECTION_REPORT, EntityMAPEK.SENSOR, connectedSensors), getAutonomicManagerActor());
-                            forwardToSpecifiedActor(new SymptomMsg(SymptomMAPEK.CONNECTION_REPORT, EntityMAPEK.SENSOR, connectedSensors), getAnalyzeActor());
+                            forwardToSpecifiedActor(new SymptomMsg(SymptomMAPEK.CONNECTION_REPORT, EntityMAPEK.SENSOR, connectedSensors),
+                                    ActorUtils.getAutonomicManagerActorFromDirectChildren(getContext(), getSelf()));
+                            forwardToSpecifiedActor(new SymptomMsg(SymptomMAPEK.CONNECTION_REPORT, EntityMAPEK.SENSOR, connectedSensors),
+                                    ActorUtils.getAnalyzeActor(getContext(), getSelf()));
                         }
                     }
                 }, context().dispatcher());

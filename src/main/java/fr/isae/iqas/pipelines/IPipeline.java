@@ -50,12 +50,12 @@ public interface IPipeline {
                                                                                                                     Operator operatorToApply);
 
     /**
-     * @return the pipeline ID ([.class name] or [.class name + request_id])
+     * @return the Simple class name (e.g., OutputPipeline)
      */
     String getPipelineID();
 
     /**
-     * @return a String representing the pipeline name
+     * @return a readable String representing the pipeline name (e.g., Output Pipeline)
      */
     String getPipelineName();
 

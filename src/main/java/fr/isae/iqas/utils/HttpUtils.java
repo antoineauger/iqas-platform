@@ -1,4 +1,4 @@
-package fr.isae.iqas.server;
+package fr.isae.iqas.utils;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;

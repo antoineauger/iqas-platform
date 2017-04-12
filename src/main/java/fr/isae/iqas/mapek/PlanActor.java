@@ -23,8 +23,9 @@ import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
 import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
-import fr.isae.iqas.pipelines.IPipeline;
-import fr.isae.iqas.pipelines.Pipeline;
+import fr.isae.iqas.pipelines.*;
+import fr.isae.iqas.utils.ActorUtils;
+import fr.isae.iqas.utils.MapUtils;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -102,52 +103,62 @@ public class PlanActor extends UntypedActor {
                     }
                 });
 
-                if (requestMapping.getConstructedFromRequest().equals("")) { // The incoming request has no common points with the enforced ones
-                    future(() -> fusekiController._findAllSensorCapabilities(), context().dispatcher())
-                            .onComplete(new OnComplete<SensorCapabilityList>() {
-                                public void onComplete(Throwable throwable, SensorCapabilityList sensorCapabilityList) {
-                                    if (throwable != null) {
-                                        log.error("Error when retrieving sensor capabilities. " + throwable.toString());
+                future(() -> fusekiController._findAllSensorCapabilities(), context().dispatcher())
+                        .onComplete(new OnComplete<SensorCapabilityList>() {
+                            public void onComplete(Throwable throwable, SensorCapabilityList sensorCapabilityList) {
+                                if (throwable != null) {
+                                    log.error("Error when retrieving sensor capabilities. " + throwable.toString());
+                                }
+                                else {
+                                    Map<String, Map<String, String>> qooParamsForAllTopics = new ConcurrentHashMap<>();
+                                    for (SensorCapability s : sensorCapabilityList.sensorCapabilities) {
+                                        qooParamsForAllTopics.putIfAbsent(s.sensor_id, new ConcurrentHashMap<>());
+                                        qooParamsForAllTopics.get(s.sensor_id).put("min_value", s.min_value);
+                                        qooParamsForAllTopics.get(s.sensor_id).put("max_value", s.max_value);
                                     }
-                                    else {
-                                        Map<String, Map<String, String>> qooParamsForAllTopics = new ConcurrentHashMap<>();
-                                        for (SensorCapability s : sensorCapabilityList.sensorCapabilities) {
-                                            qooParamsForAllTopics.putIfAbsent(s.sensor_id, new ConcurrentHashMap<>());
-                                            qooParamsForAllTopics.get(s.sensor_id).put("min_value", s.min_value);
-                                            qooParamsForAllTopics.get(s.sensor_id).put("max_value", s.max_value);
-                                        }
-                                        // After having retrieved sensor capabilities, we build the graph
+
+                                    // The incoming request has no common points with the enforced ones
+                                    if (requestMapping.getConstructedFromRequest().equals("")) {
                                         buildGraph(requestMapping, incomingRequest, qooParamsForAllTopics);
                                     }
+                                    else { // The incoming request may reuse existing enforced requests
+                                        TopicEntity beforeLastTopic = requestMapping.getPrimarySources().get(0);
+                                        Set<String> currTopicSet = new HashSet<>();
+                                        currTopicSet.add(beforeLastTopic.getName());
+                                        final int finalmaxLevelDepth = beforeLastTopic.getLevel();
+                                        TopicEntity finalSinkForApp = requestMapping.getFinalSink();
+
+                                        retrievePipeline("OutputPipeline").whenComplete((pipeline, throwable2) -> {
+                                            if (throwable2 != null) {
+                                                log.error(throwable2.toString());
+                                            }
+                                            else {
+                                                // Setting request_id, temp_id and other options for the retrieved Pipeline
+                                                pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
+                                                pipeline.setTempID(requestMapping.getPrimarySources().get(0).getEnforcedPipelines().get(requestMapping.getFinalSink().getName()).split("_")[1]);
+                                                pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
+                                                pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
+
+                                                // Specific settings since it is an OutputPipeline
+                                                setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest);
+
+                                                ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
+                                                        EntityMAPEK.PIPELINE,
+                                                        pipeline,
+                                                        incomingRequest.getObs_level(),
+                                                        currTopicSet,
+                                                        finalSinkForApp.getName(),
+                                                        requestMapping.getRequest_id(),
+                                                        requestMapping.getConstructedFromRequest(),
+                                                        finalmaxLevelDepth);
+
+                                                performAction(action);
+                                            }
+                                        });
+                                    }
                                 }
-                            }, context().dispatcher());
-                }
-                else { // The incoming request may reuse existing enforced requests
-                    TopicEntity beforeLastTopic = requestMapping.getPrimarySources().get(0);
-                    Set<String> currTopicSet = new HashSet<>();
-                    currTopicSet.add(beforeLastTopic.getName());
-                    final int finalmaxLevelDepth = beforeLastTopic.getLevel();
-                    TopicEntity finalSinkForApp = requestMapping.getFinalSink();
-
-                    retrievePipeline("OutputPipeline").whenComplete((pipeline, throwable) -> {
-                        if (throwable != null) {
-                            log.error(throwable.toString());
-                        }
-                        else {
-                            ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
-                                    EntityMAPEK.PIPELINE,
-                                    pipeline,
-                                    incomingRequest.getObs_level(),
-                                    currTopicSet,
-                                    finalSinkForApp.getName(),
-                                    requestMapping.getRequest_id(),
-                                    requestMapping.getConstructedFromRequest(),
-                                    finalmaxLevelDepth);
-
-                            performAction(action);
-                        }
-                    });
-                }
+                            }
+                        }, context().dispatcher());
 
                 incomingRequest.addLog("Successfully created pipeline graph without considering any QoO constraints.");
                 incomingRequest.updateState(State.Status.ENFORCED);
@@ -166,7 +177,7 @@ public class PlanActor extends UntypedActor {
                 for (String s : actorPathRefs.get(requestToDelete.getRequest_id())) {
                     execActorsCount.put(s, execActorsCount.get(s) - 1);
                     if (execActorsCount.get(s) == 0) { // this means that resources can be released
-                        String topicTemp = getKeyByValue(mappingTopicsActors, s);
+                        String topicTemp = MapUtils.getKeyByValue(mappingTopicsActors, s);
                         if (topicTemp != null) {
                             kafkaTopicsToDelete.add(topicTemp);
                         }
@@ -218,7 +229,7 @@ public class PlanActor extends UntypedActor {
 
     private CompletableFuture<IPipeline> retrievePipeline(String pipeline_id) {
         CompletableFuture<IPipeline> pipelineCompletableFuture = new CompletableFuture<>();
-        getPipelineWatcherActor().onComplete(new OnComplete<ActorRef>() {
+        ActorUtils.getPipelineWatcherActor(getContext(), self()).onComplete(new OnComplete<ActorRef>() {
             @Override
             public void onComplete(Throwable t, ActorRef pipelineWatcherActor) throws Throwable {
                 if (t != null) {
@@ -274,16 +285,11 @@ public class PlanActor extends UntypedActor {
                 log.error(throwable2.toString());
             }
             else {
-                if (pipeline.getPipelineID().equals("IngestPipeline")) {
-                    VirtualSensorList vList = fusekiController._findAllSensorsWithConditions(incomingRequest.getLocation(), incomingRequest.getTopic());
-                    StringBuilder sensorsToKeep = new StringBuilder();
-                    for (VirtualSensor v : vList.sensors) {
-                        sensorsToKeep.append(v.sensor_id.split("#")[1]).append(";");
-                    }
-                    sensorsToKeep = new StringBuilder(sensorsToKeep.substring(0, sensorsToKeep.length() - 1));
-                    pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep.toString());
+                if (pipeline instanceof IngestPipeline) {
+                    setOptionsForIngestPipeline((IngestPipeline) pipeline, incomingRequest);
                 }
 
+                // Setting request_id, temp_id and other options for the retrieved Pipeline
                 pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
                 pipeline.setTempID(finalTempID);
                 pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
@@ -318,23 +324,11 @@ public class PlanActor extends UntypedActor {
                     log.error(throwable3.toString());
                 }
                 else {
-                    if (pipeline.getPipelineID().equals("FilterPipeline")) {
-                        if (incomingRequest.getQooConstraints().getAdditional_params().containsKey("lower_bound")) {
-                            pipeline.setCustomizableParameter("lower_bound", incomingRequest.getQooConstraints().getAdditional_params().get("lower_bound"));
-                        }
-                        if (incomingRequest.getQooConstraints().getAdditional_params().containsKey("upper_bound")) {
-                            pipeline.setCustomizableParameter("upper_bound", incomingRequest.getQooConstraints().getAdditional_params().get("upper_bound"));
-                        }
+                    if (pipeline instanceof FilterPipeline) {
+                        setOptionsForFilterPipeline((FilterPipeline) pipeline, incomingRequest);
                     }
-                    else if (pipeline.getPipelineID().equals("OutputPipeline")) {
-                        StringBuilder interestAttr = new StringBuilder();
-                        if (incomingRequest.getQooConstraints().getInterested_in().size() > 0) {
-                            for (QoOAttribute a : incomingRequest.getQooConstraints().getInterested_in()) {
-                                interestAttr.append(a.toString()).append(";");
-                            }
-                            interestAttr = new StringBuilder(interestAttr.substring(0, interestAttr.length() - 1));
-                            pipeline.setCustomizableParameter("interested_in", interestAttr.toString());
-                        }
+                    else if (pipeline instanceof OutputPipeline) {
+                        setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest);
                     }
 
                     pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
@@ -366,7 +360,7 @@ public class PlanActor extends UntypedActor {
 
             ActorRef actorRefToStart;
             if (!mappingTopicsActors.containsKey(actionMsg.getTopicToPublish())) {
-                if (actionMsg.getPipelineToEnforce().getPipelineID().equals("IngestPipeline")) {
+                if (actionMsg.getPipelineToEnforce() instanceof IngestPipeline) {
                     actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
                             prop,
                             actionMsg.getPipelineToEnforce(),
@@ -397,7 +391,7 @@ public class PlanActor extends UntypedActor {
             execActorsCount.putIfAbsent(actorRefToStart.path().name(), 0);
             execActorsCount.put(actorRefToStart.path().name(), execActorsCount.get(actorRefToStart.path().name()) + 1);
 
-            if (actionMsg.getPipelineToEnforce().getPipelineID().equals("IngestPipeline")) {
+            if (actionMsg.getPipelineToEnforce() instanceof IngestPipeline) {
                 monitorActor.tell(new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRefToStart.path().name()).getUniqueID(), actionMsg.getAssociatedRequest_id()), getSelf());
             }
 
@@ -449,16 +443,41 @@ public class PlanActor extends UntypedActor {
         return true;
     }
 
-    private Future<ActorRef> getPipelineWatcherActor() {
-        return getContext().actorSelection(getSelf().path().parent().parent().parent() + "/pipelineWatcherActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
+    private void setOptionsForIngestPipeline(IngestPipeline pipeline, Request incomingRequest) {
+        future(() -> fusekiController._findAllSensorsWithConditions(incomingRequest.getLocation(), incomingRequest.getTopic()), context().dispatcher())
+                .onComplete(new OnComplete<VirtualSensorList>() {
+                    public void onComplete(Throwable throwable, VirtualSensorList vList) {
+                        if (throwable != null) {
+                            log.error("Error when retrieving sensor capabilities. " + throwable.toString());
+                        } else {
+                            StringBuilder sensorsToKeep = new StringBuilder();
+                            for (VirtualSensor v : vList.sensors) {
+                                sensorsToKeep.append(v.sensor_id.split("#")[1]).append(";");
+                            }
+                            sensorsToKeep = new StringBuilder(sensorsToKeep.substring(0, sensorsToKeep.length() - 1));
+                            pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep.toString());
+                        }
+                    }
+                }, context().dispatcher());
     }
 
-    private static <T, E> T getKeyByValue(Map<T, E> map, E value) {
-        for (Map.Entry<T, E> entry : map.entrySet()) {
-            if (Objects.equals(value, entry.getValue())) {
-                return entry.getKey();
-            }
+    private void setOptionsForFilterPipeline(FilterPipeline pipeline, Request incomingRequest) {
+        if (incomingRequest.getQooConstraints().getAdditional_params().containsKey("lower_bound")) {
+            pipeline.setCustomizableParameter("lower_bound", incomingRequest.getQooConstraints().getAdditional_params().get("lower_bound"));
         }
-        return null;
+        if (incomingRequest.getQooConstraints().getAdditional_params().containsKey("upper_bound")) {
+            pipeline.setCustomizableParameter("upper_bound", incomingRequest.getQooConstraints().getAdditional_params().get("upper_bound"));
+        }
+    }
+
+    private void setOptionsForOutputPipeline(OutputPipeline pipeline, Request incomingRequest) {
+        StringBuilder interestAttr = new StringBuilder();
+        if (incomingRequest.getQooConstraints().getInterested_in().size() > 0) {
+            for (QoOAttribute a : incomingRequest.getQooConstraints().getInterested_in()) {
+                interestAttr.append(a.toString()).append(";");
+            }
+            interestAttr = new StringBuilder(interestAttr.substring(0, interestAttr.length() - 1));
+            pipeline.setCustomizableParameter("interested_in", interestAttr.toString());
+        }
     }
 }

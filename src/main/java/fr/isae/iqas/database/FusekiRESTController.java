@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import fr.isae.iqas.pipelines.Pipeline;
+import fr.isae.iqas.utils.ActorUtils;
 import ioinformarics.oss.jackson.module.jsonld.JsonldModule;
 import ioinformarics.oss.jackson.module.jsonld.JsonldResource;
 import ioinformarics.oss.jackson.module.jsonld.JsonldResourceBuilder;
@@ -48,10 +49,6 @@ public class FusekiRESTController extends AllDirectives {
 
     public FusekiController getController() {
         return controller;
-    }
-
-    public Future<ActorRef> getPipelineWatcherActor() {
-        return context.actorSelection(pathPipelineWatcherActor).resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
     /**
@@ -160,7 +157,7 @@ public class FusekiRESTController extends AllDirectives {
         CompletableFuture<ArrayList<String>> pipelines = new CompletableFuture<>();
         ObjectMapper mapper = new ObjectMapper();
 
-        getPipelineWatcherActor().onComplete(new OnComplete<ActorRef>() {
+        ActorUtils.getPipelineWatcherActor(context, pathPipelineWatcherActor).onComplete(new OnComplete<ActorRef>() {
             @Override
             public void onComplete(Throwable t, ActorRef pipelineWatcherActor) throws Throwable {
                 if (t != null) {
@@ -202,7 +199,7 @@ public class FusekiRESTController extends AllDirectives {
         CompletableFuture<ArrayList<Pipeline>> pipelines = new CompletableFuture<>();
         ObjectMapper mapper = new ObjectMapper();
 
-        getPipelineWatcherActor().onComplete(new OnComplete<ActorRef>() {
+        ActorUtils.getPipelineWatcherActor(context, pathPipelineWatcherActor).onComplete(new OnComplete<ActorRef>() {
             @Override
             public void onComplete(Throwable t, ActorRef pipelineWatcherActor) throws Throwable {
                 if (t != null) {
@@ -240,7 +237,7 @@ public class FusekiRESTController extends AllDirectives {
         CompletableFuture<ArrayList<Pipeline>> pipeline = new CompletableFuture<>();
         ObjectMapper mapper = new ObjectMapper();
 
-        getPipelineWatcherActor().onComplete(new OnComplete<ActorRef>() {
+        ActorUtils.getPipelineWatcherActor(context, pathPipelineWatcherActor).onComplete(new OnComplete<ActorRef>() {
             @Override
             public void onComplete(Throwable t, ActorRef pipelineWatcherActor) throws Throwable {
                 if (t != null) {

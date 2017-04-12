@@ -17,6 +17,7 @@ import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
+import fr.isae.iqas.utils.ActorUtils;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.bson.types.ObjectId;
 import scala.concurrent.Future;
@@ -217,12 +218,8 @@ public class AnalyzeActor extends UntypedActor {
         }
     }
 
-    private Future<ActorRef> getPlanActor() {
-        return getContext().actorSelection(getSelf().path().parent() + "/planActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
-    }
-
     private void tellToPlanActor(RFCMsg rfcMsg) {
-        getPlanActor().onComplete(new OnComplete<ActorRef>() {
+        ActorUtils.getPlanActor(getContext(), getSelf()).onComplete(new OnComplete<ActorRef>() {
             @Override
             public void onComplete(Throwable t, ActorRef planActor) throws Throwable {
                 if (t != null) {
