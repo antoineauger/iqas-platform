@@ -21,44 +21,58 @@ public class QoORequirements {
     private List<QoOAttribute> interested_in;
     private Operator operator;
     private SLALevel sla_level;
-    private Map<String, String> additional_params;
+    private Map<String, String> iqas_params;
+    private Map<String, String> custom_params;
 
     public QoORequirements() {
         this.sla_level = SLALevel.BEST_EFFORT;
         this.operator = Operator.NONE;
         this.interested_in = new ArrayList<>();
-        this.additional_params = new ConcurrentHashMap<>();
+        this.custom_params = new ConcurrentHashMap<>();
+        this.iqas_params = new ConcurrentHashMap<>();
     }
 
     /**
-     *
      * @param operator is an optional parameter (default: NONE)
      * @param sla_level is an optional parameter (default: BEST_EFFORT)
      * @param interested_in
-     * @param additional_params
+     * @param iqas_params
+     * @param custom_params
      */
     @JsonCreator
     public QoORequirements(@JsonProperty("operator") String operator,
                            @JsonProperty("sla_level") String sla_level,
                            @JsonProperty("interested_in") List<String> interested_in,
-                           @JsonProperty("additional_params") Map<String, String> additional_params) {
+                           @JsonProperty("iqas_params") Map<String, String> iqas_params,
+                           @JsonProperty("custom_params") Map<String, String> custom_params) {
         if (operator == null) {
             this.operator = Operator.NONE;
         }
         else {
             this.operator = Operator.valueOf(operator);
         }
+
         if (sla_level == null) {
             this.sla_level = SLALevel.BEST_EFFORT;
         }
         else {
             this.sla_level = SLALevel.valueOf(sla_level);
         }
+
         this.interested_in = new ArrayList<>();
         for (String s : interested_in) {
             this.interested_in.add(QoOAttribute.valueOf(s));
         }
-        this.additional_params = additional_params;
+
+        this.custom_params = new ConcurrentHashMap<>();
+        if (custom_params != null) {
+            this.custom_params.putAll(custom_params);
+        }
+
+        this.iqas_params = new ConcurrentHashMap<>();
+        if (iqas_params != null) {
+            this.iqas_params.putAll(iqas_params);
+        }
     }
 
     public Operator getOperator() {
@@ -85,8 +99,16 @@ public class QoORequirements {
         this.interested_in = interested_in;
     }
 
-    public Map<String, String> getAdditional_params() {
-        return additional_params;
+    public Map<String, String> getCustom_params() {
+        return custom_params;
+    }
+
+    public Map<String, String> getIqas_params() {
+        return iqas_params;
+    }
+
+    public void setIqas_params(Map<String, String> iqas_params) {
+        this.iqas_params = iqas_params;
     }
 
     @Override
@@ -97,6 +119,17 @@ public class QoORequirements {
         QoORequirements otherMyClass = (QoORequirements) other;
         if (otherMyClass.getInterested_in().size() != this.interested_in.size()) return false;
 
+        if (otherMyClass.getCustom_params().size() != this.custom_params.size()
+                || otherMyClass.getIqas_params().size() != this.iqas_params.size()) {
+            return false;
+        }
+        else if (otherMyClass.getCustom_params().size() == 0 && this.custom_params.size() > 0
+                || otherMyClass.getCustom_params().size() >= 0 && this.custom_params.size() == 0
+                || otherMyClass.getIqas_params().size() == 0 && this.iqas_params.size() > 0
+                || otherMyClass.getIqas_params().size() > 0 && this.iqas_params.size() == 0) {
+            return false;
+        }
+
         for (int i=0 ; i<this.interested_in.size() ; i++) {
             if (!this.interested_in.get(i).equals(otherMyClass.getInterested_in().get(i))) {
                 return false;
@@ -105,6 +138,7 @@ public class QoORequirements {
 
         return (otherMyClass.getSla_level().equals(this.sla_level)
                 && otherMyClass.getOperator().equals(this.operator)
-                && otherMyClass.getAdditional_params().entrySet().equals(this.additional_params.entrySet()));
+                && otherMyClass.getCustom_params().entrySet().equals(this.custom_params.entrySet())
+                && otherMyClass.getIqas_params().entrySet().equals(this.iqas_params.entrySet()));
     }
 }

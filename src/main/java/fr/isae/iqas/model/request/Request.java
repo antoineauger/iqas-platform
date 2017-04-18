@@ -46,14 +46,17 @@ public class Request {
                    @JsonProperty("location") String location,
                    @JsonProperty("obs_level") String obs_level,
                    @JsonProperty("qoo") QoORequirements qooConstraints) {
+
         if (request_id == null) {
             this.request_id = "";
         }
         else {
             this.request_id = request_id;
         }
+
         this.application_id = application_id;
         this.topic = topic;
+
         if (obs_level == null) {
             this.obs_level = ObservationLevel.RAW_DATA;
         }
@@ -112,7 +115,8 @@ public class Request {
                 qooDoc.getString("operator"),
                 qooDoc.getString("sla_level"),
                 (List<String>) qooDoc.get("interested_in"),
-                (Map<String, String>) qooDoc.get("additional_params"));
+                (Map<String, String>) qooDoc.get("iqas_params"),
+                (Map<String, String>) qooDoc.get("custom_params"));
 
         this.statesList = new ArrayList<>();
         List<Document> bsonStatesList = (List<Document>) bsonDocument.get("statesList");
@@ -155,7 +159,8 @@ public class Request {
 
         qooDoc.put("sla_level", qooConstraints.getSla_level().toString());
         qooDoc.put("operator", qooConstraints.getOperator().toString());
-        qooDoc.put("additional_params", qooConstraints.getAdditional_params());
+        qooDoc.put("iqas_params", qooConstraints.getIqas_params());
+        qooDoc.put("custom_params", qooConstraints.getCustom_params());
         List<String> interestedInText = new ArrayList<>();
         for (QoOAttribute q : qooConstraints.getInterested_in()) {
             interestedInText.add(q.toString());

@@ -7,7 +7,7 @@
 </head>
 <body>
 
-<div style="width: 100%; text-align: center">
+<div style="width: 80%; text-align: center; margin-left: auto; margin-right: auto">
     <img src="/iqas_logo.png" />
     <p> Welcome on the homepage of the API gateway for the iQAS platform. <br/>
         This API allows you to interact with the iQAS platform in order to subscribe to high-quality sensor observations.
@@ -16,7 +16,7 @@
 
 <h2>GET endpoints</h2>
 
-<table width="100%">
+<table class="border" width="80%" style="margin-left: auto; margin-right: auto">
     <tr>
         <th>Sensors</th>
         <th>Requests</th>
@@ -25,31 +25,31 @@
         <th>Pipelines</th>
     </tr>
     <tr>
-        <td width="20%">
+        <td width="15%">
             <ul>
                 <li><a href="/sensors">/sensors</a></li>
                 <li>/sensors/[sensor_id]</li>
             </ul>
         </td>
-        <td width="20%">
+        <td width="15%">
             <ul>
                 <li><a href="/requests">/requests</a></li>
                 <li>/requests/[request_id]</li>
             </ul>
         </td>
-        <td width="20%">
+        <td width="15%">
             <ul>
                 <li><a href="/places">/places</a></li>
                 <li>/places?nearTo=[location]</li>
             </ul>
         </td>
-        <td width="20%">
+        <td width="15%">
             <ul>
                 <li><a href="/topics">/topics</a></li>
                 <li>/topics/[topic_URI]</li>
             </ul>
         </td>
-        <td width="20%">
+        <td width="15%">
             <ul>
                 <li><a href="/pipelines">/pipelines</a></li>
                 <li>/pipelines/[pipeline_id]</li>
@@ -64,59 +64,71 @@
     <li>/requests</li>
 </ul>
 
+<h3>Request syntax</h3>
+
 For submitting a new iQAS request, the format is the following (bold parameters are mandatory):
-<div style="margin-top: 10px; margin-left: 30px;" class="code">
-    Content-Type: application/json<br/>
-    {<br/>
-    <div style="margin-left: 30px;">
-        <b>"application_id"</b>: "[application_id]",<br/>
-        <b>"topic"</b>: "[topic]" / "ALL",<br/>
-        <b>"location"</b>: "[location]" / "ALL",<br/>
-        "obs_level": "RAW_DATA" / "INFORMATION" / "KNOWLEDGE", (default: RAW_DATA)<br/>
-        "qoo": (see below) (default: no QoO constraints)<br/>
-    </div>
-    }
-</div>
-
-<br/>
-
-<table width="100%">
+<table width="80%" style="margin-left: auto; margin-right: auto">
     <tr>
-        <th colspan="2">Quality of Observation (QoO)</th>
-    </tr>
-    <tr>
-        <td width="50%">
-            When present, the qoo parameter represents a "QoO Service Level Agreement" and should be expressed as follow:
-            <div style="margin-top: 10px; margin-left: 30px;" class="code">
-                "qoo": {<br/>
-                <div style="margin-left: 30px;">
-                    <b>"interested_in"</b>: [QoO_attributes_list],<br/>
-                    <b>"additional_params"</b>: {<br/>
+        <td width="40%">
+            <div class="code">
+                Content-Type: application/json<br/>
+                {<br/>
                     <div style="margin-left: 30px;">
-                        "[additional_param_name]": "[additional_param_value]",<br/>
-                        <div style="margin-left: 30px;">
-                            ...
-                        </div>
-                    </div>
-                    },<br/>
-                    "sla_level": "BEST_EFFORT" / "GUARANTEED", (default: BEST_EFFORT)<br/>
-                    "operator": "NONE" / "AVG" / "MIN" / "MAX" (default: NONE)<br/>
+                        <b>"application_id"</b>: "[application_id]",<br/>
+                        <b>"topic"</b>: "[topic]" / "ALL",<br/>
+                        <b>"location"</b>: "[location]" / "ALL",<br/>
+                        "obs_level": "RAW_DATA" / "INFORMATION" / "KNOWLEDGE", (default: RAW_DATA)<br/>
+                        "qoo": {<br/>
+                            <div style="margin-left: 30px;">
+                                <b>"interested_in"</b>: [QoO_attributes_list],<br/>
+                                "iqas_params": {<br/>
+                                <div style="margin-left: 30px;">
+                                    "[iqas_param_name]": "[iqas_param_value]",<br/>
+                                    <div style="margin-left: 30px;">
+                                        ...
+                                    </div>
+                                </div>
+                                },<br/>
+                                "custom_params": {<br/>
+                                <div style="margin-left: 30px;">
+                                    "[custom_param_name]": "[custom_param_value]",<br/>
+                                    <div style="margin-left: 30px;">
+                                        ...
+                                    </div>
+                                </div>
+                                }<br/>
+                                <!-- "sla_level": "BEST_EFFORT" / "GUARANTEED", (default: BEST_EFFORT)<br/>
+                                "operator": "NONE" / "AVG" / "MIN" / "MAX" (default: NONE)<br/> -->
+                            </div>
+                        }
                 </div>
                 }
             </div>
         </td>
-        <td width="50%">
-            Details:
-            <ul>
-                <li><span class="code"><b>interested_in</b></span> contains an ordered list
-                    (first=very important, last=less important) of QoO attributes that matter for the given application.
-                    See <a href="/qoo/attributes">/qoo/attributes</a> for the current supported QoO attributes.</li> <br/>
-                <li><span class="code"><b>additional_params</b></span> can be used to specify additional QoO requirements.
-                    Visit <a href="/qoo/parameters">/qoo/parameters</a> to see what parameters can be customized.</li>
-            </ul>
+
+        <td width="40%">
+            <script src="https://gist.github.com/antoineauger/7fad731f1340dbbecca731325e6c200d.js"></script>
         </td>
     </tr>
+
 </table>
+
+<br/>
+
+When present, the <span class="code">qoo</span> parameter represents a "QoO Service Level Agreement" and should be expressed as follow:
+<ul>
+    <li><span class="code"><b>interested_in</b></span> contains an ordered list
+        (first=very important, last=less important) of QoO attributes that matter for the given application.
+        See <a href="/qoo/attributes">/qoo/attributes</a> for the current supported QoO attributes.</li>
+
+    <li><span class="code">iqas_params</span> can be used to specify some additional QoO requirements
+        that the iQAS platform natively supports.
+        Visit <a href="/qoo/iqas_params">/qoo/iqas_params</a> for more details.</li>
+
+    <li><span class="code">custom_params</span> can be used to specify additional QoO requirements
+        that have been set as customizable for a custom QoO Pipeline.
+        Visit <a href="/qoo/custom_params">/qoo/custom_params</a> to see what parameters can be customized.</li>
+</ul>
 
 <h2>DELETE endpoints</h2>
 <ul>

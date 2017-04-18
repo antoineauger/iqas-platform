@@ -164,8 +164,8 @@ public class AnalyzeActor extends UntypedActor {
                             }
 
                             // If there is some QoO constraints about OBS_ACCURACY, we add a FilterPipeline
-                            if ((requestTemp.getQooConstraints().getAdditional_params().containsKey("threshold_min")
-                                    || requestTemp.getQooConstraints().getAdditional_params().containsKey("threshold_max")) ) {
+                            if ((requestTemp.getQooConstraints().getCustom_params().containsKey("threshold_min")
+                                    || requestTemp.getQooConstraints().getCustom_params().containsKey("threshold_max")) ) {
 
                                 TopicEntity filteredObs = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_FILTER",
                                         requestTemp.getObs_level());

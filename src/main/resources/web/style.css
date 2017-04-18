@@ -1,11 +1,21 @@
+body {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
 .code {
     font-family: monospace;
 }
 
-table {
+.border {
+    border: 1px solid black;
     border-collapse: collapse;
 }
 
-table, th, td {
+.border th {
+    border: 1px solid black;
+}
+
+.border td {
     border: 1px solid black;
 }

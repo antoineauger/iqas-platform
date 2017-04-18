@@ -176,10 +176,13 @@ public class RESTServer extends AllDirectives {
                                                 );
                                             }})
                                 ),
-                                path(segment("qoo").slash(segment("parameters")), () ->
+                                path(segment("qoo").slash(segment("custom_params")), () ->
                                         extractExecutionContext(ctx ->
                                                 onSuccess(() -> getAllQoOCustomizableAttributes(ctx), Function.identity())
                                         )
+                                ),
+                                path(segment("qoo").slash(segment("iqas_params")), () ->
+                                        getFromResource("web/iqas_params.html", ContentTypes.TEXT_HTML_UTF8)
                                 ),
                                 path(segment("qoo").slash(segment("attributes")), () ->
                                         extractExecutionContext(ctx ->

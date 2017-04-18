@@ -26,10 +26,10 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
     private Graph runnableGraph = null;
 
     public SimpleFilteringPipeline() {
-        super("Simple Filtering Pipeline", "SimpleFilteringPipeline", true);
+        super("Custom Pipeline 1", "CustomPipeline1", true);
 
         addSupportedOperator(NONE);
-        setParameter("threshold_min", String.valueOf(Float.MIN_VALUE), true);
+        setParameter("test_param_1", String.valueOf(Float.MIN_VALUE), true);
     }
 
     @Override
@@ -63,7 +63,7 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                     );
 
                     final FlowShape<RawData, RawData> filteringMechanismRawData = builder.add(
-                            Flow.of(RawData.class).filter(r -> r.getValue() < Double.valueOf(getParams().get("threshold_min")))
+                            Flow.of(RawData.class).filter(r -> r.getValue() < Double.valueOf(getParams().get("test_param_1")))
                     );
 
                     builder.from(consumRecordToRawData.out())

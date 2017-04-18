@@ -264,14 +264,14 @@ public class MonitorActor extends UntypedActor {
     }
 
     private void storeObsRateRequirements(Request incomingRequest) {
-        if (incomingRequest.getQooConstraints().getAdditional_params().containsKey("obsRate_min")
-                || incomingRequest.getQooConstraints().getAdditional_params().containsKey("obsRate_max")) { // if it expresses interest in OBS_RATE
+        if (incomingRequest.getQooConstraints().getCustom_params().containsKey("obsRate_min")
+                || incomingRequest.getQooConstraints().getCustom_params().containsKey("obsRate_max")) { // if it expresses interest in OBS_RATE
             long obsRateMaxVal = -1;
             TimeUnit obsRateMaxUnit = null;
             long obsRateMinVal = -1;
             TimeUnit obsRateMinUnit = null;
 
-            for (Object o : incomingRequest.getQooConstraints().getAdditional_params().entrySet()) {
+            for (Object o : incomingRequest.getQooConstraints().getCustom_params().entrySet()) {
                 Map.Entry pair = (Map.Entry) o;
                 String k = (String) pair.getKey();
                 String v = (String) pair.getValue();
@@ -328,9 +328,9 @@ public class MonitorActor extends UntypedActor {
     }
 
     private void storeFreshnessRequirements(Request incomingRequest) {
-        if (incomingRequest.getQooConstraints().getAdditional_params().containsKey("age_max")) { // if it expresses interest in OBS_FRESHNESS
+        if (incomingRequest.getQooConstraints().getCustom_params().containsKey("age_max")) { // if it expresses interest in OBS_FRESHNESS
             try {
-                long maxAge = Long.parseLong(incomingRequest.getQooConstraints().getAdditional_params().get("age_max"));
+                long maxAge = Long.parseLong(incomingRequest.getQooConstraints().getCustom_params().get("age_max"));
                 maxAgeByRequest.put(incomingRequest.getRequest_id(), maxAge);
             } catch (NumberFormatException | NullPointerException e) { // To avoid malformed QoO requirements
                 log.error("Error when trying to parse age_max parameter: " + e.toString());
