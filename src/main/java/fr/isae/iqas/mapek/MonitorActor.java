@@ -13,7 +13,6 @@ import fr.isae.iqas.model.message.ObsRateReportMsg;
 import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.ObservationRate;
-import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.utils.ActorUtils;
 import fr.isae.iqas.utils.HttpUtils;

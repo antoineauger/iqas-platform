@@ -21,8 +21,11 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by an.auger on 02/02/2017.
  */
+
 public class PipelineWatcherActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+
+    private final List<Class> providedPipelines = Arrays.asList(new Class[] {IngestPipeline.class, FilterPipeline.class, OutputPipeline.class});
 
     private FiniteDuration rateToCheck = null;
     private MessageDigest md = null;
@@ -42,9 +45,9 @@ public class PipelineWatcherActor extends UntypedActor {
         md5Pipelines = new ConcurrentHashMap<>();
         pipelineObjects = new ConcurrentHashMap<>();
 
-        pipelineObjects.put(IngestPipeline.class.getSimpleName(), IngestPipeline.class);
-        pipelineObjects.put(FilterPipeline.class.getSimpleName(), FilterPipeline.class);
-        pipelineObjects.put(OutputPipeline.class.getSimpleName(), OutputPipeline.class);
+        for (Class c: providedPipelines) {
+            pipelineObjects.put(c.getSimpleName(), c);
+        }
     }
 
     @Override
@@ -73,12 +76,14 @@ public class PipelineWatcherActor extends UntypedActor {
         else if (message instanceof PipelineRequestMsg) {
             ArrayList<Pipeline> objectToReturn = new ArrayList<>();
             PipelineRequestMsg request = (PipelineRequestMsg) message;
-            if (request.isGetAllPipelines()) {
+            if (request.isGetAllPipelines()) { // Only used for displaying Pipeline names on iQAS API homepage
                 log.info("PipelineRequestMsg: all available and concrete pipelines have been asked");
                 pipelineObjects.forEach((k, v) -> {
                     try {
                         IPipeline pipelineTemp = (IPipeline) v.newInstance();
-                        objectToReturn.add(new Pipeline(pipelineTemp.getPipelineID(), pipelineTemp.getPipelineName(), pipelineTemp));
+                        if (!providedPipelines.contains(pipelineTemp.getClass())) { // If the pipeline is a custom-defined one
+                            objectToReturn.add(new Pipeline(pipelineTemp.getPipelineID(), pipelineTemp.getPipelineName(), pipelineTemp));
+                        }
                     } catch (InstantiationException | IllegalAccessException e) {
                         e.printStackTrace();
                     }
