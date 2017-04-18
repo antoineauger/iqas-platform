@@ -29,8 +29,8 @@ public class FilterPipeline extends AbstractPipeline implements IPipeline {
         super("Filter Pipeline", "FilterPipeline", true);
 
         addSupportedOperator(NONE);
-        setParameter("lower_bound", String.valueOf(Float.MIN_VALUE), true);
-        setParameter("upper_bound", String.valueOf(Float.MAX_VALUE), true);
+        setParameter("threshold_min", String.valueOf(Float.MIN_VALUE), true);
+        setParameter("threshold_max", String.valueOf(Float.MAX_VALUE), true);
     }
 
     @Override
@@ -64,8 +64,8 @@ public class FilterPipeline extends AbstractPipeline implements IPipeline {
                     );
 
                     final FlowShape<RawData, RawData> filteringMechanism = builder.add(
-                            Flow.of(RawData.class).filter(r -> r.getValue() >= Double.valueOf(getParams().get("lower_bound"))
-                                    && r.getValue() <= Double.valueOf(getParams().get("upper_bound")))
+                            Flow.of(RawData.class).filter(r -> r.getValue() >= Double.valueOf(getParams().get("threshold_min"))
+                                    && r.getValue() <= Double.valueOf(getParams().get("threshold_max")))
                     );
 
                     builder.from(consumRecordToRawData.out())
