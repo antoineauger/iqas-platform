@@ -60,7 +60,6 @@ public class MonitorActor extends UntypedActor {
 
     // For QoO reporting
     private Map<String, Buffer> qooQualityBuffer; // RequestIDs <-> [QoOReportMessages]
-    //private Map<String, Long> maxAgeByRequest; // RequestIDs <-> Maximum admissible age (long)
 
     /**
      * Monitor actor for the MAPE-K loop of the iQAS platform
@@ -92,7 +91,6 @@ public class MonitorActor extends UntypedActor {
         this.maxObsRateByRequest = new ConcurrentHashMap<>();
 
         this.qooQualityBuffer = new ConcurrentHashMap<>();
-        //this.maxAgeByRequest = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -156,7 +154,6 @@ public class MonitorActor extends UntypedActor {
 
             if (requestTemp.getCurrent_status() == SUBMITTED) { // Valid Request
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.REQUEST, requestTemp);
-                //storeFreshnessRequirements(requestTemp);
                 storeObsRateRequirements(requestTemp);
                 qooQualityBuffer.put(requestTemp.getRequest_id(), new CircularFifoBuffer(nbEventsBeforeSymptom));
                 numberObservedSymptomsObsRate.put(requestTemp.getRequest_id(), 0);
@@ -181,7 +178,6 @@ public class MonitorActor extends UntypedActor {
             }
             else if (requestTemp.getCurrent_status() == UPDATED) { // Existing Request updated by the user
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.UPDATED, EntityMAPEK.REQUEST, requestTemp);
-                //storeFreshnessRequirements(requestTemp);
                 storeObsRateRequirements(requestTemp);
                 forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
@@ -327,17 +323,6 @@ public class MonitorActor extends UntypedActor {
             }
         }
     }
-
-    /*private void storeFreshnessRequirements(Request incomingRequest) {
-        if (incomingRequest.getQooConstraints().getIqas_params().containsKey("age_max")) { // if it expresses interest in OBS_FRESHNESS
-            try {
-                long maxAge = Long.parseLong(incomingRequest.getQooConstraints().getIqas_params().get("age_max"));
-                maxAgeByRequest.put(incomingRequest.getRequest_id(), maxAge);
-            } catch (NumberFormatException | NullPointerException e) { // To avoid malformed QoO requirements
-                log.error("Error when trying to parse age_max parameter: " + e.toString());
-            }
-        }
-    }*/
 
     private boolean storeVirtualSensorStates() {
         future(() -> fusekiController._findAllSensors(), context().dispatcher())
