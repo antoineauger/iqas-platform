@@ -1,5 +1,6 @@
 package fr.isae.iqas.mapek;
 
+import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
@@ -38,6 +39,9 @@ import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
+import static fr.isae.iqas.utils.PipelineUtils.setOptionsForFilterPipeline;
+import static fr.isae.iqas.utils.PipelineUtils.setOptionsForIngestPipeline;
+import static fr.isae.iqas.utils.PipelineUtils.setOptionsForOutputPipeline;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -286,7 +290,7 @@ public class PlanActor extends UntypedActor {
             }
             else {
                 if (pipeline instanceof IngestPipeline) {
-                    setOptionsForIngestPipeline((IngestPipeline) pipeline, incomingRequest);
+                    setOptionsForIngestPipeline((IngestPipeline) pipeline, incomingRequest, fusekiController, context());
                 }
 
                 // Setting request_id, temp_id and other options for the retrieved Pipeline
@@ -443,41 +447,4 @@ public class PlanActor extends UntypedActor {
         return true;
     }
 
-    private void setOptionsForIngestPipeline(IngestPipeline pipeline, Request incomingRequest) {
-        future(() -> fusekiController._findAllSensorsWithConditions(incomingRequest.getLocation(), incomingRequest.getTopic()), context().dispatcher())
-                .onComplete(new OnComplete<VirtualSensorList>() {
-                    public void onComplete(Throwable throwable, VirtualSensorList vList) {
-                        if (throwable != null) {
-                            log.error("Error when retrieving sensor capabilities. " + throwable.toString());
-                        } else {
-                            StringBuilder sensorsToKeep = new StringBuilder();
-                            for (VirtualSensor v : vList.sensors) {
-                                sensorsToKeep.append(v.sensor_id.split("#")[1]).append(";");
-                            }
-                            sensorsToKeep = new StringBuilder(sensorsToKeep.substring(0, sensorsToKeep.length() - 1));
-                            pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep.toString());
-                        }
-                    }
-                }, context().dispatcher());
-    }
-
-    private void setOptionsForFilterPipeline(FilterPipeline pipeline, Request incomingRequest) {
-        if (incomingRequest.getQooConstraints().getIqas_params().containsKey("threshold_min")) {
-            pipeline.setCustomizableParameter("threshold_min", incomingRequest.getQooConstraints().getIqas_params().get("threshold_min"));
-        }
-        if (incomingRequest.getQooConstraints().getIqas_params().containsKey("threshold_max")) {
-            pipeline.setCustomizableParameter("threshold_max", incomingRequest.getQooConstraints().getIqas_params().get("threshold_max"));
-        }
-    }
-
-    private void setOptionsForOutputPipeline(OutputPipeline pipeline, Request incomingRequest) {
-        StringBuilder interestAttr = new StringBuilder();
-        if (incomingRequest.getQooConstraints().getInterested_in().size() > 0) {
-            for (QoOAttribute a : incomingRequest.getQooConstraints().getInterested_in()) {
-                interestAttr.append(a.toString()).append(";");
-            }
-            interestAttr = new StringBuilder(interestAttr.substring(0, interestAttr.length() - 1));
-            pipeline.setCustomizableParameter("interested_in", interestAttr.toString());
-        }
-    }
 }

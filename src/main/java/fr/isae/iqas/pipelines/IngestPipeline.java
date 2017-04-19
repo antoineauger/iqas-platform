@@ -85,7 +85,6 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                             .viaFanOut(bcast)
                             .toInlet(rawDataToProdRecord.in());
 
-                    // ################################# END OF YOUR CODE #################################
                     // Do not remove - useful for MAPE-K monitoring
 
                     builder.from(bcast)
@@ -99,8 +98,6 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                             })));
 
                     return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
-
-                    // ################################# END OF YOUR CODE #################################
                 });
 
         return runnableGraph;

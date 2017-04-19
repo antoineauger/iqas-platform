@@ -41,8 +41,6 @@ public class FilterPipeline extends AbstractPipeline implements IPipeline {
         runnableGraph = GraphDSL
                 .create(builder -> {
 
-                    // ################################# YOUR CODE GOES HERE #################################
-
                     final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());

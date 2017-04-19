@@ -40,8 +40,6 @@ public class RemoveOutdatedPipeline extends AbstractPipeline implements IPipelin
         runnableGraph = GraphDSL
                 .create(builder -> {
 
-                    // ################################# YOUR CODE GOES HERE #################################
-
                     final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());

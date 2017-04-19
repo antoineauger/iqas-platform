@@ -60,8 +60,6 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         }
                     }
 
-                    // ################################# YOUR CODE GOES HERE #################################
-
                     if (askedLevelFinal == RAW_DATA) {
                         final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
@@ -197,8 +195,6 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                     else { // other observation levels are not supported
                         return null;
                     }
-
-                    // ################################# END OF YOUR CODE #################################
 
                 });
 
