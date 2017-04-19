@@ -17,20 +17,19 @@ import org.json.JSONObject;
 import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
- * Created by an.auger on 31/01/2017.
+ * Created by an.auger on 19/04/2017.
  *
- * FilterPipeline is an example of QoO pipeline provided by the iQAS platform.
+ * RemoveOutdatedPipeline is an example of QoO pipeline provided by the iQAS platform.
  * It can be modified according to user needs.
  */
-public class FilterPipeline extends AbstractPipeline implements IPipeline {
+public class RemoveOutdatedPipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
 
-    public FilterPipeline() {
-        super("Filter Pipeline", "FilterPipeline", true);
+    public RemoveOutdatedPipeline() {
+        super("Remove Outdated Pipeline", "RemoveOutdatedPipeline", true);
 
         addSupportedOperator(NONE);
-        setParameter("threshold_min", String.valueOf(Double.MIN_VALUE), true);
-        setParameter("threshold_max", String.valueOf(Double.MAX_VALUE), true);
+        setParameter("age_max", String.valueOf(Integer.MAX_VALUE), true);
     }
 
     @Override
@@ -62,13 +61,17 @@ public class FilterPipeline extends AbstractPipeline implements IPipeline {
                             })
                     );
 
-                    final FlowShape<RawData, RawData> filteringMechanism = builder.add(
-                            Flow.of(RawData.class).filter(r -> r.getValue() >= Double.valueOf(getParams().get("threshold_min"))
-                                    && r.getValue() <= Double.valueOf(getParams().get("threshold_max")))
+                    final FlowShape<RawData, RawData> removeOutdatedObsMechanism = builder.add(
+                            Flow.of(RawData.class)
+                                    .filter(r -> {
+                                        String[] timestampProducedStr = r.getTimestamps().split(",")[0].split(":");
+                                        long timestampProduced = Long.valueOf(timestampProducedStr[1]);
+                                        return timestampProduced - System.currentTimeMillis() < Long.valueOf(getParams().get("age_max"));
+                                    })
                     );
 
                     builder.from(consumRecordToRawData.out())
-                            .via(filteringMechanism)
+                            .via(removeOutdatedObsMechanism)
                             .toInlet(rawDataToProdRecord.in());
 
                     return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());

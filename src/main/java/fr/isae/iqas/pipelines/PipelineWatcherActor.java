@@ -29,6 +29,7 @@ public class PipelineWatcherActor extends UntypedActor {
             IngestPipeline.class,
             FilterPipeline.class,
             ThrottlePipeline.class,
+            RemoveOutdatedPipeline.class,
             OutputPipeline.class
     });
 

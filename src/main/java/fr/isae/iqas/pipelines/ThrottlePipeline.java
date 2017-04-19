@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import static fr.isae.iqas.model.request.Operator.NONE;
 
 /**
- * Created by an.auger on 31/01/2017.
+ * Created by an.auger on 19/04/2017.
  *
  * ThrottlePipeline is an example of QoO pipeline provided by the iQAS platform.
  * It can be modified according to user needs.
@@ -33,7 +33,7 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
         super("Throttle Pipeline", "ThrottlePipeline", true);
 
         addSupportedOperator(NONE);
-        setParameter("obsRate_max", String.valueOf(Float.MAX_VALUE), true);
+        setParameter("obsRate_max", String.valueOf(Integer.MAX_VALUE), true);
     }
 
     @Override
@@ -84,7 +84,6 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
                     final FlowShape<RawData, RawData> throttleMechanism = builder.add(
                             Flow.of(RawData.class)
                                     .throttle(nbObsMax, new FiniteDuration(1, finalUnit), 1, ThrottleMode.shaping())
-                                    .map(r -> r)
                     );
 
                     builder.from(consumRecordToRawData.out())
