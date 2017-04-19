@@ -46,7 +46,6 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                                                                                                                            ObservationLevel askedLevel,
                                                                                                                            Operator operatorToApply) {
 
-        final ObservationLevel askedLevelFinal = askedLevel;
         runnableGraph = GraphDSL
                 .create(builder -> {
                     // Definition of the broadcast for the MAPE-K monitoring

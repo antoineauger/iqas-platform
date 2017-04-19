@@ -25,7 +25,12 @@ import java.util.concurrent.TimeUnit;
 public class PipelineWatcherActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private final List<Class> providedPipelines = Arrays.asList(new Class[] {IngestPipeline.class, FilterPipeline.class, OutputPipeline.class});
+    private final List<Class> providedPipelines = Arrays.asList(new Class[] {
+            IngestPipeline.class,
+            FilterPipeline.class,
+            ThrottlePipeline.class,
+            OutputPipeline.class
+    });
 
     private FiniteDuration rateToCheck = null;
     private MessageDigest md = null;
