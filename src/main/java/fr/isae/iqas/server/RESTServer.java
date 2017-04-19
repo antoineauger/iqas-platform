@@ -105,13 +105,13 @@ public class RESTServer extends AllDirectives {
                                         getFromResource("web/index.html", ContentTypes.TEXT_HTML_UTF8)
                                 ),
                                 path(segment("style.css"), () ->
-                                        getFromResource("web/style.css")
+                                        getFromResource("web/style/style.css")
                                 ),
                                 path(segment("script.js"), () ->
-                                        getFromResource("web/script.js")
+                                        getFromResource("web/js/script.js")
                                 ),
                                 path(segment("iqas_logo.png"), () ->
-                                        getFromResource("web/iqas_logo.png")
+                                        getFromResource("web/figures/iqas_logo.png")
                                 ),
 
                                 // REST APIs
@@ -176,6 +176,8 @@ public class RESTServer extends AllDirectives {
                                                 );
                                             }})
                                 ),
+
+                                // QoO documentation
                                 path(segment("qoo").slash(segment("custom_params")), () ->
                                         extractExecutionContext(ctx ->
                                                 onSuccess(() -> getAllQoOCustomizableAttributes(ctx), Function.identity())
@@ -244,6 +246,8 @@ public class RESTServer extends AllDirectives {
 
                                         ))
                         )),
+
+                        // Error handling
                         get(() -> complete(
                                 HttpResponse.create()
                                         .withStatus(404)
