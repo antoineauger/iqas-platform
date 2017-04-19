@@ -462,11 +462,11 @@ public class PlanActor extends UntypedActor {
     }
 
     private void setOptionsForFilterPipeline(FilterPipeline pipeline, Request incomingRequest) {
-        if (incomingRequest.getQooConstraints().getCustom_params().containsKey("threshold_min")) {
-            pipeline.setCustomizableParameter("threshold_min", incomingRequest.getQooConstraints().getCustom_params().get("threshold_min"));
+        if (incomingRequest.getQooConstraints().getIqas_params().containsKey("threshold_min")) {
+            pipeline.setCustomizableParameter("threshold_min", incomingRequest.getQooConstraints().getIqas_params().get("threshold_min"));
         }
-        if (incomingRequest.getQooConstraints().getCustom_params().containsKey("threshold_max")) {
-            pipeline.setCustomizableParameter("threshold_max", incomingRequest.getQooConstraints().getCustom_params().get("threshold_max"));
+        if (incomingRequest.getQooConstraints().getIqas_params().containsKey("threshold_max")) {
+            pipeline.setCustomizableParameter("threshold_max", incomingRequest.getQooConstraints().getIqas_params().get("threshold_max"));
         }
     }
 

@@ -27,9 +27,9 @@ public class PipelineWatcherActor extends UntypedActor {
 
     private final List<Class> providedPipelines = Arrays.asList(new Class[] {
             IngestPipeline.class,
-            FilterPipeline.class,
-            ThrottlePipeline.class,
-            RemoveOutdatedPipeline.class,
+            FilterPipeline.class,  // OBS_ACCURACY
+            ThrottlePipeline.class, // OBS_RATE
+            RemoveOutdatedPipeline.class, // OBS_FRESHNESS
             OutputPipeline.class
     });
 

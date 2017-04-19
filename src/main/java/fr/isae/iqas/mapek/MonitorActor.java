@@ -60,7 +60,7 @@ public class MonitorActor extends UntypedActor {
 
     // For QoO reporting
     private Map<String, Buffer> qooQualityBuffer; // RequestIDs <-> [QoOReportMessages]
-    private Map<String, Long> maxAgeByRequest; // RequestIDs <-> Maximum admissible age (long)
+    //private Map<String, Long> maxAgeByRequest; // RequestIDs <-> Maximum admissible age (long)
 
     /**
      * Monitor actor for the MAPE-K loop of the iQAS platform
@@ -92,7 +92,7 @@ public class MonitorActor extends UntypedActor {
         this.maxObsRateByRequest = new ConcurrentHashMap<>();
 
         this.qooQualityBuffer = new ConcurrentHashMap<>();
-        this.maxAgeByRequest = new ConcurrentHashMap<>();
+        //this.maxAgeByRequest = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -156,7 +156,7 @@ public class MonitorActor extends UntypedActor {
 
             if (requestTemp.getCurrent_status() == SUBMITTED) { // Valid Request
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.REQUEST, requestTemp);
-                storeFreshnessRequirements(requestTemp);
+                //storeFreshnessRequirements(requestTemp);
                 storeObsRateRequirements(requestTemp);
                 qooQualityBuffer.put(requestTemp.getRequest_id(), new CircularFifoBuffer(nbEventsBeforeSymptom));
                 numberObservedSymptomsObsRate.put(requestTemp.getRequest_id(), 0);
@@ -181,7 +181,7 @@ public class MonitorActor extends UntypedActor {
             }
             else if (requestTemp.getCurrent_status() == UPDATED) { // Existing Request updated by the user
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.UPDATED, EntityMAPEK.REQUEST, requestTemp);
-                storeFreshnessRequirements(requestTemp);
+                //storeFreshnessRequirements(requestTemp);
                 storeObsRateRequirements(requestTemp);
                 forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
@@ -264,32 +264,32 @@ public class MonitorActor extends UntypedActor {
     }
 
     private void storeObsRateRequirements(Request incomingRequest) {
-        if (incomingRequest.getQooConstraints().getCustom_params().containsKey("obsRate_min")
-                || incomingRequest.getQooConstraints().getCustom_params().containsKey("obsRate_max")) { // if it expresses interest in OBS_RATE
+        if (incomingRequest.getQooConstraints().getIqas_params().containsKey("obsRate_min")
+                || incomingRequest.getQooConstraints().getIqas_params().containsKey("obsRate_max")) { // if it expresses interest in OBS_RATE
             long obsRateMaxVal = -1;
             TimeUnit obsRateMaxUnit = null;
             long obsRateMinVal = -1;
             TimeUnit obsRateMinUnit = null;
 
-            for (Object o : incomingRequest.getQooConstraints().getCustom_params().entrySet()) {
+            for (Object o : incomingRequest.getQooConstraints().getIqas_params().entrySet()) {
                 Map.Entry pair = (Map.Entry) o;
                 String k = (String) pair.getKey();
                 String v = (String) pair.getValue();
 
                 if (k.startsWith("obsRate_")) {
                     // We parse the obsRate according the pattern int/unit
-                    String[] unitValue = v.split("/");
+                    String[] unitValueStr = v.split("/");
 
                     try {
-                        long obsRateVal = Long.parseLong(unitValue[0]);
+                        long obsRateVal = Long.parseLong(unitValueStr[0]);
                         TimeUnit obsRateUnit;
-                        if (unitValue.length == 2 && unitValue[1].equals("s")) {
+                        if (unitValueStr.length == 2 && unitValueStr[1].equals("s")) {
                             obsRateUnit = TimeUnit.SECONDS;
                         }
-                        else if (unitValue.length == 2 && unitValue[1].equals("min")) {
+                        else if (unitValueStr.length == 2 && unitValueStr[1].equals("min")) {
                             obsRateUnit = TimeUnit.MINUTES;
                         }
-                        else if (unitValue.length == 2 && unitValue[1].equals("hour")) {
+                        else if (unitValueStr.length == 2 && unitValueStr[1].equals("hour")) {
                             obsRateUnit = TimeUnit.HOURS;
                         }
                         else {
@@ -315,28 +315,29 @@ public class MonitorActor extends UntypedActor {
                 }
             }
 
-            if (obsRateMinUnit != null && obsRateMaxUnit == null) {
+            if (obsRateMinUnit != null && obsRateMaxUnit == null) { // Only obsRate_min is kept
                 minObsRateByRequest.put(incomingRequest.getRequest_id(), new ObservationRate(obsRateMinVal, obsRateMinUnit));
             }
-            else if (obsRateMinUnit == null && obsRateMaxUnit != null) {
+            else if (obsRateMinUnit == null && obsRateMaxUnit != null) { // Only obsRate_max is kept
                 maxObsRateByRequest.put(incomingRequest.getRequest_id(), new ObservationRate(obsRateMaxVal, obsRateMaxUnit));
             }
-            else if (obsRateMinUnit != null && obsRateMaxUnit != null) {
+            else if (obsRateMinUnit != null && obsRateMaxUnit != null) { // Only obsRate_max is kept
+                incomingRequest.getQooConstraints().getIqas_params().remove("obsRate_min");
                 maxObsRateByRequest.put(incomingRequest.getRequest_id(), new ObservationRate(obsRateMaxVal, obsRateMaxUnit));
             }
         }
     }
 
-    private void storeFreshnessRequirements(Request incomingRequest) {
-        if (incomingRequest.getQooConstraints().getCustom_params().containsKey("age_max")) { // if it expresses interest in OBS_FRESHNESS
+    /*private void storeFreshnessRequirements(Request incomingRequest) {
+        if (incomingRequest.getQooConstraints().getIqas_params().containsKey("age_max")) { // if it expresses interest in OBS_FRESHNESS
             try {
-                long maxAge = Long.parseLong(incomingRequest.getQooConstraints().getCustom_params().get("age_max"));
+                long maxAge = Long.parseLong(incomingRequest.getQooConstraints().getIqas_params().get("age_max"));
                 maxAgeByRequest.put(incomingRequest.getRequest_id(), maxAge);
             } catch (NumberFormatException | NullPointerException e) { // To avoid malformed QoO requirements
                 log.error("Error when trying to parse age_max parameter: " + e.toString());
             }
         }
-    }
+    }*/
 
     private boolean storeVirtualSensorStates() {
         future(() -> fusekiController._findAllSensors(), context().dispatcher())
