@@ -56,7 +56,6 @@ public class MonitorActor extends UntypedActor {
     private Map<String, Long> startDateCount; // RequestIDs <-> Timestamps
     private Map<String, Integer> countByRequest; // RequestIDs <-> count (int)
     private Map<String, ObservationRate> minObsRateByRequest; // RequestIDs <-> Durations
-    private Map<String, ObservationRate> maxObsRateByRequest; // RequestIDs <-> Durations
 
     // For QoO reporting
     private Map<String, Buffer> qooQualityBuffer; // RequestIDs <-> [QoOReportMessages]
@@ -88,7 +87,6 @@ public class MonitorActor extends UntypedActor {
         this.startDateCount = new ConcurrentHashMap<>();
         this.countByRequest = new ConcurrentHashMap<>();
         this.minObsRateByRequest = new ConcurrentHashMap<>();
-        this.maxObsRateByRequest = new ConcurrentHashMap<>();
 
         this.qooQualityBuffer = new ConcurrentHashMap<>();
     }
@@ -119,7 +117,7 @@ public class MonitorActor extends UntypedActor {
             Map<String, List<String>> requestsWithInsuficientObsRate = new ConcurrentHashMap<>(); // UniquePipelineIDs <-> [ImpactedRequests]
             mappingPipelinesRequests.forEach((k, v) -> {
                 for (String s : v) {
-                    if (minObsRateByRequest.containsKey(s)) { // If there is a minObsRate requirement for this Request
+                    if (minObsRateByRequest.containsKey(s)) { // If there is a obsRate_min requirement for this Request
                         long step = new FiniteDuration(1, minObsRateByRequest.get(s).getUnit()).toMillis();
                         if (System.currentTimeMillis() - startDateCount.get(s) > step) {
                             if (countByRequest.get(s) < minObsRateByRequest.get(s).getValue()) {
@@ -162,13 +160,11 @@ public class MonitorActor extends UntypedActor {
 
                 // TODO
                 log.error("MIN OBS_RATE REQ: " + minObsRateByRequest.toString());
-                log.error("MAX OBS_RATE REQ: " + maxObsRateByRequest.toString());
                 forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
             else if (requestTemp.getCurrent_status() == REMOVED) { // Request deleted by the user
                 qooQualityBuffer.remove(requestTemp.getRequest_id());
                 minObsRateByRequest.remove(requestTemp.getRequest_id());
-                maxObsRateByRequest.remove(requestTemp.getRequest_id());
                 numberObservedSymptomsObsRate.remove(requestTemp.getRequest_id());
                 startDateCount.remove(requestTemp.getRequest_id());
                 countByRequest.remove(requestTemp.getRequest_id());
@@ -315,11 +311,10 @@ public class MonitorActor extends UntypedActor {
                 minObsRateByRequest.put(incomingRequest.getRequest_id(), new ObservationRate(obsRateMinVal, obsRateMinUnit));
             }
             else if (obsRateMinUnit == null && obsRateMaxUnit != null) { // Only obsRate_max is kept
-                maxObsRateByRequest.put(incomingRequest.getRequest_id(), new ObservationRate(obsRateMaxVal, obsRateMaxUnit));
+                // Do nothing, obsRate_max is handled by the ThottlePipeline
             }
             else if (obsRateMinUnit != null && obsRateMaxUnit != null) { // Only obsRate_max is kept
                 incomingRequest.getQooConstraints().getIqas_params().remove("obsRate_min");
-                maxObsRateByRequest.put(incomingRequest.getRequest_id(), new ObservationRate(obsRateMaxVal, obsRateMaxUnit));
             }
         }
     }
