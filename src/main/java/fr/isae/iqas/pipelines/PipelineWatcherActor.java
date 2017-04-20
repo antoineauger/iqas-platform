@@ -29,8 +29,7 @@ public class PipelineWatcherActor extends UntypedActor {
             IngestPipeline.class,
             FilterPipeline.class,  // OBS_ACCURACY
             ThrottlePipeline.class, // OBS_RATE
-            RemoveOutdatedPipeline.class, // OBS_FRESHNESS
-            OutputPipeline.class
+            OutputPipeline.class // OBS_FRESHNESS
     });
 
     private FiniteDuration rateToCheck = null;

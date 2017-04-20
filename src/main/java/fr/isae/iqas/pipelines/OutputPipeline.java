@@ -20,8 +20,12 @@ import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static fr.isae.iqas.model.observation.ObservationLevel.*;
 import static fr.isae.iqas.model.quality.QoOAttribute.OBS_ACCURACY;
@@ -35,11 +39,13 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * It should not be modified.
  */
 public class OutputPipeline extends AbstractPipeline implements IPipeline {
+    private Logger logger = LoggerFactory.getLogger(OutputPipeline.class);
     private Graph runnableGraph = null;
 
     public OutputPipeline() {
         super("Output Pipeline", "OutputPipeline", false);
 
+        setParameter("age_max", String.valueOf(Long.MAX_VALUE) + " hours", true);
         setParameter("interested_in", "", true);
         addSupportedOperator(NONE);
     }
@@ -48,6 +54,31 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
     public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph(String topicToPublish,
                                                                                                                            ObservationLevel askedLevel,
                                                                                                                            Operator operatorToApply) {
+
+        String[] ageMaxStr = getParams().get("age_max").split(" ");
+        long ageLongValue = Long.valueOf(ageMaxStr[0]);
+        TimeUnit unit = null;
+        switch (ageMaxStr[1]) {
+            case "ms":
+                unit = TimeUnit.MILLISECONDS;
+                break;
+            case "s":
+                unit = TimeUnit.SECONDS;
+                break;
+            case "min":
+                unit = TimeUnit.MINUTES;
+                break;
+            case "mins":
+                unit = TimeUnit.MINUTES;
+                break;
+            case "hour":
+                unit = TimeUnit.HOURS;
+                break;
+            case "hours":
+                unit = TimeUnit.HOURS;
+                break;
+        }
+        final long ageMaxAllowed = new FiniteDuration(ageLongValue, unit).toMillis();
 
         final ObservationLevel askedLevelFinal = askedLevel;
         runnableGraph = GraphDSL
@@ -87,6 +118,19 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                 })
                         );
 
+                        final FlowShape<RawData, RawData> removeOutdatedObs = builder.add(
+                                Flow.of(RawData.class)
+                                        .filter(r -> {
+                                            String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
+                                            long timestampProduced = Long.valueOf(timestampProducedStr[1]);
+                                            logger.error("timestampProducedStr: " + timestampProducedStr.toString());
+                                            logger.error("timestampProduced: " + String.valueOf(timestampProduced));
+                                            logger.error("(System.currentTimeMillis() - timestampProduced): " + String.valueOf((System.currentTimeMillis() - timestampProduced)));
+                                            logger.error("result: " + String.valueOf((System.currentTimeMillis() - timestampProduced) < ageMaxAllowed));
+                                            return (System.currentTimeMillis() - timestampProduced) < ageMaxAllowed;
+                                        })
+                        );
+
                         final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
                                 Flow.of(RawData.class).map(r -> {
                                     ObjectMapper mapper = new ObjectMapper();
@@ -96,6 +140,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         );
 
                         builder.from(consumRecordToRawData.out())
+                                .via(removeOutdatedObs)
                                 .viaFanOut(bcast)
                                 .toInlet(rawDataToProdRecord.in());
 
@@ -151,6 +196,19 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                 })
                         );
 
+                        final FlowShape<Information, Information> removeOutdatedObs = builder.add(
+                                Flow.of(Information.class)
+                                        .filter(r -> {
+                                            String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
+                                            long timestampProduced = Long.valueOf(timestampProducedStr[1]);
+                                            logger.error("timestampProducedStr: " + timestampProducedStr.toString());
+                                            logger.error("timestampProduced: " + String.valueOf(timestampProduced));
+                                            logger.error("(System.currentTimeMillis() - timestampProduced): " + String.valueOf((System.currentTimeMillis() - timestampProduced)));
+                                            logger.error("result: " + String.valueOf((System.currentTimeMillis() - timestampProduced) < ageMaxAllowed));
+                                            return (System.currentTimeMillis() - timestampProduced) < ageMaxAllowed;
+                                        })
+                        );
+
                         final FlowShape<Information, ProducerRecord> infoToProdRecord = builder.add(
                                 Flow.of(Information.class).map(r -> {
                                     ObjectMapper mapper = new ObjectMapper();
@@ -160,6 +218,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         );
 
                         builder.from(consumRecordToInfo.out())
+                                .via(removeOutdatedObs)
                                 .viaFanOut(bcast)
                                 .toInlet(infoToProdRecord.in());
 

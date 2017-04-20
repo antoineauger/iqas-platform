@@ -7,7 +7,10 @@ import fr.isae.iqas.model.jsonld.VirtualSensor;
 import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
-import fr.isae.iqas.pipelines.*;
+import fr.isae.iqas.pipelines.FilterPipeline;
+import fr.isae.iqas.pipelines.IngestPipeline;
+import fr.isae.iqas.pipelines.OutputPipeline;
+import fr.isae.iqas.pipelines.ThrottlePipeline;
 
 import static akka.dispatch.Futures.future;
 
@@ -36,12 +39,6 @@ public class PipelineUtils {
                 }, context.dispatcher());
     }
 
-    public static void setOptionsForRemoveOutdatedPipeline(RemoveOutdatedPipeline pipeline, Request incomingRequest) {
-        if (incomingRequest.getQooConstraints().getIqas_params().containsKey("age_max")) {
-            pipeline.setCustomizableParameter("age_max", incomingRequest.getQooConstraints().getIqas_params().get("age_max"));
-        }
-    }
-
     public static void setOptionsForThrottlePipeline(ThrottlePipeline pipeline, Request incomingRequest) {
         if (incomingRequest.getQooConstraints().getIqas_params().containsKey("obsRate_max")) {
             pipeline.setCustomizableParameter("obsRate_max", incomingRequest.getQooConstraints().getIqas_params().get("obsRate_max"));
@@ -65,6 +62,9 @@ public class PipelineUtils {
             }
             interestAttr = new StringBuilder(interestAttr.substring(0, interestAttr.length() - 1));
             pipeline.setCustomizableParameter("interested_in", interestAttr.toString());
+        }
+        if (incomingRequest.getQooConstraints().getIqas_params().containsKey("age_max")) {
+            pipeline.setCustomizableParameter("age_max", incomingRequest.getQooConstraints().getIqas_params().get("age_max"));
         }
     }
 }

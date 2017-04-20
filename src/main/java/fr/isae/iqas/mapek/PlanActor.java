@@ -1,6 +1,5 @@
 package fr.isae.iqas.mapek;
 
-import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
@@ -16,12 +15,9 @@ import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
 import fr.isae.iqas.model.jsonld.SensorCapability;
 import fr.isae.iqas.model.jsonld.SensorCapabilityList;
-import fr.isae.iqas.model.jsonld.VirtualSensor;
-import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
-import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.pipelines.*;
@@ -39,9 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
-import static fr.isae.iqas.utils.PipelineUtils.setOptionsForFilterPipeline;
-import static fr.isae.iqas.utils.PipelineUtils.setOptionsForIngestPipeline;
-import static fr.isae.iqas.utils.PipelineUtils.setOptionsForOutputPipeline;
+import static fr.isae.iqas.utils.PipelineUtils.*;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -123,7 +117,7 @@ public class PlanActor extends UntypedActor {
 
                                     // The incoming request has no common points with the enforced ones
                                     if (requestMapping.getConstructedFromRequest().equals("")) {
-                                        buildGraph(requestMapping, incomingRequest, qooParamsForAllTopics);
+                                        buildGraphForFirstTime(requestMapping, incomingRequest, qooParamsForAllTopics);
                                     }
                                     else { // The incoming request may reuse existing enforced requests
                                         TopicEntity beforeLastTopic = requestMapping.getPrimarySources().get(0);
@@ -262,9 +256,9 @@ public class PlanActor extends UntypedActor {
         return pipelineCompletableFuture;
     }
 
-    private void buildGraph(RequestMapping requestMapping,
-                            Request incomingRequest,
-                            Map<String,Map<String,String>> qooParamsForAllTopics) {
+    private void buildGraphForFirstTime(RequestMapping requestMapping,
+                                        Request incomingRequest,
+                                        Map<String,Map<String,String>> qooParamsForAllTopics) {
 
         // Primary sources and filtering by sensors
         String pipelineID = "";
@@ -330,6 +324,9 @@ public class PlanActor extends UntypedActor {
                 else {
                     if (pipeline instanceof FilterPipeline) {
                         setOptionsForFilterPipeline((FilterPipeline) pipeline, incomingRequest);
+                    }
+                    else if (pipeline instanceof ThrottlePipeline) {
+                        setOptionsForThrottlePipeline((ThrottlePipeline) pipeline, incomingRequest);
                     }
                     else if (pipeline instanceof OutputPipeline) {
                         setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest);

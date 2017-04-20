@@ -3,7 +3,6 @@ package fr.isae.iqas.pipelines;
 import akka.stream.FlowShape;
 import akka.stream.Graph;
 import akka.stream.Materializer;
-import akka.stream.ThrottleMode;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +15,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static fr.isae.iqas.model.request.Operator.NONE;
@@ -33,7 +34,7 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
         super("Throttle Pipeline", "ThrottlePipeline", true);
 
         addSupportedOperator(NONE);
-        setParameter("obsRate_max", String.valueOf(Integer.MAX_VALUE), true);
+        setParameter("obsRate_max", String.valueOf(Integer.MAX_VALUE)+"/s", true);
     }
 
     @Override
@@ -41,7 +42,7 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
                                                                                                                            ObservationLevel askedLevel,
                                                                                                                            Operator operatorToApply) {
 
-        String[] strTab = getParams().get("obsRate_max").split(" ");
+        String[] strTab = getParams().get("obsRate_max").split("/");
         final int nbObsMax = Integer.valueOf(strTab[0]);
         TimeUnit unit = null;
         switch (strTab[1]) {
@@ -59,7 +60,6 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
 
         runnableGraph = GraphDSL
                 .create(builder -> {
-
                     final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
@@ -81,7 +81,15 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
 
                     final FlowShape<RawData, RawData> throttleMechanism = builder.add(
                             Flow.of(RawData.class)
-                                    .throttle(nbObsMax, new FiniteDuration(1, finalUnit), 1, ThrottleMode.shaping())
+                                    .groupedWithin(Integer.MAX_VALUE, new FiniteDuration(1, finalUnit))
+                                    .map(list -> {
+                                        List<RawData> rawDataListToTransfer = new ArrayList<>();
+                                        for (int i = list.size() - nbObsMax ; (i > 0) && (i < list.size()) ; i++) {
+                                            rawDataListToTransfer.add(new RawData(list.get(i)));
+                                        }
+                                        return rawDataListToTransfer;
+                                    })
+                                    .mapConcat(elem -> elem)  // Converting List<RawData> in a Flow of RawData
                     );
 
                     builder.from(consumRecordToRawData.out())

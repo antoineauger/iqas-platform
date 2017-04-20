@@ -61,8 +61,8 @@ public class FilterPipeline extends AbstractPipeline implements IPipeline {
                     );
 
                     final FlowShape<RawData, RawData> filteringMechanism = builder.add(
-                            Flow.of(RawData.class).filter(r -> r.getValue() >= Double.valueOf(getParams().get("threshold_min"))
-                                    && r.getValue() <= Double.valueOf(getParams().get("threshold_max")))
+                            Flow.of(RawData.class).filter(r -> (r.getValue() >= Double.valueOf(getParams().get("threshold_min")))
+                                    && (r.getValue() <= Double.valueOf(getParams().get("threshold_max"))))
                     );
 
                     builder.from(consumRecordToRawData.out())

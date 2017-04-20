@@ -3,11 +3,8 @@ package fr.isae.iqas.pipelines;
 import akka.NotUsed;
 import akka.actor.ActorRef;
 import akka.stream.javadsl.Flow;
-import fr.isae.iqas.MainClass;
 import fr.isae.iqas.model.quality.IComputeQoOAttributes;
 import fr.isae.iqas.model.request.Operator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.util.*;
@@ -18,7 +15,6 @@ import java.util.concurrent.TimeUnit;
  * Created by an.auger on 08/02/2017.
  */
 public abstract class AbstractPipeline {
-    public Logger logger = LoggerFactory.getLogger(MainClass.class);
     final FiniteDuration ONE_SECOND = FiniteDuration.create(1, TimeUnit.SECONDS);
 
     private String pipelineName;
