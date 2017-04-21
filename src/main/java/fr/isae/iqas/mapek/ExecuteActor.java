@@ -2,10 +2,10 @@ package fr.isae.iqas.mapek;
 
 import akka.Done;
 import akka.actor.ActorRef;
-import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.japi.Pair;
 import akka.kafka.ConsumerSettings;
 import akka.kafka.KafkaConsumerActor;
 import akka.kafka.ProducerSettings;
@@ -15,6 +15,7 @@ import akka.kafka.javadsl.Producer;
 import akka.pattern.Patterns;
 import akka.stream.ActorMaterializer;
 import akka.stream.KillSwitches;
+import akka.stream.Materializer;
 import akka.stream.UniqueKillSwitch;
 import akka.stream.javadsl.Keep;
 import akka.stream.javadsl.Sink;
@@ -55,7 +56,8 @@ public class ExecuteActor extends UntypedActor {
     private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = null;
     private Sink<ProducerRecord<byte[], String>, CompletionStage<Done>> kafkaSink = null;
 
-    private UniqueKillSwitch stream = null;
+    private UniqueKillSwitch killSwitch = null;
+    private Pair<Pair<UniqueKillSwitch, Materializer>, CompletionStage<Done>> stream = null;
     private ActorRef kafkaActor = null;
 
     private ActorMaterializer materializer = null;
@@ -95,9 +97,11 @@ public class ExecuteActor extends UntypedActor {
     public void preStart() {
         stream = kafkaSource
                 .viaMat(KillSwitches.single(), Keep.right())
-                .via(pipelineToEnforce.getPipelineGraph())
-                .to(kafkaSink)
+                .viaMat(pipelineToEnforce.getPipelineGraph(), Keep.both())
+                .toMat(kafkaSink, Keep.both())
                 .run(materializer);
+
+        killSwitch = stream.first().first();
     }
 
     @Override
@@ -108,7 +112,7 @@ public class ExecuteActor extends UntypedActor {
             if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
                 log.info("Received TerminatedMsg message: {}", message);
                 if (stream != null) {
-                    stream.shutdown();
+                    killSwitch.shutdown();
                 }
                 if (kafkaActor != null) {
                     log.info("Trying to stop " + kafkaActor.path().name());
@@ -126,7 +130,8 @@ public class ExecuteActor extends UntypedActor {
         }
         // IPipeline messages
         else if (message instanceof IPipeline) { //TODO test this feature
-            stream.shutdown();
+            killSwitch.shutdown();
+            killSwitch.abort(new Exception("STOOOOP!"));
             //kafkaSource.failed(new Exception("STOOOOP"));
             //kafkaSource.detach();
             /*log.info("Trying to stop " + kafkaActor.path());
@@ -150,9 +155,11 @@ public class ExecuteActor extends UntypedActor {
             //this.kafkaSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(watchedTopics));
             stream = kafkaSource
                     .viaMat(KillSwitches.single(), Keep.right())
-                    .via(newPipelineToEnforce.getPipelineGraph())
-                    .to(kafkaSink)
+                    .viaMat(newPipelineToEnforce.getPipelineGraph(), Keep.both())
+                    .toMat(kafkaSink, Keep.both())
                     .run(materializer);
+
+            killSwitch = stream.first().first();
         }
     }
 
