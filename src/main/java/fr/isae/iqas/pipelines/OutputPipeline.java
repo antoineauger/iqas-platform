@@ -51,10 +51,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
     }
 
     @Override
-    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph(String topicToPublish,
-                                                                                                                           ObservationLevel askedLevel,
-                                                                                                                           Operator operatorToApply) {
-
+    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph() {
         String[] ageMaxStr = getParams().get("age_max").split(" ");
         long ageLongValue = Long.valueOf(ageMaxStr[0]);
         TimeUnit unit = null;
@@ -80,7 +77,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
         }
         final long ageMaxAllowed = new FiniteDuration(ageLongValue, unit).toMillis();
 
-        final ObservationLevel askedLevelFinal = askedLevel;
+        final ObservationLevel askedLevelFinal = getAskedLevel();
         runnableGraph = GraphDSL
                 .create(builder -> {
                     List<QoOAttribute> interestAttr = new ArrayList<>();
@@ -123,10 +120,10 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                         .filter(r -> {
                                             String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
                                             long timestampProduced = Long.valueOf(timestampProducedStr[1]);
-                                            logger.error("timestampProducedStr: " + timestampProducedStr.toString());
+                                            /*logger.error("timestampProducedStr: " + timestampProducedStr.toString());
                                             logger.error("timestampProduced: " + String.valueOf(timestampProduced));
                                             logger.error("(System.currentTimeMillis() - timestampProduced): " + String.valueOf((System.currentTimeMillis() - timestampProduced)));
-                                            logger.error("result: " + String.valueOf((System.currentTimeMillis() - timestampProduced) < ageMaxAllowed));
+                                            logger.error("result: " + String.valueOf((System.currentTimeMillis() - timestampProduced) < ageMaxAllowed));*/
                                             return (System.currentTimeMillis() - timestampProduced) < ageMaxAllowed;
                                         })
                         );
@@ -135,7 +132,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                 Flow.of(RawData.class).map(r -> {
                                     ObjectMapper mapper = new ObjectMapper();
                                     mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                    return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                                    return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                                 })
                         );
 
@@ -201,10 +198,10 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                         .filter(r -> {
                                             String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
                                             long timestampProduced = Long.valueOf(timestampProducedStr[1]);
-                                            logger.error("timestampProducedStr: " + timestampProducedStr.toString());
+                                            /*logger.error("timestampProducedStr: " + timestampProducedStr.toString());
                                             logger.error("timestampProduced: " + String.valueOf(timestampProduced));
                                             logger.error("(System.currentTimeMillis() - timestampProduced): " + String.valueOf((System.currentTimeMillis() - timestampProduced)));
-                                            logger.error("result: " + String.valueOf((System.currentTimeMillis() - timestampProduced) < ageMaxAllowed));
+                                            logger.error("result: " + String.valueOf((System.currentTimeMillis() - timestampProduced) < ageMaxAllowed));*/
                                             return (System.currentTimeMillis() - timestampProduced) < ageMaxAllowed;
                                         })
                         );
@@ -213,7 +210,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                 Flow.of(Information.class).map(r -> {
                                     ObjectMapper mapper = new ObjectMapper();
                                     mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                    return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                                    return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                                 })
                         );
 

@@ -33,11 +33,9 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
     }
 
     @Override
-    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph(String topicToPublish,
-                                                                                                                           ObservationLevel askedLevel,
-                                                                                                                           Operator operatorToApply) {
+    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph() {
 
-        final ObservationLevel askedLevelFinal = askedLevel;
+        final ObservationLevel askedLevelFinal = getAskedLevel();
         runnableGraph = GraphDSL
                 .create(builder -> {
 
@@ -58,7 +56,7 @@ public class SimpleFilteringPipeline extends AbstractPipeline implements IPipeli
                             Flow.of(RawData.class).map(r -> {
                                 ObjectMapper mapper = new ObjectMapper();
                                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                                return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                             })
                     );
 

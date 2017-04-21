@@ -180,9 +180,12 @@ public class MAPEKInternalMsg {
      */
 
     public static class RFCMsg {
+        private List<String> changes;
         private Timestamp creationDate;
         private RFCMAPEK rfc;
         private EntityMAPEK about;
+        private Request oldRequest;
+        private Request newRequest;
         private Request request;
         private QoOAttribute qoOAttribute;
         private RequestMapping requestMapping;
@@ -203,6 +206,14 @@ public class MAPEKInternalMsg {
             this.request = request;
             this.requestMapping = requestMapping;
             this.associatedRequest_id = request.getRequest_id();
+        }
+
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request oldRequest, Request newRequest, List<String> changes) { // UPDATE for Requests
+            this.rfc = rfc;
+            this.about = about;
+            this.oldRequest = oldRequest;
+            this.newRequest = newRequest;
+            this.changes = changes;
         }
 
         public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request) { // REMOVE for Requests
@@ -239,6 +250,18 @@ public class MAPEKInternalMsg {
 
         public QoOAttribute getQoOAttribute() {
             return qoOAttribute;
+        }
+
+        public List<String> getChanges() {
+            return changes;
+        }
+
+        public Request getOldRequest() {
+            return oldRequest;
+        }
+
+        public Request getNewRequest() {
+            return newRequest;
         }
     }
 

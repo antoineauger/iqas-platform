@@ -2,6 +2,7 @@ package fr.isae.iqas.mapek;
 
 import akka.Done;
 import akka.actor.ActorRef;
+import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -20,6 +21,7 @@ import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.observation.ObservationLevel;
+import fr.isae.iqas.model.request.Operator;
 import fr.isae.iqas.pipelines.IPipeline;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -48,21 +50,21 @@ import java.util.stream.Collectors;
 public class ExecuteActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+    private ConsumerSettings consumerSettings = null;
+    private Set<TopicPartition> watchedTopics = null;
     private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = null;
     private Sink<ProducerRecord<byte[], String>, CompletionStage<Done>> kafkaSink = null;
-    private ObservationLevel askedObsLevel = ObservationLevel.RAW_DATA;
 
     private UniqueKillSwitch stream = null;
     private ActorRef kafkaActor = null;
 
     private ActorMaterializer materializer = null;
     private IPipeline pipelineToEnforce = null;
-    private String topicToPublish = null;
 
     public ExecuteActor(Properties prop, IPipeline pipelineToEnforce, ObservationLevel askedObsLevel, Set<String> topicsToPullFrom, String topicToPublish) {
         String randomNumber = new ObjectId().toString();
 
-        ConsumerSettings consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
+        this.consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
                 .withGroupId("group" + randomNumber)
                 .withClientId("client" + randomNumber)
@@ -74,19 +76,16 @@ public class ExecuteActor extends UntypedActor {
 
         // Kafka source
         kafkaActor = getContext().actorOf((KafkaConsumerActor.props(consumerSettings)));
-        Set<TopicPartition> watchedTopics = new HashSet<>();
+        watchedTopics = new HashSet<>();
         watchedTopics.addAll(topicsToPullFrom.stream().map(s -> new TopicPartition(s, 0)).collect(Collectors.toList()));
         this.kafkaSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(watchedTopics));
 
         // Sinks
         this.kafkaSink = Producer.plainSink(producerSettings);
 
-        // Required observation level
-        this.askedObsLevel = askedObsLevel;
-
-        // Retrieval of available QoO pipelines
+        // Mandatory Pipeline configuration
+        pipelineToEnforce.setupPipelineGraph(topicToPublish, askedObsLevel, Operator.NONE);
         this.pipelineToEnforce = pipelineToEnforce;
-        this.topicToPublish = topicToPublish;
 
         // Materializer to run graphs (QoO pipelines)
         this.materializer = ActorMaterializer.create(getContext().system());
@@ -96,10 +95,7 @@ public class ExecuteActor extends UntypedActor {
     public void preStart() {
         stream = kafkaSource
                 .viaMat(KillSwitches.single(), Keep.right())
-                .via(pipelineToEnforce.getPipelineGraph(
-                        topicToPublish,
-                        askedObsLevel,
-                null))
+                .via(pipelineToEnforce.getPipelineGraph())
                 .to(kafkaSink)
                 .run(materializer);
     }
@@ -130,16 +126,31 @@ public class ExecuteActor extends UntypedActor {
         }
         // IPipeline messages
         else if (message instanceof IPipeline) { //TODO test this feature
-            IPipeline newPipelineToEnforce = (IPipeline) message;
-            log.info("Updating pipeline " + newPipelineToEnforce.getPipelineName() + " with QoO params " + newPipelineToEnforce.getQooParams().toString());
-
             stream.shutdown();
+            //kafkaSource.failed(new Exception("STOOOOP"));
+            //kafkaSource.detach();
+            /*log.info("Trying to stop " + kafkaActor.path());
+            try {
+                Future<Boolean> stopped = Patterns.gracefulStop(kafkaActor, Duration.create(5, TimeUnit.SECONDS));
+                Await.result(stopped, Duration.create(5, TimeUnit.SECONDS));
+                log.info("Successfully stopped " + kafkaActor.path());
+            } catch (Exception e) {
+                log.error(e.toString());
+            }*/
+
+            IPipeline newPipelineToEnforce = (IPipeline) message;
+            log.info("Updating pipeline " + newPipelineToEnforce.getPipelineName() + " with QoO params " + newPipelineToEnforce.getParams().toString());
+
+            log.error("ASK TO STOP");
+
+
+            log.error("SUPPOSED TO BE STOPPED");
+
+            //kafkaActor = getContext().system().actorOf((KafkaConsumerActor.props(consumerSettings)));
+            //this.kafkaSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(watchedTopics));
             stream = kafkaSource
                     .viaMat(KillSwitches.single(), Keep.right())
-                    .via(newPipelineToEnforce.getPipelineGraph(
-                            topicToPublish,
-                            askedObsLevel,
-                            null))
+                    .via(newPipelineToEnforce.getPipelineGraph())
                     .to(kafkaSink)
                     .run(materializer);
         }

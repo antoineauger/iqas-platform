@@ -8,9 +8,7 @@ import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
-import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
@@ -37,10 +35,7 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
     }
 
     @Override
-    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph(String topicToPublish,
-                                                                                                                           ObservationLevel askedLevel,
-                                                                                                                           Operator operatorToApply) {
-
+    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph() {
         String[] strTab = getParams().get("obsRate_max").split("/");
         final int nbObsMax = Integer.valueOf(strTab[0]);
         TimeUnit unit = null;
@@ -75,7 +70,7 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
                                     .map(r -> {
                                         ObjectMapper mapper = new ObjectMapper();
                                         mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                        return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                                        return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                                     })
                     );
 

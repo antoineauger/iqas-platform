@@ -3,6 +3,7 @@ package fr.isae.iqas.pipelines;
 import akka.NotUsed;
 import akka.actor.ActorRef;
 import akka.stream.javadsl.Flow;
+import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.quality.IComputeQoOAttributes;
 import fr.isae.iqas.model.request.Operator;
 import scala.concurrent.duration.FiniteDuration;
@@ -10,6 +11,8 @@ import scala.concurrent.duration.FiniteDuration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 
 /**
  * Created by an.auger on 08/02/2017.
@@ -22,6 +25,10 @@ public abstract class AbstractPipeline {
     private String associatedRequest_id;
     private String tempID;
     private boolean adaptable;
+
+    private String topicToPublish;
+    private ObservationLevel askedLevel;
+    private Operator operatorToApply;
 
     private List<Operator> supportedOperators;
     private Map<String, String> params;
@@ -41,6 +48,10 @@ public abstract class AbstractPipeline {
 
         this.tempID = "UNKNOWN";
         this.associatedRequest_id = "UNKNOWN";
+
+        this.topicToPublish = null;
+        this.askedLevel = RAW_DATA;
+        this.operatorToApply = Operator.NONE;
 
         this.params = new ConcurrentHashMap<>();
         this.customizableParams = new HashSet<>();
@@ -71,6 +82,12 @@ public abstract class AbstractPipeline {
                                             FiniteDuration reportFrequency) {
         this.monitorActor = monitorActor;
         this.reportFrequency = reportFrequency;
+    }
+
+    public void setupPipelineGraph(String topicToPublish, ObservationLevel askedLevel, Operator operatorToApply) {
+        this.topicToPublish = topicToPublish;
+        this.askedLevel = askedLevel;
+        this.operatorToApply = operatorToApply;
     }
 
     public String getPipelineName() {
@@ -169,5 +186,25 @@ public abstract class AbstractPipeline {
 
     public String getUniqueID() {
         return this.pipelineID + "_" + this.tempID;
+    }
+
+    public ObservationLevel getAskedLevel() {
+        return askedLevel;
+    }
+
+    public void setAskedLevel(ObservationLevel askedLevel) {
+        this.askedLevel = askedLevel;
+    }
+
+    public Operator getOperatorToApply() {
+        return operatorToApply;
+    }
+
+    public void setOperatorToApply(Operator operatorToApply) {
+        this.operatorToApply = operatorToApply;
+    }
+
+    public String getTopicToPublish() {
+        return topicToPublish;
     }
 }

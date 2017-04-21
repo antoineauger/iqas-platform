@@ -23,6 +23,7 @@ import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.pipelines.*;
 import fr.isae.iqas.utils.ActorUtils;
 import fr.isae.iqas.utils.MapUtils;
+import fr.isae.iqas.utils.PipelineUtils;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -133,7 +134,8 @@ public class PlanActor extends UntypedActor {
                                             else {
                                                 // Setting request_id, temp_id and other options for the retrieved Pipeline
                                                 pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
-                                                pipeline.setTempID(requestMapping.getPrimarySources().get(0).getEnforcedPipelines().get(requestMapping.getFinalSink().getName()).split("_")[1]);
+                                                pipeline.setTempID(requestMapping.getPrimarySources().get(0).getEnforcedPipelines()
+                                                        .get(requestMapping.getFinalSink().getName()).split("_")[1]);
                                                 pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
                                                 pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
@@ -158,7 +160,8 @@ public class PlanActor extends UntypedActor {
                             }
                         }, context().dispatcher());
 
-                incomingRequest.addLog("Successfully created pipeline graph without considering any QoO constraints.");
+                incomingRequest.addLog("Successfully created pipeline graph by enforcing following qoo constraints: "
+                        + incomingRequest.getQooConstraints().getIqas_params().toString());
                 incomingRequest.updateState(State.Status.ENFORCED);
                 mongoController.updateRequest(incomingRequest.getRequest_id(), incomingRequest).whenComplete((result, throwable) -> {
                     if (throwable != null) {
@@ -202,6 +205,42 @@ public class PlanActor extends UntypedActor {
                 // Removal of the corresponding RequestMapping
                 actorPathRefs.remove(requestToDelete.getRequest_id());
                 mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
+            }
+            // RFCs messages - Request UPDATE
+            else if (rfcMsg.getRfc() == RFCMAPEK.UPDATE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) { // Request updated by the user
+                List<String> allActorRefsForOldRequest = actorPathRefs.get(rfcMsg.getOldRequest().getRequest_id());
+
+                Request newRequest = rfcMsg.getNewRequest();
+                List<String> changes = rfcMsg.getChanges();
+
+
+                log.error("INSIDE PLAN ACTOR");
+
+
+                //TODO add Pipeline if it does not exist...
+
+                for (String ref : allActorRefsForOldRequest) {
+                    log.error("ZE REF: " + ref);
+                    IPipeline pipelineTemp = enforcedPipelines.get(ref);
+                    log.error("ZE ID: " + pipelineTemp.getPipelineID());
+                    if (pipelineTemp instanceof IngestPipeline) {
+                        // obsRate_min
+                    }
+                    else if (pipelineTemp instanceof ThrottlePipeline && changes.contains("iqas_params")) {
+                        log.error("CHANGES AFFECTED ThrottlePipeline");
+                        PipelineUtils.setOptionsForThrottlePipeline((ThrottlePipeline) pipelineTemp, newRequest);
+                        execActorsRefs.get(ref).tell(pipelineTemp, getSelf());
+                    }
+                    /*else if (pipelineTemp instanceof OutputPipeline) {
+                        PipelineUtils.setOptionsForOutputPipeline((OutputPipeline) pipelineTemp, newRequest);
+                        execActorsRefs.get(ref).tell(pipelineTemp, getSelf());
+                    }*/
+                    /*else if (pipelineTemp instanceof OutputPipeline) {
+                        PipelineUtils.setOptionsForOutputPipeline((OutputPipeline) pipelineTemp, newRequest);
+                        pipelineTemp.setAskedLevel(newRequest.getObs_level());
+                        execActorsRefs.get(ref).tell(pipelineTemp, getSelf());
+                    }*/
+                }
             }
         }
         // TerminatedMsg messages

@@ -293,6 +293,48 @@ public class Request {
         return obs_level;
     }
 
+    /**
+     * We only scan for changes in following fields: obs_level, qoo (interested_in, operator, sla_level, custom_params, iqas_params)
+     * @param otherReq
+     * @return
+     */
+    public @JsonIgnore List<String> diffAgainstOtherRequest(Request otherReq) {
+        List<String> changes = new ArrayList<>();
+        if (!this.obs_level.equals(otherReq.getObs_level())) {
+            changes.add("obs_level");
+        }
+
+        boolean compInterests = this.getQooConstraints().getInterested_in().size() == otherReq.getQooConstraints().getInterested_in().size();
+        if (compInterests) {
+            for (int i = 0; i < this.getQooConstraints().getInterested_in().size(); i++) {
+                if (!this.getQooConstraints().getInterested_in().get(i).equals(otherReq.getQooConstraints().getInterested_in().get(i))) {
+                    compInterests = false;
+                }
+            }
+        }
+        if (!compInterests) {
+            changes.add("interested_in");
+        }
+
+        if (!this.qooConstraints.getOperator().equals(otherReq.getQooConstraints().getOperator())) {
+            changes.add("operator");
+        }
+
+        if (!this.qooConstraints.getSla_level().equals(otherReq.getQooConstraints().getSla_level())) {
+            changes.add("sla_level");
+        }
+
+        if (!this.qooConstraints.getCustom_params().entrySet().equals(otherReq.getQooConstraints().getCustom_params().entrySet())) {
+            changes.add("custom_params");
+        }
+
+        if (!this.qooConstraints.getIqas_params().entrySet().equals(otherReq.getQooConstraints().getIqas_params().entrySet())) {
+            changes.add("iqas_params");
+        }
+
+        return changes;
+    }
+
     public @JsonIgnore String getAbbrvObsLevel() {
         switch (obs_level) {
             case RAW_DATA:

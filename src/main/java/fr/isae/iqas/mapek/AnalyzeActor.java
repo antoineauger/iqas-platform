@@ -21,6 +21,7 @@ import org.bson.types.ObjectId;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -207,7 +208,27 @@ public class AnalyzeActor extends UntypedActor {
                     });
                 }
                 else if (requestTemp.getCurrent_status() == State.Status.UPDATED) { // Existing Request updated by the user
-                    // TODO Request update
+                    // Retrieval of the ancient enforced Request
+                    mongoController.getSpecificRequest(requestTemp.getRequest_id()).whenComplete((result, throwable) -> {
+                        if (throwable == null && result.size() == 1) { // If a Request with the specified ID exists, then we compare them
+                            Request oldRequest = result.get(0);
+                            List<String> changes = requestTemp.diffAgainstOtherRequest(oldRequest);
+                            log.error("THE DIFFERENCES: " + changes.toString());
+
+                            //TODO
+                            changes.add("iqas_params");
+                            if (changes.size() > 0) {
+                                log.error("SENT TO PLAN ACTOR");
+                                tellToPlanActor(new RFCMsg(RFCMAPEK.UPDATE, EntityMAPEK.REQUEST, oldRequest, requestTemp, changes));
+                            }
+                            else {
+                                log.info("Nothing to update for request " + requestTemp.getRequest_id() + ". Operation skipped!");
+                            }
+                        }
+                        else {
+                            log.warning("Unable to retrieve request " + requestTemp.getRequest_id() + ". Operation skipped!");
+                        }
+                    });
                 }
                 else if (requestTemp.getCurrent_status() == State.Status.REMOVED) { // Request deleted by the user
                     tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, requestTemp));
