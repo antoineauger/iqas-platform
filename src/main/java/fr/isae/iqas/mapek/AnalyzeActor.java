@@ -184,9 +184,8 @@ public class AnalyzeActor extends UntypedActor {
                                 requestMapping.addLink(lastQoOTopic.getName(), accurObsTopic.getName(), "FilterPipeline_" + tempIDForPipelines);
                                 lastQoOTopic = accurObsTopic;
                             }
-                            // TODO solve obsRate issue
                             // If there is some QoO constraints about OBS_RATE, we add a ThrottlePipeline
-                            /*if (requestTemp.getQooConstraints().getIqas_params().containsKey("obsRate_max")) {
+                            if (requestTemp.getQooConstraints().getIqas_params().containsKey("obsRate_max")) {
                                 counterQoO += 1;
 
                                 TopicEntity rateObsTopic = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO" + String.valueOf(counterQoO),
@@ -195,7 +194,7 @@ public class AnalyzeActor extends UntypedActor {
 
                                 requestMapping.addLink(topicJustBeforeSink.getName(), rateObsTopic.getName(), "ThrottlePipeline_" + tempIDForPipelines);
                                 lastQoOTopic = rateObsTopic;
-                            }*/
+                            }
 
                             // Last edge for graph
                             // QoO constraints about OBS_FRESHNESS are enforced at this level

@@ -3,6 +3,7 @@ package fr.isae.iqas.pipelines;
 import akka.stream.FlowShape;
 import akka.stream.Graph;
 import akka.stream.Materializer;
+import akka.stream.ThrottleMode;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,8 +16,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static fr.isae.iqas.model.request.Operator.NONE;
@@ -72,28 +71,23 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
                     );
 
                     final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
-                            Flow.of(RawData.class).map(r -> {
-                                ObjectMapper mapper = new ObjectMapper();
-                                mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
-                            })
+                            Flow.of(RawData.class)
+                                    .map(r -> {
+                                        ObjectMapper mapper = new ObjectMapper();
+                                        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                                        return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                                    })
                     );
 
-                    final FlowShape<RawData, RawData> throttleMechanism = builder.add(
+                    final FlowShape<RawData, RawData> throttleMechanismNoDrop = builder.add(
                             Flow.of(RawData.class)
-                                    .groupedWithin(Integer.MAX_VALUE, new FiniteDuration(1, finalUnit))
-                                    .map(list -> {
-                                        List<RawData> rawDataListToTransfer = new ArrayList<>();
-                                        for (int i = list.size() - nbObsMax ; (i > 0) && (i < list.size()) ; i++) {
-                                            rawDataListToTransfer.add(new RawData(list.get(i)));
-                                        }
-                                        return rawDataListToTransfer;
-                                    })
-                                    .mapConcat(elem -> elem)  // Converting List<RawData> in a Flow of RawData
+                                    .throttle(nbObsMax, new FiniteDuration(1, finalUnit),
+                                            1,
+                                            ThrottleMode.shaping())
                     );
 
                     builder.from(consumRecordToRawData.out())
-                            .via(throttleMechanism)
+                            .via(throttleMechanismNoDrop)
                             .toInlet(rawDataToProdRecord.in());
 
                     return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());

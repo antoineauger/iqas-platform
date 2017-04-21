@@ -45,7 +45,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
     public OutputPipeline() {
         super("Output Pipeline", "OutputPipeline", false);
 
-        setParameter("age_max", String.valueOf(Long.MAX_VALUE) + " hours", true);
+        setParameter("age_max", "24 hours", true);
         setParameter("interested_in", "", true);
         addSupportedOperator(NONE);
     }
