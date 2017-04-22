@@ -78,7 +78,7 @@
         <!-- Log4j -->
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-slf4j_2.12</artifactId>
+            <artifactId>akka-slf4j_2.11</artifactId>
             <version>2.5.0</version>
         </dependency>
         <dependency>
@@ -95,26 +95,22 @@
         <!-- akka framework -->
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-actor_2.12</artifactId>
+            <artifactId>akka-actor_2.11</artifactId>
             <version>2.5.0</version>
         </dependency>
-
-        <!-- Change this dependency to a new version when available -->
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-stream-kafka_2.12</artifactId>
-            <version>0.14</version>
+            <artifactId>akka-stream-kafka_2.11</artifactId>
+            <version>0.15</version>
         </dependency>
-
-
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-http_2.12</artifactId>
+            <artifactId>akka-http_2.11</artifactId>
             <version>10.0.5</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-http-jackson_2.12</artifactId>
+            <artifactId>akka-http-jackson_2.11</artifactId>
             <version>10.0.5</version>
         </dependency>
 
