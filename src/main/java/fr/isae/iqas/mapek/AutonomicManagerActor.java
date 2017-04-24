@@ -40,11 +40,11 @@ public class AutonomicManagerActor extends UntypedActor {
 
     private Map<String, Boolean> connectedSensors; // SensorIDs <-> connected (true/false)
 
-    private ActorRef kafkaAdminActor = null;
-    private ActorRef monitorActor = null;
-    private ActorRef analyzeActor = null;
-    private ActorRef planActor = null;
-    private ActorRef executeActor = null;
+    private ActorRef kafkaAdminActor;
+    private ActorRef monitorActor;
+    private ActorRef analyzeActor;
+    private ActorRef planActor;
+    private ActorRef executeActor;
 
     public AutonomicManagerActor(Properties prop, ActorRef kafkaAdminActor, MongoController mongoController, FusekiController fusekiController) {
         this.kafkaAdminActor = kafkaAdminActor;

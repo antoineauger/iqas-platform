@@ -141,6 +141,16 @@ public class Request {
         this.statesList = new ArrayList<>();
     }
 
+    public Request(Request requestToClone) {
+        this.request_id = requestToClone.getRequest_id();
+        this.topic = requestToClone.getTopic();
+        this.location = requestToClone.getLocation();
+        this.obs_level = requestToClone.getObs_level();
+        this.qooConstraints = new QoORequirements(requestToClone.getQooConstraints());
+        this.statesList = new ArrayList<>(requestToClone.getStatesList());
+        this.logs = new ArrayList<>(requestToClone.getLogs());
+    }
+
     /**
      * Method called to transform a Request object into a BSON object
      *

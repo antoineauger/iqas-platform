@@ -120,10 +120,6 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                         .filter(r -> {
                                             String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
                                             long timestampProduced = Long.valueOf(timestampProducedStr[1]);
-                                            /*logger.error("timestampProducedStr: " + timestampProducedStr.toString());
-                                            logger.error("timestampProduced: " + String.valueOf(timestampProduced));
-                                            logger.error("(System.currentTimeMillis() - timestampProduced): " + String.valueOf((System.currentTimeMillis() - timestampProduced)));
-                                            logger.error("result: " + String.valueOf((System.currentTimeMillis() - timestampProduced) < ageMaxAllowed));*/
                                             return (System.currentTimeMillis() - timestampProduced) < ageMaxAllowed;
                                         })
                         );
@@ -198,10 +194,6 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                         .filter(r -> {
                                             String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
                                             long timestampProduced = Long.valueOf(timestampProducedStr[1]);
-                                            /*logger.error("timestampProducedStr: " + timestampProducedStr.toString());
-                                            logger.error("timestampProduced: " + String.valueOf(timestampProduced));
-                                            logger.error("(System.currentTimeMillis() - timestampProduced): " + String.valueOf((System.currentTimeMillis() - timestampProduced)));
-                                            logger.error("result: " + String.valueOf((System.currentTimeMillis() - timestampProduced) < ageMaxAllowed));*/
                                             return (System.currentTimeMillis() - timestampProduced) < ageMaxAllowed;
                                         })
                         );

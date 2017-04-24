@@ -24,6 +24,14 @@ public class QoORequirements {
     private Map<String, String> iqas_params;
     private Map<String, String> custom_params;
 
+    public QoORequirements(QoORequirements qoORequirementsToClone) {
+        this.sla_level = qoORequirementsToClone.getSla_level();
+        this.operator = qoORequirementsToClone.getOperator();
+        this.interested_in = qoORequirementsToClone.getInterested_in();
+        this.custom_params = qoORequirementsToClone.getCustom_params();
+        this.iqas_params = qoORequirementsToClone.getIqas_params();
+    }
+
     public QoORequirements() {
         this.sla_level = SLALevel.BEST_EFFORT;
         this.operator = Operator.NONE;
