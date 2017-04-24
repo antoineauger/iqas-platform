@@ -44,7 +44,6 @@ public class AutonomicManagerActor extends UntypedActor {
     private ActorRef monitorActor;
     private ActorRef analyzeActor;
     private ActorRef planActor;
-    private ActorRef executeActor;
 
     public AutonomicManagerActor(Properties prop, ActorRef kafkaAdminActor, MongoController mongoController, FusekiController fusekiController) {
         this.kafkaAdminActor = kafkaAdminActor;
@@ -93,9 +92,6 @@ public class AutonomicManagerActor extends UntypedActor {
                 if (planActor != null) {
                     getContext().stop(planActor);
                 }
-                if (executeActor != null) {
-                    getContext().stop(executeActor);
-                }
                 getContext().stop(self());
             }
         }
@@ -134,9 +130,6 @@ public class AutonomicManagerActor extends UntypedActor {
                                 }
                             }
                         }, context().dispatcher());
-            }
-            else if (incomingReq.getCurrent_status() == UPDATED) {
-                monitorActor.tell(incomingReq, getSelf());
             }
             else if (incomingReq.getCurrent_status() == REMOVED) {
                 monitorActor.tell(incomingReq, getSelf());

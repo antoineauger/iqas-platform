@@ -460,7 +460,7 @@ public class PlanActor extends UntypedActor {
             log.info("Successfully started " + actorRefToStart.path());
         }
         else if (actionMsg.getAction() == ActionMAPEK.CREATE && actionMsg.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
-            Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+            Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
             Future<Object> future = Patterns.ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.CREATE, actionMsg.getKafkaTopicID()), timeout);
             try {
                 return (boolean) (Boolean) Await.result(future, timeout.duration());
@@ -470,7 +470,7 @@ public class PlanActor extends UntypedActor {
             }
         }
         else if (actionMsg.getAction() == ActionMAPEK.DELETE && actionMsg.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
-            Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+            Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
             Future<Object> future = Patterns.ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.DELETE, actionMsg.getKafkaTopicID()), timeout);
             try {
                 return (boolean) (Boolean) Await.result(future, timeout.duration());

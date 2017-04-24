@@ -191,6 +191,16 @@ public class MAPEKInternalMsg {
         private RequestMapping requestMapping;
         private String associatedRequest_id;
 
+        public RFCMsg(RFCMsg rfcMsgToClone) {
+            this.creationDate = rfcMsgToClone.getCreationDate();
+            this.rfc = rfcMsgToClone.getRfc();
+            this.about = rfcMsgToClone.getAbout();
+            this.request = rfcMsgToClone.getRequest();
+            this.qoOAttribute = rfcMsgToClone.getQoOAttribute();
+            this.requestMapping = rfcMsgToClone.getRequestMapping();
+            this.associatedRequest_id = rfcMsgToClone.getAssociatedRequest_id();
+        }
+
         public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, QoOAttribute qoOAttribute, String associatedRequest_id) { // INCREASE / DECREASE for QoOAttributes
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
