@@ -212,26 +212,6 @@ public class RESTServer extends AllDirectives {
                                         )
                                 )
                         )),
-                        put(() -> route(
-                                path(segment("requests").slash(segment()), request_id ->
-                                        entity(Jackson.unmarshaller(Request.class), myRequest ->
-                                            extractExecutionContext(ctx ->
-                                                    onSuccess(() -> {
-                                                        myRequest.setRequest_id(request_id);
-                                                        RESTRequestMsg m = new RESTRequestMsg(PUT, myRequest); // construction of a special actor message
-                                                        apiGatewayActor.tell(m, ActorRef.noSender()); // PUT request forwarded to APIGatewayActor
-                                                        return CompletableFuture.supplyAsync(() ->
-                                                                completeOK(myRequest, Jackson.marshaller()), ctx);
-                                                    }, Function.identity())
-                                            )
-                                        ).orElse(
-                                                complete(HttpResponse.create()
-                                                        .withStatus(400)
-                                                        .withEntity("Malformed request submitted!")
-                                                )
-                                        )
-                                )
-                        )),
                         delete(() -> route(
                                 path(segment("requests").slash(segment()), request_id ->
                                         extractExecutionContext(ctx ->

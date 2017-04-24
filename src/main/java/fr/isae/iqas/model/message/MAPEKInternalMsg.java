@@ -46,7 +46,6 @@ public class MAPEKInternalMsg {
         CREATE,
         DELETE,
         RESET,
-        UPDATE,
         TURN_ON,
         TURN_OFF,
         SENSOR_API
@@ -180,12 +179,9 @@ public class MAPEKInternalMsg {
      */
 
     public static class RFCMsg {
-        private List<String> changes;
         private Timestamp creationDate;
         private RFCMAPEK rfc;
         private EntityMAPEK about;
-        private Request oldRequest;
-        private Request newRequest;
         private Request request;
         private QoOAttribute qoOAttribute;
         private RequestMapping requestMapping;
@@ -216,14 +212,6 @@ public class MAPEKInternalMsg {
             this.request = request;
             this.requestMapping = requestMapping;
             this.associatedRequest_id = request.getRequest_id();
-        }
-
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request oldRequest, Request newRequest, List<String> changes) { // UPDATE for Requests
-            this.rfc = rfc;
-            this.about = about;
-            this.oldRequest = oldRequest;
-            this.newRequest = newRequest;
-            this.changes = changes;
         }
 
         public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request) { // REMOVE for Requests
@@ -261,18 +249,6 @@ public class MAPEKInternalMsg {
         public QoOAttribute getQoOAttribute() {
             return qoOAttribute;
         }
-
-        public List<String> getChanges() {
-            return changes;
-        }
-
-        public Request getOldRequest() {
-            return oldRequest;
-        }
-
-        public Request getNewRequest() {
-            return newRequest;
-        }
     }
 
     /**
@@ -289,8 +265,6 @@ public class MAPEKInternalMsg {
         private ObservationLevel askedObsLevel;
         private String associatedRequest_id;
         private String kafkaTopicID;
-        private Map<String, String> paramsToUpdate;
-        private String pipeline_id;
         private String constructedFromRequest;
         private int maxLevelDepth;
 
@@ -320,23 +294,6 @@ public class MAPEKInternalMsg {
             this.associatedRequest_id = associatedRequest_id;
             this.constructedFromRequest = constructedFromRequest;
             this.maxLevelDepth = maxLevelDepth;
-        }
-
-        public ActionMsg(ActionMAPEK action, EntityMAPEK about, String pipeline_id, boolean force) { // DELETE Pipeline
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.action = action;
-            this.about = about;
-            this.pipeline_id = pipeline_id;
-            this.associatedRequest_id = pipeline_id.split("_")[1];
-        }
-
-        public ActionMsg(ActionMAPEK action, EntityMAPEK about, String pipeline_id, Map<String, String> paramsToUpdate) { // UPDATE Pipeline
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.action = action;
-            this.about = about;
-            this.pipeline_id = pipeline_id;
-            this.paramsToUpdate = paramsToUpdate;
-            this.associatedRequest_id = pipeline_id.split("_")[1];
         }
 
         public Timestamp getCreationDate() {
@@ -369,14 +326,6 @@ public class MAPEKInternalMsg {
 
         public String getTopicToPublish() {
             return topicToPublish;
-        }
-
-        public Map<String, String> getParamsToUpdate() {
-            return paramsToUpdate;
-        }
-
-        public String getPipeline_id() {
-            return pipeline_id;
         }
 
         public String getConstructedFromRequest() {

@@ -130,29 +130,6 @@ When present, the <span class="code">qoo</span> parameter represents a "QoO Serv
         Visit <a href="/qoo/custom_params">/qoo/custom_params</a> to see what parameters can be customized.</li>
 </ul>
 
-<h2>PUT endpoints</h2>
-<ul>
-    <li>/requests/[request_id]</li>
-</ul>
-
-PUT verb is used to update an already enforced iQAS Request. Simply fill the body payload with the changes you want to apply.<br/>
-For a given Request, you can update <span class="code">obs_level</span> and <span class="code">qoo</span> parameters.<br/>
-For instance, if you want to update a Request to receive KNOWLEDGE observation without any QoO guarantees, you can send the following payload:<br/><br/>
-
-<div class="code" style="margin-left: 30px;">
-    Content-Type: application/json<br/>
-    {<br/>
-        <div style="margin-left: 30px;">
-            <b>"obs_level"</b>: "KNOWLEDGE",<br/>
-            "qoo": {<br/>
-                <div style="margin-left: 30px;">
-                    <b>"interested_in"</b>: []
-                </div>
-            }
-        </div>
-    }
-</div>
-
 <h2>DELETE endpoints</h2>
 <ul>
     <li>/requests/[request_id]</li>

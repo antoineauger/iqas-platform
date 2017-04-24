@@ -128,31 +128,14 @@ public class ExecuteActor extends UntypedActor {
                 getContext().stop(getSelf());
             }
         }
-        // IPipeline messages
-        else if (message instanceof IPipeline) { //TODO test this feature
+        // IPipeline messages (= live UPDATE of the Pipeline)
+        else if (message instanceof IPipeline) {
+            // We use the UniqueKillSwitch to stop current stream
             killSwitch.shutdown();
-            killSwitch.abort(new Exception("STOOOOP!"));
-            //kafkaSource.failed(new Exception("STOOOOP"));
-            //kafkaSource.detach();
-            /*log.info("Trying to stop " + kafkaActor.path());
-            try {
-                Future<Boolean> stopped = Patterns.gracefulStop(kafkaActor, Duration.create(5, TimeUnit.SECONDS));
-                Await.result(stopped, Duration.create(5, TimeUnit.SECONDS));
-                log.info("Successfully stopped " + kafkaActor.path());
-            } catch (Exception e) {
-                log.error(e.toString());
-            }*/
 
             IPipeline newPipelineToEnforce = (IPipeline) message;
             log.info("Updating pipeline " + newPipelineToEnforce.getPipelineName() + " with QoO params " + newPipelineToEnforce.getParams().toString());
 
-            log.error("ASK TO STOP");
-
-
-            log.error("SUPPOSED TO BE STOPPED");
-
-            //kafkaActor = getContext().system().actorOf((KafkaConsumerActor.props(consumerSettings)));
-            //this.kafkaSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(watchedTopics));
             stream = kafkaSource
                     .viaMat(KillSwitches.single(), Keep.right())
                     .viaMat(newPipelineToEnforce.getPipelineGraph(), Keep.both())

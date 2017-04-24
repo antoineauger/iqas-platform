@@ -65,17 +65,6 @@ public class APIGatewayActor extends UntypedActor {
                     }
                 });
             }
-            else if (requestSubject.equals(PUT)) { // Update
-                incomingRequest.updateState(UPDATED);
-                mongoController.getSpecificRequest(incomingRequest.getRequest_id()).whenComplete((result, throwable) -> {
-                    if (throwable == null && result.size() == 1) {
-                        autoManager.tell(incomingRequest, getSelf());
-                    }
-                    else {
-                        log.warning("Unable to retrieve request " + incomingRequest.getRequest_id() + ". Operation skipped!");
-                    }
-                });
-            }
             else if (requestSubject.equals(GET)) {
                 log.error("This should never happen: GET responsibility is directly handled by RESTServer");
             }

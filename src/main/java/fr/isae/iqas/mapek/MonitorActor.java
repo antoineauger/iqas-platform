@@ -172,11 +172,6 @@ public class MonitorActor extends UntypedActor {
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestTemp);
                 forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
-            else if (requestTemp.getCurrent_status() == UPDATED) { // Existing Request updated by the user
-                SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.UPDATED, EntityMAPEK.REQUEST, requestTemp);
-                storeObsRateRequirements(requestTemp);
-                forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
-            }
             else if (requestTemp.getCurrent_status() == REJECTED) {
                 // Do nothing since the Request has already been rejected
             }
@@ -213,7 +208,7 @@ public class MonitorActor extends UntypedActor {
         else if (message instanceof SymptomMsg) {
             SymptomMsg symptomMAPEKMsg = (SymptomMsg) message;
             if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.NEW && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline creation
-                log.info("New IngestPipeline: {} {}", symptomMAPEKMsg.getUniqueIDPipeline(), symptomMAPEKMsg.getRequestID());
+                log.info("NEW IngestPipeline: {} {}", symptomMAPEKMsg.getUniqueIDPipeline(), symptomMAPEKMsg.getRequestID());
                 mappingPipelinesRequests.putIfAbsent(symptomMAPEKMsg.getUniqueIDPipeline(), new HashSet<>());
                 mappingPipelinesRequests.get(symptomMAPEKMsg.getUniqueIDPipeline()).add(symptomMAPEKMsg.getRequestID());
             }
@@ -258,7 +253,6 @@ public class MonitorActor extends UntypedActor {
     private void storeObsRateRequirements(Request incomingRequest) {
         if (incomingRequest.getQooConstraints().getIqas_params().containsKey("obsRate_min")
                 || incomingRequest.getQooConstraints().getIqas_params().containsKey("obsRate_max")) { // if it expresses interest in OBS_RATE
-            long obsRateMaxVal = -1;
             TimeUnit obsRateMaxUnit = null;
             long obsRateMinVal = -1;
             TimeUnit obsRateMinUnit = null;
@@ -295,7 +289,6 @@ public class MonitorActor extends UntypedActor {
                             obsRateMinUnit = obsRateUnit;
                         }
                         else if (keyType.length == 2 && keyType[1].equals("max")) {
-                            obsRateMaxVal = obsRateVal;
                             obsRateMaxUnit = obsRateUnit;
                         }
                     } catch (NumberFormatException | NullPointerException e) { // To avoid malformed QoO requirements

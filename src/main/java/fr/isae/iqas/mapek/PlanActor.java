@@ -23,7 +23,6 @@ import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.pipelines.*;
 import fr.isae.iqas.utils.ActorUtils;
 import fr.isae.iqas.utils.MapUtils;
-import fr.isae.iqas.utils.PipelineUtils;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -172,75 +171,7 @@ public class PlanActor extends UntypedActor {
             // RFCs messages - Request REMOVE
             else if (rfcMsg.getRfc() == RFCMAPEK.REMOVE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) { // Request deleted by the user
                 Request requestToDelete = rfcMsg.getRequest();
-
-                Set<ActorRef> actorsToShutDown = new HashSet<>();
-                Set<String> kafkaTopicsToDelete = new HashSet<>();
-                for (String s : actorPathRefs.get(requestToDelete.getRequest_id())) {
-                    execActorsCount.put(s, execActorsCount.get(s) - 1);
-                    if (execActorsCount.get(s) == 0) { // this means that resources can be released
-                        String topicTemp = MapUtils.getKeyByValue(mappingTopicsActors, s);
-                        if (topicTemp != null) {
-                            kafkaTopicsToDelete.add(topicTemp);
-                        }
-                        actorsToShutDown.add(execActorsRefs.get(s));
-                    }
-                }
-
-                // We stop the workers that enforce the different pipelines
-                for (ActorRef actorRef : actorsToShutDown) {
-                    gracefulStop(actorRef);
-                    execActorsCount.remove(actorRef.path().name());
-                    execActorsRefs.remove(actorRef.path().name());
-                    monitorActor.tell(new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRef.path().name()).getUniqueID()), getSelf());
-                    enforcedPipelines.remove(actorRef.path().name());
-                }
-
-                // We clean up the unused topics
-                for (String topic : kafkaTopicsToDelete) {
-                    performAction(new ActionMsg(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
-                    log.error("Removing: " + topic);
-                    mappingTopicsActors.remove(topic);
-                }
-
-                // Removal of the corresponding RequestMapping
-                actorPathRefs.remove(requestToDelete.getRequest_id());
-                mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
-            }
-            // RFCs messages - Request UPDATE
-            else if (rfcMsg.getRfc() == RFCMAPEK.UPDATE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) { // Request updated by the user
-                List<String> allActorRefsForOldRequest = actorPathRefs.get(rfcMsg.getOldRequest().getRequest_id());
-
-                Request newRequest = rfcMsg.getNewRequest();
-                List<String> changes = rfcMsg.getChanges();
-
-
-                log.error("INSIDE PLAN ACTOR");
-
-
-                //TODO add Pipeline if it does not exist...
-
-                for (String ref : allActorRefsForOldRequest) {
-                    log.error("ZE REF: " + ref);
-                    IPipeline pipelineTemp = enforcedPipelines.get(ref);
-                    log.error("ZE ID: " + pipelineTemp.getPipelineID());
-                    if (pipelineTemp instanceof IngestPipeline) {
-                        // obsRate_min
-                    }
-                    else if (pipelineTemp instanceof ThrottlePipeline && changes.contains("iqas_params")) {
-                        log.error("CHANGES AFFECTED ThrottlePipeline");
-                        PipelineUtils.setOptionsForThrottlePipeline((ThrottlePipeline) pipelineTemp, newRequest);
-                        execActorsRefs.get(ref).tell(pipelineTemp, getSelf());
-                    }
-                    /*else if (pipelineTemp instanceof OutputPipeline) {
-                        PipelineUtils.setOptionsForOutputPipeline((OutputPipeline) pipelineTemp, newRequest);
-                        execActorsRefs.get(ref).tell(pipelineTemp, getSelf());
-                    }*/
-                    /*else if (pipelineTemp instanceof OutputPipeline) {
-                        PipelineUtils.setOptionsForOutputPipeline((OutputPipeline) pipelineTemp, newRequest);
-                        pipelineTemp.setAskedLevel(newRequest.getObs_level());
-                        execActorsRefs.get(ref).tell(pipelineTemp, getSelf());
-                    }*/
-                }
+                deleteRequest(requestToDelete);
             }
         }
         // TerminatedMsg messages
@@ -295,10 +226,7 @@ public class PlanActor extends UntypedActor {
         return pipelineCompletableFuture;
     }
 
-    private void buildGraphForFirstTime(RequestMapping requestMapping,
-                                        Request incomingRequest,
-                                        Map<String,Map<String,String>> qooParamsForAllTopics) {
-
+    private void buildGraphForFirstTime(RequestMapping requestMapping, Request incomingRequest, Map<String,Map<String,String>> qooParamsForAllTopics) {
         // Primary sources and filtering by sensors
         String pipelineID = "";
         String tempID = "";
@@ -393,6 +321,41 @@ public class PlanActor extends UntypedActor {
         }
     }
 
+    private void deleteRequest(Request requestToDelete) {
+        Set<ActorRef> actorsToShutDown = new HashSet<>();
+        Set<String> kafkaTopicsToDelete = new HashSet<>();
+        for (String s : actorPathRefs.get(requestToDelete.getRequest_id())) {
+            execActorsCount.put(s, execActorsCount.get(s) - 1);
+            if (execActorsCount.get(s) == 0) { // this means that resources can be released
+                String topicTemp = MapUtils.getKeyByValue(mappingTopicsActors, s);
+                if (topicTemp != null) {
+                    kafkaTopicsToDelete.add(topicTemp);
+                }
+                actorsToShutDown.add(execActorsRefs.get(s));
+            }
+        }
+
+        // We stop the workers that enforce the different pipelines
+        for (ActorRef actorRef : actorsToShutDown) {
+            gracefulStop(actorRef);
+            execActorsCount.remove(actorRef.path().name());
+            execActorsRefs.remove(actorRef.path().name());
+            monitorActor.tell(new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRef.path().name()).getUniqueID()), getSelf());
+            enforcedPipelines.remove(actorRef.path().name());
+        }
+
+        // We clean up the unused topics
+        for (String topic : kafkaTopicsToDelete) {
+            performAction(new ActionMsg(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
+            log.error("Removing: " + topic);
+            mappingTopicsActors.remove(topic);
+        }
+
+        // Removal of the corresponding RequestMapping
+        actorPathRefs.remove(requestToDelete.getRequest_id());
+        mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
+    }
+
     private boolean performAction(ActionMsg actionMsg) {
         log.info("Processing ActionMsg: {} {}", actionMsg.getAction(), actionMsg.getAbout());
 
@@ -465,7 +428,7 @@ public class PlanActor extends UntypedActor {
             try {
                 return (boolean) (Boolean) Await.result(future, timeout.duration());
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.toString());
                 return false;
             }
         }
@@ -475,7 +438,7 @@ public class PlanActor extends UntypedActor {
             try {
                 return (boolean) (Boolean) Await.result(future, timeout.duration());
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.toString());
                 return false;
             }
         }
