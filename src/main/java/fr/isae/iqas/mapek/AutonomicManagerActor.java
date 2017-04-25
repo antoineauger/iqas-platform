@@ -25,6 +25,8 @@ import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
 import static akka.pattern.Patterns.ask;
+import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.SENSOR;
+import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.CONNECTION_REPORT;
 import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 import static fr.isae.iqas.model.request.State.Status.*;
 
@@ -138,12 +140,16 @@ public class AutonomicManagerActor extends UntypedActor {
                 log.error("Unknown state for request " + incomingReq.getRequest_id() + " at this stage");
             }
         }
-        // SymptomMsg messages [received from Monitor]
         else if (message instanceof MAPEKInternalMsg.SymptomMsg) {
             MAPEKInternalMsg.SymptomMsg symptomMsg = (MAPEKInternalMsg.SymptomMsg) message;
-            if (symptomMsg.getSymptom() == MAPEKInternalMsg.SymptomMAPEK.CONNECTION_REPORT && symptomMsg.getAbout() == MAPEKInternalMsg.EntityMAPEK.SENSOR) {
+            // SymptomMsg messages [received from Monitor]
+            if (symptomMsg.getSymptom() == CONNECTION_REPORT && symptomMsg.getAbout() == SENSOR) {
                 connectedSensors = symptomMsg.getConnectedSensors();
                 log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), connectedSensors.toString());
+            }
+            // Sensor UPDATE in Fuseki
+            else if (symptomMsg.getSymptom() == MAPEKInternalMsg.SymptomMAPEK.UPDATED && symptomMsg.getAbout() == SENSOR) {
+                monitorActor.tell(new MAPEKInternalMsg.SymptomMsg(MAPEKInternalMsg.SymptomMAPEK.UPDATED, SENSOR), getSelf());
             }
         }
     }

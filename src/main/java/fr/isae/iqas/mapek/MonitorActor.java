@@ -27,8 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.OBS_RATE;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.PIPELINE;
+import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.*;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.TOO_LOW;
 import static fr.isae.iqas.model.request.State.Status.*;
 
@@ -216,6 +215,9 @@ public class MonitorActor extends UntypedActor {
                 log.info("IngestPipeline " + symptomMAPEKMsg.getUniqueIDPipeline() + " is no longer active, removing it");
                 numberObservedSymptomsObsRate.remove(symptomMAPEKMsg.getUniqueIDPipeline());
                 mappingPipelinesRequests.remove(symptomMAPEKMsg.getUniqueIDPipeline());
+            }
+            else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.UPDATED && symptomMAPEKMsg.getAbout() == SENSOR) { // Sensor UPDATE
+                forwardToSpecifiedActor(new SymptomMsg(SymptomMAPEK.UPDATED, SENSOR), ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
         }
         // TerminatedMsg messages

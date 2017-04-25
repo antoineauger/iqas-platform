@@ -15,6 +15,7 @@ import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
 import fr.isae.iqas.model.jsonld.SensorCapability;
 import fr.isae.iqas.model.jsonld.SensorCapabilityList;
+import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
@@ -47,7 +48,8 @@ public class PlanActor extends UntypedActor {
     private MongoController mongoController;
     private FusekiController fusekiController;
 
-    private FiniteDuration reportIntervalRateAndQoO = null;
+    private FiniteDuration reportIntervalRateAndQoO;
+    private VirtualSensorList virtualSensorList;
 
     private ActorRef kafkaAdminActor;
     private ActorRef monitorActor;
@@ -76,6 +78,7 @@ public class PlanActor extends UntypedActor {
 
     @Override
     public void preStart() {
+        this.virtualSensorList = fusekiController._findAllSensors();
     }
 
     @Override
@@ -139,7 +142,7 @@ public class PlanActor extends UntypedActor {
                                                 pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
                                                 // Specific settings since it is an OutputPipeline
-                                                setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest);
+                                                setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest, virtualSensorList);
 
                                                 ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
                                                         EntityMAPEK.PIPELINE,
@@ -172,6 +175,16 @@ public class PlanActor extends UntypedActor {
             else if (rfcMsg.getRfc() == RFCMAPEK.REMOVE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) { // Request deleted by the user
                 Request requestToDelete = rfcMsg.getRequest();
                 deleteRequest(requestToDelete);
+            }
+            // RFCs messages - Sensor UPDATE
+            else if (rfcMsg.getRfc() == RFCMAPEK.UPDATE && rfcMsg.getAbout() == EntityMAPEK.SENSOR) { // Sensor description has been updated on Fuseki
+                VirtualSensorList newVirtualSensorList = fusekiController._findAllSensors();
+                enforcedPipelines.forEach((actorPathName, pipelineObject) -> {
+                    if (pipelineObject instanceof OutputPipeline) {
+                        ((OutputPipeline) pipelineObject).setSensorContext(newVirtualSensorList);
+                        execActorsRefs.get(actorPathName).tell(pipelineObject, getSelf());
+                    }
+                });
             }
         }
         // TerminatedMsg messages
@@ -296,7 +309,7 @@ public class PlanActor extends UntypedActor {
                         setOptionsForThrottlePipeline((ThrottlePipeline) pipeline, incomingRequest);
                     }
                     else if (pipeline instanceof OutputPipeline) {
-                        setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest);
+                        setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest, virtualSensorList);
                     }
 
                     pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());

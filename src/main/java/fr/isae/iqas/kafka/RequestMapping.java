@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.isae.iqas.model.request.Request;
-import fr.isae.iqas.pipelines.IPipeline;
 import org.bson.Document;
 
 import java.util.*;

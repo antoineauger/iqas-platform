@@ -104,6 +104,12 @@ public class MAPEKInternalMsg {
         private String uniqueIDPipeline;
         private String requestID;
 
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about) { // UPDATE for Sensors
+            this.creationDate = new Timestamp(System.currentTimeMillis());
+            this.symptom = symptom;
+            this.about = about;
+        }
+
         public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Request attachedRequest) { // For Requests
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.symptom = symptom;
@@ -203,6 +209,12 @@ public class MAPEKInternalMsg {
             this.about = about;
             this.qoOAttribute = qoOAttribute;
             this.associatedRequest_id = associatedRequest_id;
+        }
+
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about) { // UPDATE for Sensors
+            this.creationDate = new Timestamp(System.currentTimeMillis());
+            this.rfc = rfc;
+            this.about = about;
         }
 
         public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request, RequestMapping requestMapping) { // CREATE for Requests

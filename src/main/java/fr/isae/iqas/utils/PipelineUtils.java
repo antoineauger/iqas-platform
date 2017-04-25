@@ -61,7 +61,7 @@ public class PipelineUtils {
         }
     }
 
-    public static void setOptionsForOutputPipeline(OutputPipeline pipeline, Request incomingRequest) {
+    public static void setOptionsForOutputPipeline(OutputPipeline pipeline, Request incomingRequest, VirtualSensorList virtualSensorList) {
         // Params reset
         pipeline.getParams().replace("age_max", "24 hours");
         pipeline.getParams().replace("interested_in", "");
@@ -77,5 +77,6 @@ public class PipelineUtils {
         if (incomingRequest.getQooConstraints().getIqas_params().containsKey("age_max")) {
             pipeline.setCustomizableParameter("age_max", incomingRequest.getQooConstraints().getIqas_params().get("age_max"));
         }
+        pipeline.setSensorContext(virtualSensorList);
     }
 }

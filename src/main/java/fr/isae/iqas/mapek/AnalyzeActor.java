@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
+import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.*;
 import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 
 /**
@@ -207,20 +208,24 @@ public class AnalyzeActor extends UntypedActor {
                     });
                 }
                 else if (requestTemp.getCurrent_status() == State.Status.REMOVED) { // Request deleted by the user
-                    tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, requestTemp));
+                    tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST));
                 }
             }
             // TODO QoO adaptation
             // SymptomMsg messages - Obs Rate
-            else if (symptomMsg.getAbout() == EntityMAPEK.OBS_RATE) {
+            else if (symptomMsg.getSymptom() == TOO_LOW && symptomMsg.getAbout() == EntityMAPEK.OBS_RATE) {
                 log.info("Received Symptom : {} {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getUniqueIDPipeline(), symptomMsg.getConcernedRequests().toString());
                 receivedObsRateSymptoms.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new CircularFifoBuffer(5));
                 receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).add(new MAPEKSymptomMsgWithDate(symptomMsg));
             }
             // SymptomMsg messages - Virtual Sensors
-            else if (symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
+            else if (symptomMsg.getSymptom() == CONNECTION_REPORT && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
                 log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getConnectedSensors().toString());
                 // TODO terminate concerned Requests
+            }
+            else if (symptomMsg.getSymptom() == UPDATED && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
+                log.info("Received Symptom : {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout());
+                tellToPlanActor(new RFCMsg(RFCMAPEK.UPDATE, EntityMAPEK.SENSOR));
             }
         }
         // TerminatedMsg messages

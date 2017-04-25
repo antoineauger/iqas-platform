@@ -11,12 +11,13 @@ import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Sink;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import fr.isae.iqas.model.jsonld.VirtualSensor;
+import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.quality.QoOAttribute;
-import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static fr.isae.iqas.model.observation.ObservationLevel.*;
@@ -40,7 +42,9 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  */
 public class OutputPipeline extends AbstractPipeline implements IPipeline {
     private Logger logger = LoggerFactory.getLogger(OutputPipeline.class);
-    private Graph runnableGraph = null;
+
+    private Graph runnableGraph;
+    private Map<String, VirtualSensor> allVirtualSensors;
 
     public OutputPipeline() {
         super("Output Pipeline", "OutputPipeline", false);
@@ -48,6 +52,16 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
         setParameter("age_max", "24 hours", true);
         setParameter("interested_in", "", true);
         addSupportedOperator(NONE);
+
+        this.allVirtualSensors = new ConcurrentHashMap<>();
+    }
+
+    public void setSensorContext(VirtualSensorList virtualSensorList) {
+        this.allVirtualSensors.clear();
+        for (VirtualSensor v : virtualSensorList.sensors) {
+            String sensorID = v.sensor_id.split("#")[1];
+            this.allVirtualSensors.put(sensorID, v);
+        }
     }
 
     @Override
@@ -168,10 +182,11 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         final FlowShape<ConsumerRecord, Information> consumRecordToInfo = builder.add(
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                                    String producer = sensorDataObject.getString("producer");
                                     Information informationTemp =  new Information(
                                             sensorDataObject.getString("date"),
                                             sensorDataObject.getString("value"),
-                                            sensorDataObject.getString("producer"),
+                                            producer,
                                             sensorDataObject.getString("timestamps"),
                                             "iQAS_out",
                                             System.currentTimeMillis());
@@ -183,6 +198,10 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                         if (interestAttr.contains(OBS_FRESHNESS)) {
                                             informationTemp.setQoOAttribute(OBS_FRESHNESS, String.valueOf(getComputeAttributeHelper().computeQoOFreshness(informationTemp)));
                                         }
+                                    }
+
+                                    if (allVirtualSensors.containsKey(producer)) {
+                                        informationTemp.setContext(allVirtualSensors.get(producer));
                                     }
 
                                     return informationTemp;
