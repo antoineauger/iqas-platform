@@ -27,8 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.OBS_RATE;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.PIPELINE;
+import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.*;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.TOO_LOW;
 import static fr.isae.iqas.model.request.State.Status.*;
 
@@ -56,11 +55,9 @@ public class MonitorActor extends UntypedActor {
     private Map<String, Long> startDateCount; // RequestIDs <-> Timestamps
     private Map<String, Integer> countByRequest; // RequestIDs <-> count (int)
     private Map<String, ObservationRate> minObsRateByRequest; // RequestIDs <-> Durations
-    private Map<String, ObservationRate> maxObsRateByRequest; // RequestIDs <-> Durations
 
     // For QoO reporting
     private Map<String, Buffer> qooQualityBuffer; // RequestIDs <-> [QoOReportMessages]
-    private Map<String, Long> maxAgeByRequest; // RequestIDs <-> Maximum admissible age (long)
 
     /**
      * Monitor actor for the MAPE-K loop of the iQAS platform
@@ -89,10 +86,8 @@ public class MonitorActor extends UntypedActor {
         this.startDateCount = new ConcurrentHashMap<>();
         this.countByRequest = new ConcurrentHashMap<>();
         this.minObsRateByRequest = new ConcurrentHashMap<>();
-        this.maxObsRateByRequest = new ConcurrentHashMap<>();
 
         this.qooQualityBuffer = new ConcurrentHashMap<>();
-        this.maxAgeByRequest = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -121,7 +116,7 @@ public class MonitorActor extends UntypedActor {
             Map<String, List<String>> requestsWithInsuficientObsRate = new ConcurrentHashMap<>(); // UniquePipelineIDs <-> [ImpactedRequests]
             mappingPipelinesRequests.forEach((k, v) -> {
                 for (String s : v) {
-                    if (minObsRateByRequest.containsKey(s)) { // If there is a minObsRate requirement for this Request
+                    if (minObsRateByRequest.containsKey(s)) { // If there is a obsRate_min requirement for this Request
                         long step = new FiniteDuration(1, minObsRateByRequest.get(s).getUnit()).toMillis();
                         if (System.currentTimeMillis() - startDateCount.get(s) > step) {
                             if (countByRequest.get(s) < minObsRateByRequest.get(s).getValue()) {
@@ -156,7 +151,6 @@ public class MonitorActor extends UntypedActor {
 
             if (requestTemp.getCurrent_status() == SUBMITTED) { // Valid Request
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.REQUEST, requestTemp);
-                storeFreshnessRequirements(requestTemp);
                 storeObsRateRequirements(requestTemp);
                 qooQualityBuffer.put(requestTemp.getRequest_id(), new CircularFifoBuffer(nbEventsBeforeSymptom));
                 numberObservedSymptomsObsRate.put(requestTemp.getRequest_id(), 0);
@@ -165,24 +159,16 @@ public class MonitorActor extends UntypedActor {
 
                 // TODO
                 log.error("MIN OBS_RATE REQ: " + minObsRateByRequest.toString());
-                log.error("MAX OBS_RATE REQ: " + maxObsRateByRequest.toString());
                 forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
             else if (requestTemp.getCurrent_status() == REMOVED) { // Request deleted by the user
                 qooQualityBuffer.remove(requestTemp.getRequest_id());
                 minObsRateByRequest.remove(requestTemp.getRequest_id());
-                maxObsRateByRequest.remove(requestTemp.getRequest_id());
                 numberObservedSymptomsObsRate.remove(requestTemp.getRequest_id());
                 startDateCount.remove(requestTemp.getRequest_id());
                 countByRequest.remove(requestTemp.getRequest_id());
 
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestTemp);
-                forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
-            }
-            else if (requestTemp.getCurrent_status() == UPDATED) { // Existing Request updated by the user
-                SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.UPDATED, EntityMAPEK.REQUEST, requestTemp);
-                storeFreshnessRequirements(requestTemp);
-                storeObsRateRequirements(requestTemp);
                 forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
             else if (requestTemp.getCurrent_status() == REJECTED) {
@@ -221,7 +207,7 @@ public class MonitorActor extends UntypedActor {
         else if (message instanceof SymptomMsg) {
             SymptomMsg symptomMAPEKMsg = (SymptomMsg) message;
             if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.NEW && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline creation
-                log.info("New IngestPipeline: {} {}", symptomMAPEKMsg.getUniqueIDPipeline(), symptomMAPEKMsg.getRequestID());
+                log.info("NEW IngestPipeline: {} {}", symptomMAPEKMsg.getUniqueIDPipeline(), symptomMAPEKMsg.getRequestID());
                 mappingPipelinesRequests.putIfAbsent(symptomMAPEKMsg.getUniqueIDPipeline(), new HashSet<>());
                 mappingPipelinesRequests.get(symptomMAPEKMsg.getUniqueIDPipeline()).add(symptomMAPEKMsg.getRequestID());
             }
@@ -229,6 +215,9 @@ public class MonitorActor extends UntypedActor {
                 log.info("IngestPipeline " + symptomMAPEKMsg.getUniqueIDPipeline() + " is no longer active, removing it");
                 numberObservedSymptomsObsRate.remove(symptomMAPEKMsg.getUniqueIDPipeline());
                 mappingPipelinesRequests.remove(symptomMAPEKMsg.getUniqueIDPipeline());
+            }
+            else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.UPDATED && symptomMAPEKMsg.getAbout() == SENSOR) { // Sensor UPDATE
+                forwardToSpecifiedActor(new SymptomMsg(SymptomMAPEK.UPDATED, SENSOR), ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
         }
         // TerminatedMsg messages
@@ -264,32 +253,31 @@ public class MonitorActor extends UntypedActor {
     }
 
     private void storeObsRateRequirements(Request incomingRequest) {
-        if (incomingRequest.getQooConstraints().getCustom_params().containsKey("obsRate_min")
-                || incomingRequest.getQooConstraints().getCustom_params().containsKey("obsRate_max")) { // if it expresses interest in OBS_RATE
-            long obsRateMaxVal = -1;
+        if (incomingRequest.getQooConstraints().getIqas_params().containsKey("obsRate_min")
+                || incomingRequest.getQooConstraints().getIqas_params().containsKey("obsRate_max")) { // if it expresses interest in OBS_RATE
             TimeUnit obsRateMaxUnit = null;
             long obsRateMinVal = -1;
             TimeUnit obsRateMinUnit = null;
 
-            for (Object o : incomingRequest.getQooConstraints().getCustom_params().entrySet()) {
+            for (Object o : incomingRequest.getQooConstraints().getIqas_params().entrySet()) {
                 Map.Entry pair = (Map.Entry) o;
                 String k = (String) pair.getKey();
                 String v = (String) pair.getValue();
 
                 if (k.startsWith("obsRate_")) {
                     // We parse the obsRate according the pattern int/unit
-                    String[] unitValue = v.split("/");
+                    String[] unitValueStr = v.split("/");
 
                     try {
-                        long obsRateVal = Long.parseLong(unitValue[0]);
+                        long obsRateVal = Long.parseLong(unitValueStr[0]);
                         TimeUnit obsRateUnit;
-                        if (unitValue.length == 2 && unitValue[1].equals("s")) {
+                        if (unitValueStr.length == 2 && unitValueStr[1].equals("s")) {
                             obsRateUnit = TimeUnit.SECONDS;
                         }
-                        else if (unitValue.length == 2 && unitValue[1].equals("min")) {
+                        else if (unitValueStr.length == 2 && unitValueStr[1].equals("min")) {
                             obsRateUnit = TimeUnit.MINUTES;
                         }
-                        else if (unitValue.length == 2 && unitValue[1].equals("hour")) {
+                        else if (unitValueStr.length == 2 && unitValueStr[1].equals("hour")) {
                             obsRateUnit = TimeUnit.HOURS;
                         }
                         else {
@@ -303,7 +291,6 @@ public class MonitorActor extends UntypedActor {
                             obsRateMinUnit = obsRateUnit;
                         }
                         else if (keyType.length == 2 && keyType[1].equals("max")) {
-                            obsRateMaxVal = obsRateVal;
                             obsRateMaxUnit = obsRateUnit;
                         }
                     } catch (NumberFormatException | NullPointerException e) { // To avoid malformed QoO requirements
@@ -315,25 +302,14 @@ public class MonitorActor extends UntypedActor {
                 }
             }
 
-            if (obsRateMinUnit != null && obsRateMaxUnit == null) {
+            if (obsRateMinUnit != null && obsRateMaxUnit == null) { // Only obsRate_min is kept
                 minObsRateByRequest.put(incomingRequest.getRequest_id(), new ObservationRate(obsRateMinVal, obsRateMinUnit));
             }
-            else if (obsRateMinUnit == null && obsRateMaxUnit != null) {
-                maxObsRateByRequest.put(incomingRequest.getRequest_id(), new ObservationRate(obsRateMaxVal, obsRateMaxUnit));
+            else if (obsRateMinUnit == null && obsRateMaxUnit != null) { // Only obsRate_max is kept
+                // Do nothing, obsRate_max is handled by the ThottlePipeline
             }
-            else if (obsRateMinUnit != null && obsRateMaxUnit != null) {
-                maxObsRateByRequest.put(incomingRequest.getRequest_id(), new ObservationRate(obsRateMaxVal, obsRateMaxUnit));
-            }
-        }
-    }
-
-    private void storeFreshnessRequirements(Request incomingRequest) {
-        if (incomingRequest.getQooConstraints().getCustom_params().containsKey("age_max")) { // if it expresses interest in OBS_FRESHNESS
-            try {
-                long maxAge = Long.parseLong(incomingRequest.getQooConstraints().getCustom_params().get("age_max"));
-                maxAgeByRequest.put(incomingRequest.getRequest_id(), maxAge);
-            } catch (NumberFormatException | NullPointerException e) { // To avoid malformed QoO requirements
-                log.error("Error when trying to parse age_max parameter: " + e.toString());
+            else if (obsRateMinUnit != null && obsRateMaxUnit != null) { // Only obsRate_max is kept
+                incomingRequest.getQooConstraints().getIqas_params().remove("obsRate_min");
             }
         }
     }

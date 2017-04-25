@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
+import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.*;
 import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 
 /**
@@ -163,20 +164,42 @@ public class AnalyzeActor extends UntypedActor {
                                 requestMapping.addLink(topicBase.getName(), topicJustBeforeSink.getName(), "IngestPipeline_" + tempIDForPipelines);
                             }
 
+                            /**
+                             * Resolution of iQAS parameters before enforcing the Request
+                             * This allows to have observations of higher quality more quickly.
+                             *
+                             * The natural order is FilterPipeline -> ThrottlePipeline -> OutputPipeline
+                             */
+
+                            TopicEntity lastQoOTopic = topicJustBeforeSink;
+                            int counterQoO = 0;
+
                             // If there is some QoO constraints about OBS_ACCURACY, we add a FilterPipeline
-                            if ((requestTemp.getQooConstraints().getCustom_params().containsKey("threshold_min")
-                                    || requestTemp.getQooConstraints().getCustom_params().containsKey("threshold_max")) ) {
+                            if (requestTemp.getQooConstraints().getIqas_params().containsKey("threshold_max")) {
+                                counterQoO += 1;
 
-                                TopicEntity filteredObs = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_FILTER",
+                                TopicEntity accurObsTopic = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO" + String.valueOf(counterQoO),
                                         requestTemp.getObs_level());
-                                requestMapping.getAllTopics().put(filteredObs.getName(), filteredObs);
+                                requestMapping.getAllTopics().put(accurObsTopic.getName(), accurObsTopic);
 
-                                requestMapping.addLink(topicJustBeforeSink.getName(), filteredObs.getName(), "FilterPipeline_" + tempIDForPipelines);
-                                requestMapping.addLink(filteredObs.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
+                                requestMapping.addLink(lastQoOTopic.getName(), accurObsTopic.getName(), "FilterPipeline_" + tempIDForPipelines);
+                                lastQoOTopic = accurObsTopic;
                             }
-                            else {
-                                requestMapping.addLink(topicJustBeforeSink.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
+                            // If there is some QoO constraints about OBS_RATE, we add a ThrottlePipeline
+                            if (requestTemp.getQooConstraints().getIqas_params().containsKey("obsRate_max")) {
+                                counterQoO += 1;
+
+                                TopicEntity rateObsTopic = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO" + String.valueOf(counterQoO),
+                                        requestTemp.getObs_level());
+                                requestMapping.getAllTopics().put(rateObsTopic.getName(), rateObsTopic);
+
+                                requestMapping.addLink(topicJustBeforeSink.getName(), rateObsTopic.getName(), "ThrottlePipeline_" + tempIDForPipelines);
+                                lastQoOTopic = rateObsTopic;
                             }
+
+                            // Last edge for graph
+                            // QoO constraints about OBS_FRESHNESS are enforced at this level
+                            requestMapping.addLink(lastQoOTopic.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
 
                             mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
                                 tellToPlanActor(new RFCMsg(RFCMAPEK.CREATE, EntityMAPEK.REQUEST, requestTemp, requestMapping));
@@ -184,24 +207,25 @@ public class AnalyzeActor extends UntypedActor {
                         }
                     });
                 }
-                else if (requestTemp.getCurrent_status() == State.Status.UPDATED) { // Existing Request updated by the user
-                    // TODO Request update
-                }
                 else if (requestTemp.getCurrent_status() == State.Status.REMOVED) { // Request deleted by the user
-                    tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, requestTemp));
+                    tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST));
                 }
             }
             // TODO QoO adaptation
             // SymptomMsg messages - Obs Rate
-            else if (symptomMsg.getAbout() == EntityMAPEK.OBS_RATE) {
+            else if (symptomMsg.getSymptom() == TOO_LOW && symptomMsg.getAbout() == EntityMAPEK.OBS_RATE) {
                 log.info("Received Symptom : {} {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getUniqueIDPipeline(), symptomMsg.getConcernedRequests().toString());
                 receivedObsRateSymptoms.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new CircularFifoBuffer(5));
                 receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).add(new MAPEKSymptomMsgWithDate(symptomMsg));
             }
             // SymptomMsg messages - Virtual Sensors
-            else if (symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
+            else if (symptomMsg.getSymptom() == CONNECTION_REPORT && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
                 log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getConnectedSensors().toString());
                 // TODO terminate concerned Requests
+            }
+            else if (symptomMsg.getSymptom() == UPDATED && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
+                log.info("Received Symptom : {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout());
+                tellToPlanActor(new RFCMsg(RFCMAPEK.UPDATE, EntityMAPEK.SENSOR));
             }
         }
         // TerminatedMsg messages

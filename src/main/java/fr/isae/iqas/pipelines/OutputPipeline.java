@@ -11,17 +11,23 @@ import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Sink;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import fr.isae.iqas.model.jsonld.VirtualSensor;
+import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.quality.QoOAttribute;
-import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static fr.isae.iqas.model.observation.ObservationLevel.*;
 import static fr.isae.iqas.model.quality.QoOAttribute.OBS_ACCURACY;
@@ -35,21 +41,57 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * It should not be modified.
  */
 public class OutputPipeline extends AbstractPipeline implements IPipeline {
-    private Graph runnableGraph = null;
+    private Logger logger = LoggerFactory.getLogger(OutputPipeline.class);
+
+    private Graph runnableGraph;
+    private Map<String, VirtualSensor> allVirtualSensors;
 
     public OutputPipeline() {
         super("Output Pipeline", "OutputPipeline", false);
 
+        setParameter("age_max", "24 hours", true);
         setParameter("interested_in", "", true);
         addSupportedOperator(NONE);
+
+        this.allVirtualSensors = new ConcurrentHashMap<>();
+    }
+
+    public void setSensorContext(VirtualSensorList virtualSensorList) {
+        this.allVirtualSensors.clear();
+        for (VirtualSensor v : virtualSensorList.sensors) {
+            String sensorID = v.sensor_id.split("#")[1];
+            this.allVirtualSensors.put(sensorID, v);
+        }
     }
 
     @Override
-    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph(String topicToPublish,
-                                                                                                                           ObservationLevel askedLevel,
-                                                                                                                           Operator operatorToApply) {
+    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph() {
+        String[] ageMaxStr = getParams().get("age_max").split(" ");
+        long ageLongValue = Long.valueOf(ageMaxStr[0]);
+        TimeUnit unit = null;
+        switch (ageMaxStr[1]) {
+            case "ms":
+                unit = TimeUnit.MILLISECONDS;
+                break;
+            case "s":
+                unit = TimeUnit.SECONDS;
+                break;
+            case "min":
+                unit = TimeUnit.MINUTES;
+                break;
+            case "mins":
+                unit = TimeUnit.MINUTES;
+                break;
+            case "hour":
+                unit = TimeUnit.HOURS;
+                break;
+            case "hours":
+                unit = TimeUnit.HOURS;
+                break;
+        }
+        final long ageMaxAllowed = new FiniteDuration(ageLongValue, unit).toMillis();
 
-        final ObservationLevel askedLevelFinal = askedLevel;
+        final ObservationLevel askedLevelFinal = getAskedLevel();
         runnableGraph = GraphDSL
                 .create(builder -> {
                     List<QoOAttribute> interestAttr = new ArrayList<>();
@@ -59,8 +101,6 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                             interestAttr.add(QoOAttribute.valueOf(s));
                         }
                     }
-
-                    // ################################# YOUR CODE GOES HERE #################################
 
                     if (askedLevelFinal == RAW_DATA) {
                         final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
@@ -89,15 +129,25 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                 })
                         );
 
+                        final FlowShape<RawData, RawData> removeOutdatedObs = builder.add(
+                                Flow.of(RawData.class)
+                                        .filter(r -> {
+                                            String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
+                                            long timestampProduced = Long.valueOf(timestampProducedStr[1]);
+                                            return (System.currentTimeMillis() - timestampProduced) < ageMaxAllowed;
+                                        })
+                        );
+
                         final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
                                 Flow.of(RawData.class).map(r -> {
                                     ObjectMapper mapper = new ObjectMapper();
                                     mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                    return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                                    return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                                 })
                         );
 
                         builder.from(consumRecordToRawData.out())
+                                .via(removeOutdatedObs)
                                 .viaFanOut(bcast)
                                 .toInlet(rawDataToProdRecord.in());
 
@@ -132,10 +182,11 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         final FlowShape<ConsumerRecord, Information> consumRecordToInfo = builder.add(
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                                    String producer = sensorDataObject.getString("producer");
                                     Information informationTemp =  new Information(
                                             sensorDataObject.getString("date"),
                                             sensorDataObject.getString("value"),
-                                            sensorDataObject.getString("producer"),
+                                            producer,
                                             sensorDataObject.getString("timestamps"),
                                             "iQAS_out",
                                             System.currentTimeMillis());
@@ -149,19 +200,33 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                         }
                                     }
 
+                                    if (allVirtualSensors.containsKey(producer)) {
+                                        informationTemp.setContext(allVirtualSensors.get(producer));
+                                    }
+
                                     return informationTemp;
                                 })
+                        );
+
+                        final FlowShape<Information, Information> removeOutdatedObs = builder.add(
+                                Flow.of(Information.class)
+                                        .filter(r -> {
+                                            String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
+                                            long timestampProduced = Long.valueOf(timestampProducedStr[1]);
+                                            return (System.currentTimeMillis() - timestampProduced) < ageMaxAllowed;
+                                        })
                         );
 
                         final FlowShape<Information, ProducerRecord> infoToProdRecord = builder.add(
                                 Flow.of(Information.class).map(r -> {
                                     ObjectMapper mapper = new ObjectMapper();
                                     mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                    return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                                    return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                                 })
                         );
 
                         builder.from(consumRecordToInfo.out())
+                                .via(removeOutdatedObs)
                                 .viaFanOut(bcast)
                                 .toInlet(infoToProdRecord.in());
 
@@ -197,8 +262,6 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                     else { // other observation levels are not supported
                         return null;
                     }
-
-                    // ################################# END OF YOUR CODE #################################
 
                 });
 

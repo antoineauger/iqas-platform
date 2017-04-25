@@ -15,12 +15,10 @@ import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
 import fr.isae.iqas.model.jsonld.SensorCapability;
 import fr.isae.iqas.model.jsonld.SensorCapabilityList;
-import fr.isae.iqas.model.jsonld.VirtualSensor;
 import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
-import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.pipelines.*;
@@ -38,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
+import static fr.isae.iqas.utils.PipelineUtils.*;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -49,7 +48,8 @@ public class PlanActor extends UntypedActor {
     private MongoController mongoController;
     private FusekiController fusekiController;
 
-    private FiniteDuration reportIntervalRateAndQoO = null;
+    private FiniteDuration reportIntervalRateAndQoO;
+    private VirtualSensorList virtualSensorList;
 
     private ActorRef kafkaAdminActor;
     private ActorRef monitorActor;
@@ -78,6 +78,7 @@ public class PlanActor extends UntypedActor {
 
     @Override
     public void preStart() {
+        this.virtualSensorList = fusekiController._findAllSensors();
     }
 
     @Override
@@ -119,7 +120,7 @@ public class PlanActor extends UntypedActor {
 
                                     // The incoming request has no common points with the enforced ones
                                     if (requestMapping.getConstructedFromRequest().equals("")) {
-                                        buildGraph(requestMapping, incomingRequest, qooParamsForAllTopics);
+                                        buildGraphForFirstTime(requestMapping, incomingRequest, qooParamsForAllTopics);
                                     }
                                     else { // The incoming request may reuse existing enforced requests
                                         TopicEntity beforeLastTopic = requestMapping.getPrimarySources().get(0);
@@ -135,12 +136,13 @@ public class PlanActor extends UntypedActor {
                                             else {
                                                 // Setting request_id, temp_id and other options for the retrieved Pipeline
                                                 pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
-                                                pipeline.setTempID(requestMapping.getPrimarySources().get(0).getEnforcedPipelines().get(requestMapping.getFinalSink().getName()).split("_")[1]);
+                                                pipeline.setTempID(requestMapping.getPrimarySources().get(0).getEnforcedPipelines()
+                                                        .get(requestMapping.getFinalSink().getName()).split("_")[1]);
                                                 pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
                                                 pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
                                                 // Specific settings since it is an OutputPipeline
-                                                setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest);
+                                                setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest, virtualSensorList);
 
                                                 ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
                                                         EntityMAPEK.PIPELINE,
@@ -160,7 +162,8 @@ public class PlanActor extends UntypedActor {
                             }
                         }, context().dispatcher());
 
-                incomingRequest.addLog("Successfully created pipeline graph without considering any QoO constraints.");
+                incomingRequest.addLog("Successfully created pipeline graph by enforcing following qoo constraints: "
+                        + incomingRequest.getQooConstraints().getIqas_params().toString());
                 incomingRequest.updateState(State.Status.ENFORCED);
                 mongoController.updateRequest(incomingRequest.getRequest_id(), incomingRequest).whenComplete((result, throwable) -> {
                     if (throwable != null) {
@@ -171,39 +174,17 @@ public class PlanActor extends UntypedActor {
             // RFCs messages - Request REMOVE
             else if (rfcMsg.getRfc() == RFCMAPEK.REMOVE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) { // Request deleted by the user
                 Request requestToDelete = rfcMsg.getRequest();
-
-                Set<ActorRef> actorsToShutDown = new HashSet<>();
-                Set<String> kafkaTopicsToDelete = new HashSet<>();
-                for (String s : actorPathRefs.get(requestToDelete.getRequest_id())) {
-                    execActorsCount.put(s, execActorsCount.get(s) - 1);
-                    if (execActorsCount.get(s) == 0) { // this means that resources can be released
-                        String topicTemp = MapUtils.getKeyByValue(mappingTopicsActors, s);
-                        if (topicTemp != null) {
-                            kafkaTopicsToDelete.add(topicTemp);
-                        }
-                        actorsToShutDown.add(execActorsRefs.get(s));
+                deleteRequest(requestToDelete);
+            }
+            // RFCs messages - Sensor UPDATE
+            else if (rfcMsg.getRfc() == RFCMAPEK.UPDATE && rfcMsg.getAbout() == EntityMAPEK.SENSOR) { // Sensor description has been updated on Fuseki
+                VirtualSensorList newVirtualSensorList = fusekiController._findAllSensors();
+                enforcedPipelines.forEach((actorPathName, pipelineObject) -> {
+                    if (pipelineObject instanceof OutputPipeline) {
+                        ((OutputPipeline) pipelineObject).setSensorContext(newVirtualSensorList);
+                        execActorsRefs.get(actorPathName).tell(pipelineObject, getSelf());
                     }
-                }
-
-                // We stop the workers that enforce the different pipelines
-                for (ActorRef actorRef : actorsToShutDown) {
-                    gracefulStop(actorRef);
-                    execActorsCount.remove(actorRef.path().name());
-                    execActorsRefs.remove(actorRef.path().name());
-                    monitorActor.tell(new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRef.path().name()).getUniqueID()), getSelf());
-                    enforcedPipelines.remove(actorRef.path().name());
-                }
-
-                // We clean up the unused topics
-                for (String topic : kafkaTopicsToDelete) {
-                    performAction(new ActionMsg(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
-                    log.error("Removing: " + topic);
-                    mappingTopicsActors.remove(topic);
-                }
-
-                // Removal of the corresponding RequestMapping
-                actorPathRefs.remove(requestToDelete.getRequest_id());
-                mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
+                });
             }
         }
         // TerminatedMsg messages
@@ -258,10 +239,7 @@ public class PlanActor extends UntypedActor {
         return pipelineCompletableFuture;
     }
 
-    private void buildGraph(RequestMapping requestMapping,
-                            Request incomingRequest,
-                            Map<String,Map<String,String>> qooParamsForAllTopics) {
-
+    private void buildGraphForFirstTime(RequestMapping requestMapping, Request incomingRequest, Map<String,Map<String,String>> qooParamsForAllTopics) {
         // Primary sources and filtering by sensors
         String pipelineID = "";
         String tempID = "";
@@ -286,7 +264,7 @@ public class PlanActor extends UntypedActor {
             }
             else {
                 if (pipeline instanceof IngestPipeline) {
-                    setOptionsForIngestPipeline((IngestPipeline) pipeline, incomingRequest);
+                    setOptionsForIngestPipeline((IngestPipeline) pipeline, incomingRequest, fusekiController, context());
                 }
 
                 // Setting request_id, temp_id and other options for the retrieved Pipeline
@@ -327,8 +305,11 @@ public class PlanActor extends UntypedActor {
                     if (pipeline instanceof FilterPipeline) {
                         setOptionsForFilterPipeline((FilterPipeline) pipeline, incomingRequest);
                     }
+                    else if (pipeline instanceof ThrottlePipeline) {
+                        setOptionsForThrottlePipeline((ThrottlePipeline) pipeline, incomingRequest);
+                    }
                     else if (pipeline instanceof OutputPipeline) {
-                        setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest);
+                        setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest, virtualSensorList);
                     }
 
                     pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
@@ -351,6 +332,41 @@ public class PlanActor extends UntypedActor {
             });
             currTopicName = childrenTopic.getName();
         }
+    }
+
+    private void deleteRequest(Request requestToDelete) {
+        Set<ActorRef> actorsToShutDown = new HashSet<>();
+        Set<String> kafkaTopicsToDelete = new HashSet<>();
+        for (String s : actorPathRefs.get(requestToDelete.getRequest_id())) {
+            execActorsCount.put(s, execActorsCount.get(s) - 1);
+            if (execActorsCount.get(s) == 0) { // this means that resources can be released
+                String topicTemp = MapUtils.getKeyByValue(mappingTopicsActors, s);
+                if (topicTemp != null) {
+                    kafkaTopicsToDelete.add(topicTemp);
+                }
+                actorsToShutDown.add(execActorsRefs.get(s));
+            }
+        }
+
+        // We stop the workers that enforce the different pipelines
+        for (ActorRef actorRef : actorsToShutDown) {
+            gracefulStop(actorRef);
+            execActorsCount.remove(actorRef.path().name());
+            execActorsRefs.remove(actorRef.path().name());
+            monitorActor.tell(new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRef.path().name()).getUniqueID()), getSelf());
+            enforcedPipelines.remove(actorRef.path().name());
+        }
+
+        // We clean up the unused topics
+        for (String topic : kafkaTopicsToDelete) {
+            performAction(new ActionMsg(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
+            log.error("Removing: " + topic);
+            mappingTopicsActors.remove(topic);
+        }
+
+        // Removal of the corresponding RequestMapping
+        actorPathRefs.remove(requestToDelete.getRequest_id());
+        mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
     }
 
     private boolean performAction(ActionMsg actionMsg) {
@@ -420,22 +436,22 @@ public class PlanActor extends UntypedActor {
             log.info("Successfully started " + actorRefToStart.path());
         }
         else if (actionMsg.getAction() == ActionMAPEK.CREATE && actionMsg.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
-            Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+            Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
             Future<Object> future = Patterns.ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.CREATE, actionMsg.getKafkaTopicID()), timeout);
             try {
                 return (boolean) (Boolean) Await.result(future, timeout.duration());
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.toString());
                 return false;
             }
         }
         else if (actionMsg.getAction() == ActionMAPEK.DELETE && actionMsg.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
-            Timeout timeout = new Timeout(Duration.create(5, "seconds"));
+            Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
             Future<Object> future = Patterns.ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.DELETE, actionMsg.getKafkaTopicID()), timeout);
             try {
                 return (boolean) (Boolean) Await.result(future, timeout.duration());
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.toString());
                 return false;
             }
         }
@@ -443,41 +459,4 @@ public class PlanActor extends UntypedActor {
         return true;
     }
 
-    private void setOptionsForIngestPipeline(IngestPipeline pipeline, Request incomingRequest) {
-        future(() -> fusekiController._findAllSensorsWithConditions(incomingRequest.getLocation(), incomingRequest.getTopic()), context().dispatcher())
-                .onComplete(new OnComplete<VirtualSensorList>() {
-                    public void onComplete(Throwable throwable, VirtualSensorList vList) {
-                        if (throwable != null) {
-                            log.error("Error when retrieving sensor capabilities. " + throwable.toString());
-                        } else {
-                            StringBuilder sensorsToKeep = new StringBuilder();
-                            for (VirtualSensor v : vList.sensors) {
-                                sensorsToKeep.append(v.sensor_id.split("#")[1]).append(";");
-                            }
-                            sensorsToKeep = new StringBuilder(sensorsToKeep.substring(0, sensorsToKeep.length() - 1));
-                            pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep.toString());
-                        }
-                    }
-                }, context().dispatcher());
-    }
-
-    private void setOptionsForFilterPipeline(FilterPipeline pipeline, Request incomingRequest) {
-        if (incomingRequest.getQooConstraints().getCustom_params().containsKey("threshold_min")) {
-            pipeline.setCustomizableParameter("threshold_min", incomingRequest.getQooConstraints().getCustom_params().get("threshold_min"));
-        }
-        if (incomingRequest.getQooConstraints().getCustom_params().containsKey("threshold_max")) {
-            pipeline.setCustomizableParameter("threshold_max", incomingRequest.getQooConstraints().getCustom_params().get("threshold_max"));
-        }
-    }
-
-    private void setOptionsForOutputPipeline(OutputPipeline pipeline, Request incomingRequest) {
-        StringBuilder interestAttr = new StringBuilder();
-        if (incomingRequest.getQooConstraints().getInterested_in().size() > 0) {
-            for (QoOAttribute a : incomingRequest.getQooConstraints().getInterested_in()) {
-                interestAttr.append(a.toString()).append(";");
-            }
-            interestAttr = new StringBuilder(interestAttr.substring(0, interestAttr.length() - 1));
-            pipeline.setCustomizableParameter("interested_in", interestAttr.toString());
-        }
-    }
 }

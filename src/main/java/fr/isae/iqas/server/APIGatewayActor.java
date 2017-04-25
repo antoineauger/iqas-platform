@@ -9,13 +9,15 @@ import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.KafkaAdminActor;
 import fr.isae.iqas.mapek.AutonomicManagerActor;
+import fr.isae.iqas.model.message.MAPEKInternalMsg;
 import fr.isae.iqas.model.message.RESTRequestMsg;
 import fr.isae.iqas.model.request.Request;
 
 import java.util.Properties;
 
 import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.*;
-import static fr.isae.iqas.model.request.State.Status.*;
+import static fr.isae.iqas.model.request.State.Status.ENFORCED;
+import static fr.isae.iqas.model.request.State.Status.REMOVED;
 
 /**
  * Created by an.auger on 20/09/2016.
@@ -65,17 +67,6 @@ public class APIGatewayActor extends UntypedActor {
                     }
                 });
             }
-            else if (requestSubject.equals(PUT)) { // Update
-                incomingRequest.updateState(UPDATED);
-                mongoController.getSpecificRequest(incomingRequest.getRequest_id()).whenComplete((result, throwable) -> {
-                    if (throwable == null && result.size() == 1) {
-                        autoManager.tell(incomingRequest, getSelf());
-                    }
-                    else {
-                        log.warning("Unable to retrieve request " + incomingRequest.getRequest_id() + ". Operation skipped!");
-                    }
-                });
-            }
             else if (requestSubject.equals(GET)) {
                 log.error("This should never happen: GET responsibility is directly handled by RESTServer");
             }
@@ -104,6 +95,12 @@ public class APIGatewayActor extends UntypedActor {
             }
             else {
                 log.error("Unknown REST verb (" + requestSubject + ") for request with id " + incomingRequest.getRequest_id());
+            }
+        }
+        else if (message instanceof MAPEKInternalMsg.SymptomMsg) {
+            MAPEKInternalMsg.SymptomMsg symptomMsg = (MAPEKInternalMsg.SymptomMsg) message;
+            if (symptomMsg.getSymptom() == MAPEKInternalMsg.SymptomMAPEK.UPDATED && symptomMsg.getAbout() == MAPEKInternalMsg.EntityMAPEK.SENSOR) {
+                autoManager.tell(symptomMsg, getSelf());
             }
         }
     }

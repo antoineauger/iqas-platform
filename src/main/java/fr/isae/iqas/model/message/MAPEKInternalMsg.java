@@ -46,7 +46,6 @@ public class MAPEKInternalMsg {
         CREATE,
         DELETE,
         RESET,
-        UPDATE,
         TURN_ON,
         TURN_OFF,
         SENSOR_API
@@ -104,6 +103,12 @@ public class MAPEKInternalMsg {
         private Request attachedRequest;
         private String uniqueIDPipeline;
         private String requestID;
+
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about) { // UPDATE for Sensors
+            this.creationDate = new Timestamp(System.currentTimeMillis());
+            this.symptom = symptom;
+            this.about = about;
+        }
 
         public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Request attachedRequest) { // For Requests
             this.creationDate = new Timestamp(System.currentTimeMillis());
@@ -188,12 +193,28 @@ public class MAPEKInternalMsg {
         private RequestMapping requestMapping;
         private String associatedRequest_id;
 
+        public RFCMsg(RFCMsg rfcMsgToClone) {
+            this.creationDate = rfcMsgToClone.getCreationDate();
+            this.rfc = rfcMsgToClone.getRfc();
+            this.about = rfcMsgToClone.getAbout();
+            this.request = rfcMsgToClone.getRequest();
+            this.qoOAttribute = rfcMsgToClone.getQoOAttribute();
+            this.requestMapping = rfcMsgToClone.getRequestMapping();
+            this.associatedRequest_id = rfcMsgToClone.getAssociatedRequest_id();
+        }
+
         public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, QoOAttribute qoOAttribute, String associatedRequest_id) { // INCREASE / DECREASE for QoOAttributes
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
             this.about = about;
             this.qoOAttribute = qoOAttribute;
             this.associatedRequest_id = associatedRequest_id;
+        }
+
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about) { // UPDATE for Sensors
+            this.creationDate = new Timestamp(System.currentTimeMillis());
+            this.rfc = rfc;
+            this.about = about;
         }
 
         public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request, RequestMapping requestMapping) { // CREATE for Requests
@@ -256,8 +277,6 @@ public class MAPEKInternalMsg {
         private ObservationLevel askedObsLevel;
         private String associatedRequest_id;
         private String kafkaTopicID;
-        private Map<String, String> paramsToUpdate;
-        private String pipeline_id;
         private String constructedFromRequest;
         private int maxLevelDepth;
 
@@ -287,23 +306,6 @@ public class MAPEKInternalMsg {
             this.associatedRequest_id = associatedRequest_id;
             this.constructedFromRequest = constructedFromRequest;
             this.maxLevelDepth = maxLevelDepth;
-        }
-
-        public ActionMsg(ActionMAPEK action, EntityMAPEK about, String pipeline_id, boolean force) { // DELETE Pipeline
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.action = action;
-            this.about = about;
-            this.pipeline_id = pipeline_id;
-            this.associatedRequest_id = pipeline_id.split("_")[1];
-        }
-
-        public ActionMsg(ActionMAPEK action, EntityMAPEK about, String pipeline_id, Map<String, String> paramsToUpdate) { // UPDATE Pipeline
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.action = action;
-            this.about = about;
-            this.pipeline_id = pipeline_id;
-            this.paramsToUpdate = paramsToUpdate;
-            this.associatedRequest_id = pipeline_id.split("_")[1];
         }
 
         public Timestamp getCreationDate() {
@@ -336,14 +338,6 @@ public class MAPEKInternalMsg {
 
         public String getTopicToPublish() {
             return topicToPublish;
-        }
-
-        public Map<String, String> getParamsToUpdate() {
-            return paramsToUpdate;
-        }
-
-        public String getPipeline_id() {
-            return pipeline_id;
         }
 
         public String getConstructedFromRequest() {

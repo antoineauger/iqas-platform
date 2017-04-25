@@ -7,9 +7,7 @@ import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
-import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
@@ -29,20 +27,14 @@ public class FilterPipeline extends AbstractPipeline implements IPipeline {
         super("Filter Pipeline", "FilterPipeline", true);
 
         addSupportedOperator(NONE);
-        setParameter("threshold_min", String.valueOf(Float.MIN_VALUE), true);
-        setParameter("threshold_max", String.valueOf(Float.MAX_VALUE), true);
+        setParameter("threshold_min", String.valueOf(Double.MIN_VALUE), true);
+        setParameter("threshold_max", String.valueOf(Double.MAX_VALUE), true);
     }
 
     @Override
-    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph(String topicToPublish,
-                                                                                                                           ObservationLevel askedLevel,
-                                                                                                                           Operator operatorToApply) {
-
-        final ObservationLevel askedLevelFinal = askedLevel;
+    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph() {
         runnableGraph = GraphDSL
                 .create(builder -> {
-
-                    // ################################# YOUR CODE GOES HERE #################################
 
                     final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {
@@ -59,13 +51,13 @@ public class FilterPipeline extends AbstractPipeline implements IPipeline {
                             Flow.of(RawData.class).map(r -> {
                                 ObjectMapper mapper = new ObjectMapper();
                                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                                return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                             })
                     );
 
                     final FlowShape<RawData, RawData> filteringMechanism = builder.add(
-                            Flow.of(RawData.class).filter(r -> r.getValue() >= Double.valueOf(getParams().get("threshold_min"))
-                                    && r.getValue() <= Double.valueOf(getParams().get("threshold_max")))
+                            Flow.of(RawData.class).filter(r -> (r.getValue() >= Double.valueOf(getParams().get("threshold_min")))
+                                    && (r.getValue() <= Double.valueOf(getParams().get("threshold_max"))))
                     );
 
                     builder.from(consumRecordToRawData.out())

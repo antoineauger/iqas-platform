@@ -38,16 +38,20 @@ public interface IPipeline {
                                      FiniteDuration reportFrequency);
 
     /**
+     *
+     * @param topicToPublish the name of the topic to publish to
+     * @param askedLevel
+     * @param operatorToApply
+     */
+    void setupPipelineGraph(String topicToPublish, ObservationLevel askedLevel, Operator operatorToApply);
+
+    /**
      * Ground method to get the Akka graph to run
      * It corresponds to a pipeline in the iQAS platform, composed of none, one or more QoO mechanisms
-     * @param topicToPublish the name of the topic to publish to
-     * @param operatorToApply an operator to set in the graph, if supported. May be null when not wanted
      * @return the graph to run for the given pipeline
      */
 
-    Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph(String topicToPublish,
-                                                                                                                    ObservationLevel askedLevel,
-                                                                                                                    Operator operatorToApply);
+    Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph();
 
     /**
      * @return the Simple class name (e.g., OutputPipeline)
@@ -105,4 +109,8 @@ public interface IPipeline {
     void setTempID(String tempID);
 
     String getTempID();
+
+    ObservationLevel getAskedLevel();
+
+    void setAskedLevel(ObservationLevel askedLevel);
 }

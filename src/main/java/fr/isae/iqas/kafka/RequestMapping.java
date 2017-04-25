@@ -30,8 +30,8 @@ public class RequestMapping {
     public  @JsonIgnore RequestMapping(RequestMapping requestMappingToClone) {
         this.request_id = requestMappingToClone.request_id;
         this.constructedFromRequest = requestMappingToClone.constructedFromRequest;
-        this.dependentRequests = requestMappingToClone.dependentRequests;
-        this.allTopics = requestMappingToClone.allTopics;
+        this.dependentRequests = new HashSet<>(requestMappingToClone.dependentRequests);
+        this.allTopics = new ConcurrentHashMap<>(requestMappingToClone.allTopics);
     }
 
     public RequestMapping(Document bsonDocument) {
@@ -106,6 +106,20 @@ public class RequestMapping {
             }
         }
         return null;
+    }
+
+    public @JsonIgnore List<String> removeAllTopicsAfter(String topicStartingPoint) {
+        List<String> removedTopics = new ArrayList<>();
+        TopicEntity currTopicEntity = allTopics.get(topicStartingPoint);
+        while (!currTopicEntity.isSink()) {
+            for (String child : currTopicEntity.getChildren()) {
+                allTopics.remove(child);
+                removedTopics.add(child);
+            }
+        }
+        removedTopics.add(currTopicEntity.getName());
+        allTopics.remove(currTopicEntity.getName());
+        return removedTopics;
     }
 
     public void addDependentRequest(Request r) {

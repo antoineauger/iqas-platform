@@ -1,4 +1,4 @@
-![iqas_logo](/src/main/resources/web/iqas_logo.png?raw=true "iQAS logo")
+![iqas_logo](/src/main/resources/web/figures/iqas_logo.png?raw=true "iQAS logo")
 
 # iQAS-platform
 

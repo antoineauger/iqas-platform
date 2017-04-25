@@ -25,6 +25,8 @@ import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
 import static akka.pattern.Patterns.ask;
+import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.SENSOR;
+import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.CONNECTION_REPORT;
 import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 import static fr.isae.iqas.model.request.State.Status.*;
 
@@ -40,11 +42,10 @@ public class AutonomicManagerActor extends UntypedActor {
 
     private Map<String, Boolean> connectedSensors; // SensorIDs <-> connected (true/false)
 
-    private ActorRef kafkaAdminActor = null;
-    private ActorRef monitorActor = null;
-    private ActorRef analyzeActor = null;
-    private ActorRef planActor = null;
-    private ActorRef executeActor = null;
+    private ActorRef kafkaAdminActor;
+    private ActorRef monitorActor;
+    private ActorRef analyzeActor;
+    private ActorRef planActor;
 
     public AutonomicManagerActor(Properties prop, ActorRef kafkaAdminActor, MongoController mongoController, FusekiController fusekiController) {
         this.kafkaAdminActor = kafkaAdminActor;
@@ -93,9 +94,6 @@ public class AutonomicManagerActor extends UntypedActor {
                 if (planActor != null) {
                     getContext().stop(planActor);
                 }
-                if (executeActor != null) {
-                    getContext().stop(executeActor);
-                }
                 getContext().stop(self());
             }
         }
@@ -135,9 +133,6 @@ public class AutonomicManagerActor extends UntypedActor {
                             }
                         }, context().dispatcher());
             }
-            else if (incomingReq.getCurrent_status() == UPDATED) {
-                monitorActor.tell(incomingReq, getSelf());
-            }
             else if (incomingReq.getCurrent_status() == REMOVED) {
                 monitorActor.tell(incomingReq, getSelf());
             }
@@ -145,12 +140,16 @@ public class AutonomicManagerActor extends UntypedActor {
                 log.error("Unknown state for request " + incomingReq.getRequest_id() + " at this stage");
             }
         }
-        // SymptomMsg messages [received from Monitor]
         else if (message instanceof MAPEKInternalMsg.SymptomMsg) {
             MAPEKInternalMsg.SymptomMsg symptomMsg = (MAPEKInternalMsg.SymptomMsg) message;
-            if (symptomMsg.getSymptom() == MAPEKInternalMsg.SymptomMAPEK.CONNECTION_REPORT && symptomMsg.getAbout() == MAPEKInternalMsg.EntityMAPEK.SENSOR) {
+            // SymptomMsg messages [received from Monitor]
+            if (symptomMsg.getSymptom() == CONNECTION_REPORT && symptomMsg.getAbout() == SENSOR) {
                 connectedSensors = symptomMsg.getConnectedSensors();
                 log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), connectedSensors.toString());
+            }
+            // Sensor UPDATE in Fuseki
+            else if (symptomMsg.getSymptom() == MAPEKInternalMsg.SymptomMAPEK.UPDATED && symptomMsg.getAbout() == SENSOR) {
+                monitorActor.tell(new MAPEKInternalMsg.SymptomMsg(MAPEKInternalMsg.SymptomMAPEK.UPDATED, SENSOR), getSelf());
             }
         }
     }

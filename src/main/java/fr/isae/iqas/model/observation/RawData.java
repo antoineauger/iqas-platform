@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 public class RawData {
-
     private Timestamp date;
     private Double value;
     private String producer;

@@ -12,9 +12,7 @@ import akka.stream.javadsl.Sink;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.message.ObsRateReportMsg;
-import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
-import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
@@ -42,11 +40,7 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
     }
 
     @Override
-    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph(String topicToPublish,
-                                                                                                                           ObservationLevel askedLevel,
-                                                                                                                           Operator operatorToApply) {
-
-        final ObservationLevel askedLevelFinal = askedLevel;
+    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph() {
         runnableGraph = GraphDSL
                 .create(builder -> {
                     // Definition of the broadcast for the MAPE-K monitoring
@@ -77,7 +71,7 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                             Flow.of(RawData.class).map(r -> {
                                 ObjectMapper mapper = new ObjectMapper();
                                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                return new ProducerRecord<byte[], String>(topicToPublish, mapper.writeValueAsString(r));
+                                return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                             })
                     );
 
@@ -86,7 +80,6 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                             .viaFanOut(bcast)
                             .toInlet(rawDataToProdRecord.in());
 
-                    // ################################# END OF YOUR CODE #################################
                     // Do not remove - useful for MAPE-K monitoring
 
                     builder.from(bcast)
@@ -100,8 +93,6 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                             })));
 
                     return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
-
-                    // ################################# END OF YOUR CODE #################################
                 });
 
         return runnableGraph;
