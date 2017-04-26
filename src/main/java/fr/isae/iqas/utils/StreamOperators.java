@@ -1,4 +1,4 @@
-package fr.isae.iqas.mechanisms;
+package fr.isae.iqas.utils;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 
@@ -8,6 +8,7 @@ import java.util.List;
 /**
  * Created by an.auger on 09/11/2016.
  */
+// TODO refactor, to keep?
 public class StreamOperators {
 
     /**

@@ -11,6 +11,7 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import fr.isae.iqas.config.Config;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import fr.isae.iqas.pipelines.Pipeline;
 import fr.isae.iqas.utils.ActorUtils;
@@ -23,7 +24,6 @@ import scala.concurrent.Await;
 import scala.concurrent.Future;
 
 import java.util.ArrayList;
-import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -39,10 +39,9 @@ public class FusekiRESTController extends AllDirectives {
     private UntypedActorContext context;
     private String pathPipelineWatcherActor;
 
-    public FusekiRESTController(Properties prop, UntypedActorContext context, String pathPipelineWatcherActor) {
-        this.controller = new FusekiController(prop);
-        String fullQoOIRI = prop.getProperty("qooIRI");
-        this.baseQoOIRI = fullQoOIRI.substring(0,fullQoOIRI.length()-1);
+    public FusekiRESTController(Config iqasConfig, UntypedActorContext context, String pathPipelineWatcherActor) {
+        this.controller = new FusekiController(iqasConfig);
+        this.baseQoOIRI = iqasConfig.getIRIForPrefix("qoo", false);
         this.context = context;
         this.pathPipelineWatcherActor = pathPipelineWatcherActor;
     }

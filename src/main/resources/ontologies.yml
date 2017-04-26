@@ -1,0 +1,48 @@
+# Ontology namespaces
+
+ns:
+  - prefix: qoo
+    IRI: http://isae.fr/iqas/qoo-ontology#
+
+  - prefix: ssn
+    IRI: http://purl.oclc.org/NET/ssnx/ssn#
+
+  - prefix: iot-lite
+    IRI: http://purl.oclc.org/NET/UNIS/fiware/iot-lite#
+
+  - prefix: geo
+    IRI: http://www.w3.org/2003/01/geo/wgs84_pos#
+
+  - prefix: rdf
+    IRI: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+
+  - prefix: dul
+    IRI: http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#
+
+  - prefix: qu
+    IRI: http://purl.org/NET/ssnx/qu/qu#
+
+  - prefix: m3-lite
+    IRI: http://purl.org/iot/vocab/m3-lite#
+
+# Ontology imports
+
+load_from_disk: true
+file_locations:
+  - forPrefix: qoo
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/qoo-onto-full-jena.rdf
+
+  - forPrefix: ssn
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/ssn.rdf
+
+  - forPrefix: geo
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/wgs84_pos
+
+  - forPrefix: dul
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/DUL.rdf
+
+  - forPrefix: qu
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/qu.owl
+
+  - forPrefix: m3-lite
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/m3-lite.owl

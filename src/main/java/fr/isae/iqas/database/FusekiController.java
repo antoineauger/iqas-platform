@@ -1,5 +1,6 @@
 package fr.isae.iqas.database;
 
+import fr.isae.iqas.config.Config;
 import fr.isae.iqas.model.jsonld.*;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -12,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -22,25 +22,19 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FusekiController {
     private Logger log = LoggerFactory.getLogger(FusekiController.class);
 
-    private String sparqlService = null;
-    private String baseStringForRequests = null;
-    private Map<String, String> namespaces = null;
+    private String sparqlService;
+    private String baseStringForRequests;
+    private Map<String, String> namespaces;
 
-    public FusekiController(Properties prop) {
-        this.sparqlService = prop.getProperty("fuseki_query_endpoint");
+    public FusekiController(Config iqasConfig) {
+        this.sparqlService = iqasConfig.getProp().getProperty("fuseki_query_endpoint");
 
         this.namespaces = new ConcurrentHashMap<>();
-        this.namespaces.put("ssn", prop.getProperty("ssnIRI"));
-        this.namespaces.put("iot-lite", prop.getProperty("iotliteIRI"));
-        this.namespaces.put("qoo", prop.getProperty("qooIRI"));
-        this.namespaces.put("geo", prop.getProperty("geoIRI"));
-        this.namespaces.put("rdf", prop.getProperty("rdfIRI"));
-
-        this.baseStringForRequests = "PREFIX ssn: <" + namespaces.get("ssn") + ">\n";
-        this.baseStringForRequests += "PREFIX iot-lite: <" + namespaces.get("iot-lite") + ">\n";
-        this.baseStringForRequests += "PREFIX qoo: <" + namespaces.get("qoo") + ">\n";
-        this.baseStringForRequests += "PREFIX geo: <" + namespaces.get("geo") + ">\n";
-        this.baseStringForRequests += "PREFIX rdf: <" + namespaces.get("rdf") + ">\n";
+        this.baseStringForRequests = "";
+        for (String prefix : iqasConfig.getAllPrefixes()) {
+            this.namespaces.put(prefix, iqasConfig.getIRIForPrefix(prefix, true));
+            this.baseStringForRequests = this.baseStringForRequests.concat("PREFIX " + prefix + ": <" + namespaces.get(prefix) + ">\n");
+        }
 
         log.info("FusekiController successfully created!");
     }

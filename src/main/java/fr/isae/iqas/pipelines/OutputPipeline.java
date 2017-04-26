@@ -18,6 +18,7 @@ import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.quality.QoOAttribute;
+import org.apache.jena.rdf.model.Model;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
@@ -56,7 +57,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
         this.allVirtualSensors = new ConcurrentHashMap<>();
     }
 
-    public void setSensorContext(VirtualSensorList virtualSensorList) {
+    public void setSensorContext(VirtualSensorList virtualSensorList, Model qooBaseModel) {
         this.allVirtualSensors.clear();
         for (VirtualSensor v : virtualSensorList.sensors) {
             String sensorID = v.sensor_id.split("#")[1];

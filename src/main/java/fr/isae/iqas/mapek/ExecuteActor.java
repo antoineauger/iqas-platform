@@ -51,17 +51,17 @@ import java.util.stream.Collectors;
 public class ExecuteActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private ConsumerSettings consumerSettings = null;
-    private Set<TopicPartition> watchedTopics = null;
-    private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource = null;
-    private Sink<ProducerRecord<byte[], String>, CompletionStage<Done>> kafkaSink = null;
+    private ConsumerSettings consumerSettings;
+    private Set<TopicPartition> watchedTopics;
+    private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource;
+    private Sink<ProducerRecord<byte[], String>, CompletionStage<Done>> kafkaSink;
 
-    private UniqueKillSwitch killSwitch = null;
-    private Pair<Pair<UniqueKillSwitch, Materializer>, CompletionStage<Done>> stream = null;
-    private ActorRef kafkaActor = null;
+    private UniqueKillSwitch killSwitch;
+    private Pair<Pair<UniqueKillSwitch, Materializer>, CompletionStage<Done>> stream;
+    private ActorRef kafkaActor;
 
-    private ActorMaterializer materializer = null;
-    private IPipeline pipelineToEnforce = null;
+    private ActorMaterializer materializer;
+    private IPipeline pipelineToEnforce ;
 
     public ExecuteActor(Properties prop, IPipeline pipelineToEnforce, ObservationLevel askedObsLevel, Set<String> topicsToPullFrom, String topicToPublish) {
         String randomNumber = new ObjectId().toString();
