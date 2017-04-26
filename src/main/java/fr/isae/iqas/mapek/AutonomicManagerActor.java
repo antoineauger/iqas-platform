@@ -7,6 +7,7 @@ import akka.dispatch.OnComplete;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
+import fr.isae.iqas.config.Config;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.KafkaTopicMsg;
@@ -47,7 +48,9 @@ public class AutonomicManagerActor extends UntypedActor {
     private ActorRef analyzeActor;
     private ActorRef planActor;
 
-    public AutonomicManagerActor(Properties prop, ActorRef kafkaAdminActor, MongoController mongoController, FusekiController fusekiController) {
+    public AutonomicManagerActor(Config iqasConfig, ActorRef kafkaAdminActor, MongoController mongoController, FusekiController fusekiController) {
+        Properties prop = iqasConfig.getProp();
+
         this.kafkaAdminActor = kafkaAdminActor;
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
@@ -56,7 +59,7 @@ public class AutonomicManagerActor extends UntypedActor {
 
         this.monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop, mongoController, fusekiController), "monitorActor");
         this.analyzeActor = getContext().actorOf(Props.create(AnalyzeActor.class, prop, mongoController, fusekiController), "analyzeActor");
-        this.planActor = getContext().actorOf(Props.create(PlanActor.class, prop, mongoController, fusekiController, kafkaAdminActor), "planActor");
+        this.planActor = getContext().actorOf(Props.create(PlanActor.class, iqasConfig, mongoController, fusekiController, kafkaAdminActor), "planActor");
     }
 
     @Override

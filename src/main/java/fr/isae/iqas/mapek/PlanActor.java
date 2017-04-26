@@ -8,6 +8,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
+import fr.isae.iqas.config.Config;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.KafkaTopicMsg;
@@ -23,7 +24,9 @@ import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.pipelines.*;
 import fr.isae.iqas.utils.ActorUtils;
+import fr.isae.iqas.utils.JenaUtils;
 import fr.isae.iqas.utils.MapUtils;
+import org.apache.jena.ontology.OntModel;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -44,12 +47,14 @@ import static fr.isae.iqas.utils.PipelineUtils.*;
 public class PlanActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+    private Config iqasConfig;
     private Properties prop;
     private MongoController mongoController;
     private FusekiController fusekiController;
 
     private FiniteDuration reportIntervalRateAndQoO;
     private VirtualSensorList virtualSensorList;
+    private OntModel qoOntoBaseModel;
 
     private ActorRef kafkaAdminActor;
     private ActorRef monitorActor;
@@ -60,8 +65,9 @@ public class PlanActor extends UntypedActor {
     private Map<String, IPipeline> enforcedPipelines; // ActorPathNames <-> IPipeline objects
     private Map<String, String> mappingTopicsActors; // DestinationTopic <-> ActorPathNames
 
-    public PlanActor(Properties prop, MongoController mongoController, FusekiController fusekiController, ActorRef kafkaAdminActor) {
-        this.prop = prop;
+    public PlanActor(Config iqasConfig, MongoController mongoController, FusekiController fusekiController, ActorRef kafkaAdminActor) {
+        this.iqasConfig = iqasConfig;
+        this.prop = iqasConfig.getProp();
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
         this.kafkaAdminActor = kafkaAdminActor;
@@ -79,6 +85,7 @@ public class PlanActor extends UntypedActor {
     @Override
     public void preStart() {
         this.virtualSensorList = fusekiController._findAllSensors();
+        this.qoOntoBaseModel = JenaUtils.loadQoOntoWithImports(iqasConfig);
     }
 
     @Override
@@ -142,7 +149,7 @@ public class PlanActor extends UntypedActor {
                                                 pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
                                                 // Specific settings since it is an OutputPipeline
-                                                setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest, virtualSensorList);
+                                                setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest, virtualSensorList, qoOntoBaseModel);
 
                                                 ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
                                                         EntityMAPEK.PIPELINE,
@@ -181,7 +188,7 @@ public class PlanActor extends UntypedActor {
                 VirtualSensorList newVirtualSensorList = fusekiController._findAllSensors();
                 enforcedPipelines.forEach((actorPathName, pipelineObject) -> {
                     if (pipelineObject instanceof OutputPipeline) {
-                        ((OutputPipeline) pipelineObject).setSensorContext(newVirtualSensorList);
+                        ((OutputPipeline) pipelineObject).setSensorContext(newVirtualSensorList, null);
                         execActorsRefs.get(actorPathName).tell(pipelineObject, getSelf());
                     }
                 });
@@ -309,7 +316,7 @@ public class PlanActor extends UntypedActor {
                         setOptionsForThrottlePipeline((ThrottlePipeline) pipeline, incomingRequest);
                     }
                     else if (pipeline instanceof OutputPipeline) {
-                        setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest, virtualSensorList);
+                        setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest, virtualSensorList, qoOntoBaseModel);
                     }
 
                     pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());

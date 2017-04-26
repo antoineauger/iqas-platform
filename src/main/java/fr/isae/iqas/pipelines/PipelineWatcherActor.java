@@ -3,6 +3,7 @@ package fr.isae.iqas.pipelines;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import fr.isae.iqas.config.Config;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import org.apache.commons.codec.binary.Hex;
 import scala.concurrent.duration.FiniteDuration;
@@ -32,19 +33,19 @@ public class PipelineWatcherActor extends UntypedActor {
             OutputPipeline.class // OBS_FRESHNESS
     });
 
-    private FiniteDuration rateToCheck = null;
-    private MessageDigest md = null;
-    private String qooPipelinesDir = null;
-    private Map<String, String> md5Pipelines = null;
-    private Set<String> filesToCheck = null;
-    private Map<String, Class> pipelineObjects = null;
+    private FiniteDuration rateToCheck;
+    private MessageDigest md;
+    private String qooPipelinesDir;
+    private Map<String, String> md5Pipelines;
+    private Map<String, Class> pipelineObjects;
 
-    public PipelineWatcherActor(Properties prop) {
+    public PipelineWatcherActor(Config iqasConfid) {
         try {
             this.md = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
             log.error(e.toString());
         }
+        Properties prop = iqasConfid.getProp();
         rateToCheck = new FiniteDuration(Long.parseLong(prop.getProperty("frequency_rate_to_check_seconds")), TimeUnit.SECONDS);
         qooPipelinesDir = prop.getProperty("qoo_pipelines_dir");
         md5Pipelines = new ConcurrentHashMap<>();
@@ -144,7 +145,7 @@ public class PipelineWatcherActor extends UntypedActor {
     }
 
     private void checkPipelines() {
-        filesToCheck = new HashSet<>(md5Pipelines.keySet());
+        Set<String> filesToCheck = new HashSet<>(md5Pipelines.keySet());
         List<String> listPipelines = getAllPipelineFiles();
 
         for (String pipelineName : listPipelines) {

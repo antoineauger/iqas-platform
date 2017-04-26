@@ -5,6 +5,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import fr.isae.iqas.config.Config;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.KafkaAdminActor;
@@ -34,14 +35,14 @@ public class APIGatewayActor extends UntypedActor {
     private ActorRef autoManager;
     private ActorRef kafkaAdminActor;
 
-    public APIGatewayActor(Properties prop, MongoController mongoController, FusekiController fusekiController) {
-        this.prop = prop;
+    public APIGatewayActor(Config iqasConfig, MongoController mongoController, FusekiController fusekiController) {
+        this.prop = iqasConfig.getProp();
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
 
         this.kafkaAdminActor = getContext().actorOf(Props.create(KafkaAdminActor.class, prop), "KafkaAdminActor");
         this.autoManager = getContext()
-                .actorOf(Props.create(AutonomicManagerActor.class, this.prop, this.kafkaAdminActor, this.mongoController, this.fusekiController), "autoManager");
+                .actorOf(Props.create(AutonomicManagerActor.class, iqasConfig, this.kafkaAdminActor, this.mongoController, this.fusekiController), "autoManager");
     }
 
     @Override
