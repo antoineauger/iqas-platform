@@ -30,11 +30,6 @@ import fr.isae.iqas.pipelines.PipelineWatcherActor;
 import fr.isae.iqas.server.APIGatewayActor;
 import fr.isae.iqas.server.RESTServer;
 import org.apache.commons.io.IOUtils;
-import org.apache.jena.ontology.*;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +37,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.concurrent.CompletionStage;
-
-import static org.apache.jena.ontology.OntModelSpec.OWL_MEM;
 
 /**
  * Created by an.auger on 13/09/2016.

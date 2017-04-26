@@ -24,7 +24,6 @@ import scala.concurrent.Await;
 import scala.concurrent.Future;
 
 import java.util.ArrayList;
-import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;

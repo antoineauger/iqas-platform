@@ -2,7 +2,6 @@ package fr.isae.iqas.database;
 
 import fr.isae.iqas.config.Config;
 import fr.isae.iqas.model.jsonld.*;
-import org.apache.jena.base.Sys;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
