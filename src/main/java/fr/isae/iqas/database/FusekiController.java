@@ -49,22 +49,29 @@ public class FusekiController {
         sensorList.sensors = new ArrayList<>();
 
         final String req = baseStringForRequests +
-                "SELECT ?sensor ?topic ?url ?interfaceType ?interfaceDescription ?longitude ?latitude ?alt ?altRelative ?relativeLocation\n" +
+                "SELECT ?sensor ?topic ?fof ?unit ?quantityKind ?url ?interfaceType ?interfaceDescription ?longitude ?latitude ?alt ?altRelative ?relativeLocation\n" +
                 "WHERE {\n" +
-                "?sensor rdf:type ssn:Sensor .\n" +
-                "?sensor ssn:madeObservation ?o .\n" +
-                "?o ssn:observedProperty ?topic .\n" +
-                "?sensor iot-lite:exposedBy ?s .\n" +
-                "?topic qoo:canBeRetrievedThrough ?s .\n" +
-                "?s iot-lite:endpoint ?url .\n" +
-                "?s iot-lite:interfaceType ?interfaceType .\n" +
-                "?s iot-lite:interfaceDescription ?interfaceDescription .\n" +
-                "?sensor geo:location ?pos .\n" +
-                "?pos geo:long ?longitude .\n" +
-                "?pos geo:lat ?latitude .\n" +
-                "?pos iot-lite:relativeLocation ?relativeLocation .\n" +
-                "?pos iot-lite:altRelative ?altRelative .\n" +
-                "?pos geo:alt ?alt\n" +
+                "  ?sensor rdf:type ssn:Sensor .\n" +
+                "  ?sensor ssn:madeObservation ?o .\n" +
+                "  ?o ssn:observationResult ?obsResult .\n" +
+                "  ?obsResult iot-lite:hasValue ?obsVal .\n" +
+                "  ?obsVal iot-lite:hasUnit ?u .\n" +
+                "  ?u rdf:type ?unit .\n" +
+                "  ?obsVal iot-lite:hasQuantityKind ?q .\n" +
+                "  ?q rdf:type ?quantityKind .\n" +
+                "  ?o ssn:observedProperty ?topic .\n" +
+                "  ?topic ssn:isPropertyOf ?fof .\n" +
+                "  ?sensor iot-lite:exposedBy ?s .\n" +
+                "  ?prop qoo:canBeRetrievedThrough ?s .\n" +
+                "  ?s iot-lite:endpoint ?url .\n" +
+                "  ?s iot-lite:interfaceType ?interfaceType .\n" +
+                "  ?s iot-lite:interfaceDescription ?interfaceDescription .\n" +
+                "  ?sensor geo:location ?pos .\n" +
+                "  ?pos geo:long ?longitude .\n" +
+                "  ?pos geo:lat ?latitude .\n" +
+                "  ?pos iot-lite:relativeLocation ?relativeLocation .\n" +
+                "  ?pos iot-lite:altRelative ?altRelative .\n" +
+                "  ?pos geo:alt ?alt\n" +
                 "}";
 
         QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
@@ -74,6 +81,9 @@ public class FusekiController {
 
             Resource id = (Resource) binding.get("sensor");
             Resource topic = (Resource) binding.get("topic");
+            Resource fof = (Resource) binding.get("fof");
+            Resource unit = (Resource) binding.get("unit");
+            Resource quantityKind = (Resource) binding.get("quantityKind");
             Literal url = binding.getLiteral("url");
             Literal interfaceType = binding.getLiteral("interfaceType");
             Literal interfaceDescription = binding.getLiteral("interfaceDescription");
@@ -84,18 +94,24 @@ public class FusekiController {
             Literal relativeLocation = binding.getLiteral("relativeLocation");
 
             VirtualSensor sensorTemp = new VirtualSensor();
-
             sensorTemp.sensor_id = id.getURI();
-            Location locTemp = new Location();
-            locTemp.latitude = latitude.getString();
-            locTemp.longitude = longitude.getString();
-            locTemp.altitude = alt.getString();
-            locTemp.relative_altitude = altRelative.getString();
-            locTemp.relative_location = relativeLocation.getString();
-            sensorTemp.location = locTemp;
+
+            sensorTemp.location = new Location();
+            sensorTemp.location.latitude = latitude.getString();
+            sensorTemp.location.longitude = longitude.getString();
+            sensorTemp.location.altitude = alt.getString();
+            sensorTemp.location.relative_altitude = altRelative.getString();
+            sensorTemp.location.relative_location = relativeLocation.getString();
+
+            sensorTemp.madeObservation = new Observation();
+            sensorTemp.madeObservation.featureOfInterest = fof.getURI();
+            sensorTemp.madeObservation.observedProperty = topic.getURI();
+
+            sensorTemp.observationValue = new ObservationValue();
+            sensorTemp.observationValue.hasQuantityKind = quantityKind.getURI();
+            sensorTemp.observationValue.hasUnit = unit.getURI();
 
             sensorTemp.endpoint = new ServiceEndpoint();
-            sensorTemp.endpoint.topic = topic.getURI();
             sensorTemp.endpoint.url = url.getString();
             sensorTemp.endpoint.if_type = interfaceType.getString();
             sensorTemp.endpoint.description = interfaceDescription.getString();
@@ -116,22 +132,30 @@ public class FusekiController {
         VirtualSensor sensor = null;
 
         final String req = baseStringForRequests +
-                "SELECT ?sensor ?topic ?url ?interfaceType ?interfaceDescription ?longitude ?latitude ?alt ?altRelative ?relativeLocation\n" +
+                "SELECT ?sensor ?topic ?fof ?unit ?quantityKind ?url ?interfaceType ?interfaceDescription ?longitude ?latitude ?alt ?altRelative ?relativeLocation\n" +
                 "WHERE {\n" +
-                "?sensor iot-lite:id \"" + sensor_id + "\" .\n" +
-                "?sensor ssn:madeObservation ?o .\n" +
-                "?o ssn:observedProperty ?topic .\n" +
-                "?sensor iot-lite:exposedBy ?s .\n" +
-                "?topic qoo:canBeRetrievedThrough ?s .\n" +
-                "?s iot-lite:endpoint ?url .\n" +
-                "?s iot-lite:interfaceType ?interfaceType .\n" +
-                "?s iot-lite:interfaceDescription ?interfaceDescription .\n" +
-                "?sensor geo:location ?pos .\n" +
-                "?pos geo:long ?longitude .\n" +
-                "?pos geo:lat ?latitude .\n" +
-                "?pos iot-lite:relativeLocation ?relativeLocation .\n" +
-                "?pos iot-lite:altRelative ?altRelative .\n" +
-                "?pos geo:alt ?alt\n" +
+                "  ?sensor iot-lite:id \"" + sensor_id + "\" .\n" +
+                "  ?sensor rdf:type ssn:Sensor .\n" +
+                "  ?sensor ssn:madeObservation ?o .\n" +
+                "  ?o ssn:observationResult ?obsResult .\n" +
+                "  ?obsResult iot-lite:hasValue ?obsVal .\n" +
+                "  ?obsVal iot-lite:hasUnit ?u .\n" +
+                "  ?u rdf:type ?unit .\n" +
+                "  ?obsVal iot-lite:hasQuantityKind ?q .\n" +
+                "  ?q rdf:type ?quantityKind .\n" +
+                "  ?o ssn:observedProperty ?topic .\n" +
+                "  ?topic ssn:isPropertyOf ?fof .\n" +
+                "  ?sensor iot-lite:exposedBy ?s .\n" +
+                "  ?prop qoo:canBeRetrievedThrough ?s .\n" +
+                "  ?s iot-lite:endpoint ?url .\n" +
+                "  ?s iot-lite:interfaceType ?interfaceType .\n" +
+                "  ?s iot-lite:interfaceDescription ?interfaceDescription .\n" +
+                "  ?sensor geo:location ?pos .\n" +
+                "  ?pos geo:long ?longitude .\n" +
+                "  ?pos geo:lat ?latitude .\n" +
+                "  ?pos iot-lite:relativeLocation ?relativeLocation .\n" +
+                "  ?pos iot-lite:altRelative ?altRelative .\n" +
+                "  ?pos geo:alt ?alt\n" +
                 "}";
 
         QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
@@ -141,6 +165,9 @@ public class FusekiController {
 
             Resource id = (Resource) binding.get("sensor");
             Resource topic = (Resource) binding.get("topic");
+            Resource fof = (Resource) binding.get("fof");
+            Resource unit = (Resource) binding.get("unit");
+            Resource quantityKind = (Resource) binding.get("quantityKind");
             Literal url = binding.getLiteral("url");
             Literal interfaceType = binding.getLiteral("interfaceType");
             Literal interfaceDescription = binding.getLiteral("interfaceDescription");
@@ -153,16 +180,22 @@ public class FusekiController {
             sensor = new VirtualSensor();
             sensor.sensor_id = id.getURI();
 
-            Location locTemp = new Location();
-            locTemp.latitude = latitude.getString();
-            locTemp.longitude = longitude.getString();
-            locTemp.altitude = alt.getString();
-            locTemp.relative_altitude = altRelative.getString();
-            locTemp.relative_location = relativeLocation.getString();
-            sensor.location = locTemp;
+            sensor.location = new Location();
+            sensor.location.latitude = latitude.getString();
+            sensor.location.longitude = longitude.getString();
+            sensor.location.altitude = alt.getString();
+            sensor.location.relative_altitude = altRelative.getString();
+            sensor.location.relative_location = relativeLocation.getString();
+
+            sensor.madeObservation = new Observation();
+            sensor.madeObservation.featureOfInterest = fof.getURI();
+            sensor.madeObservation.observedProperty = topic.getURI();
+
+            sensor.observationValue = new ObservationValue();
+            sensor.observationValue.hasQuantityKind = quantityKind.getURI();
+            sensor.observationValue.hasUnit = unit.getURI();
 
             sensor.endpoint = new ServiceEndpoint();
-            sensor.endpoint.topic = topic.getURI();
             sensor.endpoint.url = url.getString();
             sensor.endpoint.if_type = interfaceType.getString();
             sensor.endpoint.description = interfaceDescription.getString();
@@ -182,12 +215,19 @@ public class FusekiController {
         sensorList.sensors = new ArrayList<>();
 
         String req = baseStringForRequests +
-                "SELECT ?sensor ?topic ?url ?interfaceType ?interfaceDescription ?longitude ?latitude ?alt ?altRelative ?relativeLocation\n" +
+                "SELECT ?sensor ?topic ?fof ?unit ?quantityKind ?url ?interfaceType ?interfaceDescription ?longitude ?latitude ?alt ?altRelative ?relativeLocation\n" +
                 "WHERE {\n" +
-                "?sensor rdf:type ssn:Sensor .\n" +
-                "?sensor ssn:madeObservation ?o .\n" +
-                "?o ssn:observedProperty ?topic .\n" +
-                "?sensor iot-lite:exposedBy ?s .\n";
+                "  ?sensor rdf:type ssn:Sensor .\n" +
+                "  ?sensor ssn:madeObservation ?o .\n" +
+                "  ?o ssn:observationResult ?obsResult .\n" +
+                "  ?obsResult iot-lite:hasValue ?obsVal .\n" +
+                "  ?obsVal iot-lite:hasUnit ?u .\n" +
+                "  ?u rdf:type ?unit .\n" +
+                "  ?obsVal iot-lite:hasQuantityKind ?q .\n" +
+                "  ?q rdf:type ?quantityKind .\n" +
+                "  ?o ssn:observedProperty ?topic .\n" +
+                "  ?topic ssn:isPropertyOf ?fof .\n" +
+                "  ?sensor iot-lite:exposedBy ?s .\n";
 
         if (!topic_id.equals("ALL")) {
             req += "qoo:" + topic_id + " rdf:type ssn:Property .\n" +
@@ -219,6 +259,9 @@ public class FusekiController {
 
             Resource id = (Resource) binding.get("sensor");
             Resource topic = (Resource) binding.get("topic");
+            Resource fof = (Resource) binding.get("fof");
+            Resource unit = (Resource) binding.get("unit");
+            Resource quantityKind = (Resource) binding.get("quantityKind");
             Literal url = binding.getLiteral("url");
             Literal interfaceType = binding.getLiteral("interfaceType");
             Literal interfaceDescription = binding.getLiteral("interfaceDescription");
@@ -229,18 +272,24 @@ public class FusekiController {
             Literal relativeLocation = binding.getLiteral("relativeLocation");
 
             VirtualSensor sensorTemp = new VirtualSensor();
-
             sensorTemp.sensor_id = id.getURI();
-            Location locTemp = new Location();
-            locTemp.latitude = latitude.getString();
-            locTemp.longitude = longitude.getString();
-            locTemp.altitude = alt.getString();
-            locTemp.relative_altitude = altRelative.getString();
-            locTemp.relative_location = relativeLocation.getString();
+
+            sensorTemp.location = new Location();
+            sensorTemp.location.latitude = latitude.getString();
+            sensorTemp.location.longitude = longitude.getString();
+            sensorTemp.location.altitude = alt.getString();
+            sensorTemp.location.relative_altitude = altRelative.getString();
+            sensorTemp.location.relative_location = relativeLocation.getString();
+
+            sensorTemp.madeObservation = new Observation();
+            sensorTemp.madeObservation.featureOfInterest = fof.getURI();
+            sensorTemp.madeObservation.observedProperty = topic.getURI();
+
+            sensorTemp.observationValue = new ObservationValue();
+            sensorTemp.observationValue.hasQuantityKind = quantityKind.getURI();
+            sensorTemp.observationValue.hasUnit = unit.getURI();
 
             sensorTemp.endpoint = new ServiceEndpoint();
-            sensorTemp.location = locTemp;
-            sensorTemp.endpoint.topic = topic.getURI();
             sensorTemp.endpoint.url = url.getString();
             sensorTemp.endpoint.if_type = interfaceType.getString();
             sensorTemp.endpoint.description = interfaceDescription.getString();
@@ -311,13 +360,11 @@ public class FusekiController {
         ResultSet r = q.execSelect();
         while (r.hasNext()) {
             binding = r.nextSolution();
-            Resource topicRes = (Resource) binding.get("service");
             Literal url = binding.getLiteral("url");
             Literal interfaceType = binding.getLiteral("interfaceType");
             Literal interfaceDescription = binding.getLiteral("interfaceDescription");
 
             ServiceEndpoint serviceEndpointTemp = new ServiceEndpoint();
-            serviceEndpointTemp.topic = topicRes.getURI();
             serviceEndpointTemp.url = url.getString();
             serviceEndpointTemp.if_type = interfaceType.getString();
             serviceEndpointTemp.description = interfaceDescription.getString();
@@ -444,8 +491,8 @@ public class FusekiController {
         final String req = baseStringForRequests +
                 "SELECT DISTINCT ?attribute ?variation\n" +
                 "WHERE {\n" +
-                "?attribute rdf:type qoo:QoOAttribute .\n" +
-                "?attribute qoo:shouldBe ?variation\n" +
+                "  ?attribute rdf:type qoo:QoOAttribute .\n" +
+                "  ?attribute qoo:shouldBe ?variation\n" +
                 "}";
 
         QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
@@ -485,12 +532,12 @@ public class FusekiController {
         final String req = baseStringForRequests +
                 "SELECT ?param ?doc ?impact ?capaVariation ?attrVariation\n" +
                 "WHERE {\n" +
-                "?param rdf:type qoo:QoOCustomizableParameter .\n" +
-                "?param qoo:documentation ?doc .\n" +
-                "?param qoo:has ?effect .\n" +
-                "?effect qoo:impacts ?impact .\n" +
-                "?effect qoo:capabilityVariation ?capaVariation .\n" +
-                "?effect qoo:qooAttributeVariation ?attrVariation\n" +
+                "  ?param rdf:type qoo:QoOCustomizableParameter .\n" +
+                "  ?param qoo:documentation ?doc .\n" +
+                "  ?param qoo:has ?effect .\n" +
+                "  ?effect qoo:impacts ?impact .\n" +
+                "  ?effect qoo:capabilityVariation ?capaVariation .\n" +
+                "  ?effect qoo:qooAttributeVariation ?attrVariation\n" +
                 "}";
 
         QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
@@ -550,12 +597,12 @@ public class FusekiController {
         final String req = baseStringForRequests +
                 "SELECT ?sensor ?topic ?minValue ?maxValue\n" +
                 "WHERE {\n" +
-                "?sensor rdf:type ssn:Sensor .\n" +
-                "?sensor ssn:hasMeasurementCapability ?capa .\n" +
-                "?capa ssn:forProperty ?topic .\n" +
-                "?capa ssn:hasMeasurementProperty ?prop .\n" +
-                "?prop qoo:hasMinValue ?minValue .\n" +
-                "?prop qoo:hasMaxValue ?maxValue\n" +
+                "  ?sensor rdf:type ssn:Sensor .\n" +
+                "  ?sensor ssn:hasMeasurementCapability ?capa .\n" +
+                "  ?capa ssn:forProperty ?topic .\n" +
+                "  ?capa ssn:hasMeasurementProperty ?prop .\n" +
+                "  ?prop qoo:hasMinValue ?minValue .\n" +
+                "  ?prop qoo:hasMaxValue ?maxValue\n" +
                 "}";
 
         QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);

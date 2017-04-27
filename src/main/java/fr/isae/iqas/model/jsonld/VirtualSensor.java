@@ -15,5 +15,10 @@ public class VirtualSensor {
     @JsonldProperty("http://www.w3.org/2003/01/geo/wgs84_pos#location")
     public Location location;
 
+    @JsonldProperty("http://purl.oclc.org/NET/ssnx/ssn#madeObservation")
+    public Observation madeObservation;
+
+    public ObservationValue observationValue;
+
     public ServiceEndpoint endpoint;
 }
