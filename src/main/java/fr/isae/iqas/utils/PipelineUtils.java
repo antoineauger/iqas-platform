@@ -11,7 +11,7 @@ import fr.isae.iqas.pipelines.FilterPipeline;
 import fr.isae.iqas.pipelines.IngestPipeline;
 import fr.isae.iqas.pipelines.OutputPipeline;
 import fr.isae.iqas.pipelines.ThrottlePipeline;
-import org.apache.jena.rdf.model.Model;
+import org.apache.jena.ontology.OntModel;
 
 import static akka.dispatch.Futures.future;
 
@@ -62,7 +62,7 @@ public class PipelineUtils {
         }
     }
 
-    public static void setOptionsForOutputPipeline(OutputPipeline pipeline, Request incomingRequest, VirtualSensorList virtualSensorList, Model qooBaseModel) {
+    public static void setOptionsForOutputPipeline(OutputPipeline pipeline, Request incomingRequest, VirtualSensorList virtualSensorList, OntModel qooBaseModel) {
         // Params reset
         pipeline.getParams().replace("age_max", "24 hours");
         pipeline.getParams().replace("interested_in", "");
