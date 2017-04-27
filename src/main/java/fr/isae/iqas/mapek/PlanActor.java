@@ -84,8 +84,23 @@ public class PlanActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        this.virtualSensorList = fusekiController._findAllSensors();
-        this.qoOntoBaseModel = JenaUtils.loadQoOntoWithImports(iqasConfig);
+        future(() -> fusekiController._findAllSensors(), context().dispatcher())
+                .onComplete(new OnComplete<VirtualSensorList>() {
+                    public void onComplete(Throwable throwable, VirtualSensorList virtualSensorListResult) {
+                        if (throwable == null) { // Only continue if there was no error so far
+                            virtualSensorList = virtualSensorListResult;
+                        }
+                    }
+                }, context().dispatcher());
+
+        future(() -> JenaUtils.loadQoOntoWithImports(iqasConfig), context().dispatcher())
+                .onComplete(new OnComplete<OntModel>() {
+                    public void onComplete(Throwable throwable, OntModel ontModelResult) {
+                        if (throwable == null) { // Only continue if there was no error so far
+                            qoOntoBaseModel = ontModelResult;
+                        }
+                    }
+                }, context().dispatcher());
     }
 
     @Override
@@ -185,13 +200,20 @@ public class PlanActor extends UntypedActor {
             }
             // RFCs messages - Sensor UPDATE
             else if (rfcMsg.getRfc() == RFCMAPEK.UPDATE && rfcMsg.getAbout() == EntityMAPEK.SENSOR) { // Sensor description has been updated on Fuseki
-                VirtualSensorList newVirtualSensorList = fusekiController._findAllSensors();
-                enforcedPipelines.forEach((actorPathName, pipelineObject) -> {
-                    if (pipelineObject instanceof OutputPipeline) {
-                        ((OutputPipeline) pipelineObject).setSensorContext(newVirtualSensorList, null);
-                        execActorsRefs.get(actorPathName).tell(pipelineObject, getSelf());
-                    }
-                });
+                future(() -> fusekiController._findAllSensors(), context().dispatcher())
+                        .onComplete(new OnComplete<VirtualSensorList>() {
+                            public void onComplete(Throwable throwable, VirtualSensorList newVirtualSensorList) {
+                                if (throwable == null) { // Only continue if there was no error so far
+                                    virtualSensorList = newVirtualSensorList;
+                                    enforcedPipelines.forEach((actorPathName, pipelineObject) -> {
+                                        if (pipelineObject instanceof OutputPipeline) {
+                                            ((OutputPipeline) pipelineObject).setSensorContext(virtualSensorList, null);
+                                            execActorsRefs.get(actorPathName).tell(pipelineObject, getSelf());
+                                        }
+                                    });
+                                }
+                            }
+                        }, context().dispatcher());
             }
         }
         // TerminatedMsg messages

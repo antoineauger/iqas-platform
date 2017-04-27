@@ -5,12 +5,15 @@ import akka.actor.UntypedActor;
 import akka.dispatch.OnComplete;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.util.Timeout;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
+import fr.isae.iqas.kafka.KafkaTopicMsg;
 import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
 import fr.isae.iqas.model.jsonld.Topic;
 import fr.isae.iqas.model.jsonld.TopicList;
+import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.MAPEKSymptomMsgWithDate;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.request.Request;
@@ -26,6 +29,8 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static akka.dispatch.Futures.future;
+import static akka.pattern.Patterns.ask;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.*;
 import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
@@ -36,17 +41,16 @@ import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 public class AnalyzeActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private Properties prop;
+    private TopicList topicList;
     private MongoController mongoController;
     private FusekiController fusekiController;
 
-    private FiniteDuration tickMAPEK = null;
-    private FiniteDuration symptomLifetime = null;
+    private FiniteDuration tickMAPEK;
+    private FiniteDuration symptomLifetime;
     private Map<String, CircularFifoBuffer> receivedObsRateSymptoms; // UniquePipelineIDs <-> [<SymptomMsg,received date>]
     private Map<String, CircularFifoBuffer> receivedQoOSymptoms; // RequestIDs <-> [<SymptomMsg,received date>]
 
     public AnalyzeActor(Properties prop, MongoController mongoController, FusekiController fusekiController) {
-        this.prop = prop;
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
 
@@ -59,6 +63,15 @@ public class AnalyzeActor extends UntypedActor {
 
     @Override
     public void preStart() {
+        future(() -> fusekiController._findAllTopics(), context().dispatcher())
+                .onComplete(new OnComplete<TopicList>() {
+                    public void onComplete(Throwable throwable, TopicList topicListResult) {
+                        if (throwable == null) { // Only continue if there was no error so far
+                            topicList = topicListResult;
+                        }
+                    }
+                }, context().dispatcher());
+
         getContext().system().scheduler().scheduleOnce(
                 tickMAPEK,
                 getSelf(), "tick", getContext().dispatcher(), getSelf());
@@ -148,7 +161,6 @@ public class AnalyzeActor extends UntypedActor {
                             requestMapping.getAllTopics().put(sinkForApp.getName(), sinkForApp);
 
                             if (requestTemp.getTopic().equals("ALL")) { // (Location = x, Topic = ALL) or (Location = ALL, Topic = ALL)
-                                TopicList topicList = fusekiController._findAllTopics();
                                 for (Topic topicObject : topicList.topics) {
                                     String topicName = topicObject.topic.split("#")[1];
                                     TopicEntity topicBase = new TopicEntity(topicName, RAW_DATA);
@@ -225,6 +237,14 @@ public class AnalyzeActor extends UntypedActor {
             }
             else if (symptomMsg.getSymptom() == UPDATED && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
                 log.info("Received Symptom : {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout());
+                future(() -> fusekiController._findAllTopics(), context().dispatcher())
+                        .onComplete(new OnComplete<TopicList>() {
+                            public void onComplete(Throwable throwable, TopicList topicListResult) {
+                                if (throwable == null) { // Only continue if there was no error so far
+                                    topicList = topicListResult;
+                                }
+                            }
+                        }, context().dispatcher());
                 tellToPlanActor(new RFCMsg(RFCMAPEK.UPDATE, EntityMAPEK.SENSOR));
             }
         }

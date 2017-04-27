@@ -77,9 +77,9 @@ public class ExecuteActor extends UntypedActor {
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"));
 
         // Kafka source
-        kafkaActor = getContext().actorOf((KafkaConsumerActor.props(consumerSettings)));
-        watchedTopics = new HashSet<>();
-        watchedTopics.addAll(topicsToPullFrom.stream().map(s -> new TopicPartition(s, 0)).collect(Collectors.toList()));
+        this.kafkaActor = getContext().actorOf((KafkaConsumerActor.props(consumerSettings)));
+        this.watchedTopics = new HashSet<>();
+        this.watchedTopics.addAll(topicsToPullFrom.stream().map(s -> new TopicPartition(s, 0)).collect(Collectors.toList()));
         this.kafkaSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(watchedTopics));
 
         // Sinks
@@ -134,7 +134,7 @@ public class ExecuteActor extends UntypedActor {
             killSwitch.shutdown();
 
             IPipeline newPipelineToEnforce = (IPipeline) message;
-            log.info("Updating pipeline " + newPipelineToEnforce.getPipelineName() + " with QoO params " + newPipelineToEnforce.getParams().toString());
+            log.info("Updating pipeline " + newPipelineToEnforce.getUniqueID());
 
             stream = kafkaSource
                     .viaMat(KillSwitches.single(), Keep.right())
