@@ -238,7 +238,6 @@ public class MonitorActor extends UntypedActor {
     }
 
     private void forwardToSpecifiedActor(SymptomMsg symptomMsgToForward, Future<ActorRef> actorRefFuture) {
-        SymptomMsg finalSymptomMsgToForward = symptomMsgToForward;
         actorRefFuture.onComplete(new OnComplete<ActorRef>() {
             @Override
             public void onComplete(Throwable t, ActorRef actor) throws Throwable {
@@ -246,7 +245,7 @@ public class MonitorActor extends UntypedActor {
                     log.error("Unable to find the AnalyzeActor: " + t.toString());
                 }
                 else {
-                    actor.tell(finalSymptomMsgToForward, getSelf());
+                    actor.tell(symptomMsgToForward, getSelf());
                 }
             }
         }, getContext().dispatcher());

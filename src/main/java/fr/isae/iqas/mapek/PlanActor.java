@@ -54,7 +54,7 @@ public class PlanActor extends UntypedActor {
 
     private FiniteDuration reportIntervalRateAndQoO;
     private VirtualSensorList virtualSensorList;
-    private OntModel qoOntoBaseModel;
+    private OntModel qooBaseModel;
 
     private ActorRef kafkaAdminActor;
     private ActorRef monitorActor;
@@ -95,9 +95,9 @@ public class PlanActor extends UntypedActor {
 
         future(() -> JenaUtils.loadQoOntoWithImports(iqasConfig), context().dispatcher())
                 .onComplete(new OnComplete<OntModel>() {
-                    public void onComplete(Throwable throwable, OntModel ontModelResult) {
+                    public void onComplete(Throwable throwable, OntModel qooBaseModelResult) {
                         if (throwable == null) { // Only continue if there was no error so far
-                            qoOntoBaseModel = ontModelResult;
+                            qooBaseModel = qooBaseModelResult;
                         }
                     }
                 }, context().dispatcher());
@@ -164,7 +164,7 @@ public class PlanActor extends UntypedActor {
                                                 pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
                                                 // Specific settings since it is an OutputPipeline
-                                                setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest, virtualSensorList, qoOntoBaseModel);
+                                                setOptionsForOutputPipeline((OutputPipeline) pipeline, iqasConfig, incomingRequest, virtualSensorList, qooBaseModel);
 
                                                 ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
                                                         EntityMAPEK.PIPELINE,
@@ -207,7 +207,7 @@ public class PlanActor extends UntypedActor {
                                     virtualSensorList = newVirtualSensorList;
                                     enforcedPipelines.forEach((actorPathName, pipelineObject) -> {
                                         if (pipelineObject instanceof OutputPipeline) {
-                                            ((OutputPipeline) pipelineObject).setSensorContext(virtualSensorList, null);
+                                            ((OutputPipeline) pipelineObject).setSensorContext(iqasConfig, virtualSensorList, qooBaseModel);
                                             execActorsRefs.get(actorPathName).tell(pipelineObject, getSelf());
                                         }
                                     });
@@ -338,7 +338,8 @@ public class PlanActor extends UntypedActor {
                         setOptionsForThrottlePipeline((ThrottlePipeline) pipeline, incomingRequest);
                     }
                     else if (pipeline instanceof OutputPipeline) {
-                        setOptionsForOutputPipeline((OutputPipeline) pipeline, incomingRequest, virtualSensorList, qoOntoBaseModel);
+                        setOptionsForOutputPipeline((OutputPipeline) pipeline, iqasConfig, incomingRequest, virtualSensorList, qooBaseModel);
+                        ((OutputPipeline) pipeline).setSensorContext(iqasConfig, virtualSensorList, qooBaseModel);
                     }
 
                     pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());

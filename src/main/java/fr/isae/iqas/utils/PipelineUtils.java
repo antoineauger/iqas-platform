@@ -2,6 +2,7 @@ package fr.isae.iqas.utils;
 
 import akka.actor.ActorContext;
 import akka.dispatch.OnComplete;
+import fr.isae.iqas.config.Config;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.model.jsonld.VirtualSensor;
 import fr.isae.iqas.model.jsonld.VirtualSensorList;
@@ -62,7 +63,11 @@ public class PipelineUtils {
         }
     }
 
-    public static void setOptionsForOutputPipeline(OutputPipeline pipeline, Request incomingRequest, VirtualSensorList virtualSensorList, OntModel qooBaseModel) {
+    public static void setOptionsForOutputPipeline(OutputPipeline pipeline,
+                                                   Config iqasConfig,
+                                                   Request incomingRequest,
+                                                   VirtualSensorList virtualSensorList,
+                                                   OntModel qooBaseModel) {
         // Params reset
         pipeline.getParams().replace("age_max", "24 hours");
         pipeline.getParams().replace("interested_in", "");
@@ -78,6 +83,6 @@ public class PipelineUtils {
         if (incomingRequest.getQooConstraints().getIqas_params().containsKey("age_max")) {
             pipeline.setCustomizableParameter("age_max", incomingRequest.getQooConstraints().getIqas_params().get("age_max"));
         }
-        pipeline.setSensorContext(virtualSensorList, qooBaseModel);
+        pipeline.setSensorContext(iqasConfig, virtualSensorList, qooBaseModel);
     }
 }
