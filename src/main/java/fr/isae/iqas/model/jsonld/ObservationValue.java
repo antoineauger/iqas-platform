@@ -14,9 +14,15 @@ public class ObservationValue {
     @JsonldProperty("http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasUnit")
     public String hasUnit;
 
-    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#levelValue")
-    public String levelValue;
+    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#obsLevelValue")
+    public String obsLevelValue;
 
     @JsonldProperty("http://isae.fr/iqas/qoo-ontology#obsStrValue")
     public String obsStrValue;
+
+    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#obsDateValue")
+    public String obsDateValue;
+
+    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#obsTimestampsValue")
+    public String obsTimestampsValue;
 }

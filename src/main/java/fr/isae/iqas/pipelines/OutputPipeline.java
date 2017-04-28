@@ -284,6 +284,17 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                             "iQAS_out",
                                             System.currentTimeMillis());
 
+                                    if (getQooParams().size() > 0) {
+                                        if (interestAttr.contains(OBS_ACCURACY)) {
+                                            rawDataTemp.setQoOAttribute(OBS_ACCURACY,
+                                                    String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(rawDataTemp, getQooParams())));
+                                        }
+                                        if (interestAttr.contains(OBS_FRESHNESS)) {
+                                            rawDataTemp.setQoOAttribute(OBS_FRESHNESS,
+                                                    String.valueOf(getComputeAttributeHelper().computeQoOFreshness(rawDataTemp)));
+                                        }
+                                    }
+
                                     return rawDataTemp;
                                 })
                         );
@@ -300,7 +311,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
                                 Flow.of(RawData.class).map(rawDataTemp -> {
 
-                                    Knowledge kTest = new Knowledge(
+                                    Knowledge knowledgeTemp = new Knowledge(
                                             rawDataTemp,
                                             allVirtualSensors.get(rawDataTemp.getProducer()),
                                             pref,
@@ -310,16 +321,14 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
 
                                     if (getQooParams().size() > 0) {
                                         if (interestAttr.contains(OBS_ACCURACY)) {
-                                            kTest.setQoOAttribute(OBS_ACCURACY,
-                                                    String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(rawDataTemp, getQooParams())));
+                                            knowledgeTemp.setQoOAttribute(OBS_ACCURACY, rawDataTemp.getQoOAttribute(OBS_ACCURACY));
                                         }
                                         if (interestAttr.contains(OBS_FRESHNESS)) {
-                                            kTest.setQoOAttribute(OBS_FRESHNESS,
-                                                    String.valueOf(getComputeAttributeHelper().computeQoOFreshness(rawDataTemp)));
+                                            knowledgeTemp.setQoOAttribute(OBS_FRESHNESS, rawDataTemp.getQoOAttribute(OBS_FRESHNESS));
                                         }
                                     }
 
-                                    return new ProducerRecord<byte[], String>(getTopicToPublish(), kTest.toString());
+                                    return new ProducerRecord<byte[], String>(getTopicToPublish(), knowledgeTemp.toString());
                                 })
                         );
 

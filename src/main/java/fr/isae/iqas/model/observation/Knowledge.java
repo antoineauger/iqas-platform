@@ -74,7 +74,9 @@ public class Knowledge extends RawData {
         obsValueInd.setPropertyValue(qooP.get("iot-lite:hasUnit"), unitInd);
         obsValueInd.setPropertyValue(qooP.get("iot-lite:hasQuantityKind"), qkInd);
         obsValueInd.setPropertyValue(qooP.get("qoo:obsStrValue"), obsModel.createLiteral(String.valueOf(rawData.getValue())));
-        obsValueInd.setPropertyValue(qooP.get("qoo:levelValue"), obsModel.createLiteral("KNOWLEDGE"));
+        obsValueInd.setPropertyValue(qooP.get("qoo:obsLevelValue"), obsModel.createLiteral("KNOWLEDGE"));
+        obsValueInd.setPropertyValue(qooP.get("qoo:obsDateValue"), obsModel.createLiteral(rawData.getDate().toString()));
+        obsValueInd.setPropertyValue(qooP.get("qoo:obsTimestampsValue"), obsModel.createLiteral(rawData.getTimestamps()));
 
         // QoO
         obsModel.createSeq(pref.get("qoo") + "qooAttributesList");
@@ -100,6 +102,8 @@ public class Knowledge extends RawData {
 
     @Override
     public void setQoOAttribute(String attribute, String value) {
+        getQoOAttributeValues().put(QoOAttribute.valueOf(attribute), value);
+
         Individual obsValueInd = obsModel.getIndividual( pref.get("qoo") + "obsValue");
         Seq list = obsModel.getSeq(pref.get("qoo") + "qooAttributesList");
 
@@ -130,12 +134,9 @@ public class Knowledge extends RawData {
     }
 
     @Override
-    public String getQoOAttribute(String attribute) {
-        return obsModel.getIndividual(pref.get("qoo") + "qooValue_" + attribute).getPropertyValue(qooP.get("qoo:qooStrValue")).toString();
-    }
-
-    @Override
     public void setQoOAttribute(QoOAttribute attribute, String value) {
+        getQoOAttributeValues().put(attribute, value);
+
         Individual obsValueInd = obsModel.getIndividual( pref.get("qoo") + "obsValue");
         Seq list = obsModel.getSeq(pref.get("qoo") + "qooAttributesList");
 
@@ -166,7 +167,12 @@ public class Knowledge extends RawData {
     }
 
     @Override
-    public String getQoOAttribute(QoOAttribute attribute) {
-        return obsModel.getIndividual(pref.get("qoo") + "qooValue_" + attribute.toString()).getPropertyValue(qooP.get("qoo:qooStrValue")).toString();
+    public void setQoOAttributeValues(Map<QoOAttribute, String> qoOAttributeValues) {
+        qoOAttributeValues.forEach(this::setQoOAttribute);
+    }
+
+    @Override
+    public void setQoOAttributeValuesFromJSON(Map<String, String> qoOAttributeValues) {
+        qoOAttributeValues.forEach(this::setQoOAttribute);
     }
 }

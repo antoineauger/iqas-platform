@@ -45,7 +45,9 @@ public class JenaUtils {
         allUsefulProperties.put("iot-lite:hasUnit", qooBaseModel.getProperty(iotliteIRI + "hasUnit"));
         allUsefulProperties.put("iot-lite:hasQuantityKind", qooBaseModel.getProperty(iotliteIRI + "hasQuantityKind"));
         allUsefulProperties.put("qoo:obsStrValue", qooBaseModel.getProperty(qooIRI + "obsStrValue"));
-        allUsefulProperties.put("qoo:levelValue", qooBaseModel.getProperty(qooIRI + "levelValue"));
+        allUsefulProperties.put("qoo:obsLevelValue", qooBaseModel.getProperty(qooIRI + "obsLevelValue"));
+        allUsefulProperties.put("qoo:obsTimestampsValue", qooBaseModel.getProperty(qooIRI + "obsTimestampsValue"));
+        allUsefulProperties.put("qoo:obsDateValue", qooBaseModel.getProperty(qooIRI + "obsDateValue"));
         allUsefulProperties.put("qoo:hasQoO", qooBaseModel.getProperty(qooIRI + "hasQoO"));
         allUsefulProperties.put("qoo:qooStrValue", qooBaseModel.getProperty(qooIRI + "qooStrValue"));
         allUsefulProperties.put("qoo:hasQoOValue", qooBaseModel.getProperty(qooIRI + "hasQoOValue"));
