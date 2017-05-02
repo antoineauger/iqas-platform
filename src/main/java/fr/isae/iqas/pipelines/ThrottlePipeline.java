@@ -81,7 +81,10 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
                                             ThrottleMode.shaping())
                     );
 
+                    Test<RawData> o = new Test<>(new FiniteDuration(15, TimeUnit.SECONDS));
+
                     builder.from(consumRecordToRawData.out())
+                            .via(o.shape())
                             .via(throttleMechanismNoDrop)
                             .toInlet(rawDataToProdRecord.in());
 
