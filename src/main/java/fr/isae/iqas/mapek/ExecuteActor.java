@@ -51,8 +51,6 @@ import java.util.stream.Collectors;
 public class ExecuteActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private ConsumerSettings consumerSettings;
-    private Set<TopicPartition> watchedTopics;
     private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource;
     private Sink<ProducerRecord<byte[], String>, CompletionStage<Done>> kafkaSink;
 
@@ -66,7 +64,7 @@ public class ExecuteActor extends UntypedActor {
     public ExecuteActor(Properties prop, IPipeline pipelineToEnforce, ObservationLevel askedObsLevel, Set<String> topicsToPullFrom, String topicToPublish) {
         String randomNumber = new ObjectId().toString();
 
-        this.consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
+        ConsumerSettings consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
                 .withGroupId("group" + randomNumber)
                 .withClientId("client" + randomNumber)
@@ -78,8 +76,8 @@ public class ExecuteActor extends UntypedActor {
 
         // Kafka source
         this.kafkaActor = getContext().actorOf((KafkaConsumerActor.props(consumerSettings)));
-        this.watchedTopics = new HashSet<>();
-        this.watchedTopics.addAll(topicsToPullFrom.stream().map(s -> new TopicPartition(s, 0)).collect(Collectors.toList()));
+        Set<TopicPartition> watchedTopics = new HashSet<>();
+        watchedTopics.addAll(topicsToPullFrom.stream().map(s -> new TopicPartition(s, 0)).collect(Collectors.toList()));
         this.kafkaSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(watchedTopics));
 
         // Sinks

@@ -10,12 +10,14 @@ import scala.concurrent.duration.FiniteDuration;
 /**
  * Created by an.auger on 30/04/2017.
  */
-public class Test<A> extends GraphStage<FlowShape<A, A>> {
+public class CustomThrottleGraphStage<A> extends GraphStage<FlowShape<A, A>> {
 
     private final FiniteDuration silencePeriod;
+    private int nbElemsMax;
 
-    public Test(FiniteDuration silencePeriod) {
+    public CustomThrottleGraphStage(int nbElemsMax, FiniteDuration silencePeriod) {
         this.silencePeriod = silencePeriod;
+        this.nbElemsMax = nbElemsMax;
     }
 
     public final Inlet<A> in = Inlet.create("TimedGate.in");
@@ -39,13 +41,15 @@ public class Test<A> extends GraphStage<FlowShape<A, A>> {
                     @Override
                     public void onPush() throws Exception {
                         A elem = grab(in);
-                        if (open) {
+                        if (open || countElements >= nbElemsMax) {
                             pull(in);
                         }
                         else {
+                            if (countElements == 0) {
+                                scheduleOnce("resetCounter", silencePeriod);
+                            }
                             push(out, elem);
-                            open = true;
-                            scheduleOnce("key", silencePeriod);
+                            countElements += 1;
                         }
                     }
                 });
@@ -59,8 +63,9 @@ public class Test<A> extends GraphStage<FlowShape<A, A>> {
 
             @Override
             public void onTimer(Object key) {
-                if (key.equals("key")) {
+                if (key.equals("resetCounter")) {
                     open = false;
+                    countElements = 0;
                 }
             }
         };

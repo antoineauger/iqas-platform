@@ -3,7 +3,6 @@ package fr.isae.iqas.pipelines;
 import akka.stream.FlowShape;
 import akka.stream.Graph;
 import akka.stream.Materializer;
-import akka.stream.ThrottleMode;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -74,18 +73,8 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
                                     })
                     );
 
-                    final FlowShape<RawData, RawData> throttleMechanismNoDrop = builder.add(
-                            Flow.of(RawData.class)
-                                    .throttle(nbObsMax, new FiniteDuration(1, finalUnit),
-                                            1,
-                                            ThrottleMode.shaping())
-                    );
-
-                    Test<RawData> o = new Test<>(new FiniteDuration(15, TimeUnit.SECONDS));
-
                     builder.from(consumRecordToRawData.out())
-                            .via(o.shape())
-                            .via(throttleMechanismNoDrop)
+                            .via(builder.add(new CustomThrottleGraphStage<RawData>(nbObsMax, new FiniteDuration(1, finalUnit))))
                             .toInlet(rawDataToProdRecord.in());
 
                     return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
