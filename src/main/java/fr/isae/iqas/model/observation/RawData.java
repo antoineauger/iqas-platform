@@ -153,8 +153,6 @@ public class RawData {
     }
 
     public void setQoOAttributeValuesFromJSON(Map<String, String> qoOAttributeValues) {
-        qoOAttributeValues.forEach( (k,v) -> {
-            this.qoOAttributeValues.put(QoOAttribute.valueOf(k), v);
-        });
+        qoOAttributeValues.forEach( (k,v) -> this.qoOAttributeValues.put(QoOAttribute.valueOf(k), v));
     }
 }

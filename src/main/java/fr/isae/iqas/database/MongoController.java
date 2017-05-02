@@ -6,7 +6,6 @@ import com.mongodb.async.client.MongoCollection;
 import com.mongodb.async.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
-import fr.isae.iqas.MainClass;
 import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
@@ -14,9 +13,6 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -374,32 +370,5 @@ public class MongoController extends AllDirectives {
                 log.error("Drop of the " + collectionName + " collection failed: " + t.toString());
             }
         });
-    }
-
-    // ######### MongoDB methods for testing/development #########
-
-    // TODO remove method, only for testing
-    public void putSensorsFromFileIntoDB(String sensorFileName) {
-        MongoCollection<Document> collection = mongoDatabase.getCollection("sensors");
-        List<Document> documents = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(MainClass.class.getClassLoader().getResourceAsStream(sensorFileName),
-                        StandardCharsets.UTF_8))) {
-            String sCurrentLine;
-            while ((sCurrentLine = reader.readLine()) != null) {
-                documents.add(Document.parse(sCurrentLine));
-            }
-            collection.insertMany(documents, (result, t) -> {
-
-                if (t == null) {
-                    log.info("Sensors inserted into sensors collection");
-                }
-                else {
-                    log.error("Failed to insert sensors");
-                }
-            });
-        } catch (Throwable t) {
-            log.error("Unable to insert sensors into iQAS database: " + t.toString());
-        }
     }
 }

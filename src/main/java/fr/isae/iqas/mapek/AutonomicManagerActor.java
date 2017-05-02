@@ -64,21 +64,26 @@ public class AutonomicManagerActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        TopicList topicList = fusekiController._findAllTopics();
-        for (Topic t : topicList.topics) {
-            String topicName = t.topic.split("#")[1];
-            TopicEntity topicEntityTemp = new TopicEntity(topicName, RAW_DATA);
-            topicEntityTemp.setSource(topicName);
-
-            ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.CREATE, topicName), new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {
-                @Override
-                public void onComplete(Throwable t, Object booleanResult) throws Throwable {
-                    if (t != null) {
-                        log.error("Unable to find the KafkaAdminActor: " + t.toString());
+        future(() -> fusekiController._findAllTopics(), context().dispatcher())
+                .onComplete(new OnComplete<TopicList>() {
+                    public void onComplete(Throwable throwable, TopicList topicListResult) {
+                        if (throwable == null) { // Only continue if there was no error so far
+                            for (Topic t : topicListResult.topics) {
+                                String topicName = t.topic.split("#")[1];
+                                TopicEntity topicEntityTemp = new TopicEntity(topicName, RAW_DATA);
+                                topicEntityTemp.setSource(topicName);
+                                ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.CREATE, topicName), new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {
+                                    @Override
+                                    public void onComplete(Throwable t, Object booleanResult) throws Throwable {
+                                        if (t != null) {
+                                            log.error("Unable to find the KafkaAdminActor: " + t.toString());
+                                        }
+                                    }
+                                }, getContext().dispatcher());
+                            }
+                        }
                     }
-                }
-            }, getContext().dispatcher());
-        }
+                }, context().dispatcher());
     }
 
     @Override

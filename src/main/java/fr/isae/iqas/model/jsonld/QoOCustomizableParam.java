@@ -16,5 +16,6 @@ public class QoOCustomizableParam {
     @JsonldProperty("http://isae.fr/iqas/qoo-ontology#documentation")
     public String details;
 
+    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#has")
     public List<QoOEffect> has;
 }

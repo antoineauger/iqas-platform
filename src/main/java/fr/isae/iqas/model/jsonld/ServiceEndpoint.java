@@ -17,7 +17,4 @@ public class ServiceEndpoint {
 
     @JsonldProperty("http://purl.oclc.org/NET/UNIS/fiware/iot-lite#endpoint")
     public String url;
-
-    @JsonldProperty("http://purl.oclc.org/NET/ssnx/ssn#Property")
-    public String topic;
 }
