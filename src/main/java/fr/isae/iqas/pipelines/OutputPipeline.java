@@ -190,6 +190,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                 })));
 
                         return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
+
                     } else if (askedLevelFinal == INFORMATION) {
                         final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
 
@@ -270,6 +271,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                 })));
 
                         return new FlowShape<>(consumRecordToInfo.in(), infoToProdRecord.out());
+
                     } else if (askedLevelFinal == KNOWLEDGE) {
                         final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
@@ -361,6 +363,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                 })));
 
                         return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
+
                     } else { // other observation levels are not supported
                         return null;
                     }

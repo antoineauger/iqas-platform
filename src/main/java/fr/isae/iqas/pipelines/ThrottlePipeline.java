@@ -8,6 +8,7 @@ import akka.stream.javadsl.GraphDSL;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.model.observation.RawData;
+import fr.isae.iqas.pipelines.mechanisms.ObsRateLimitGS;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
@@ -74,7 +75,7 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
                     );
 
                     builder.from(consumRecordToRawData.out())
-                            .via(builder.add(new CustomThrottleGraphStage<RawData>(nbObsMax, new FiniteDuration(1, finalUnit))))
+                            .via(builder.add(new ObsRateLimitGS<RawData>(nbObsMax, new FiniteDuration(1, finalUnit))))
                             .toInlet(rawDataToProdRecord.in());
 
                     return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());

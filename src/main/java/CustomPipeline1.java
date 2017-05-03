@@ -9,6 +9,7 @@ import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.pipelines.AbstractPipeline;
 import fr.isae.iqas.pipelines.IPipeline;
+import fr.isae.iqas.pipelines.mechanisms.CloneSameValueGS;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
@@ -28,7 +29,7 @@ public class CustomPipeline1 extends AbstractPipeline implements IPipeline {
         super("Custom Pipeline 1", "CustomPipeline1", true);
 
         addSupportedOperator(NONE);
-        setParameter("test_param_1", String.valueOf(Float.MIN_VALUE), true);
+        setParameter("nb_copies", String.valueOf(Float.MIN_VALUE), true);
     }
 
     @Override
@@ -59,13 +60,11 @@ public class CustomPipeline1 extends AbstractPipeline implements IPipeline {
                             })
                     );
 
-                    final FlowShape<RawData, RawData> filteringMechanismRawData = builder.add(
-                            Flow.of(RawData.class).filter(r -> r.getValue() < Double.valueOf(getParams().get("test_param_1")))
-                    );
-
                     builder.from(consumRecordToRawData.out())
-                            .via(filteringMechanismRawData)
+                            .via(builder.add(new CloneSameValueGS<RawData>(Integer.valueOf(getParams().get("nb_copies")))))
                             .toInlet(rawDataToProdRecord.in());
+
+                    // ################################# END OF YOUR CODE #################################
 
                     return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
 
