@@ -14,7 +14,8 @@ public class ObservationValue {
     @JsonldProperty("http://purl.oclc.org/NET/UNIS/fiware/iot-lite#hasUnit")
     public String hasUnit;
 
-    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#obsLevelValue")
+    // Only used directly with Jena when outputting KNOWLEDGE
+    /*@JsonldProperty("http://isae.fr/iqas/qoo-ontology#obsLevelValue")
     public String obsLevelValue;
 
     @JsonldProperty("http://isae.fr/iqas/qoo-ontology#obsStrValue")
@@ -24,5 +25,5 @@ public class ObservationValue {
     public String obsDateValue;
 
     @JsonldProperty("http://isae.fr/iqas/qoo-ontology#obsTimestampsValue")
-    public String obsTimestampsValue;
+    public String obsTimestampsValue;*/
 }

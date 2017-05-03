@@ -25,7 +25,7 @@ import java.util.Set;
 
 @JsonIgnoreProperties({"logger", "monitorActor", "flowToComputeObsRate", "computeAttributeHelper", "pipelineName",
         "pipelineID", "params", "qooParams", "reportFrequency", "associatedRequest_id",
-        "tempID", "uniqueID", "topicToPublish"})
+        "tempID", "uniqueID", "topicToPublish", "pipelineGraph", "askedLevel"})
 public interface IPipeline {
     ActorRef getMonitorActor();
 
