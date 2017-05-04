@@ -9,10 +9,12 @@ import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
+import fr.isae.iqas.model.jsonld.QoOPipelineList;
 import fr.isae.iqas.model.jsonld.Topic;
 import fr.isae.iqas.model.jsonld.TopicList;
 import fr.isae.iqas.model.message.MAPEKSymptomMsgWithDate;
 import fr.isae.iqas.model.message.TerminatedMsg;
+import fr.isae.iqas.model.request.HealRequest;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.utils.ActorUtils;
@@ -30,12 +32,16 @@ import static akka.dispatch.Futures.future;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.*;
 import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
+import static fr.isae.iqas.model.quality.QoOAttribute.OBS_RATE;
 
 /**
  * Created by an.auger on 13/09/2016.
  */
+
 public class AnalyzeActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+    private final static int MAX_SYMPTOMS_BEFORE_ACTION = 5;
+    private int max_retries;
 
     private TopicList topicList;
     private MongoController mongoController;
@@ -43,6 +49,10 @@ public class AnalyzeActor extends UntypedActor {
 
     private FiniteDuration tickMAPEK;
     private FiniteDuration symptomLifetime;
+    private long observeDuration;
+
+    private Map<String, HealRequest> currentlyHealedRequest; // RequestIDs <-> HealRequests
+
     private Map<String, CircularFifoBuffer> receivedObsRateSymptoms; // UniquePipelineIDs <-> [<SymptomMsg,received date>]
     private Map<String, CircularFifoBuffer> receivedQoOSymptoms; // RequestIDs <-> [<SymptomMsg,received date>]
 
@@ -52,6 +62,8 @@ public class AnalyzeActor extends UntypedActor {
 
         this.tickMAPEK = new FiniteDuration(Long.valueOf(prop.getProperty("tick_mapek_seconds")), TimeUnit.SECONDS);
         this.symptomLifetime = new FiniteDuration(Long.valueOf(prop.getProperty("symptom_lifetime_seconds")), TimeUnit.SECONDS);
+        this.observeDuration = Integer.valueOf(prop.getProperty("max_time_to_observe_effect_seconds")) * 1000;
+        this.max_retries = Integer.parseInt(prop.getProperty("max_number_retries"));
 
         this.receivedObsRateSymptoms = new ConcurrentHashMap<>();
         this.receivedQoOSymptoms = new ConcurrentHashMap<>();
@@ -71,6 +83,19 @@ public class AnalyzeActor extends UntypedActor {
         getContext().system().scheduler().scheduleOnce(
                 tickMAPEK,
                 getSelf(), "tick", getContext().dispatcher(), getSelf());
+
+        // TODO remove
+        /*ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JsonldModule(mapper::createObjectNode));
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        JsonldResourceBuilder builder = JsonldResource.Builder.create();
+
+        QoOPipelineList t = fusekiController._findMatchingPipelinesToHeal(OBS_FRESHNESS, Arrays.asList(OBS_ACCURACY, OBS_RATE));
+        try {
+            log.info(mapper.writeValueAsString(t));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }*/
     }
 
     // override postRestart so we don't call preStart and schedule a new message
@@ -91,7 +116,7 @@ public class AnalyzeActor extends UntypedActor {
             clearExpiredSymptoms(receivedQoOSymptoms, symptomLifetime);
         }
         // SymptomMsg messages [received from MonitorActor]
-        if (message instanceof SymptomMsg) {
+        else if (message instanceof SymptomMsg) {
             SymptomMsg symptomMsg = (SymptomMsg) message;
 
             // SymptomMsg messages - Requests
@@ -183,7 +208,8 @@ public class AnalyzeActor extends UntypedActor {
                             int counterQoO = 0;
 
                             // If there is some QoO constraints about OBS_ACCURACY, we add a FilterPipeline
-                            if (requestTemp.getQooConstraints().getIqas_params().containsKey("threshold_max")) {
+                            if ( requestTemp.getQooConstraints().getIqas_params().containsKey("threshold_min")
+                                    || requestTemp.getQooConstraints().getIqas_params().containsKey("threshold_max")) {
                                 counterQoO += 1;
 
                                 TopicEntity accurObsTopic = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO" + String.valueOf(counterQoO),
@@ -223,13 +249,54 @@ public class AnalyzeActor extends UntypedActor {
             // SymptomMsg messages - Obs Rate
             else if (symptomMsg.getSymptom() == TOO_LOW && symptomMsg.getAbout() == EntityMAPEK.OBS_RATE) {
                 log.info("Received Symptom : {} {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getUniqueIDPipeline(), symptomMsg.getConcernedRequests().toString());
-                receivedObsRateSymptoms.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new CircularFifoBuffer(5));
+                receivedObsRateSymptoms.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new CircularFifoBuffer(MAX_SYMPTOMS_BEFORE_ACTION));
                 receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).add(new MAPEKSymptomMsgWithDate(symptomMsg));
+
+                if (receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).size() == MAX_SYMPTOMS_BEFORE_ACTION) {
+                    // TODO tell Plan Actor
+                    //tellToPlanActor(new RFCMsg(RFCMAPEK.INCREASE, EntityMAPEK.OBS_RATE, new HealPipeline(/* TODO */observeDuration)));
+                    //receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).clear();
+
+                    /*getContext().system().scheduler().scheduleOnce(
+                            new FiniteDuration(0, TimeUnit.SECONDS),
+                            getSelf(), "dkddk", getContext().dispatcher(), getSelf());*/
+
+                    for (String request_id : symptomMsg.getConcernedRequests()) {
+
+                        currentlyHealedRequest.putIfAbsent(request_id, new HealRequest(request_id, OBS_RATE, observeDuration));
+                        HealRequest currHealRequest = currentlyHealedRequest.get(request_id);
+
+                        if (currHealRequest.canPerformHeal() && currHealRequest.getRetries() < max_retries) {
+
+                            currHealRequest.performHeal(OBS_RATE);
+                            currentlyHealedRequest.put(request_id, currHealRequest);
+
+                            mongoController.getSpecificRequest(request_id).whenComplete((result, throwable) -> {
+                                if (throwable == null && result.size() == 1) {
+                                    Request retrievedRequest = result.get(0);
+
+                                    future(() -> fusekiController._findMatchingPipelinesToHeal(OBS_RATE, retrievedRequest.getQooConstraints().getInterested_in()), context().dispatcher())
+                                            .onComplete(new OnComplete<QoOPipelineList>() {
+                                                public void onComplete(Throwable throwable, QoOPipelineList qoOPipelineList) {
+                                                    if (throwable == null) { // Only continue if there was no error so far
+                                                        log.info("On the point to apply " + qoOPipelineList.qoOPipelines.get(0).pipeline);
+
+
+                                                    }
+                                                }
+                                            }, context().dispatcher());
+                                } else {
+                                    log.warning("Unable to retrieve request " + request_id + ". Operation skipped!");
+                                }
+                            });
+                        }
+                    }
+                }
             }
             // SymptomMsg messages - Virtual Sensors
             else if (symptomMsg.getSymptom() == CONNECTION_REPORT && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
                 log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getConnectedSensors().toString());
-                // TODO terminate concerned Requests
+                // Only to log the symptom. Not doing anything since it only affects future iQAS Requests.
             }
             else if (symptomMsg.getSymptom() == UPDATED && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
                 log.info("Received Symptom : {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout());
@@ -251,6 +318,9 @@ public class AnalyzeActor extends UntypedActor {
                 log.info("Received TerminatedMsg message: {}", message);
                 getContext().stop(self());
             }
+        }
+        else if (message instanceof String) {
+            log.info("Received String message: {}", message);
         }
     }
 

@@ -1,8 +1,9 @@
 package fr.isae.iqas.model.message;
 
 import fr.isae.iqas.kafka.RequestMapping;
-import fr.isae.iqas.model.jsonld.QoOAttribute;
+import fr.isae.iqas.model.request.HealRequest;
 import fr.isae.iqas.model.observation.ObservationLevel;
+import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.pipelines.IPipeline;
 
@@ -27,18 +28,17 @@ public class MAPEKInternalMsg {
     public enum EntityMAPEK {
         REQUEST,
         PIPELINE,
-        QOO_ATTRIBUTE,
         OBS_RATE,
         SENSOR,
         KAFKA_TOPIC
     }
 
     public enum RFCMAPEK {
-        INCREASE,
-        DECREASE,
         CREATE,
         UPDATE,
-        REMOVE
+        REMOVE,
+        HEAL,
+        RESET
     }
 
     public enum ActionMAPEK {
@@ -189,6 +189,7 @@ public class MAPEKInternalMsg {
         private RFCMAPEK rfc;
         private EntityMAPEK about;
         private Request request;
+        private HealRequest healRequest;
         private QoOAttribute qoOAttribute;
         private RequestMapping requestMapping;
         private String associatedRequest_id;
@@ -203,12 +204,12 @@ public class MAPEKInternalMsg {
             this.associatedRequest_id = rfcMsgToClone.getAssociatedRequest_id();
         }
 
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, QoOAttribute qoOAttribute, String associatedRequest_id) { // INCREASE / DECREASE for QoOAttributes
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, HealRequest healRequest) { // HEAL / RESET for QoOAttributes
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
             this.about = about;
-            this.qoOAttribute = qoOAttribute;
-            this.associatedRequest_id = associatedRequest_id;
+            this.qoOAttribute = healRequest.getConcernedAttr();
+            this.healRequest = healRequest;
         }
 
         public RFCMsg(RFCMAPEK rfc, EntityMAPEK about) { // UPDATE for Sensors
