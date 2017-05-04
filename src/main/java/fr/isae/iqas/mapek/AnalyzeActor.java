@@ -263,14 +263,10 @@ public class AnalyzeActor extends UntypedActor {
 
                     for (String request_id : symptomMsg.getConcernedRequests()) {
 
-                        currentlyHealedRequest.putIfAbsent(request_id, new HealRequest(request_id, OBS_RATE, observeDuration));
+                        currentlyHealedRequest.putIfAbsent(request_id, new HealRequest(request_id, observeDuration));
                         HealRequest currHealRequest = currentlyHealedRequest.get(request_id);
 
                         if (currHealRequest.canPerformHeal() && currHealRequest.getRetries() < max_retries) {
-
-                            currHealRequest.performHeal(OBS_RATE);
-                            currentlyHealedRequest.put(request_id, currHealRequest);
-
                             mongoController.getSpecificRequest(request_id).whenComplete((result, throwable) -> {
                                 if (throwable == null && result.size() == 1) {
                                     Request retrievedRequest = result.get(0);
@@ -281,7 +277,14 @@ public class AnalyzeActor extends UntypedActor {
                                                     if (throwable == null) { // Only continue if there was no error so far
                                                         log.info("On the point to apply " + qoOPipelineList.qoOPipelines.get(0).pipeline);
 
+                                                        // TODO resolve dynamically
+                                                        Map<String, String> healParams = new ConcurrentHashMap<>();
+                                                        healParams.put("nb_copies", "0");
 
+                                                        currHealRequest.performHeal(OBS_RATE, qoOPipelineList.qoOPipelines.get(0), healParams);
+                                                        currentlyHealedRequest.put(request_id, currHealRequest);
+
+                                                        tellToPlanActor(new RFCMsg(RFCMAPEK.HEAL, EntityMAPEK.REQUEST, currHealRequest));
                                                     }
                                                 }
                                             }, context().dispatcher());

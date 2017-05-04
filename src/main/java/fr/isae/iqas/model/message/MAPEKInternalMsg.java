@@ -45,50 +45,10 @@ public class MAPEKInternalMsg {
         APPLY,
         CREATE,
         DELETE,
-        RESET,
         TURN_ON,
         TURN_OFF,
         SENSOR_API
     }
-
-    /**
-     * QoOAttribute TOO_LOW / TOO_HIGH for request_id
-     * OBS_RATE TOO_LOW / TOO_HIGH for request_id
-     *
-     * NEW request with request_id
-     * UPDATED request with request_id
-     * REMOVED request with request_id
-     */
-
-    /**
-     * INCREASE QoOAttribute for request_id
-     * DECREASE QoOAttribute for request_id
-     *
-     * INCREASE OBS_RATE for sensor_id
-     * DECREASE OBS_RATE for sensor_id
-     */
-
-    /**
-     * APPLY PIPELINE for request_id
-     * DELETE PIPELINE for request_id
-     * UPDATE PIPELINE pipeline_id, new_customizable_params
-     *
-     * SET OBS_RATE for sensor_id with new_value
-     *
-     * TURN ON / TURN OFF sensor_id
-     *
-     * SEND instructions to sensor_id via API
-     *      MODIFY OBS_RATE for sensor_id
-     */
-
-    /**
-     * Internal actions
-     *
-     * CREATE KAFKA_TOPIC with topic_id
-     * DELETE KAFKA_TOPIC with topic_id
-     * RESET KAFKA_TOPIC with topic_id
-     */
-
 
     /**
      * Symptoms (Emitted by Monitor)
@@ -104,34 +64,39 @@ public class MAPEKInternalMsg {
         private String uniqueIDPipeline;
         private String requestID;
 
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about) { // UPDATE for Sensors
+        // UPDATE for Sensors
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.symptom = symptom;
             this.about = about;
         }
 
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Request attachedRequest) { // For Requests
+        // For Requests
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Request attachedRequest) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.symptom = symptom;
             this.about = about;
             this.attachedRequest = attachedRequest;
         }
 
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String uniqueIDRemovedPipeline) { // For removed Pipelines (cleanup)
+        // For removed Pipelines (cleanup)
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String uniqueIDRemovedPipeline) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.symptom = symptom;
             this.about = about;
             this.uniqueIDPipeline = uniqueIDRemovedPipeline;
         }
 
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Map<String, Boolean> connectedSensors) { // For Virtual Sensors connection report
+        // For Virtual Sensors connection report
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Map<String, Boolean> connectedSensors) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.symptom = symptom;
             this.about = about;
             this.connectedSensors = connectedSensors;
         }
 
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String concernedUniqueIDPipeline, List<String> concernedRequests) { // For OBS_RATE too low
+        // For OBS_RATE TOO_LOW
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String concernedUniqueIDPipeline, List<String> concernedRequests) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.symptom = symptom;
             this.about = about;
@@ -139,7 +104,17 @@ public class MAPEKInternalMsg {
             this.concernedRequests = concernedRequests;
         }
 
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String uniqueIDPipeline, String requestID) { // For Pipeline creation (Plan -> Monitor)
+        // For TOO_HIGH / TOO_LOW QoOAttributes (except OBS_RATE)
+        /*public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String concernedUniqueIDPipeline, List<String> concernedRequests) {
+            this.creationDate = new Timestamp(System.currentTimeMillis());
+            this.symptom = symptom;
+            this.about = about;
+            this.uniqueIDPipeline = concernedUniqueIDPipeline;
+            this.concernedRequests = concernedRequests;
+        }*/
+
+        // For Pipeline creation (Plan -> Monitor)
+        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String uniqueIDPipeline, String requestID) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.symptom = symptom;
             this.about = about;
@@ -204,7 +179,8 @@ public class MAPEKInternalMsg {
             this.associatedRequest_id = rfcMsgToClone.getAssociatedRequest_id();
         }
 
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, HealRequest healRequest) { // HEAL / RESET for QoOAttributes
+        // HEAL / RESET for QoOAttributes
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, HealRequest healRequest) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
             this.about = about;
@@ -212,13 +188,15 @@ public class MAPEKInternalMsg {
             this.healRequest = healRequest;
         }
 
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about) { // UPDATE for Sensors
+        // UPDATE for Sensors
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
             this.about = about;
         }
 
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request, RequestMapping requestMapping) { // CREATE for Requests
+        // CREATE for Requests
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request, RequestMapping requestMapping) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
             this.about = about;
@@ -227,7 +205,8 @@ public class MAPEKInternalMsg {
             this.associatedRequest_id = request.getRequest_id();
         }
 
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request) { // REMOVE for Requests
+        // REMOVE for Requests
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
             this.about = about;
@@ -262,6 +241,10 @@ public class MAPEKInternalMsg {
         public QoOAttribute getQoOAttribute() {
             return qoOAttribute;
         }
+
+        public HealRequest getHealRequest() {
+            return healRequest;
+        }
     }
 
     /**
@@ -281,13 +264,15 @@ public class MAPEKInternalMsg {
         private String constructedFromRequest;
         private int maxLevelDepth;
 
-        public ActionMsg(ActionMAPEK action, EntityMAPEK about, String kafkaTopicID) { // CREATE / DELETE / RESET KafkaTopic
+        // CREATE / DELETE / RESET KafkaTopic
+        public ActionMsg(ActionMAPEK action, EntityMAPEK about, String kafkaTopicID) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.action = action;
             this.about = about;
             this.kafkaTopicID = kafkaTopicID;
         }
 
+        // APPLY Pipeline
         public ActionMsg(ActionMAPEK action,
                          EntityMAPEK about,
                          IPipeline pipelineToEnforce,
@@ -296,7 +281,7 @@ public class MAPEKInternalMsg {
                          String topicToPublish,
                          String associatedRequest_id,
                          String constructedFromRequest,
-                         int maxLevelDepth) { // APPLY Pipeline
+                         int maxLevelDepth) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.action = action;
             this.about = about;

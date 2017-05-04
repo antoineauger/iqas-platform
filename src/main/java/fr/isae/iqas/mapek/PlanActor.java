@@ -20,6 +20,7 @@ import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.PipelineRequestMsg;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
+import fr.isae.iqas.model.request.HealRequest;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.pipelines.*;
@@ -193,11 +194,13 @@ public class PlanActor extends UntypedActor {
                     }
                 });
             }
+
             // RFCs messages - Request REMOVE
             else if (rfcMsg.getRfc() == RFCMAPEK.REMOVE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) { // Request deleted by the user
                 Request requestToDelete = rfcMsg.getRequest();
                 deleteRequest(requestToDelete);
             }
+
             // RFCs messages - Sensor UPDATE
             else if (rfcMsg.getRfc() == RFCMAPEK.UPDATE && rfcMsg.getAbout() == EntityMAPEK.SENSOR) { // Sensor description has been updated on Fuseki
                 future(() -> fusekiController._findAllSensors(), context().dispatcher())
@@ -214,6 +217,16 @@ public class PlanActor extends UntypedActor {
                                 }
                             }
                         }, context().dispatcher());
+            }
+
+            // RFCs messages - Request HEAL
+            else if (rfcMsg.getRfc() == RFCMAPEK.HEAL && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
+
+            }
+
+            // RFCs messages - Request RESET
+            else if (rfcMsg.getRfc() == RFCMAPEK.RESET && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
+
             }
         }
         // TerminatedMsg messages
@@ -403,7 +416,6 @@ public class PlanActor extends UntypedActor {
         log.info("Processing ActionMsg: {} {}", actionMsg.getAction(), actionMsg.getAbout());
 
         if (actionMsg.getAction() == ActionMAPEK.APPLY && actionMsg.getAbout() == EntityMAPEK.PIPELINE) {
-
             ActorRef actorRefToStart;
             if (!mappingTopicsActors.containsKey(actionMsg.getTopicToPublish())) {
                 if (actionMsg.getPipelineToEnforce() instanceof IngestPipeline) {
@@ -487,6 +499,16 @@ public class PlanActor extends UntypedActor {
         }
 
         return true;
+    }
+
+    // TODO ActionMsg for that?
+
+    private void healRequest(RequestMapping currEnforcedRM, HealRequest request) {
+        //request.getConcernedRequest()
+    }
+
+    private void resetRequest(RequestMapping currEnforcedRM, HealRequest request) {
+
     }
 
 }
