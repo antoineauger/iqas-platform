@@ -180,11 +180,12 @@ public class MAPEKInternalMsg {
         }
 
         // HEAL / RESET for QoOAttributes
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, HealRequest healRequest) {
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, HealRequest healRequest, RequestMapping newRequestMapping) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
             this.about = about;
             this.qoOAttribute = healRequest.getConcernedAttr();
+            this.requestMapping = newRequestMapping;
             this.healRequest = healRequest;
         }
 

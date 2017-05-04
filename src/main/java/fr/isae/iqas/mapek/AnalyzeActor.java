@@ -277,6 +277,9 @@ public class AnalyzeActor extends UntypedActor {
                                                     if (throwable == null) { // Only continue if there was no error so far
                                                         log.info("On the point to apply " + qoOPipelineList.qoOPipelines.get(0).pipeline);
 
+
+                                                        //TODO retrieve RequestMapping
+
                                                         // TODO resolve dynamically
                                                         Map<String, String> healParams = new ConcurrentHashMap<>();
                                                         healParams.put("nb_copies", "0");
@@ -284,7 +287,8 @@ public class AnalyzeActor extends UntypedActor {
                                                         currHealRequest.performHeal(OBS_RATE, qoOPipelineList.qoOPipelines.get(0), healParams);
                                                         currentlyHealedRequest.put(request_id, currHealRequest);
 
-                                                        tellToPlanActor(new RFCMsg(RFCMAPEK.HEAL, EntityMAPEK.REQUEST, currHealRequest));
+                                                        // TODO
+                                                        tellToPlanActor(new RFCMsg(RFCMAPEK.HEAL, EntityMAPEK.REQUEST, currHealRequest, new RequestMapping("TOTO")));
                                                     }
                                                 }
                                             }, context().dispatcher());
