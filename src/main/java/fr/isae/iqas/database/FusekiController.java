@@ -2,6 +2,9 @@ package fr.isae.iqas.database;
 
 import fr.isae.iqas.config.Config;
 import fr.isae.iqas.model.jsonld.*;
+import fr.isae.iqas.model.jsonld.QoOAttribute;
+import fr.isae.iqas.model.quality.*;
+import fr.isae.iqas.utils.QualityUtils;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
@@ -12,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -573,14 +577,11 @@ public class FusekiController {
             processedParams.put(paramName, paramTemp);
         }
 
-        processedParams.forEach((k, v) -> {
-            customizableParamList.customizable_params.add(v);
-        });
-
         if (binding == null) {
             return null;
         }
         else {
+            customizableParamList.customizable_params.addAll(processedParams.values());
             return customizableParamList;
         }
     }
@@ -645,6 +646,122 @@ public class FusekiController {
         }
         else {
             return sensorCapabilityList;
+        }
+    }
+
+    /**
+     * QoOPipeline
+     */
+
+    public QoOPipelineList _findMatchingPipelinesToHeal(fr.isae.iqas.model.quality.QoOAttribute priorityAttr, List<fr.isae.iqas.model.quality.QoOAttribute> attrToPreserve) {
+        QuerySolution binding = null;
+        QoOPipelineList qoOPipelineList = new QoOPipelineList();
+        qoOPipelineList.qoOPipelines = new ArrayList<>();
+
+        // Step 1: retrieval of all QoOAttributes and their 'shouldBe' property
+
+        Map<fr.isae.iqas.model.quality.QoOAttribute, String> attrShouldNotBe = new ConcurrentHashMap<>();
+
+        final String req1 = baseStringForRequests +
+                "SELECT DISTINCT ?attr ?var\n" +
+                "WHERE {\n" +
+                "  ?attr rdf:type qoo:QoOAttribute .\n" +
+                "  ?attr qoo:shouldBe ?var \n" +
+                "}";
+
+        QueryExecution q1 = QueryExecutionFactory.sparqlService(sparqlService, req1);
+        ResultSet r1 = q1.execSelect();
+        while (r1.hasNext()) {
+            binding = r1.nextSolution();
+            Resource param = (Resource) binding.get("attr");
+            fr.isae.iqas.model.quality.QoOAttribute attr = fr.isae.iqas.model.quality.QoOAttribute.valueOf(param.getURI().split("#")[1]);
+            String var = binding.getLiteral("var").getString();
+            attrShouldNotBe.put(attr, QualityUtils.inverseOfVariation(var));
+        }
+
+        if (attrShouldNotBe.size() == 0) {
+            return qoOPipelineList;
+        }
+
+        // Step 2: search for some matching QoOPipelines that meet parameters priorityAttr / attrToPreserve
+
+        StringBuilder req2 = new StringBuilder(baseStringForRequests +
+                "SELECT DISTINCT ?attr ?pipeline ?param ?paramVariation ?attrVar\n" +
+                "WHERE {\n" +
+                "  ?attr rdf:type qoo:QoOAttribute .\n" +
+                "  FILTER (?attr = qoo:" + priorityAttr.toString() + ") .\n" +
+                "  ?attr qoo:shouldBe ?attrVar .\n" +
+                "  ?pipeline rdf:type qoo:QoOPipeline .\n" +
+                "  ?pipeline qoo:allowsToSet ?param .\n" +
+                "  ?param qoo:has ?impact .\n" +
+                "  ?impact qoo:capabilityVariation ?paramVariation .\n" +
+                "  ?impact qoo:qooAttributeVariation ?attrVar .\n" +
+                "  ?impact qoo:impacts ?attr .\n");
+
+        for (fr.isae.iqas.model.quality.QoOAttribute attr : attrToPreserve) {
+            if (!attr.equals(priorityAttr)) {
+                req2.append("FILTER (NOT EXISTS { \n" +
+                        "      ?param qoo:has ?impact2 .\n" +
+                        "      ?impact2 qoo:qooAttributeVariation \"" + attrShouldNotBe.get(attr) + "\" .\n" +
+                        "      ?impact2 qoo:impacts ?attr2 .\n" +
+                        "      FILTER (?attr2 = qoo:" + attr.toString() + ")\n" +
+                        "    })\n");
+            }
+        }
+
+        req2.append("}");
+
+        Map<String, QoOPipeline> pipelineMap = new ConcurrentHashMap<>();      // Pipeline_id <-> QoOPipeline
+        Map<String, String> mappingMap = new ConcurrentHashMap<>();   // QoOCustomizableParam_id <-> Pipeline_id
+        Map<String, QoOCustomizableParam> paramsMap = new ConcurrentHashMap<>();   // QoOCustomizableParam_id <-> QoOCustomizableParams
+
+        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req2.toString());
+        ResultSet r = q.execSelect();
+        while (r.hasNext()) {
+            binding = r.nextSolution();
+
+            Resource pipeline = (Resource) binding.get("pipeline");
+            String pipeline_id = pipeline.getURI().split("#")[1];
+            Resource param = (Resource) binding.get("param");
+            String param_name = param.getURI().split("#")[1];
+            Resource attr = (Resource) binding.get("attr");
+            Literal paramVariation = binding.getLiteral("paramVariation");
+            Literal attrVar = binding.getLiteral("attrVar");
+
+            if (!pipelineMap.containsKey(pipeline_id)) {
+                QoOPipeline qoOPipeline = new QoOPipeline();
+                qoOPipeline.pipeline = pipeline_id;
+                qoOPipeline.customizable_params = new ArrayList<>();
+                pipelineMap.put(pipeline_id, qoOPipeline);
+            }
+
+            if (!paramsMap.containsKey(param_name)) {
+                QoOCustomizableParam qoOCustomizableParam = new QoOCustomizableParam();
+                qoOCustomizableParam.param_name = param_name;
+                qoOCustomizableParam.has = new ArrayList<>();
+                paramsMap.put(param_name, qoOCustomizableParam);
+            }
+            QoOCustomizableParam qoOCustomizableParamTemp = paramsMap.get(param_name);
+
+            QoOEffect qoOEffectTemp = new QoOEffect();
+            qoOEffectTemp.impacts = attr.getURI();
+            qoOEffectTemp.qooAttributeVariation = attrVar.getString();
+            qoOEffectTemp.capabilityVariation = paramVariation.getString();
+            qoOCustomizableParamTemp.has.add(qoOEffectTemp);
+
+            mappingMap.put(qoOCustomizableParamTemp.param_name, pipeline_id);
+        }
+
+        mappingMap.forEach((key, val) -> {
+            pipelineMap.get(val).customizable_params.add(paramsMap.get(key));
+        });
+
+        if (binding == null) {
+            return null;
+        }
+        else {
+            qoOPipelineList.qoOPipelines.addAll(pipelineMap.values());
+            return qoOPipelineList;
         }
     }
 

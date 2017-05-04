@@ -29,7 +29,7 @@ public class CustomPipeline1 extends AbstractPipeline implements IPipeline {
         super("Custom Pipeline 1", "CustomPipeline1", true);
 
         addSupportedOperator(NONE);
-        setParameter("nb_copies", String.valueOf(Float.MIN_VALUE), true);
+        setParameter("nb_copies", String.valueOf(0), true);
     }
 
     @Override

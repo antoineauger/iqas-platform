@@ -157,8 +157,6 @@ public class MonitorActor extends UntypedActor {
                 startDateCount.put(requestTemp.getRequest_id(), System.currentTimeMillis());
                 countByRequest.put(requestTemp.getRequest_id(), 0);
 
-                // TODO
-                log.error("MIN OBS_RATE REQ: " + minObsRateByRequest.toString());
                 forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
             else if (requestTemp.getCurrent_status() == REMOVED) { // Request deleted by the user

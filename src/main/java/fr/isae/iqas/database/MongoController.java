@@ -173,8 +173,7 @@ public class MongoController extends AllDirectives {
         final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
         _findSpecificRequest("request_id", request_id, (result, t) -> {
             if (t == null) {
-                List<Request> requestTempList = result.stream()
-                        .collect(Collectors.toCollection(ArrayList::new));
+                List<Request> requestTempList = new ArrayList<>(result);
                 requests.complete(requestTempList);
             }
             else {
