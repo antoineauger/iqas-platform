@@ -110,14 +110,11 @@ public class AnalyzeActor extends UntypedActor {
                             String tempIDForPipelines = new ObjectId().toString();
                             Request similarRequest = result.get(0);
 
-                            mongoController.getSpecificRequestMapping(similarRequest.getRequest_id()).whenComplete((result2, throwable2) -> {
-                                if (throwable2 != null || result2.size() <= 0) {
-                                    if (throwable2 != null) {
-                                        log.error(throwable2.toString());
-                                    }
+                            mongoController.getSpecificRequestMapping(similarRequest.getRequest_id()).whenComplete((similarMappings, throwable2) -> {
+                                if (throwable2 != null) {
+                                    log.error(throwable2.toString());
                                 }
                                 else {
-                                    RequestMapping similarMappings = result2.get(0);
                                     similarMappings.addDependentRequest(requestTemp);
 
                                     RequestMapping requestMapping = new RequestMapping(requestTemp.getRequest_id());

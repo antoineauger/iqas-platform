@@ -72,9 +72,8 @@ public class APIGatewayActor extends UntypedActor {
                 log.error("This should never happen: GET responsibility is directly handled by RESTServer");
             }
             else if (requestSubject.equals(DELETE)) { // Deletion
-                mongoController.getSpecificRequest(incomingRequest.getRequest_id()).whenComplete((result, throwable) -> {
-                    if (throwable == null && result.size() == 1) {
-                        Request retrievedRequest = result.get(0);
+                mongoController.getSpecificRequest(incomingRequest.getRequest_id()).whenComplete((retrievedRequest, throwable) -> {
+                    if (throwable == null) {
                         if (retrievedRequest.isInState(ENFORCED)) {
                             retrievedRequest.addLog("Request deleted by the user.");
                             retrievedRequest.updateState(REMOVED);
