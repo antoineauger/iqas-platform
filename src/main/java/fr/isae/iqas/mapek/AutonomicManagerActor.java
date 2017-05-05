@@ -123,7 +123,7 @@ public class AutonomicManagerActor extends UntypedActor {
                                         }
                                     }*/
                                     if (virtualSensorList.sensors.size() > 0) {
-                                        incomingReq.addLog("Found couple (" + incomingReq.getTopic() + " / " + incomingReq.getLocation() + "), forwarding request to Monitor.");
+                                        incomingReq.addLog("Found couple (" + incomingReq.getTopic() + " / " + incomingReq.getLocation() + "), request forwarded to Monitor.");
                                         incomingReq.updateState(SUBMITTED);
                                     } else {
                                         incomingReq.addLog("No sensor found for (" + incomingReq.getTopic() + " / " + incomingReq.getLocation() + ").");

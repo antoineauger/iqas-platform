@@ -42,8 +42,6 @@ public class HealRequest {
             return true;
         }
         else {
-            System.err.println("NOW: " + now);
-            System.err.println(observeUntil.getTime());
             return now >= observeUntil.getTime();
         }
     }
@@ -63,7 +61,7 @@ public class HealRequest {
 
     public boolean hasAlreadyBeenTried(QoOAttribute qoOAttribute, QoOPipeline healPipeline) {
         for (int i=0 ; i<healFor.size() ; i++) {
-            if (healFor.get(i).equals(qoOAttribute) && triedRemedies.get(i).equals(healPipeline)) {
+            if (healFor.get(i).equals(qoOAttribute) && triedRemedies.get(i).pipeline.equals(healPipeline.pipeline)) {
                 return true;
             }
         }

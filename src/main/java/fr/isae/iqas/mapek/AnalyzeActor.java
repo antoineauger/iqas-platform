@@ -35,6 +35,7 @@ import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.*;
 import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 import static fr.isae.iqas.model.quality.QoOAttribute.OBS_RATE;
+import static fr.isae.iqas.model.request.State.Status.REJECTED;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -259,10 +260,7 @@ public class AnalyzeActor extends UntypedActor {
                         if (currHealRequest.canPerformHeal()) {
                             log.info("We can perform heal for Request " + request_id);
                             mongoController.getSpecificRequest(request_id).whenComplete((retrievedRequest, throwable) -> {
-                                log.info("A " + request_id);
                                 if (throwable == null) {
-                                    log.info("B " + request_id);
-
                                     future(() -> fusekiController._findMatchingPipelinesToHeal(OBS_RATE, retrievedRequest.getQooConstraints().getInterested_in()), context().dispatcher())
                                             .onComplete(new OnComplete<QoOPipelineList>() {
                                                 public void onComplete(Throwable throwable2, QoOPipelineList qoOPipelineList) {
@@ -274,7 +272,8 @@ public class AnalyzeActor extends UntypedActor {
                                                                 || (currHealRequest.getLastHealFor().equals(OBS_RATE) && currHealRequest.getRetries() < max_retries)
                                                                 || !currHealRequest.hasAlreadyBeenTried(OBS_RATE, qoOPipelineToApplyForHeal)) {
 
-                                                            log.info("On the point to apply " + qoOPipelineList.qoOPipelines.get(0).pipeline + " for the time #" + String.valueOf(currHealRequest.getRetries()+1));
+                                                            log.info("On the point to apply " + qoOPipelineList.qoOPipelines.get(0).pipeline + " for the time #" +
+                                                                    String.valueOf(currHealRequest.getRetries()+1));
 
 
                                                             //TODO retrieve RequestMapping
@@ -291,8 +290,17 @@ public class AnalyzeActor extends UntypedActor {
                                                         }
                                                         else {
                                                             // Already tried this solution and does not seem to work...
-                                                            // TODO
-                                                            log.info("C " + request_id);
+                                                            tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, retrievedRequest));
+                                                            retrievedRequest.addLog("Max retry attempts (" + String.valueOf(max_retries) + ") reached to heal this request. " +
+                                                                    "Last heal was tried with the pipeline " + currHealRequest.getLastTriedRemedy().pipeline + " to improve " +
+                                                                    currHealRequest.getLastHealFor().toString() + " with the following params: " +
+                                                                    currHealRequest.getLastParamsForRemedies().toString() + ".");
+                                                            retrievedRequest.updateState(REJECTED);
+                                                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
+                                                                if (throwable != null) {
+                                                                    log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                                }
+                                                            });
                                                         }
                                                     }
                                                     else {
