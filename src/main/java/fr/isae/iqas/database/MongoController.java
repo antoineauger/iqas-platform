@@ -169,19 +169,25 @@ public class MongoController extends AllDirectives {
      * @param request_id
      * @return
      */
-    public CompletableFuture<List<Request>> getSpecificRequest(String request_id) {
-        final CompletableFuture<List<Request>> requests = new CompletableFuture<>();
+    public CompletableFuture<Request> getSpecificRequest(String request_id) {
+        final CompletableFuture<Request> request = new CompletableFuture<>();
         _findSpecificRequest("request_id", request_id, (result, t) -> {
             if (t == null) {
                 List<Request> requestTempList = new ArrayList<>(result);
-                requests.complete(requestTempList);
+                if (requestTempList.size() == 1) {
+                    request.complete(requestTempList.get(0));
+                }
+                else {
+                    log.error("Found more than one Request for request_id " + request_id + ". " + t.toString());
+                    request.completeExceptionally(t);
+                }
             }
             else {
                 log.error("Unable to retrieve specific request: " + t.toString());
-                requests.completeExceptionally(t);
+                request.completeExceptionally(t);
             }
         });
-        return requests;
+        return request;
     }
 
     /**
@@ -289,8 +295,8 @@ public class MongoController extends AllDirectives {
         return insertedRequest;
     }
 
-    public CompletableFuture<List<RequestMapping>> getSpecificRequestMapping(String request_id) {
-        final CompletableFuture<List<RequestMapping>> requestMappings = new CompletableFuture<>();
+    public CompletableFuture<RequestMapping> getSpecificRequestMapping(String request_id) {
+        final CompletableFuture<RequestMapping> requestMapping = new CompletableFuture<>();
         _findAllRequestMappings((result, t) -> {
             if (t == null) {
                 List<RequestMapping> requestTempList = new ArrayList<>();
@@ -299,14 +305,20 @@ public class MongoController extends AllDirectives {
                         requestTempList.add(r);
                     }
                 }
-                requestMappings.complete(requestTempList);
+                if (requestTempList.size() == 1) {
+                    requestMapping.complete(requestTempList.get(0));
+                }
+                else {
+                    log.error("Found more than one Request Mapping concerning request " + request_id + ": " + t.toString());
+                    requestMapping.completeExceptionally(t);
+                }
             }
             else {
                 log.error("Error when fetching Request Mapping concerning request " + request_id + ": " + t.toString());
-                requestMappings.completeExceptionally(t);
+                requestMapping.completeExceptionally(t);
             }
         });
-        return requestMappings;
+        return requestMapping;
     }
 
     public CompletableFuture<Boolean> updateRequestMapping(String associated_request_id, RequestMapping newRequestMapping) {

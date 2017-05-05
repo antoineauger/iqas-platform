@@ -9,11 +9,13 @@ import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
+import fr.isae.iqas.model.jsonld.QoOPipeline;
 import fr.isae.iqas.model.jsonld.QoOPipelineList;
 import fr.isae.iqas.model.jsonld.Topic;
 import fr.isae.iqas.model.jsonld.TopicList;
 import fr.isae.iqas.model.message.MAPEKSymptomMsgWithDate;
 import fr.isae.iqas.model.message.TerminatedMsg;
+import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.HealRequest;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
@@ -40,8 +42,6 @@ import static fr.isae.iqas.model.quality.QoOAttribute.OBS_RATE;
 
 public class AnalyzeActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-    private final static int MAX_SYMPTOMS_BEFORE_ACTION = 5;
-    private int max_retries;
 
     private final static int INC_DEC_STEP_FOR_INTEGER_PARAM = 1;
 
@@ -52,6 +52,8 @@ public class AnalyzeActor extends UntypedActor {
     private FiniteDuration tickMAPEK;
     private FiniteDuration symptomLifetime;
     private long observeDuration;
+    private int max_retries;
+    private int maxSymptomsBeforeAction;
 
     private Map<String, HealRequest> currentlyHealedRequest; // RequestIDs <-> HealRequests
 
@@ -66,7 +68,9 @@ public class AnalyzeActor extends UntypedActor {
         this.symptomLifetime = new FiniteDuration(Long.valueOf(prop.getProperty("symptom_lifetime_seconds")), TimeUnit.SECONDS);
         this.observeDuration = Integer.valueOf(prop.getProperty("max_time_to_observe_effect_seconds")) * 1000;
         this.max_retries = Integer.parseInt(prop.getProperty("max_number_retries"));
+        this.maxSymptomsBeforeAction = Integer.parseInt(prop.getProperty("nb_symptoms_before_action"));
 
+        this.currentlyHealedRequest = new ConcurrentHashMap<>();
         this.receivedObsRateSymptoms = new ConcurrentHashMap<>();
         this.receivedQoOSymptoms = new ConcurrentHashMap<>();
     }
@@ -76,7 +80,7 @@ public class AnalyzeActor extends UntypedActor {
         future(() -> fusekiController._findAllTopics(), context().dispatcher())
                 .onComplete(new OnComplete<TopicList>() {
                     public void onComplete(Throwable throwable, TopicList topicListResult) {
-                        if (throwable == null) { // Only continue if there was no error so far
+                        if (throwable == null) { // Only continue if there is no error so far
                             topicList = topicListResult;
                         }
                     }
@@ -85,19 +89,6 @@ public class AnalyzeActor extends UntypedActor {
         getContext().system().scheduler().scheduleOnce(
                 tickMAPEK,
                 getSelf(), "tick", getContext().dispatcher(), getSelf());
-
-        // TODO remove
-        /*ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JsonldModule(mapper::createObjectNode));
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        JsonldResourceBuilder builder = JsonldResource.Builder.create();
-
-        QoOPipelineList t = fusekiController._findMatchingPipelinesToHeal(OBS_FRESHNESS, Arrays.asList(OBS_ACCURACY, OBS_RATE));
-        try {
-            log.info(mapper.writeValueAsString(t));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }*/
     }
 
     // override postRestart so we don't call preStart and schedule a new message
@@ -135,14 +126,11 @@ public class AnalyzeActor extends UntypedActor {
                             String tempIDForPipelines = new ObjectId().toString();
                             Request similarRequest = result.get(0);
 
-                            mongoController.getSpecificRequestMapping(similarRequest.getRequest_id()).whenComplete((result2, throwable2) -> {
-                                if (throwable2 != null || result2.size() <= 0) {
-                                    if (throwable2 != null) {
-                                        log.error(throwable2.toString());
-                                    }
+                            mongoController.getSpecificRequestMapping(similarRequest.getRequest_id()).whenComplete((similarMappings, throwable2) -> {
+                                if (throwable2 != null) {
+                                    log.error(throwable2.toString());
                                 }
                                 else {
-                                    RequestMapping similarMappings = result2.get(0);
                                     similarMappings.addDependentRequest(requestTemp);
 
                                     RequestMapping requestMapping = new RequestMapping(requestTemp.getRequest_id());
@@ -251,13 +239,11 @@ public class AnalyzeActor extends UntypedActor {
             // SymptomMsg messages - Obs Rate
             else if (symptomMsg.getSymptom() == TOO_LOW && symptomMsg.getAbout() == EntityMAPEK.OBS_RATE) {
                 log.info("Received Symptom : {} {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getUniqueIDPipeline(), symptomMsg.getConcernedRequests().toString());
-                receivedObsRateSymptoms.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new CircularFifoBuffer(MAX_SYMPTOMS_BEFORE_ACTION));
+                receivedObsRateSymptoms.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new CircularFifoBuffer(maxSymptomsBeforeAction));
                 receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).add(new MAPEKSymptomMsgWithDate(symptomMsg));
 
-                if (receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).size() == MAX_SYMPTOMS_BEFORE_ACTION) {
+                if (receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).size() >= maxSymptomsBeforeAction) {
                     // TODO tell Plan Actor
-                    //tellToPlanActor(new RFCMsg(RFCMAPEK.INCREASE, EntityMAPEK.OBS_RATE, new HealPipeline(/* TODO */observeDuration)));
-                    //receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).clear();
 
                     /*getContext().system().scheduler().scheduleOnce(
                             new FiniteDuration(0, TimeUnit.SECONDS),
@@ -265,39 +251,64 @@ public class AnalyzeActor extends UntypedActor {
 
                     for (String request_id : symptomMsg.getConcernedRequests()) {
 
+                        log.info("Searching for Request " + request_id);
+
                         currentlyHealedRequest.putIfAbsent(request_id, new HealRequest(request_id, observeDuration));
                         HealRequest currHealRequest = currentlyHealedRequest.get(request_id);
 
-                        if (currHealRequest.canPerformHeal() && currHealRequest.getRetries() < max_retries) {
-                            mongoController.getSpecificRequest(request_id).whenComplete((result, throwable) -> {
-                                if (throwable == null && result.size() == 1) {
-                                    Request retrievedRequest = result.get(0);
+                        if (currHealRequest.canPerformHeal()) {
+                            log.info("We can perform heal for Request " + request_id);
+                            mongoController.getSpecificRequest(request_id).whenComplete((retrievedRequest, throwable) -> {
+                                log.info("A " + request_id);
+                                if (throwable == null) {
+                                    log.info("B " + request_id);
 
                                     future(() -> fusekiController._findMatchingPipelinesToHeal(OBS_RATE, retrievedRequest.getQooConstraints().getInterested_in()), context().dispatcher())
                                             .onComplete(new OnComplete<QoOPipelineList>() {
-                                                public void onComplete(Throwable throwable, QoOPipelineList qoOPipelineList) {
-                                                    if (throwable == null) { // Only continue if there was no error so far
-                                                        log.info("On the point to apply " + qoOPipelineList.qoOPipelines.get(0).pipeline);
+                                                public void onComplete(Throwable throwable2, QoOPipelineList qoOPipelineList) {
+
+                                                    if (throwable2 == null && qoOPipelineList.qoOPipelines.size() > 0) { // Only continue if there was no error so far
+                                                        QoOPipeline qoOPipelineToApplyForHeal = qoOPipelineList.qoOPipelines.get(0);
+                                                        if (currHealRequest.getLastHealFor() == null
+                                                                || !currHealRequest.getLastHealFor().equals(OBS_RATE)
+                                                                || (currHealRequest.getLastHealFor().equals(OBS_RATE) && currHealRequest.getRetries() < max_retries)
+                                                                || !currHealRequest.hasAlreadyBeenTried(OBS_RATE, qoOPipelineToApplyForHeal)) {
+
+                                                            log.info("On the point to apply " + qoOPipelineList.qoOPipelines.get(0).pipeline + " for the time #" + String.valueOf(currHealRequest.getRetries()+1));
 
 
-                                                        //TODO retrieve RequestMapping
+                                                            //TODO retrieve RequestMapping
 
-                                                        // TODO resolve dynamically
-                                                        Map<String, String> healParams = new ConcurrentHashMap<>();
-                                                        healParams.put("nb_copies", "0");
+                                                            // TODO resolve dynamically
+                                                            Map<String, String> healParams = new ConcurrentHashMap<>();
+                                                            healParams.put("nb_copies", "0");
 
-                                                        currHealRequest.performHeal(OBS_RATE, qoOPipelineList.qoOPipelines.get(0), healParams);
-                                                        currentlyHealedRequest.put(request_id, currHealRequest);
+                                                            currHealRequest.performHeal(OBS_RATE, qoOPipelineList.qoOPipelines.get(0), healParams);
+                                                            currentlyHealedRequest.put(request_id, currHealRequest);
 
+                                                            // TODO
+                                                            //tellToPlanActor(new RFCMsg(RFCMAPEK.HEAL, EntityMAPEK.REQUEST, currHealRequest, new RequestMapping("TOTO")));
+                                                        }
+                                                        else {
+                                                            // Already tried this solution and does not seem to work...
+                                                            // TODO
+                                                            log.info("C " + request_id);
+                                                        }
+                                                    }
+                                                    else {
+                                                        // No suitable Pipeline for healing, rejecting Request if its level is "GUARANTEED"
                                                         // TODO
-                                                        tellToPlanActor(new RFCMsg(RFCMAPEK.HEAL, EntityMAPEK.REQUEST, currHealRequest, new RequestMapping("TOTO")));
+                                                        log.info("D " + request_id);
                                                     }
                                                 }
                                             }, context().dispatcher());
+
+
                                 } else {
                                     log.warning("Unable to retrieve request " + request_id + ". Operation skipped!");
                                 }
                             });
+                            receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).clear(); // We clear buffer for TOO_LOW OBS_RATE Symptoms
                         }
                     }
                 }

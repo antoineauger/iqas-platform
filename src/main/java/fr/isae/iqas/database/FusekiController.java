@@ -2,7 +2,6 @@ package fr.isae.iqas.database;
 
 import fr.isae.iqas.config.Config;
 import fr.isae.iqas.model.jsonld.*;
-import fr.isae.iqas.model.jsonld.QoOAttribute;
 import fr.isae.iqas.utils.QualityUtils;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -77,49 +76,50 @@ public class FusekiController {
                 "  ?pos geo:alt ?alt\n" +
                 "}";
 
-        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
-        ResultSet r = q.execSelect();
-        while (r.hasNext()) {
-            binding = r.nextSolution();
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
 
-            Resource id = (Resource) binding.get("sensor");
-            Resource topic = (Resource) binding.get("topic");
-            Resource fof = (Resource) binding.get("fof");
-            Resource unit = (Resource) binding.get("unit");
-            Resource quantityKind = (Resource) binding.get("quantityKind");
-            Literal url = binding.getLiteral("url");
-            Literal interfaceType = binding.getLiteral("interfaceType");
-            Literal interfaceDescription = binding.getLiteral("interfaceDescription");
-            Literal longitude = binding.getLiteral("longitude");
-            Literal latitude = binding.getLiteral("latitude");
-            Literal alt = binding.getLiteral("alt");
-            Literal altRelative = binding.getLiteral("altRelative");
-            Literal relativeLocation = binding.getLiteral("relativeLocation");
+                Resource id = (Resource) binding.get("sensor");
+                Resource topic = (Resource) binding.get("topic");
+                Resource fof = (Resource) binding.get("fof");
+                Resource unit = (Resource) binding.get("unit");
+                Resource quantityKind = (Resource) binding.get("quantityKind");
+                Literal url = binding.getLiteral("url");
+                Literal interfaceType = binding.getLiteral("interfaceType");
+                Literal interfaceDescription = binding.getLiteral("interfaceDescription");
+                Literal longitude = binding.getLiteral("longitude");
+                Literal latitude = binding.getLiteral("latitude");
+                Literal alt = binding.getLiteral("alt");
+                Literal altRelative = binding.getLiteral("altRelative");
+                Literal relativeLocation = binding.getLiteral("relativeLocation");
 
-            VirtualSensor sensorTemp = new VirtualSensor();
-            sensorTemp.sensor_id = id.getURI();
+                VirtualSensor sensorTemp = new VirtualSensor();
+                sensorTemp.sensor_id = id.getURI();
 
-            sensorTemp.location = new Location();
-            sensorTemp.location.latitude = latitude.getString();
-            sensorTemp.location.longitude = longitude.getString();
-            sensorTemp.location.altitude = alt.getString();
-            sensorTemp.location.relative_altitude = altRelative.getString();
-            sensorTemp.location.relative_location = relativeLocation.getString();
+                sensorTemp.location = new Location();
+                sensorTemp.location.latitude = latitude.getString();
+                sensorTemp.location.longitude = longitude.getString();
+                sensorTemp.location.altitude = alt.getString();
+                sensorTemp.location.relative_altitude = altRelative.getString();
+                sensorTemp.location.relative_location = relativeLocation.getString();
 
-            sensorTemp.madeObservation = new Observation();
-            sensorTemp.madeObservation.featureOfInterest = fof.getURI();
-            sensorTemp.madeObservation.observedProperty = topic.getURI();
+                sensorTemp.madeObservation = new Observation();
+                sensorTemp.madeObservation.featureOfInterest = fof.getURI();
+                sensorTemp.madeObservation.observedProperty = topic.getURI();
 
-            sensorTemp.observationValue = new ObservationValue();
-            sensorTemp.observationValue.hasQuantityKind = quantityKind.getURI();
-            sensorTemp.observationValue.hasUnit = unit.getURI();
+                sensorTemp.observationValue = new ObservationValue();
+                sensorTemp.observationValue.hasQuantityKind = quantityKind.getURI();
+                sensorTemp.observationValue.hasUnit = unit.getURI();
 
-            sensorTemp.endpoint = new ServiceEndpoint();
-            sensorTemp.endpoint.url = url.getString();
-            sensorTemp.endpoint.if_type = interfaceType.getString();
-            sensorTemp.endpoint.description = interfaceDescription.getString();
+                sensorTemp.endpoint = new ServiceEndpoint();
+                sensorTemp.endpoint.url = url.getString();
+                sensorTemp.endpoint.if_type = interfaceType.getString();
+                sensorTemp.endpoint.description = interfaceDescription.getString();
 
-            sensorList.sensors.add(sensorTemp);
+                sensorList.sensors.add(sensorTemp);
+            }
         }
 
         if (sensorList.sensors.size() == 0) {
@@ -161,47 +161,48 @@ public class FusekiController {
                 "  ?pos geo:alt ?alt\n" +
                 "}";
 
-        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
-        ResultSet r = q.execSelect();
-        if (r.hasNext()) {
-            binding = r.nextSolution();
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            if (r.hasNext()) {
+                binding = r.nextSolution();
 
-            Resource id = (Resource) binding.get("sensor");
-            Resource topic = (Resource) binding.get("topic");
-            Resource fof = (Resource) binding.get("fof");
-            Resource unit = (Resource) binding.get("unit");
-            Resource quantityKind = (Resource) binding.get("quantityKind");
-            Literal url = binding.getLiteral("url");
-            Literal interfaceType = binding.getLiteral("interfaceType");
-            Literal interfaceDescription = binding.getLiteral("interfaceDescription");
-            Literal longitude = binding.getLiteral("longitude");
-            Literal latitude = binding.getLiteral("latitude");
-            Literal alt = binding.getLiteral("alt");
-            Literal altRelative = binding.getLiteral("altRelative");
-            Literal relativeLocation = binding.getLiteral("relativeLocation");
+                Resource id = (Resource) binding.get("sensor");
+                Resource topic = (Resource) binding.get("topic");
+                Resource fof = (Resource) binding.get("fof");
+                Resource unit = (Resource) binding.get("unit");
+                Resource quantityKind = (Resource) binding.get("quantityKind");
+                Literal url = binding.getLiteral("url");
+                Literal interfaceType = binding.getLiteral("interfaceType");
+                Literal interfaceDescription = binding.getLiteral("interfaceDescription");
+                Literal longitude = binding.getLiteral("longitude");
+                Literal latitude = binding.getLiteral("latitude");
+                Literal alt = binding.getLiteral("alt");
+                Literal altRelative = binding.getLiteral("altRelative");
+                Literal relativeLocation = binding.getLiteral("relativeLocation");
 
-            sensor = new VirtualSensor();
-            sensor.sensor_id = id.getURI();
+                sensor = new VirtualSensor();
+                sensor.sensor_id = id.getURI();
 
-            sensor.location = new Location();
-            sensor.location.latitude = latitude.getString();
-            sensor.location.longitude = longitude.getString();
-            sensor.location.altitude = alt.getString();
-            sensor.location.relative_altitude = altRelative.getString();
-            sensor.location.relative_location = relativeLocation.getString();
+                sensor.location = new Location();
+                sensor.location.latitude = latitude.getString();
+                sensor.location.longitude = longitude.getString();
+                sensor.location.altitude = alt.getString();
+                sensor.location.relative_altitude = altRelative.getString();
+                sensor.location.relative_location = relativeLocation.getString();
 
-            sensor.madeObservation = new Observation();
-            sensor.madeObservation.featureOfInterest = fof.getURI();
-            sensor.madeObservation.observedProperty = topic.getURI();
+                sensor.madeObservation = new Observation();
+                sensor.madeObservation.featureOfInterest = fof.getURI();
+                sensor.madeObservation.observedProperty = topic.getURI();
 
-            sensor.observationValue = new ObservationValue();
-            sensor.observationValue.hasQuantityKind = quantityKind.getURI();
-            sensor.observationValue.hasUnit = unit.getURI();
+                sensor.observationValue = new ObservationValue();
+                sensor.observationValue.hasQuantityKind = quantityKind.getURI();
+                sensor.observationValue.hasUnit = unit.getURI();
 
-            sensor.endpoint = new ServiceEndpoint();
-            sensor.endpoint.url = url.getString();
-            sensor.endpoint.if_type = interfaceType.getString();
-            sensor.endpoint.description = interfaceDescription.getString();
+                sensor.endpoint = new ServiceEndpoint();
+                sensor.endpoint.url = url.getString();
+                sensor.endpoint.if_type = interfaceType.getString();
+                sensor.endpoint.description = interfaceDescription.getString();
+            }
         }
 
         if (binding == null) {
@@ -255,49 +256,50 @@ public class FusekiController {
                 "?pos geo:alt ?alt\n" +
                 "}";
 
-        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
-        ResultSet r = q.execSelect();
-        while (r.hasNext()) {
-            binding = r.nextSolution();
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
 
-            Resource id = (Resource) binding.get("sensor");
-            Resource topic = (Resource) binding.get("topic");
-            Resource fof = (Resource) binding.get("fof");
-            Resource unit = (Resource) binding.get("unit");
-            Resource quantityKind = (Resource) binding.get("quantityKind");
-            Literal url = binding.getLiteral("url");
-            Literal interfaceType = binding.getLiteral("interfaceType");
-            Literal interfaceDescription = binding.getLiteral("interfaceDescription");
-            Literal longitude = binding.getLiteral("longitude");
-            Literal latitude = binding.getLiteral("latitude");
-            Literal alt = binding.getLiteral("alt");
-            Literal altRelative = binding.getLiteral("altRelative");
-            Literal relativeLocation = binding.getLiteral("relativeLocation");
+                Resource id = (Resource) binding.get("sensor");
+                Resource topic = (Resource) binding.get("topic");
+                Resource fof = (Resource) binding.get("fof");
+                Resource unit = (Resource) binding.get("unit");
+                Resource quantityKind = (Resource) binding.get("quantityKind");
+                Literal url = binding.getLiteral("url");
+                Literal interfaceType = binding.getLiteral("interfaceType");
+                Literal interfaceDescription = binding.getLiteral("interfaceDescription");
+                Literal longitude = binding.getLiteral("longitude");
+                Literal latitude = binding.getLiteral("latitude");
+                Literal alt = binding.getLiteral("alt");
+                Literal altRelative = binding.getLiteral("altRelative");
+                Literal relativeLocation = binding.getLiteral("relativeLocation");
 
-            VirtualSensor sensorTemp = new VirtualSensor();
-            sensorTemp.sensor_id = id.getURI();
+                VirtualSensor sensorTemp = new VirtualSensor();
+                sensorTemp.sensor_id = id.getURI();
 
-            sensorTemp.location = new Location();
-            sensorTemp.location.latitude = latitude.getString();
-            sensorTemp.location.longitude = longitude.getString();
-            sensorTemp.location.altitude = alt.getString();
-            sensorTemp.location.relative_altitude = altRelative.getString();
-            sensorTemp.location.relative_location = relativeLocation.getString();
+                sensorTemp.location = new Location();
+                sensorTemp.location.latitude = latitude.getString();
+                sensorTemp.location.longitude = longitude.getString();
+                sensorTemp.location.altitude = alt.getString();
+                sensorTemp.location.relative_altitude = altRelative.getString();
+                sensorTemp.location.relative_location = relativeLocation.getString();
 
-            sensorTemp.madeObservation = new Observation();
-            sensorTemp.madeObservation.featureOfInterest = fof.getURI();
-            sensorTemp.madeObservation.observedProperty = topic.getURI();
+                sensorTemp.madeObservation = new Observation();
+                sensorTemp.madeObservation.featureOfInterest = fof.getURI();
+                sensorTemp.madeObservation.observedProperty = topic.getURI();
 
-            sensorTemp.observationValue = new ObservationValue();
-            sensorTemp.observationValue.hasQuantityKind = quantityKind.getURI();
-            sensorTemp.observationValue.hasUnit = unit.getURI();
+                sensorTemp.observationValue = new ObservationValue();
+                sensorTemp.observationValue.hasQuantityKind = quantityKind.getURI();
+                sensorTemp.observationValue.hasUnit = unit.getURI();
 
-            sensorTemp.endpoint = new ServiceEndpoint();
-            sensorTemp.endpoint.url = url.getString();
-            sensorTemp.endpoint.if_type = interfaceType.getString();
-            sensorTemp.endpoint.description = interfaceDescription.getString();
+                sensorTemp.endpoint = new ServiceEndpoint();
+                sensorTemp.endpoint.url = url.getString();
+                sensorTemp.endpoint.if_type = interfaceType.getString();
+                sensorTemp.endpoint.description = interfaceDescription.getString();
 
-            sensorList.sensors.add(sensorTemp);
+                sensorList.sensors.add(sensorTemp);
+            }
         }
 
         if (sensorList.sensors.size() == 0) {
@@ -325,15 +327,16 @@ public class FusekiController {
                 " ?topic rdf:type ssn:Property .\n" +
                 "}";
 
-        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
-        ResultSet r = q.execSelect();
-        while (r.hasNext()) {
-            binding = r.nextSolution();
-            Resource topic = (Resource) binding.get("topic");
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
+                Resource topic = (Resource) binding.get("topic");
 
-            Topic topicTemp = new Topic();
-            topicTemp.topic = topic.getURI();
-            topicList.topics.add(topicTemp);
+                Topic topicTemp = new Topic();
+                topicTemp.topic = topic.getURI();
+                topicList.topics.add(topicTemp);
+            }
         }
 
         if (topicList.topics.size() == 0) {
@@ -359,20 +362,21 @@ public class FusekiController {
                 "?service iot-lite:interfaceDescription ?interfaceDescription\n" +
                 "}";
 
-        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
-        ResultSet r = q.execSelect();
-        while (r.hasNext()) {
-            binding = r.nextSolution();
-            Literal url = binding.getLiteral("url");
-            Literal interfaceType = binding.getLiteral("interfaceType");
-            Literal interfaceDescription = binding.getLiteral("interfaceDescription");
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
+                Literal url = binding.getLiteral("url");
+                Literal interfaceType = binding.getLiteral("interfaceType");
+                Literal interfaceDescription = binding.getLiteral("interfaceDescription");
 
-            ServiceEndpoint serviceEndpointTemp = new ServiceEndpoint();
-            serviceEndpointTemp.url = url.getString();
-            serviceEndpointTemp.if_type = interfaceType.getString();
-            serviceEndpointTemp.description = interfaceDescription.getString();
+                ServiceEndpoint serviceEndpointTemp = new ServiceEndpoint();
+                serviceEndpointTemp.url = url.getString();
+                serviceEndpointTemp.if_type = interfaceType.getString();
+                serviceEndpointTemp.description = interfaceDescription.getString();
 
-            endpointsForTopic.serviceEndpoints.add(serviceEndpointTemp);
+                endpointsForTopic.serviceEndpoints.add(serviceEndpointTemp);
+            }
         }
 
         if (binding == null) {
@@ -405,24 +409,25 @@ public class FusekiController {
                 "  ?loc iot-lite:altRelative ?altRelative \n" +
                 "}";
 
-        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
-        ResultSet r = q.execSelect();
-        while (r.hasNext()) {
-            binding = r.nextSolution();
-            Literal latitude = binding.getLiteral("latitude");
-            Literal longitude = binding.getLiteral("longitude");
-            Literal altitude = binding.getLiteral("altitude");
-            Literal relative_altitude = binding.getLiteral("altRelative");
-            Literal relative_location = binding.getLiteral("relativeLocation");
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
+                Literal latitude = binding.getLiteral("latitude");
+                Literal longitude = binding.getLiteral("longitude");
+                Literal altitude = binding.getLiteral("altitude");
+                Literal relative_altitude = binding.getLiteral("altRelative");
+                Literal relative_location = binding.getLiteral("relativeLocation");
 
-            Location locationTemp = new Location();
-            locationTemp.latitude = latitude.getString();
-            locationTemp.longitude = longitude.getString();
-            locationTemp.altitude = altitude.getString();
-            locationTemp.relative_altitude = relative_altitude.getString();
-            locationTemp.relative_location = relative_location.getString();
+                Location locationTemp = new Location();
+                locationTemp.latitude = latitude.getString();
+                locationTemp.longitude = longitude.getString();
+                locationTemp.altitude = altitude.getString();
+                locationTemp.relative_altitude = relative_altitude.getString();
+                locationTemp.relative_location = relative_location.getString();
 
-            locationList.locations.add(locationTemp);
+                locationList.locations.add(locationTemp);
+            }
         }
 
         if (binding == null) {
@@ -454,24 +459,25 @@ public class FusekiController {
                 "  ?loc iot-lite:altRelative ?altRelative \n" +
                 "}";
 
-        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
-        ResultSet r = q.execSelect();
-        while (r.hasNext()) {
-            binding = r.nextSolution();
-            Literal latitude = binding.getLiteral("latitude");
-            Literal longitude = binding.getLiteral("longitude");
-            Literal altitude = binding.getLiteral("altitude");
-            Literal relative_altitude = binding.getLiteral("altRelative");
-            Literal relative_location = binding.getLiteral("relativeLocation");
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
+                Literal latitude = binding.getLiteral("latitude");
+                Literal longitude = binding.getLiteral("longitude");
+                Literal altitude = binding.getLiteral("altitude");
+                Literal relative_altitude = binding.getLiteral("altRelative");
+                Literal relative_location = binding.getLiteral("relativeLocation");
 
-            Location locationTemp = new Location();
-            locationTemp.latitude = latitude.getString();
-            locationTemp.longitude = longitude.getString();
-            locationTemp.altitude = altitude.getString();
-            locationTemp.relative_altitude = relative_altitude.getString();
-            locationTemp.relative_location = relative_location.getString();
+                Location locationTemp = new Location();
+                locationTemp.latitude = latitude.getString();
+                locationTemp.longitude = longitude.getString();
+                locationTemp.altitude = altitude.getString();
+                locationTemp.relative_altitude = relative_altitude.getString();
+                locationTemp.relative_location = relative_location.getString();
 
-            locationList.locations.add(locationTemp);
+                locationList.locations.add(locationTemp);
+            }
         }
 
         if (binding == null) {
@@ -498,19 +504,20 @@ public class FusekiController {
                 "  ?attribute qoo:shouldBe ?variation\n" +
                 "}";
 
-        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
-        ResultSet r = q.execSelect();
-        while (r.hasNext()) {
-            binding = r.nextSolution();
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
 
-            Resource attribute = (Resource) binding.get("attribute");
-            Literal variation = binding.getLiteral("variation");
+                Resource attribute = (Resource) binding.get("attribute");
+                Literal variation = binding.getLiteral("variation");
 
-            QoOAttribute attrTemp = new QoOAttribute();
-            attrTemp.name = attribute.getURI().split("#")[1];
-            attrTemp.should_be = variation.getString();
+                QoOAttribute attrTemp = new QoOAttribute();
+                attrTemp.name = attribute.getURI().split("#")[1];
+                attrTemp.should_be = variation.getString();
 
-            qoOAttributeList.qoo_attributes.add(attrTemp);
+                qoOAttributeList.qoo_attributes.add(attrTemp);
+            }
         }
 
         if (binding == null) {
@@ -543,37 +550,37 @@ public class FusekiController {
                 "  ?effect qoo:qooAttributeVariation ?attrVariation\n" +
                 "}";
 
-        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
-        ResultSet r = q.execSelect();
-        while (r.hasNext()) {
-            binding = r.nextSolution();
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
 
-            Resource param = (Resource) binding.get("param");
-            String paramName = param.getURI().split("#")[1];
-            Literal doc = binding.getLiteral("doc");
+                Resource param = (Resource) binding.get("param");
+                String paramName = param.getURI().split("#")[1];
+                Literal doc = binding.getLiteral("doc");
 
-            Resource impact = (Resource) binding.get("impact");
-            String impactName = impact.getURI().split("#")[1];
-            Literal paramVariation = binding.getLiteral("paramVariation");
-            Literal attrVariation = binding.getLiteral("attrVariation");
+                Resource impact = (Resource) binding.get("impact");
+                String impactName = impact.getURI().split("#")[1];
+                Literal paramVariation = binding.getLiteral("paramVariation");
+                Literal attrVariation = binding.getLiteral("attrVariation");
 
-            QoOCustomizableParam paramTemp;
-            if (!processedParams.containsKey(paramName)) {
-                paramTemp = new QoOCustomizableParam();
-                paramTemp.param_name = paramName;
-                paramTemp.documentation = doc.getString();
-                paramTemp.has = new ArrayList<>();
+                QoOCustomizableParam paramTemp;
+                if (!processedParams.containsKey(paramName)) {
+                    paramTemp = new QoOCustomizableParam();
+                    paramTemp.param_name = paramName;
+                    paramTemp.documentation = doc.getString();
+                    paramTemp.has = new ArrayList<>();
+                } else {
+                    paramTemp = processedParams.get(paramName);
+                }
+                QoOEffect qoOEffect = new QoOEffect();
+                qoOEffect.impacts = impactName;
+                qoOEffect.paramVariation = paramVariation.getString();
+                qoOEffect.qooAttributeVariation = attrVariation.getString();
+                paramTemp.has.add(qoOEffect);
+
+                processedParams.put(paramName, paramTemp);
             }
-            else {
-                paramTemp = processedParams.get(paramName);
-            }
-            QoOEffect qoOEffect = new QoOEffect();
-            qoOEffect.impacts = impactName;
-            qoOEffect.paramVariation = paramVariation.getString();
-            qoOEffect.qooAttributeVariation = attrVariation.getString();
-            paramTemp.has.add(qoOEffect);
-
-            processedParams.put(paramName, paramTemp);
         }
 
         if (binding == null) {
@@ -605,39 +612,38 @@ public class FusekiController {
                 "  ?prop qoo:hasMaxValue ?maxValue\n" +
                 "}";
 
-        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req);
-        ResultSet r = q.execSelect();
-        while (r.hasNext()) {
-            binding = r.nextSolution();
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req)) {
+            ResultSet r = q.execSelect();
+            while (r.hasNext()) {
+                binding = r.nextSolution();
 
-            Resource param = (Resource) binding.get("sensor");
-            String sensor_id = param.getURI().split("#")[1];
-            param = (Resource) binding.get("topic");
-            String topic = param.getURI().split("#")[1];
-            String minValue = binding.getLiteral("minValue").getString();
-            String maxValue = binding.getLiteral("maxValue").getString();
+                Resource param = (Resource) binding.get("sensor");
+                String sensor_id = param.getURI().split("#")[1];
+                param = (Resource) binding.get("topic");
+                String topic = param.getURI().split("#")[1];
+                String minValue = binding.getLiteral("minValue").getString();
+                String maxValue = binding.getLiteral("maxValue").getString();
 
-            if (minValue.equals("+INF")) {
-                minValue = String.valueOf(Float.MAX_VALUE);
+                if (minValue.equals("+INF")) {
+                    minValue = String.valueOf(Float.MAX_VALUE);
+                } else if (minValue.equals("-INF")) {
+                    minValue = String.valueOf(Float.MIN_VALUE);
+                }
+
+                if (maxValue.equals("+INF")) {
+                    maxValue = String.valueOf(Float.MAX_VALUE);
+                } else if (maxValue.equals("-INF")) {
+                    maxValue = String.valueOf(Float.MIN_VALUE);
+                }
+
+                SensorCapability paramTemp = new SensorCapability();
+                paramTemp.sensor_id = sensor_id;
+                paramTemp.topic = topic;
+                paramTemp.min_value = minValue;
+                paramTemp.max_value = maxValue;
+
+                sensorCapabilityList.sensorCapabilities.add(paramTemp);
             }
-            else if (minValue.equals("-INF")) {
-                minValue = String.valueOf(Float.MIN_VALUE);
-            }
-
-            if (maxValue.equals("+INF")) {
-                maxValue = String.valueOf(Float.MAX_VALUE);
-            }
-            else if (maxValue.equals("-INF")) {
-                maxValue = String.valueOf(Float.MIN_VALUE);
-            }
-
-            SensorCapability paramTemp = new SensorCapability();
-            paramTemp.sensor_id = sensor_id;
-            paramTemp.topic = topic;
-            paramTemp.min_value = minValue;
-            paramTemp.max_value = maxValue;
-
-            sensorCapabilityList.sensorCapabilities.add(paramTemp);
         }
 
         if (binding == null) {
@@ -653,7 +659,11 @@ public class FusekiController {
      */
 
     public QoOPipelineList _findMatchingPipelinesToHeal(fr.isae.iqas.model.quality.QoOAttribute priorityAttr, List<fr.isae.iqas.model.quality.QoOAttribute> attrToPreserve) {
-        QuerySolution binding = null;
+        Map<String, QoOPipeline> pipelineMap = new ConcurrentHashMap<>();      // Pipeline_id <-> QoOPipeline
+        Map<String, String> mappingMap = new ConcurrentHashMap<>();   // QoOCustomizableParam_id <-> Pipeline_id
+        Map<String, QoOCustomizableParam> paramsMap = new ConcurrentHashMap<>();   // QoOCustomizableParam_id <-> QoOCustomizableParams
+
+        QuerySolution binding1;
         QoOPipelineList qoOPipelineList = new QoOPipelineList();
         qoOPipelineList.qoOPipelines = new ArrayList<>();
 
@@ -668,14 +678,16 @@ public class FusekiController {
                 "  ?attr qoo:shouldBe ?var \n" +
                 "}";
 
-        QueryExecution q1 = QueryExecutionFactory.sparqlService(sparqlService, req1);
-        ResultSet r1 = q1.execSelect();
-        while (r1.hasNext()) {
-            binding = r1.nextSolution();
-            Resource param = (Resource) binding.get("attr");
-            fr.isae.iqas.model.quality.QoOAttribute attr = fr.isae.iqas.model.quality.QoOAttribute.valueOf(param.getURI().split("#")[1]);
-            String var = binding.getLiteral("var").getString();
-            attrShouldNotBe.put(attr, QualityUtils.inverseOfVariation(var));
+        try (QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req1)) {
+            ResultSet r1 = q.execSelect();
+            while (r1.hasNext()) {
+                binding1 = r1.nextSolution();
+
+                Resource param = (Resource) binding1.get("attr");
+                fr.isae.iqas.model.quality.QoOAttribute attr = fr.isae.iqas.model.quality.QoOAttribute.valueOf(param.getURI().split("#")[1]);
+                String var = binding1.getLiteral("var").getString();
+                attrShouldNotBe.put(attr, QualityUtils.inverseOfVariation(var));
+            }
         }
 
         if (attrShouldNotBe.size() == 0) {
@@ -714,60 +726,59 @@ public class FusekiController {
 
         req2.append("}");
 
-        Map<String, QoOPipeline> pipelineMap = new ConcurrentHashMap<>();      // Pipeline_id <-> QoOPipeline
-        Map<String, String> mappingMap = new ConcurrentHashMap<>();   // QoOCustomizableParam_id <-> Pipeline_id
-        Map<String, QoOCustomizableParam> paramsMap = new ConcurrentHashMap<>();   // QoOCustomizableParam_id <-> QoOCustomizableParams
+        QuerySolution binding2 = null;
 
-        QueryExecution q = QueryExecutionFactory.sparqlService(sparqlService, req2.toString());
-        ResultSet r = q.execSelect();
-        while (r.hasNext()) {
-            binding = r.nextSolution();
+        try (QueryExecution q2 = QueryExecutionFactory.sparqlService(sparqlService, req2.toString())) {
+            ResultSet r2 = q2.execSelect();
+            while (r2.hasNext()) {
+                binding2 = r2.nextSolution();
 
-            Resource pipeline = (Resource) binding.get("pipeline");
-            String pipeline_id = pipeline.getURI().split("#")[1];
-            Resource param = (Resource) binding.get("param");
-            String param_name = param.getURI().split("#")[1];
-            Resource attr = (Resource) binding.get("attr");
-            Literal paramVariation = binding.getLiteral("paramVariation");
-            Literal attrVar = binding.getLiteral("attrVar");
-            Literal paramType = binding.getLiteral("paramType");
-            Literal paramMinValue = binding.getLiteral("paramMinValue");
-            Literal paramMaxValue = binding.getLiteral("paramMaxValue");
-            Literal paramInitialValue = binding.getLiteral("paramInitialValue");
+                Resource pipeline = (Resource) binding2.get("pipeline");
+                String pipeline_id = pipeline.getURI().split("#")[1];
+                Resource param = (Resource) binding2.get("param");
+                String param_name = param.getURI().split("#")[1];
+                Resource attr = (Resource) binding2.get("attr");
+                Literal paramVariation = binding2.getLiteral("paramVariation");
+                Literal attrVar = binding2.getLiteral("attrVar");
+                Literal paramType = binding2.getLiteral("paramType");
+                Literal paramMinValue = binding2.getLiteral("paramMinValue");
+                Literal paramMaxValue = binding2.getLiteral("paramMaxValue");
+                Literal paramInitialValue = binding2.getLiteral("paramInitialValue");
 
-            if (!pipelineMap.containsKey(pipeline_id)) {
-                QoOPipeline qoOPipeline = new QoOPipeline();
-                qoOPipeline.pipeline = pipeline_id;
-                qoOPipeline.customizable_params = new ArrayList<>();
-                pipelineMap.put(pipeline_id, qoOPipeline);
+                if (!pipelineMap.containsKey(pipeline_id)) {
+                    QoOPipeline qoOPipeline = new QoOPipeline();
+                    qoOPipeline.pipeline = pipeline_id;
+                    qoOPipeline.customizable_params = new ArrayList<>();
+                    pipelineMap.put(pipeline_id, qoOPipeline);
+                }
+
+                if (!paramsMap.containsKey(param_name)) {
+                    QoOCustomizableParam qoOCustomizableParam = new QoOCustomizableParam();
+                    qoOCustomizableParam.param_name = param_name;
+                    qoOCustomizableParam.paramInitialValue = paramInitialValue.getString();
+                    qoOCustomizableParam.paramType = paramType.getString();
+                    qoOCustomizableParam.paramMinValue = paramMinValue.getString();
+                    qoOCustomizableParam.paramMaxValue = paramMaxValue.getString();
+                    qoOCustomizableParam.has = new ArrayList<>();
+                    paramsMap.put(param_name, qoOCustomizableParam);
+                }
+                QoOCustomizableParam qoOCustomizableParamTemp = paramsMap.get(param_name);
+
+                QoOEffect qoOEffectTemp = new QoOEffect();
+                qoOEffectTemp.impacts = attr.getURI();
+                qoOEffectTemp.qooAttributeVariation = attrVar.getString();
+                qoOEffectTemp.paramVariation = paramVariation.getString();
+                qoOCustomizableParamTemp.has.add(qoOEffectTemp);
+
+                mappingMap.put(qoOCustomizableParamTemp.param_name, pipeline_id);
             }
-
-            if (!paramsMap.containsKey(param_name)) {
-                QoOCustomizableParam qoOCustomizableParam = new QoOCustomizableParam();
-                qoOCustomizableParam.param_name = param_name;
-                qoOCustomizableParam.paramInitialValue = paramInitialValue.getString();
-                qoOCustomizableParam.paramType = paramType.getString();
-                qoOCustomizableParam.paramMinValue = paramMinValue.getString();
-                qoOCustomizableParam.paramMaxValue = paramMaxValue.getString();
-                qoOCustomizableParam.has = new ArrayList<>();
-                paramsMap.put(param_name, qoOCustomizableParam);
-            }
-            QoOCustomizableParam qoOCustomizableParamTemp = paramsMap.get(param_name);
-
-            QoOEffect qoOEffectTemp = new QoOEffect();
-            qoOEffectTemp.impacts = attr.getURI();
-            qoOEffectTemp.qooAttributeVariation = attrVar.getString();
-            qoOEffectTemp.paramVariation = paramVariation.getString();
-            qoOCustomizableParamTemp.has.add(qoOEffectTemp);
-
-            mappingMap.put(qoOCustomizableParamTemp.param_name, pipeline_id);
         }
 
         mappingMap.forEach((key, val) -> {
             pipelineMap.get(val).customizable_params.add(paramsMap.get(key));
         });
 
-        if (binding == null) {
+        if (binding2 == null) {
             return null;
         }
         else {

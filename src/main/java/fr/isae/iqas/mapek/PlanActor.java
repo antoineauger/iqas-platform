@@ -454,9 +454,8 @@ public class PlanActor extends UntypedActor {
             }
 
             if (!actionMsg.getConstructedFromRequest().equals("")) { // Additional steps to perform if the request depends on another one
-                mongoController.getSpecificRequestMapping(actionMsg.getConstructedFromRequest()).whenComplete((result, throwable) -> {
+                mongoController.getSpecificRequestMapping(actionMsg.getConstructedFromRequest()).whenComplete((ancestorReqMapping, throwable) -> {
                     if (throwable == null) {
-                        RequestMapping ancestorReqMapping = result.get(0);
                         for (Object o : ancestorReqMapping.getAllTopics().entrySet()) {
                             Map.Entry pair = (Map.Entry) o;
                             TopicEntity topicEntityTemp = (TopicEntity) pair.getValue();

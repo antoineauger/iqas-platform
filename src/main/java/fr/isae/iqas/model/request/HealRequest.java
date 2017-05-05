@@ -23,7 +23,7 @@ public class HealRequest {
     // To emulate a kind of memory
     private List<QoOAttribute> healFor;
     private List<QoOPipeline> triedRemedies;
-    private List<Map<String, String>> paramForRemedies;
+    private List<Map<String, String>> paramsForRemedies;
 
     public HealRequest(String concernedRequest, long observeDuration) {
         this.concernedRequest = concernedRequest;
@@ -33,29 +33,67 @@ public class HealRequest {
 
         this.healFor = new ArrayList<>();
         this.triedRemedies = new ArrayList<>();
-        this.paramForRemedies = new ArrayList<>();
+        this.paramsForRemedies = new ArrayList<>();
     }
 
     public boolean canPerformHeal() {
         long now = System.currentTimeMillis();
-        return !isHealing || now >= observeUntil.getTime();
-    }
-
-    public boolean performHeal(QoOAttribute concernedAttr, QoOPipeline healPipelineToApply, Map<String, String> params) {
-        this.concernedAttr = concernedAttr;
-        healFor.add(concernedAttr);
-        triedRemedies.add(healPipelineToApply);
-        paramForRemedies.add(params);
-
-        long now = System.currentTimeMillis();
-        if (!isHealing || now >= observeUntil.getTime()) {
-            healStartDate = new Timestamp(now);
-            observeUntil = new Timestamp(now + observeDuration);
-            retries += 1;
+        if (!isHealing) {
             return true;
         }
         else {
-            return false;
+            System.err.println("NOW: " + now);
+            System.err.println(observeUntil.getTime());
+            return now >= observeUntil.getTime();
+        }
+    }
+
+    public void performHeal(QoOAttribute concernedAttr, QoOPipeline healPipelineToApply, Map<String, String> params) {
+        this.concernedAttr = concernedAttr;
+        healFor.add(concernedAttr);
+        triedRemedies.add(healPipelineToApply);
+        paramsForRemedies.add(params);
+
+        long now = System.currentTimeMillis();
+        healStartDate = new Timestamp(now);
+        observeUntil = new Timestamp(now + observeDuration);
+        retries += 1;
+        isHealing = true;
+    }
+
+    public boolean hasAlreadyBeenTried(QoOAttribute qoOAttribute, QoOPipeline healPipeline) {
+        for (int i=0 ; i<healFor.size() ; i++) {
+            if (healFor.get(i).equals(qoOAttribute) && triedRemedies.get(i).equals(healPipeline)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public QoOPipeline getLastTriedRemedy() {
+        if (triedRemedies.size() > 0) {
+            return triedRemedies.get(triedRemedies.size()-1);
+        }
+        else {
+            return null;
+        }
+    }
+
+    public QoOAttribute getLastHealFor() {
+        if (healFor.size() > 0) {
+            return healFor.get(healFor.size()-1);
+        }
+        else {
+            return null;
+        }
+    }
+
+    public Map<String, String> getLastParamsForRemedies() {
+        if (paramsForRemedies.size() > 0) {
+            return paramsForRemedies.get(paramsForRemedies.size()-1);
+        }
+        else {
+            return null;
         }
     }
 
@@ -69,5 +107,9 @@ public class HealRequest {
 
     public String getConcernedRequest() {
         return concernedRequest;
+    }
+
+    public Timestamp getHealStartDate() {
+        return healStartDate;
     }
 }
