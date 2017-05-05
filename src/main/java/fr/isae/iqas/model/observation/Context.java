@@ -33,7 +33,7 @@ public class Context {
         this.longitude = virtualSensor.location.longitude;
         this.altitude = virtualSensor.location.altitude;
         this.relativeLocation = virtualSensor.location.relative_location;
-        this.topic = virtualSensor.madeObservation.observedProperty;
+        this.topic = virtualSensor.madeObservation.observedProperty.split("#")[1];
     }
 
     public String getLatitude() {

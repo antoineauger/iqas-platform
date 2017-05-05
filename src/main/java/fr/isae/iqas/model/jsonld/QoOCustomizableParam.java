@@ -14,7 +14,19 @@ public class QoOCustomizableParam {
     public String param_name;
 
     @JsonldProperty("http://isae.fr/iqas/qoo-ontology#documentation")
-    public String details;
+    public String documentation;
+
+    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#paramType")
+    public String paramType;
+
+    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#paramMinValue")
+    public String paramMinValue;
+
+    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#paramMaxValue")
+    public String paramMaxValue;
+
+    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#paramInitialValue")
+    public String paramInitialValue;
 
     @JsonldProperty("http://isae.fr/iqas/qoo-ontology#has")
     public List<QoOEffect> has;

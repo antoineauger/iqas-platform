@@ -3,7 +3,6 @@ package fr.isae.iqas.database;
 import fr.isae.iqas.config.Config;
 import fr.isae.iqas.model.jsonld.*;
 import fr.isae.iqas.model.jsonld.QoOAttribute;
-import fr.isae.iqas.model.quality.*;
 import fr.isae.iqas.utils.QualityUtils;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -534,13 +533,13 @@ public class FusekiController {
         customizableParamList.customizable_params = new ArrayList<>();
 
         final String req = baseStringForRequests +
-                "SELECT ?param ?doc ?impact ?capaVariation ?attrVariation\n" +
+                "SELECT ?param ?doc ?impact ?paramVariation ?attrVariation\n" +
                 "WHERE {\n" +
                 "  ?param rdf:type qoo:QoOCustomizableParameter .\n" +
                 "  ?param qoo:documentation ?doc .\n" +
                 "  ?param qoo:has ?effect .\n" +
                 "  ?effect qoo:impacts ?impact .\n" +
-                "  ?effect qoo:capabilityVariation ?capaVariation .\n" +
+                "  ?effect qoo:paramVariation ?paramVariation .\n" +
                 "  ?effect qoo:qooAttributeVariation ?attrVariation\n" +
                 "}";
 
@@ -555,14 +554,14 @@ public class FusekiController {
 
             Resource impact = (Resource) binding.get("impact");
             String impactName = impact.getURI().split("#")[1];
-            Literal capaVariation = binding.getLiteral("capaVariation");
+            Literal paramVariation = binding.getLiteral("paramVariation");
             Literal attrVariation = binding.getLiteral("attrVariation");
 
             QoOCustomizableParam paramTemp;
             if (!processedParams.containsKey(paramName)) {
                 paramTemp = new QoOCustomizableParam();
                 paramTemp.param_name = paramName;
-                paramTemp.details = doc.getString();
+                paramTemp.documentation = doc.getString();
                 paramTemp.has = new ArrayList<>();
             }
             else {
@@ -570,7 +569,7 @@ public class FusekiController {
             }
             QoOEffect qoOEffect = new QoOEffect();
             qoOEffect.impacts = impactName;
-            qoOEffect.capabilityVariation = capaVariation.getString();
+            qoOEffect.paramVariation = paramVariation.getString();
             qoOEffect.qooAttributeVariation = attrVariation.getString();
             paramTemp.has.add(qoOEffect);
 
@@ -686,15 +685,19 @@ public class FusekiController {
         // Step 2: search for some matching QoOPipelines that meet parameters priorityAttr / attrToPreserve
 
         StringBuilder req2 = new StringBuilder(baseStringForRequests +
-                "SELECT DISTINCT ?attr ?pipeline ?param ?paramVariation ?attrVar\n" +
-                "WHERE {\n" +
+                "SELECT DISTINCT ?attr ?pipeline ?param ?paramType ?paramMinValue ?paramMaxValue ?paramInitialValue ?paramVariation ?attrVar\n" +
+                "WHERE {   \n" +
                 "  ?attr rdf:type qoo:QoOAttribute .\n" +
                 "  FILTER (?attr = qoo:" + priorityAttr.toString() + ") .\n" +
                 "  ?attr qoo:shouldBe ?attrVar .\n" +
                 "  ?pipeline rdf:type qoo:QoOPipeline .\n" +
                 "  ?pipeline qoo:allowsToSet ?param .\n" +
                 "  ?param qoo:has ?impact .\n" +
-                "  ?impact qoo:capabilityVariation ?paramVariation .\n" +
+                "  ?param qoo:paramType ?paramType .\n" +
+                "  ?param qoo:paramMinValue ?paramMinValue .\n" +
+                "  ?param qoo:paramMaxValue ?paramMaxValue .\n" +
+                "  ?param qoo:paramInitialValue ?paramInitialValue .\n" +
+                "  ?impact qoo:paramVariation ?paramVariation .\n" +
                 "  ?impact qoo:qooAttributeVariation ?attrVar .\n" +
                 "  ?impact qoo:impacts ?attr .\n");
 
@@ -727,6 +730,10 @@ public class FusekiController {
             Resource attr = (Resource) binding.get("attr");
             Literal paramVariation = binding.getLiteral("paramVariation");
             Literal attrVar = binding.getLiteral("attrVar");
+            Literal paramType = binding.getLiteral("paramType");
+            Literal paramMinValue = binding.getLiteral("paramMinValue");
+            Literal paramMaxValue = binding.getLiteral("paramMaxValue");
+            Literal paramInitialValue = binding.getLiteral("paramInitialValue");
 
             if (!pipelineMap.containsKey(pipeline_id)) {
                 QoOPipeline qoOPipeline = new QoOPipeline();
@@ -738,6 +745,10 @@ public class FusekiController {
             if (!paramsMap.containsKey(param_name)) {
                 QoOCustomizableParam qoOCustomizableParam = new QoOCustomizableParam();
                 qoOCustomizableParam.param_name = param_name;
+                qoOCustomizableParam.paramInitialValue = paramInitialValue.getString();
+                qoOCustomizableParam.paramType = paramType.getString();
+                qoOCustomizableParam.paramMinValue = paramMinValue.getString();
+                qoOCustomizableParam.paramMaxValue = paramMaxValue.getString();
                 qoOCustomizableParam.has = new ArrayList<>();
                 paramsMap.put(param_name, qoOCustomizableParam);
             }
@@ -746,7 +757,7 @@ public class FusekiController {
             QoOEffect qoOEffectTemp = new QoOEffect();
             qoOEffectTemp.impacts = attr.getURI();
             qoOEffectTemp.qooAttributeVariation = attrVar.getString();
-            qoOEffectTemp.capabilityVariation = paramVariation.getString();
+            qoOEffectTemp.paramVariation = paramVariation.getString();
             qoOCustomizableParamTemp.has.add(qoOEffectTemp);
 
             mappingMap.put(qoOCustomizableParamTemp.param_name, pipeline_id);

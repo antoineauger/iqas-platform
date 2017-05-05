@@ -37,6 +37,8 @@ import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 public class AnalyzeActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+    private final static int INC_DEC_STEP_FOR_INTEGER_PARAM = 1;
+
     private TopicList topicList;
     private MongoController mongoController;
     private FusekiController fusekiController;
