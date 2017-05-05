@@ -8,10 +8,10 @@ import ioinformarics.oss.jackson.module.jsonld.annotation.JsonldType;
  */
 @JsonldType("http://isae.fr/iqas/qoo-ontology#QoOEffect")
 public class QoOEffect {
-    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#variation")
-    public String capabilityVariation;
+    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#paramVariation")
+    public String paramVariation;
 
-    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#variation")
+    @JsonldProperty("http://isae.fr/iqas/qoo-ontology#qooAttributeVariation")
     public String qooAttributeVariation;
 
     @JsonldProperty("http://isae.fr/iqas/qoo-ontology#QoOAttribute")

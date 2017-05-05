@@ -43,6 +43,8 @@ public class AnalyzeActor extends UntypedActor {
     private final static int MAX_SYMPTOMS_BEFORE_ACTION = 5;
     private int max_retries;
 
+    private final static int INC_DEC_STEP_FOR_INTEGER_PARAM = 1;
+
     private TopicList topicList;
     private MongoController mongoController;
     private FusekiController fusekiController;
