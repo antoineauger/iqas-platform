@@ -17,6 +17,7 @@ import fr.isae.iqas.model.message.MAPEKSymptomMsgWithDate;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.HealRequest;
+import fr.isae.iqas.model.request.QoORequirements;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.utils.ActorUtils;
@@ -24,9 +25,7 @@ import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.bson.types.ObjectId;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -35,6 +34,8 @@ import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.*;
 import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 import static fr.isae.iqas.model.quality.QoOAttribute.OBS_RATE;
+import static fr.isae.iqas.model.request.State.Status.ENFORCED;
+import static fr.isae.iqas.model.request.State.Status.HEALED;
 import static fr.isae.iqas.model.request.State.Status.REJECTED;
 
 /**
@@ -57,6 +58,7 @@ public class AnalyzeActor extends UntypedActor {
     private int maxSymptomsBeforeAction;
 
     private Map<String, HealRequest> currentlyHealedRequest; // RequestIDs <-> HealRequests
+    private Set<String> requestsToIgnore;
 
     private Map<String, CircularFifoBuffer> receivedObsRateSymptoms; // UniquePipelineIDs <-> [<SymptomMsg,received date>]
     private Map<String, CircularFifoBuffer> receivedQoOSymptoms; // RequestIDs <-> [<SymptomMsg,received date>]
@@ -74,6 +76,7 @@ public class AnalyzeActor extends UntypedActor {
         this.currentlyHealedRequest = new ConcurrentHashMap<>();
         this.receivedObsRateSymptoms = new ConcurrentHashMap<>();
         this.receivedQoOSymptoms = new ConcurrentHashMap<>();
+        this.requestsToIgnore = new HashSet<>();
     }
 
     @Override
@@ -272,8 +275,12 @@ public class AnalyzeActor extends UntypedActor {
                                                                 || (currHealRequest.getLastHealFor().equals(OBS_RATE) && currHealRequest.getRetries() < max_retries)
                                                                 || !currHealRequest.hasAlreadyBeenTried(OBS_RATE, qoOPipelineToApplyForHeal)) {
 
-                                                            log.info("On the point to apply " + qoOPipelineList.qoOPipelines.get(0).pipeline + " for the time #" +
-                                                                    String.valueOf(currHealRequest.getRetries()+1));
+                                                            retrievedRequest.updateState(HEALED);
+                                                            retrievedRequest.addLog("On the point to heal request with " + qoOPipelineList.qoOPipelines.get(0).pipeline +
+                                                                    " for the time #" + String.valueOf(currHealRequest.getRetries()+1));
+
+                                                            log.info("On the point to heal request with " + qoOPipelineList.qoOPipelines.get(0).pipeline +
+                                                                    " for the time #" + String.valueOf(currHealRequest.getRetries()+1));
 
 
                                                             //TODO retrieve RequestMapping
@@ -288,26 +295,46 @@ public class AnalyzeActor extends UntypedActor {
                                                             // TODO
                                                             //tellToPlanActor(new RFCMsg(RFCMAPEK.HEAL, EntityMAPEK.REQUEST, currHealRequest, new RequestMapping("TOTO")));
                                                         }
-                                                        else {
+                                                        else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
                                                             // Already tried this solution and does not seem to work...
-                                                            tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, retrievedRequest));
+                                                            requestsToIgnore.add(retrievedRequest.getRequest_id());
                                                             retrievedRequest.addLog("Max retry attempts (" + String.valueOf(max_retries) + ") reached to heal this request. " +
                                                                     "Last heal was tried with the pipeline " + currHealRequest.getLastTriedRemedy().pipeline + " to improve " +
                                                                     currHealRequest.getLastHealFor().toString() + " with the following params: " +
                                                                     currHealRequest.getLastParamsForRemedies().toString() + ".");
-                                                            retrievedRequest.updateState(REJECTED);
-                                                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
-                                                                if (throwable != null) {
-                                                                    log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
-                                                                }
-                                                            });
+                                                            if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
+                                                                retrievedRequest.addLog("Removing this request since it has a GUARANTEED Service Level Agreement.");
+                                                                retrievedRequest.updateState(State.Status.REMOVED);
+                                                                tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, retrievedRequest));
+                                                            }
+                                                            else {
+                                                                retrievedRequest.addLog("Impossible to ensure an acceptable QoO level for this request. " +
+                                                                        "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
+                                                                retrievedRequest.updateState(ENFORCED);
+                                                            }
                                                         }
                                                     }
-                                                    else {
-                                                        // No suitable Pipeline for healing, rejecting Request if its level is "GUARANTEED"
-                                                        // TODO
-                                                        log.info("D " + request_id);
+                                                    else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
+                                                        // No suitable Pipeline for healing, removing Request if its level is "GUARANTEED"
+                                                        requestsToIgnore.add(retrievedRequest.getRequest_id());
+                                                        if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
+                                                            retrievedRequest.addLog("No suitable pipeline for healing. " +
+                                                                    "Rejecting this request since it has a GUARANTEED Service Level Agreement.");
+                                                            retrievedRequest.updateState(State.Status.REMOVED);
+                                                            tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, retrievedRequest));
+                                                        }
+                                                        else {
+                                                            retrievedRequest.addLog("No suitable pipeline for healing. " +
+                                                                    "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
+                                                            retrievedRequest.updateState(ENFORCED);
+                                                        }
                                                     }
+                                                    // We save changes into MongoDB
+                                                    mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
+                                                        if (throwable != null) {
+                                                            log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                        }
+                                                    });
                                                 }
                                             }, context().dispatcher());
 
