@@ -177,9 +177,13 @@ public class MongoController extends AllDirectives {
                 if (requestTempList.size() == 1) {
                     request.complete(requestTempList.get(0));
                 }
+                else if (requestTempList.size() == 0) {
+                    log.warn("No Request found for request_id " + request_id + ". Skipping operation.");
+                    request.completeExceptionally(new Throwable("No Request found."));
+                }
                 else {
-                    log.error("Found more than one Request for request_id " + request_id + ". " + t.toString());
-                    request.completeExceptionally(t);
+                    log.error("Found more than one Request for request_id " + request_id + ". ");
+                    request.completeExceptionally(new Throwable("Found more than one Request."));
                 }
             }
             else {
@@ -309,8 +313,8 @@ public class MongoController extends AllDirectives {
                     requestMapping.complete(requestTempList.get(0));
                 }
                 else {
-                    log.error("Found more than one Request Mapping concerning request " + request_id + ": " + t.toString());
-                    requestMapping.completeExceptionally(t);
+                    log.error("Found more than one Request Mapping concerning request " + request_id + ".");
+                    requestMapping.completeExceptionally(new Throwable("Found more than one Request Mapping."));
                 }
             }
             else {
