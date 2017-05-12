@@ -11,11 +11,14 @@ import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Sink;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import fr.isae.iqas.MainClass;
 import fr.isae.iqas.model.message.ObsRateReportMsg;
 import fr.isae.iqas.model.observation.RawData;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +33,8 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * It should not be modified.
  */
 public class IngestPipeline extends AbstractPipeline implements IPipeline {
+    private Logger logger = LoggerFactory.getLogger(IngestPipeline.class);
+
     private Graph runnableGraph = null;
 
     public IngestPipeline() {
@@ -49,13 +54,15 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                     final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                                long timestamp_now = System.currentTimeMillis();
+                                //logger.warn("INPUT " + sensorDataObject.getString("value") + " at time " + String.valueOf(t));
                                 return new RawData(
                                         sensorDataObject.getString("date"),
                                         sensorDataObject.getString("value"),
                                         sensorDataObject.getString("producer"),
                                         sensorDataObject.getString("timestamps"),
                                         "iQAS_in",
-                                        System.currentTimeMillis());
+                                        timestamp_now);
                             })
                     );
 

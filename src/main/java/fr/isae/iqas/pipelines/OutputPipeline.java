@@ -121,13 +121,15 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                                    long timestamp_now = System.currentTimeMillis();
+                                    //logger.warn("OUTPUT " + sensorDataObject.getString("value") + " at time " + String.valueOf(timestamp_now));
                                     RawData rawDataTemp = new RawData(
                                             sensorDataObject.getString("date"),
                                             sensorDataObject.getString("value"),
                                             sensorDataObject.getString("producer"),
                                             sensorDataObject.getString("timestamps"),
                                             "iQAS_out",
-                                            System.currentTimeMillis());
+                                            timestamp_now);
 
                                     if (getQooParams().size() > 0) {
                                         if (interestAttr.contains(OBS_ACCURACY)) {
@@ -198,13 +200,15 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                     String producer = sensorDataObject.getString("producer");
+                                    long timestamp_now = System.currentTimeMillis();
+                                    //logger.warn("OUTPUT " + sensorDataObject.getString("value") + " at time " + String.valueOf(timestamp_now));
                                     Information informationTemp = new Information(
                                             sensorDataObject.getString("date"),
                                             sensorDataObject.getString("value"),
                                             producer,
                                             sensorDataObject.getString("timestamps"),
                                             "iQAS_out",
-                                            System.currentTimeMillis());
+                                            timestamp_now);
 
                                     if (getQooParams().size() > 0) {
                                         if (interestAttr.contains(OBS_ACCURACY)) {
@@ -278,13 +282,15 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                                    long timestamp_now = System.currentTimeMillis();
+                                    //logger.warn("OUTPUT " + sensorDataObject.getString("value") + " at time " + String.valueOf(timestamp_now));
                                     RawData rawDataTemp = new RawData(
                                             sensorDataObject.getString("date"),
                                             sensorDataObject.getString("value"),
                                             sensorDataObject.getString("producer"),
                                             sensorDataObject.getString("timestamps"),
                                             "iQAS_out",
-                                            System.currentTimeMillis());
+                                            timestamp_now);
 
                                     if (getQooParams().size() > 0) {
                                         if (interestAttr.contains(OBS_ACCURACY)) {

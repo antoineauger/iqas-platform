@@ -221,7 +221,7 @@ public class AnalyzeActor extends UntypedActor {
                                         requestTemp.getObs_level());
                                 requestMapping.getAllTopics().put(rateObsTopic.getName(), rateObsTopic);
 
-                                requestMapping.addLink(topicJustBeforeSink.getName(), rateObsTopic.getName(), "ThrottlePipeline_" + tempIDForPipelines);
+                                requestMapping.addLink(lastQoOTopic.getName(), rateObsTopic.getName(), "ThrottlePipeline_" + tempIDForPipelines);
                                 lastQoOTopic = rateObsTopic;
                             }
 
