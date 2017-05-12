@@ -3,6 +3,7 @@ package fr.isae.iqas.kafka;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import fr.isae.iqas.model.jsonld.QoOPipeline;
 import fr.isae.iqas.model.request.Request;
 import org.bson.Document;
 
@@ -148,5 +149,15 @@ public class RequestMapping {
     @JsonProperty("constructed_from")
     public String getConstructedFromRequest() {
         return constructedFromRequest;
+    }
+
+    // TODO
+    public void healRequestWith(QoOPipeline healPipeline) {
+
+    }
+
+    // TODO
+    public void resetRequestHeal() {
+
     }
 }
