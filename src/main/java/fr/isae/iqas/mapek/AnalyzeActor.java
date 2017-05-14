@@ -15,7 +15,6 @@ import fr.isae.iqas.model.jsonld.Topic;
 import fr.isae.iqas.model.jsonld.TopicList;
 import fr.isae.iqas.model.message.MAPEKSymptomMsgWithDate;
 import fr.isae.iqas.model.message.TerminatedMsg;
-import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.HealRequest;
 import fr.isae.iqas.model.request.QoORequirements;
 import fr.isae.iqas.model.request.Request;
@@ -81,7 +80,7 @@ public class AnalyzeActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        future(() -> fusekiController._findAllTopics(), context().dispatcher())
+        future(() -> fusekiController.findAllTopics(), context().dispatcher())
                 .onComplete(new OnComplete<TopicList>() {
                     public void onComplete(Throwable throwable, TopicList topicListResult) {
                         if (throwable == null) { // Only continue if there is no error so far
@@ -264,7 +263,7 @@ public class AnalyzeActor extends UntypedActor {
                             log.info("We can perform heal for Request " + request_id);
                             mongoController.getSpecificRequest(request_id).whenComplete((retrievedRequest, throwable) -> {
                                 if (throwable == null) {
-                                    future(() -> fusekiController._findMatchingPipelinesToHeal(OBS_RATE, retrievedRequest.getQooConstraints().getInterested_in()), context().dispatcher())
+                                    future(() -> fusekiController.findMatchingPipelinesToHeal(OBS_RATE, retrievedRequest.getQooConstraints().getInterested_in()), context().dispatcher())
                                             .onComplete(new OnComplete<QoOPipelineList>() {
                                                 public void onComplete(Throwable throwable2, QoOPipelineList qoOPipelineList) {
 
@@ -355,7 +354,7 @@ public class AnalyzeActor extends UntypedActor {
             }
             else if (symptomMsg.getSymptom() == UPDATED && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
                 log.info("Received Symptom : {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout());
-                future(() -> fusekiController._findAllTopics(), context().dispatcher())
+                future(() -> fusekiController.findAllTopics(), context().dispatcher())
                         .onComplete(new OnComplete<TopicList>() {
                             public void onComplete(Throwable throwable, TopicList topicListResult) {
                                 if (throwable == null) { // Only continue if there was no error so far

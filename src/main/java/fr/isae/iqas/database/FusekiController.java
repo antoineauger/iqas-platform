@@ -45,7 +45,7 @@ public class FusekiController {
      * Sensors
      */
 
-    public VirtualSensorList _findAllSensors() {
+    VirtualSensorList _findAllSensors() {
         QuerySolution binding;
         VirtualSensorList sensorList = new VirtualSensorList();
         sensorList.sensors = new ArrayList<>();
@@ -130,7 +130,7 @@ public class FusekiController {
         }
     }
 
-    public VirtualSensor _findSpecificSensor(String sensor_id) {
+    VirtualSensor _findSpecificSensor(String sensor_id) {
         QuerySolution binding = null;
         VirtualSensor sensor = null;
 
@@ -213,7 +213,7 @@ public class FusekiController {
         }
     }
 
-    public VirtualSensorList _findAllSensorsWithConditions(String locationNearTo, String topic_id) {
+    public VirtualSensorList findAllSensorsWithConditions(String locationNearTo, String topic_id) {
         QuerySolution binding;
         VirtualSensorList sensorList = new VirtualSensorList();
         sensorList.sensors = new ArrayList<>();
@@ -314,7 +314,7 @@ public class FusekiController {
      * Topics
      */
 
-    public TopicList _findAllTopics() {
+    public TopicList findAllTopics() {
         QuerySolution binding;
         TopicList topicList = new TopicList();
         topicList.topics = new ArrayList<>();
@@ -347,7 +347,7 @@ public class FusekiController {
         }
     }
 
-    public ServiceEndpointList _findSpecificTopic(String topic_id) {
+    ServiceEndpointList _findSpecificTopic(String topic_id) {
         QuerySolution binding = null;
         ServiceEndpointList endpointsForTopic = new ServiceEndpointList();
         endpointsForTopic.serviceEndpoints = new ArrayList<>();
@@ -391,7 +391,7 @@ public class FusekiController {
      * Places
      */
 
-    public LocationList _findAllPlaces() {
+    LocationList _findAllPlaces() {
         QuerySolution binding = null;
         LocationList locationList = new LocationList();
         locationList.locations = new ArrayList<>();
@@ -438,7 +438,7 @@ public class FusekiController {
         }
     }
 
-    public LocationList _findPlacesNearTo(String location) {
+    LocationList _findPlacesNearTo(String location) {
         QuerySolution binding = null;
         LocationList locationList = new LocationList();
         locationList.locations = new ArrayList<>();
@@ -492,7 +492,7 @@ public class FusekiController {
      * QoO attributes
      */
 
-    public QoOAttributeList _findAllQoOAttributes() {
+    QoOAttributeList _findAllQoOAttributes() {
         QuerySolution binding = null;
         QoOAttributeList qoOAttributeList = new QoOAttributeList();
         qoOAttributeList.qoo_attributes = new ArrayList<>();
@@ -532,7 +532,7 @@ public class FusekiController {
      * QoO customizable parameters
      */
 
-    public QoOCustomizableParamList _findAllQoOCustomizableParameters() {
+    QoOCustomizableParamList _findAllQoOCustomizableParameters() {
         Map<String, QoOCustomizableParam> processedParams = new ConcurrentHashMap<>();
 
         QuerySolution binding = null;
@@ -596,7 +596,7 @@ public class FusekiController {
      * Sensor capabilities
      */
 
-    public SensorCapabilityList _findAllSensorCapabilities() {
+    public SensorCapabilityList findAllSensorCapabilities() {
         QuerySolution binding = null;
         SensorCapabilityList sensorCapabilityList = new SensorCapabilityList();
         sensorCapabilityList.sensorCapabilities = new ArrayList<>();
@@ -658,7 +658,7 @@ public class FusekiController {
      * QoOPipeline
      */
 
-    public QoOPipelineList _findMatchingPipelinesToHeal(fr.isae.iqas.model.quality.QoOAttribute priorityAttr, List<fr.isae.iqas.model.quality.QoOAttribute> attrToPreserve) {
+    public QoOPipelineList findMatchingPipelinesToHeal(fr.isae.iqas.model.quality.QoOAttribute priorityAttr, List<fr.isae.iqas.model.quality.QoOAttribute> attrToPreserve) {
         Map<String, QoOPipeline> pipelineMap = new ConcurrentHashMap<>();      // Pipeline_id <-> QoOPipeline
         Map<String, String> mappingMap = new ConcurrentHashMap<>();   // QoOCustomizableParam_id <-> Pipeline_id
         Map<String, QoOCustomizableParam> paramsMap = new ConcurrentHashMap<>();   // QoOCustomizableParam_id <-> QoOCustomizableParams

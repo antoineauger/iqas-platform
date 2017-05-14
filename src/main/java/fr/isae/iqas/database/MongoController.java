@@ -61,17 +61,17 @@ public class MongoController extends AllDirectives {
         collection.find().map(myDoc -> new Request(myDoc)).into(new ArrayList<>(), callback);
     }
 
-    void _putRequest(Document req, final SingleResultCallback<Void> callback) {
+    private void _putRequest(Document req, final SingleResultCallback<Void> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
         collection.insertOne(req, callback);
     }
 
-    void _updateRequest(String request_id, Document newReq, final SingleResultCallback<UpdateResult> callback) {
+    private void _updateRequest(String request_id, Document newReq, final SingleResultCallback<UpdateResult> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
         collection.replaceOne(eq("request_id", request_id), newReq, callback);
     }
 
-    void _deleteRequest(String request_id, final SingleResultCallback<DeleteResult> callback) {
+    private void _deleteRequest(String request_id, final SingleResultCallback<DeleteResult> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("requests");
         collection.deleteOne(eq("request_id", request_id), callback);
     }
@@ -80,22 +80,22 @@ public class MongoController extends AllDirectives {
      * Request Mappings
      */
 
-    void _findAllRequestMappings(final SingleResultCallback<List<RequestMapping>> callback) {
+    private void _findAllRequestMappings(final SingleResultCallback<List<RequestMapping>> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("request_mappings");
         collection.find().map(myDoc -> new RequestMapping(myDoc)).into(new ArrayList<>(), callback);
     }
 
-    void _putRequestMapping(Document req, final SingleResultCallback<Void> callback) {
+    private void _putRequestMapping(Document req, final SingleResultCallback<Void> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("request_mappings");
         collection.insertOne(req, callback);
     }
 
-    void _updateRequestMapping(String associated_request_id, Document newReq, final SingleResultCallback<UpdateResult> callback) {
+    private void _updateRequestMapping(String associated_request_id, Document newReq, final SingleResultCallback<UpdateResult> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("request_mappings");
         collection.replaceOne(eq("request_id", associated_request_id), newReq, callback);
     }
 
-    void _deleteRequestMapping(String associated_request_id, final SingleResultCallback<DeleteResult> callback) {
+    private void _deleteRequestMapping(String associated_request_id, final SingleResultCallback<DeleteResult> callback) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("request_mappings");
         collection.deleteOne(eq("request_id", associated_request_id), callback);
     }

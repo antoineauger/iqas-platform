@@ -106,7 +106,7 @@ public class FusekiRESTController extends AllDirectives {
         CompletableFuture<Route> topics;
         ObjectMapper mapper = new ObjectMapper();
 
-        topics = CompletableFuture.supplyAsync(() -> controller._findAllTopics(), ctx).thenApply((result) -> {
+        topics = CompletableFuture.supplyAsync(() -> controller.findAllTopics(), ctx).thenApply((result) -> {
             if (result == null) {
                 return complete(HttpResponse.create()
                         .withStatus(400)

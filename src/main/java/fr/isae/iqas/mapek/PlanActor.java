@@ -127,7 +127,7 @@ public class PlanActor extends UntypedActor {
                     }
                 });
 
-                future(() -> fusekiController._findAllSensorCapabilities(), context().dispatcher())
+                future(() -> fusekiController.findAllSensorCapabilities(), context().dispatcher())
                         .onComplete(new OnComplete<SensorCapabilityList>() {
                             public void onComplete(Throwable throwable, SensorCapabilityList sensorCapabilityList) {
                                 if (throwable != null) {

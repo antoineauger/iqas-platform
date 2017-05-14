@@ -64,7 +64,7 @@ public class AutonomicManagerActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        future(() -> fusekiController._findAllTopics(), context().dispatcher())
+        future(() -> fusekiController.findAllTopics(), context().dispatcher())
                 .onComplete(new OnComplete<TopicList>() {
                     public void onComplete(Throwable throwable, TopicList topicListResult) {
                         if (throwable == null) { // Only continue if there was no error so far
@@ -109,7 +109,7 @@ public class AutonomicManagerActor extends UntypedActor {
         else if (message instanceof Request) {
             Request incomingReq = (Request) message;
             if (incomingReq.getCurrent_status() == CREATED) { // A Request has just been submitted, we check if we can satisfy it
-                future(() -> fusekiController._findAllSensorsWithConditions(incomingReq.getLocation(), incomingReq.getTopic()), context().dispatcher())
+                future(() -> fusekiController.findAllSensorsWithConditions(incomingReq.getLocation(), incomingReq.getTopic()), context().dispatcher())
                         .onComplete(new OnComplete<VirtualSensorList>() {
                             public void onComplete(Throwable throwable, VirtualSensorList virtualSensorList) {
                                 if (throwable == null) { // Only continue if there was no error so far

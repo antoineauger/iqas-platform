@@ -24,7 +24,7 @@ public class PipelineUtils {
                                                    Request incomingRequest,
                                                    FusekiController fusekiController,
                                                    ActorContext context) {
-        future(() -> fusekiController._findAllSensorsWithConditions(incomingRequest.getLocation(), incomingRequest.getTopic()), context.dispatcher())
+        future(() -> fusekiController.findAllSensorsWithConditions(incomingRequest.getLocation(), incomingRequest.getTopic()), context.dispatcher())
                 .onComplete(new OnComplete<VirtualSensorList>() {
                     public void onComplete(Throwable throwable, VirtualSensorList vList) {
                         if (throwable != null) {
