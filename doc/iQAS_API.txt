@@ -3,22 +3,29 @@
 * GET
 
 /sensors
-
 /sensors/[sensor_id]
+
+/places
+/places?nearTo=[location]
+
+/topics
+/topics/[topic_id]
+
+/pipelines
+/pipelines/[pipeline_id]
+/pipelines?print=ids
 
 ==================== Requests -> MongoController ========================
 
 * GET
 
 /requests
-
 /requests/[request_id]
 
-* PUT
+* POST
 
 /requests
-	Content-Type: application/json
-	{
-		"request_id": "",
-		"application_id": "[application_id]"
-	}
+
+* DELETE
+
+/requests/[request_id]

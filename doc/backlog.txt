@@ -2,16 +2,7 @@ Implementation
 
 +++ Virtual Sensors +++
 -Add hazard events
--Improve obs generation (real/adapted timestamp)
-
-+++ iQAS platform +++
--Add Knowledge layer
--Class for Symptoms > Plans
--Class for Executions (according to the MAPE-K loop RD / Info)
--Define RFC for each MAPE-K loop
-
-+++ Consumers +++
--Real-time consuming (graph, pie charts?)
+-Add Network bursts
 
 Evaluation
 
