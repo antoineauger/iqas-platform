@@ -58,7 +58,7 @@ public class FusekiRESTController extends AllDirectives {
         CompletableFuture<Route> sensors;
         ObjectMapper mapper = new ObjectMapper();
 
-        sensors = CompletableFuture.supplyAsync(() -> controller._findAllSensors(), ctx).thenApply((result) -> {
+        sensors = CompletableFuture.supplyAsync(() -> controller.findAllSensors(), ctx).thenApply((result) -> {
             if (result == null) {
                 return complete(HttpResponse.create()
                         .withStatus(400)

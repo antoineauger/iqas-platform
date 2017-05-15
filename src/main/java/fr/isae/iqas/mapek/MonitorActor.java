@@ -312,7 +312,7 @@ public class MonitorActor extends UntypedActor {
     }
 
     private boolean storeVirtualSensorStates() {
-        future(() -> fusekiController._findAllSensors(), context().dispatcher())
+        future(() -> fusekiController.findAllSensors(), context().dispatcher())
                 .onComplete(new OnComplete<VirtualSensorList>() {
                     public void onComplete(Throwable throwable, VirtualSensorList virtualSensorList) {
                         if (throwable == null) { // Only continue if there was no error so far

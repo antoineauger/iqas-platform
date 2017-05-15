@@ -45,7 +45,7 @@ public class FusekiController {
      * Sensors
      */
 
-    VirtualSensorList _findAllSensors() {
+    public VirtualSensorList findAllSensors() {
         QuerySolution binding;
         VirtualSensorList sensorList = new VirtualSensorList();
         sensorList.sensors = new ArrayList<>();

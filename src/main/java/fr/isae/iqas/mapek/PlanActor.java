@@ -85,7 +85,7 @@ public class PlanActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        future(() -> fusekiController._findAllSensors(), context().dispatcher())
+        future(() -> fusekiController.findAllSensors(), context().dispatcher())
                 .onComplete(new OnComplete<VirtualSensorList>() {
                     public void onComplete(Throwable throwable, VirtualSensorList virtualSensorListResult) {
                         if (throwable == null) { // Only continue if there was no error so far
@@ -203,7 +203,7 @@ public class PlanActor extends UntypedActor {
 
             // RFCs messages - Sensor UPDATE
             else if (rfcMsg.getRfc() == RFCMAPEK.UPDATE && rfcMsg.getAbout() == EntityMAPEK.SENSOR) { // Sensor description has been updated on Fuseki
-                future(() -> fusekiController._findAllSensors(), context().dispatcher())
+                future(() -> fusekiController.findAllSensors(), context().dispatcher())
                         .onComplete(new OnComplete<VirtualSensorList>() {
                             public void onComplete(Throwable throwable, VirtualSensorList newVirtualSensorList) {
                                 if (throwable == null) { // Only continue if there was no error so far
