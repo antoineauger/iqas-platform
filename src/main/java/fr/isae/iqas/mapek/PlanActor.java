@@ -407,6 +407,9 @@ public class PlanActor extends UntypedActor {
             mappingTopicsActors.remove(topic);
         }
 
+        // For cleaning up resources in Monitor actor
+        monitorActor.tell(new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestToDelete), getSelf());
+
         // Removal of the corresponding RequestMapping
         actorPathRefs.remove(requestToDelete.getRequest_id());
         mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
