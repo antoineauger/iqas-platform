@@ -9,10 +9,7 @@ import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
-import fr.isae.iqas.model.jsonld.QoOPipeline;
-import fr.isae.iqas.model.jsonld.QoOPipelineList;
-import fr.isae.iqas.model.jsonld.Topic;
-import fr.isae.iqas.model.jsonld.TopicList;
+import fr.isae.iqas.model.jsonld.*;
 import fr.isae.iqas.model.message.MAPEKSymptomMsgWithDate;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.request.HealRequest;
@@ -20,6 +17,7 @@ import fr.isae.iqas.model.request.QoORequirements;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.utils.ActorUtils;
+import fr.isae.iqas.utils.QualityUtils;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.bson.types.ObjectId;
 import scala.concurrent.duration.FiniteDuration;
@@ -44,7 +42,8 @@ import static fr.isae.iqas.model.request.State.Status.REJECTED;
 public class AnalyzeActor extends UntypedActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private final static int INC_DEC_STEP_FOR_INTEGER_PARAM = 1;
+    private final static int INC_STEP_FOR_INTEGER_PARAM = 1;
+    private final static int DEC_STEP_FOR_INTEGER_PARAM = 1;
 
     private TopicList topicList;
     private MongoController mongoController;
@@ -238,7 +237,6 @@ public class AnalyzeActor extends UntypedActor {
                     tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, requestTemp));
                 }
             }
-            // TODO QoO adaptation
             // SymptomMsg messages - Obs Rate
             else if (symptomMsg.getSymptom() == TOO_LOW && symptomMsg.getAbout() == EntityMAPEK.OBS_RATE) {
                 log.info("Received Symptom : {} {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getUniqueIDPipeline(), symptomMsg.getConcernedRequests().toString());
@@ -246,12 +244,6 @@ public class AnalyzeActor extends UntypedActor {
                 receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).add(new MAPEKSymptomMsgWithDate(symptomMsg));
 
                 if (receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).size() >= maxSymptomsBeforeAction) {
-                    // TODO tell Plan Actor
-
-                    /*getContext().system().scheduler().scheduleOnce(
-                            new FiniteDuration(0, TimeUnit.SECONDS),
-                            getSelf(), "dkddk", getContext().dispatcher(), getSelf());*/
-
                     for (String request_id : symptomMsg.getConcernedRequests()) {
 
                         log.info("Searching for Request " + request_id);
@@ -268,31 +260,72 @@ public class AnalyzeActor extends UntypedActor {
                                                 public void onComplete(Throwable throwable2, QoOPipelineList qoOPipelineList) {
 
                                                     if (throwable2 == null && qoOPipelineList.qoOPipelines.size() > 0) { // Only continue if there was no error so far
-                                                        QoOPipeline qoOPipelineToApplyForHeal = qoOPipelineList.qoOPipelines.get(0);
+                                                        QoOPipeline qoOPipelineToApplyForHeal = qoOPipelineList.qoOPipelines.get(0); // TODO not static decision
                                                         if (currHealRequest.getLastHealFor() == null
                                                                 || !currHealRequest.getLastHealFor().equals(OBS_RATE)
                                                                 || (currHealRequest.getLastHealFor().equals(OBS_RATE) && currHealRequest.getRetries() < max_retries)
                                                                 || !currHealRequest.hasAlreadyBeenTried(OBS_RATE, qoOPipelineToApplyForHeal)) {
 
                                                             retrievedRequest.updateState(HEALED);
-                                                            retrievedRequest.addLog("On the point to heal request with " + qoOPipelineList.qoOPipelines.get(0).pipeline +
+                                                            retrievedRequest.addLog("On the point to heal request with " + qoOPipelineToApplyForHeal.pipeline +
                                                                     " for the time #" + String.valueOf(currHealRequest.getRetries()+1));
 
-                                                            log.info("On the point to heal request with " + qoOPipelineList.qoOPipelines.get(0).pipeline +
+                                                            log.info("On the point to heal request with " + qoOPipelineToApplyForHeal.pipeline +
                                                                     " for the time #" + String.valueOf(currHealRequest.getRetries()+1));
 
+                                                            mongoController.getSpecificRequestMapping(retrievedRequest.getRequest_id()).whenComplete((similarMappings, throwable3) -> {
+                                                                if (throwable3 != null) {
+                                                                    log.error(throwable3.toString());
+                                                                }
+                                                                else {
+                                                                    QoOCustomizableParam qoOCustomizableParam = qoOPipelineToApplyForHeal.customizable_params.get(0);
+                                                                    RequestMapping newRequestMapping = new RequestMapping(similarMappings);
+                                                                    Map<String, String> newHealParams = new ConcurrentHashMap<>();
 
-                                                            //TODO retrieve RequestMapping
+                                                                    if (currHealRequest.getRetries() == 0) {
+                                                                        newHealParams.put(qoOCustomizableParam.param_name, qoOCustomizableParam.paramInitialValue);
+                                                                    }
+                                                                    else if (qoOCustomizableParam.paramType.equals("Integer")) {
 
-                                                            // TODO resolve dynamically
-                                                            Map<String, String> healParams = new ConcurrentHashMap<>();
-                                                            healParams.put("nb_copies", "0");
+                                                                        String variationDir = decideToIncreaseOrIncrease(symptomMsg.getSymptom(), qoOCustomizableParam);
+                                                                        if (variationDir != null) {
+                                                                            Map<String, String> oldParams = currHealRequest.getLastParamsForRemedies();
+                                                                            for (Map.Entry<String, String> entry : oldParams.entrySet()) {
+                                                                                switch (variationDir) {
+                                                                                    case "HIGH":
+                                                                                        newHealParams.put(entry.getKey(), String.valueOf(Integer.valueOf(entry.getValue()) + INC_STEP_FOR_INTEGER_PARAM));
+                                                                                        break;
+                                                                                    case "LOW":
+                                                                                        newHealParams.put(entry.getKey(), String.valueOf(Integer.valueOf(entry.getValue()) - DEC_STEP_FOR_INTEGER_PARAM));
+                                                                                        break;
+                                                                                    default:
+                                                                                        break;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                        else {
+                                                                            newHealParams = currHealRequest.getLastParamsForRemedies();
+                                                                        }
+                                                                    }
 
-                                                            currHealRequest.performHeal(OBS_RATE, qoOPipelineList.qoOPipelines.get(0), healParams);
-                                                            currentlyHealedRequest.put(request_id, currHealRequest);
+                                                                    currHealRequest.performHeal(OBS_RATE, qoOPipelineToApplyForHeal, newHealParams);
+                                                                    currentlyHealedRequest.put(request_id, currHealRequest);
 
-                                                            // TODO
-                                                            //tellToPlanActor(new RFCMsg(RFCMAPEK.HEAL, EntityMAPEK.REQUEST, currHealRequest, new RequestMapping("TOTO")));
+                                                                    // TODO: Update RequestMapping
+
+                                                                    mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result3, throwable4) -> {
+                                                                        if (throwable4 == null) {
+                                                                            tellToPlanActor(new RFCMsg(RFCMAPEK.HEAL, EntityMAPEK.REQUEST, currHealRequest, newRequestMapping));
+                                                                        }
+                                                                    });
+                                                                }
+                                                            });
+                                                            // We save changes into MongoDB
+                                                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
+                                                                if (throwable != null) {
+                                                                    log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                                }
+                                                            });
                                                         }
                                                         else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
                                                             // Already tried this solution and does not seem to work...
@@ -311,6 +344,12 @@ public class AnalyzeActor extends UntypedActor {
                                                                         "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
                                                                 retrievedRequest.updateState(ENFORCED);
                                                             }
+                                                            // We save changes into MongoDB
+                                                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
+                                                                if (throwable != null) {
+                                                                    log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                                }
+                                                            });
                                                         }
                                                     }
                                                     else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
@@ -327,13 +366,13 @@ public class AnalyzeActor extends UntypedActor {
                                                                     "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
                                                             retrievedRequest.updateState(ENFORCED);
                                                         }
+                                                        // We save changes into MongoDB
+                                                        mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
+                                                            if (throwable != null) {
+                                                                log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                            }
+                                                        });
                                                     }
-                                                    // We save changes into MongoDB
-                                                    mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
-                                                        if (throwable != null) {
-                                                            log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
-                                                        }
-                                                    });
                                                 }
                                             }, context().dispatcher());
 
@@ -410,5 +449,21 @@ public class AnalyzeActor extends UntypedActor {
                 it.remove();
             }
         }
+    }
+
+    /**
+     *
+     * @param symptomMAPEK
+     * @param qoOCustomizableParam
+     * @return String "HIGH" or "LOW" or null if unable to find a suitable QoOEffect
+     */
+    private String decideToIncreaseOrIncrease(SymptomMAPEK symptomMAPEK, QoOCustomizableParam qoOCustomizableParam) {
+        String realSymptom = symptomMAPEK.toString().split("_")[1];
+        for (QoOEffect qoOEffect : qoOCustomizableParam.has) {
+            if (qoOEffect.qooAttributeVariation.equals(QualityUtils.inverseOfVariation(realSymptom))) {
+                return qoOEffect.paramVariation;
+            }
+        }
+        return null;
     }
 }

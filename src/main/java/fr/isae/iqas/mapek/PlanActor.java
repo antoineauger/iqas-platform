@@ -221,7 +221,9 @@ public class PlanActor extends UntypedActor {
 
             // RFCs messages - Request HEAL
             else if (rfcMsg.getRfc() == RFCMAPEK.HEAL && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
-
+                log.error("TEST, received in PLAN actor: " + rfcMsg.getHealRequest().getLastTriedRemedy().pipeline);
+                log.error("TEST, received in PLAN actor: " + rfcMsg.getHealRequest().getLastHealFor().toString());
+                log.error("TEST, received in PLAN actor: " + rfcMsg.getHealRequest().getLastParamsForRemedies().toString());
             }
 
             // RFCs messages - Request RESET
