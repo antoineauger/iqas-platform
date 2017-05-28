@@ -505,8 +505,6 @@ public class PlanActor extends UntypedActor {
         return true;
     }
 
-    // TODO ActionMsg for that?
-
     private void healRequest(RequestMapping currEnforcedRM, HealRequest request) {
         //request.getConcernedRequest()
     }
