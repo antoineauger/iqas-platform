@@ -224,6 +224,7 @@ public class PlanActor extends UntypedActor {
                 log.error("TEST, received in PLAN actor: " + rfcMsg.getHealRequest().getLastTriedRemedy().pipeline);
                 log.error("TEST, received in PLAN actor: " + rfcMsg.getHealRequest().getLastHealFor().toString());
                 log.error("TEST, received in PLAN actor: " + rfcMsg.getHealRequest().getLastParamsForRemedies().toString());
+                healRequest(rfcMsg.getRequestMapping(), rfcMsg.getHealRequest());
             }
 
             // RFCs messages - Request RESET
@@ -506,7 +507,7 @@ public class PlanActor extends UntypedActor {
     }
 
     private void healRequest(RequestMapping currEnforcedRM, HealRequest request) {
-        //request.getConcernedRequest()
+
     }
 
     private void resetRequest(RequestMapping currEnforcedRM, HealRequest request) {

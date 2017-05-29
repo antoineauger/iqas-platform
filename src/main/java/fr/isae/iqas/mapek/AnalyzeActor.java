@@ -135,7 +135,7 @@ public class AnalyzeActor extends UntypedActor {
                                 else {
                                     similarMappings.addDependentRequest(requestTemp);
 
-                                    RequestMapping requestMapping = new RequestMapping(requestTemp.getRequest_id());
+                                    RequestMapping requestMapping = new RequestMapping(requestTemp.getApplication_id(), requestTemp.getRequest_id());
                                     requestMapping.setConstructedFromRequest(similarRequest.getRequest_id());
 
                                     String fromTopicName = similarMappings.getFinalSink().getParents().get(0);
@@ -162,7 +162,7 @@ public class AnalyzeActor extends UntypedActor {
                         }
                         else {  // The incoming request has no common points with the enforced ones
                             String tempIDForPipelines = new ObjectId().toString();
-                            RequestMapping requestMapping = new RequestMapping(requestTemp.getRequest_id());
+                            RequestMapping requestMapping = new RequestMapping(requestTemp.getApplication_id(), requestTemp.getRequest_id());
 
                             TopicEntity topicJustBeforeSink = new TopicEntity(requestTemp.getTopic() + "_" + requestTemp.getLocation() + "_" + requestTemp.getAbbrvObsLevel(),
                                     requestTemp.getObs_level());
@@ -255,37 +255,39 @@ public class AnalyzeActor extends UntypedActor {
                             log.info("We can perform heal for Request " + request_id);
                             mongoController.getSpecificRequest(request_id).whenComplete((retrievedRequest, throwable) -> {
                                 if (throwable == null) {
-                                    future(() -> fusekiController.findMatchingPipelinesToHeal(OBS_RATE, retrievedRequest.getQooConstraints().getInterested_in()), context().dispatcher())
-                                            .onComplete(new OnComplete<QoOPipelineList>() {
-                                                public void onComplete(Throwable throwable2, QoOPipelineList qoOPipelineList) {
 
-                                                    if (throwable2 == null && qoOPipelineList.qoOPipelines.size() > 0) { // Only continue if there was no error so far
-                                                        QoOPipeline qoOPipelineToApplyForHeal = qoOPipelineList.qoOPipelines.get(0); // TODO not static decision
-                                                        if (currHealRequest.getLastHealFor() == null
-                                                                || !currHealRequest.getLastHealFor().equals(OBS_RATE)
-                                                                || (currHealRequest.getLastHealFor().equals(OBS_RATE) && currHealRequest.getRetries() < max_retries)
-                                                                || !currHealRequest.hasAlreadyBeenTried(OBS_RATE, qoOPipelineToApplyForHeal)) {
+                                    mongoController.getSpecificRequestMapping(retrievedRequest.getRequest_id()).whenComplete((requestMappings, throwable2) -> {
+                                        RequestMapping newRequestMapping = new RequestMapping(requestMappings);
 
-                                                            retrievedRequest.updateState(HEALED);
-                                                            retrievedRequest.addLog("On the point to heal request with " + qoOPipelineToApplyForHeal.pipeline +
-                                                                    " for the time #" + String.valueOf(currHealRequest.getRetries()+1));
+                                        if (throwable2 != null) {
+                                            log.error(throwable2.toString());
+                                        }
+                                        else {
 
-                                                            log.info("On the point to heal request with " + qoOPipelineToApplyForHeal.pipeline +
-                                                                    " for the time #" + String.valueOf(currHealRequest.getRetries()+1));
+                                            future(() -> fusekiController.findMatchingPipelinesToHeal(OBS_RATE, retrievedRequest.getQooConstraints().getInterested_in()), context().dispatcher())
+                                                    .onComplete(new OnComplete<QoOPipelineList>() {
+                                                        public void onComplete(Throwable throwable3, QoOPipelineList qoOPipelineList) {
 
-                                                            mongoController.getSpecificRequestMapping(retrievedRequest.getRequest_id()).whenComplete((similarMappings, throwable3) -> {
-                                                                if (throwable3 != null) {
-                                                                    log.error(throwable3.toString());
-                                                                }
-                                                                else {
+                                                            if (throwable3 == null && qoOPipelineList.qoOPipelines.size() > 0) { // Only continue if there was no error so far
+                                                                QoOPipeline qoOPipelineToApplyForHeal = qoOPipelineList.qoOPipelines.get(0); // TODO not static decision
+                                                                if (currHealRequest.getLastHealFor() == null
+                                                                        || !currHealRequest.getLastHealFor().equals(OBS_RATE)
+                                                                        || (currHealRequest.getLastHealFor().equals(OBS_RATE) && currHealRequest.getRetries() < max_retries)
+                                                                        || !currHealRequest.hasAlreadyBeenTried(OBS_RATE, qoOPipelineToApplyForHeal)) {
+
+                                                                    retrievedRequest.updateState(HEALED);
+                                                                    retrievedRequest.addLog("On the point to heal request with " + qoOPipelineToApplyForHeal.pipeline +
+                                                                            " for the time #" + String.valueOf(currHealRequest.getRetries() + 1));
+
+                                                                    log.info("On the point to heal request with " + qoOPipelineToApplyForHeal.pipeline +
+                                                                            " for the time #" + String.valueOf(currHealRequest.getRetries() + 1));
+
                                                                     QoOCustomizableParam qoOCustomizableParam = qoOPipelineToApplyForHeal.customizable_params.get(0);
-                                                                    RequestMapping newRequestMapping = new RequestMapping(similarMappings);
                                                                     Map<String, String> newHealParams = new ConcurrentHashMap<>();
 
                                                                     if (currHealRequest.getRetries() == 0) {
                                                                         newHealParams.put(qoOCustomizableParam.param_name, qoOCustomizableParam.paramInitialValue);
-                                                                    }
-                                                                    else if (qoOCustomizableParam.paramType.equals("Integer")) {
+                                                                    } else if (qoOCustomizableParam.paramType.equals("Integer")) {
 
                                                                         String variationDir = decideToIncreaseOrIncrease(symptomMsg.getSymptom(), qoOCustomizableParam);
                                                                         if (variationDir != null) {
@@ -302,8 +304,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                                         break;
                                                                                 }
                                                                             }
-                                                                        }
-                                                                        else {
+                                                                        } else {
                                                                             newHealParams = currHealRequest.getLastParamsForRemedies();
                                                                         }
                                                                     }
@@ -311,71 +312,76 @@ public class AnalyzeActor extends UntypedActor {
                                                                     currHealRequest.performHeal(OBS_RATE, qoOPipelineToApplyForHeal, newHealParams);
                                                                     currentlyHealedRequest.put(request_id, currHealRequest);
 
-                                                                    // TODO: Update RequestMapping
+                                                                    newRequestMapping.resetRequestHeal();
+                                                                    newRequestMapping.healRequestWith(qoOPipelineToApplyForHeal);
 
-                                                                    mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result3, throwable4) -> {
+                                                                    // We save changes into MongoDB
+                                                                    mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result4, throwable4) -> {
                                                                         if (throwable4 == null) {
                                                                             tellToPlanActor(new RFCMsg(RFCMAPEK.HEAL, EntityMAPEK.REQUEST, currHealRequest, newRequestMapping));
+                                                                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result5, throwable5) -> {
+                                                                                if (throwable5 != null) {
+                                                                                    log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                                                }
+                                                                            });
                                                                         }
                                                                     });
                                                                 }
-                                                            });
-                                                            // We save changes into MongoDB
-                                                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
-                                                                if (throwable != null) {
-                                                                    log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
-                                                                }
-                                                            });
-                                                        }
-                                                        else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
-                                                            // Already tried this solution and does not seem to work...
-                                                            requestsToIgnore.add(retrievedRequest.getRequest_id());
-                                                            retrievedRequest.addLog("Max retry attempts (" + String.valueOf(max_retries) + ") reached to heal this request. " +
-                                                                    "Last heal was tried with the pipeline " + currHealRequest.getLastTriedRemedy().pipeline + " to improve " +
-                                                                    currHealRequest.getLastHealFor().toString() + " with the following params: " +
-                                                                    currHealRequest.getLastParamsForRemedies().toString() + ".");
-                                                            if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
-                                                                retrievedRequest.addLog("Removing this request since it has a GUARANTEED Service Level Agreement.");
-                                                                retrievedRequest.updateState(State.Status.REMOVED);
-                                                                tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, retrievedRequest));
-                                                            }
-                                                            else {
-                                                                retrievedRequest.addLog("Impossible to ensure an acceptable QoO level for this request. " +
-                                                                        "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
-                                                                retrievedRequest.updateState(ENFORCED);
-                                                            }
-                                                            // We save changes into MongoDB
-                                                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
-                                                                if (throwable != null) {
-                                                                    log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
-                                                                }
-                                                            });
-                                                        }
-                                                    }
-                                                    else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
-                                                        // No suitable Pipeline for healing, removing Request if its level is "GUARANTEED"
-                                                        requestsToIgnore.add(retrievedRequest.getRequest_id());
-                                                        if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
-                                                            retrievedRequest.addLog("No suitable pipeline for healing. " +
-                                                                    "Rejecting this request since it has a GUARANTEED Service Level Agreement.");
-                                                            retrievedRequest.updateState(State.Status.REMOVED);
-                                                            tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, retrievedRequest));
-                                                        }
-                                                        else {
-                                                            retrievedRequest.addLog("No suitable pipeline for healing. " +
-                                                                    "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
-                                                            retrievedRequest.updateState(ENFORCED);
-                                                        }
-                                                        // We save changes into MongoDB
-                                                        mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
-                                                            if (throwable != null) {
-                                                                log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
-                                                            }
-                                                        });
-                                                    }
-                                                }
-                                            }, context().dispatcher());
+                                                                else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
+                                                                    // Already tried this solution and does not seem to work...
+                                                                    requestsToIgnore.add(retrievedRequest.getRequest_id());
+                                                                    retrievedRequest.addLog("Max retry attempts (" + String.valueOf(max_retries) + ") reached to heal this request. " +
+                                                                            "Last heal was tried with the pipeline " + currHealRequest.getLastTriedRemedy().pipeline + " to improve " +
+                                                                            currHealRequest.getLastHealFor().toString() + " with the following params: " +
+                                                                            currHealRequest.getLastParamsForRemedies().toString() + ".");
+                                                                    if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
+                                                                        retrievedRequest.addLog("Removing this request since it has a GUARANTEED Service Level Agreement.");
+                                                                        retrievedRequest.updateState(State.Status.REMOVED);
+                                                                        tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, retrievedRequest));
+                                                                    } else {
+                                                                        retrievedRequest.addLog("Impossible to ensure an acceptable QoO level for this request. " +
+                                                                                "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
+                                                                        retrievedRequest.updateState(ENFORCED);
+                                                                    }
 
+                                                                    newRequestMapping.resetRequestHeal();
+
+                                                                    // We save changes into MongoDB
+                                                                    mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result4, throwable4) -> {
+                                                                        if (throwable4 == null) {
+                                                                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result5, throwable5) -> {
+                                                                                if (throwable5 != null) {
+                                                                                    log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                                                }
+                                                                            });
+                                                                        }
+                                                                    });
+                                                                }
+                                                            }
+                                                            else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
+                                                                // No suitable Pipeline for healing, removing Request if its level is "GUARANTEED"
+                                                                requestsToIgnore.add(retrievedRequest.getRequest_id());
+                                                                if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
+                                                                    retrievedRequest.addLog("No suitable pipeline for healing. " +
+                                                                            "Rejecting this request since it has a GUARANTEED Service Level Agreement.");
+                                                                    retrievedRequest.updateState(State.Status.REMOVED);
+                                                                    tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, retrievedRequest));
+                                                                } else {
+                                                                    retrievedRequest.addLog("No suitable pipeline for healing. " +
+                                                                            "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
+                                                                    retrievedRequest.updateState(ENFORCED);
+                                                                }
+                                                                // We save changes into MongoDB
+                                                                mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
+                                                                    if (throwable != null) {
+                                                                        log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                                    }
+                                                                });
+                                                            }
+                                                        }
+                                                    }, context().dispatcher());
+                                        }
+                                    });
 
                                 } else {
                                     log.warning("Unable to retrieve request " + request_id + ". Operation skipped!");

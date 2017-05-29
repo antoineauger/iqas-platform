@@ -18,6 +18,7 @@ public class TopicEntity {
     private String forApplication;
     private ObservationLevel observationLevel;
     private boolean isSource;
+    private boolean isForHeal;
     private boolean isSink;
 
     private List<String> parents;
@@ -29,6 +30,7 @@ public class TopicEntity {
         this.name = topicEntityToClone.name;
         this.isSource = topicEntityToClone.isSource;
         this.isSink = topicEntityToClone.isSink;
+        this.isForHeal = topicEntityToClone.isForHeal;
         this.observationLevel = topicEntityToClone.observationLevel;
 
         this.parents = topicEntityToClone.parents;
@@ -43,6 +45,7 @@ public class TopicEntity {
         this.level = 0;
         this.name = name;
         this.isSource = false;
+        this.isForHeal = false;
         this.isSink = false;
         this.observationLevel = observation_level;
 
@@ -59,6 +62,7 @@ public class TopicEntity {
         docToReturn.put("name", name);
         docToReturn.put("level", level);
         docToReturn.put("isSource", isSource);
+        docToReturn.put("isForHeal", isForHeal);
         docToReturn.put("isSink", isSink);
         docToReturn.put("observation_level", observationLevel.toString());
         docToReturn.put("parents", parents);
@@ -73,6 +77,7 @@ public class TopicEntity {
         this.level = bsonDocument.getInteger("level");
         this.name = bsonDocument.getString("name");
         this.isSource = bsonDocument.getBoolean("isSource");
+        this.isForHeal = bsonDocument.getBoolean("isForHeal");
         this.isSink = bsonDocument.getBoolean("isSink");
         this.observationLevel = ObservationLevel.valueOf(bsonDocument.getString("observation_level"));
 
@@ -152,5 +157,14 @@ public class TopicEntity {
 
     public void setObservationLevel(ObservationLevel observationLevel) {
         this.observationLevel = observationLevel;
+    }
+
+
+    public boolean isForHeal() {
+        return isForHeal;
+    }
+
+    public void setForHeal(boolean forHeal) {
+        isForHeal = forHeal;
     }
 }
