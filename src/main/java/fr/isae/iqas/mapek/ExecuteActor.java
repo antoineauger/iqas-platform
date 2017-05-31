@@ -32,7 +32,6 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.bson.types.ObjectId;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -62,12 +61,10 @@ public class ExecuteActor extends UntypedActor {
     private IPipeline pipelineToEnforce ;
 
     public ExecuteActor(Properties prop, IPipeline pipelineToEnforce, ObservationLevel askedObsLevel, Set<String> topicsToPullFrom, String topicToPublish) {
-        String randomNumber = new ObjectId().toString();
-
         ConsumerSettings consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
-                .withGroupId("group" + randomNumber)
-                .withClientId("client" + randomNumber)
+                .withGroupId("group_" + pipelineToEnforce.getUniqueID())
+                .withClientId("client_" + pipelineToEnforce.getUniqueID())
                 .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
         ProducerSettings producerSettings = ProducerSettings

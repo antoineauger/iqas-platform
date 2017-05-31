@@ -17,8 +17,7 @@ import fr.isae.iqas.model.request.Request;
 import java.util.Properties;
 
 import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.*;
-import static fr.isae.iqas.model.request.State.Status.ENFORCED;
-import static fr.isae.iqas.model.request.State.Status.REMOVED;
+import static fr.isae.iqas.model.request.State.Status.*;
 
 /**
  * Created by an.auger on 20/09/2016.
@@ -74,7 +73,7 @@ public class APIGatewayActor extends UntypedActor {
             else if (requestSubject.equals(DELETE)) { // Deletion
                 mongoController.getSpecificRequest(incomingRequest.getRequest_id()).whenComplete((retrievedRequest, throwable) -> {
                     if (throwable == null) {
-                        if (retrievedRequest.isInState(ENFORCED)) {
+                        if (retrievedRequest.isInState(ENFORCED) || retrievedRequest.isInState(HEALED)) {
                             retrievedRequest.addLog("Request deleted by the user.");
                             retrievedRequest.updateState(REMOVED);
                             mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result2, throwable2) -> {
