@@ -4,7 +4,10 @@ import akka.stream.Attributes;
 import akka.stream.FlowShape;
 import akka.stream.Inlet;
 import akka.stream.Outlet;
-import akka.stream.stage.*;
+import akka.stream.stage.AbstractInHandler;
+import akka.stream.stage.AbstractOutHandler;
+import akka.stream.stage.GraphStage;
+import akka.stream.stage.GraphStageLogic;
 
 import java.util.Collections;
 

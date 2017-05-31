@@ -33,9 +33,15 @@ public class TopicEntity {
         this.isForHeal = topicEntityToClone.isForHeal;
         this.observationLevel = topicEntityToClone.observationLevel;
 
-        this.parents = topicEntityToClone.parents;
-        this.children = topicEntityToClone.parents;
-        this.enforcedPipelines = topicEntityToClone.enforcedPipelines;
+        this.parents = new ArrayList<>();
+        this.children = new ArrayList<>();
+        this.parents.addAll(topicEntityToClone.parents);
+        this.children.addAll(topicEntityToClone.children);
+
+        this.enforcedPipelines = new ConcurrentHashMap<>();
+        topicEntityToClone.enforcedPipelines.forEach((k, v) -> {
+            this.enforcedPipelines.put(k, v);
+        });
 
         this.forTopic = topicEntityToClone.forTopic;
         this.forApplication = topicEntityToClone.forApplication;
