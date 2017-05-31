@@ -1,9 +1,9 @@
 package fr.isae.iqas.model.message;
 
 import fr.isae.iqas.kafka.RequestMapping;
-import fr.isae.iqas.model.request.HealRequest;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.quality.QoOAttribute;
+import fr.isae.iqas.model.request.HealRequest;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.pipelines.IPipeline;
 
@@ -44,6 +44,7 @@ public class MAPEKInternalMsg {
     public enum ActionMAPEK {
         APPLY,
         CREATE,
+        RESET,
         DELETE,
         TURN_ON,
         TURN_OFF,
@@ -166,7 +167,8 @@ public class MAPEKInternalMsg {
         private Request request;
         private HealRequest healRequest;
         private QoOAttribute qoOAttribute;
-        private RequestMapping requestMapping;
+        private RequestMapping oldRequestMapping;
+        private RequestMapping newRequestMapping;
         private String associatedRequest_id;
 
         public RFCMsg(RFCMsg rfcMsgToClone) {
@@ -175,17 +177,18 @@ public class MAPEKInternalMsg {
             this.about = rfcMsgToClone.getAbout();
             this.request = rfcMsgToClone.getRequest();
             this.qoOAttribute = rfcMsgToClone.getQoOAttribute();
-            this.requestMapping = rfcMsgToClone.getRequestMapping();
+            this.newRequestMapping = rfcMsgToClone.getNewRequestMapping();
             this.associatedRequest_id = rfcMsgToClone.getAssociatedRequest_id();
         }
 
         // HEAL / RESET for QoOAttributes
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, HealRequest healRequest, RequestMapping newRequestMapping) {
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, HealRequest healRequest, RequestMapping oldRequestMapping, RequestMapping newRequestMapping) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
             this.about = about;
             this.qoOAttribute = healRequest.getConcernedAttr();
-            this.requestMapping = newRequestMapping;
+            this.oldRequestMapping = oldRequestMapping;
+            this.newRequestMapping = newRequestMapping;
             this.healRequest = healRequest;
         }
 
@@ -197,12 +200,12 @@ public class MAPEKInternalMsg {
         }
 
         // CREATE for Requests
-        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request, RequestMapping requestMapping) {
+        public RFCMsg(RFCMAPEK rfc, EntityMAPEK about, Request request, RequestMapping newRequestMapping) {
             this.creationDate = new Timestamp(System.currentTimeMillis());
             this.rfc = rfc;
             this.about = about;
             this.request = request;
-            this.requestMapping = requestMapping;
+            this.newRequestMapping = newRequestMapping;
             this.associatedRequest_id = request.getRequest_id();
         }
 
@@ -235,8 +238,8 @@ public class MAPEKInternalMsg {
             return request;
         }
 
-        public RequestMapping getRequestMapping() {
-            return requestMapping;
+        public RequestMapping getNewRequestMapping() {
+            return newRequestMapping;
         }
 
         public QoOAttribute getQoOAttribute() {
@@ -245,6 +248,10 @@ public class MAPEKInternalMsg {
 
         public HealRequest getHealRequest() {
             return healRequest;
+        }
+
+        public RequestMapping getOldRequestMapping() {
+            return oldRequestMapping;
         }
     }
 

@@ -2,6 +2,7 @@ package fr.isae.iqas.kafka;
 
 import akka.actor.UntypedActor;
 import kafka.admin.AdminUtils;
+import kafka.admin.RackAwareMode;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 import org.I0Itec.zkclient.ZkClient;
@@ -67,7 +68,7 @@ public class KafkaAdminActor extends UntypedActor {
         Properties topicConfig = new Properties(); // add per-topic configurations settings here
 
         if (!AdminUtils.topicExists(zkUtils, kafkaTopicToCreate)) {
-            AdminUtils.createTopic(zkUtils, kafkaTopicToCreate, partitions, replication, topicConfig, null);
+            AdminUtils.createTopic(zkUtils, kafkaTopicToCreate, partitions, replication, topicConfig, RackAwareMode.Enforced$.MODULE$);
         }
         zkClient.close();
 
@@ -75,7 +76,7 @@ public class KafkaAdminActor extends UntypedActor {
     }
 
     private boolean deleteTopic(String kafkaTopicToDelete) {
-        boolean success = false;
+        boolean success = true;
 
         // Note: You must initialize the ZkClient with ZKStringSerializer.  If you don't, then
         // createTopic() will only seem to work (it will return without error).  The topic will exist in
@@ -90,9 +91,6 @@ public class KafkaAdminActor extends UntypedActor {
         ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zookeeperConnect), false);
 
         if (AdminUtils.topicExists(zkUtils, kafkaTopicToDelete)) {
-            AdminUtils.deleteTopic(zkUtils, kafkaTopicToDelete);
-        }
-        if (!AdminUtils.topicExists(zkUtils, kafkaTopicToDelete)) {
             AdminUtils.deleteTopic(zkUtils, kafkaTopicToDelete);
         }
         zkClient.close();

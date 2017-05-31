@@ -14,14 +14,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by an.auger on 28/02/2017.
  */
 public class RequestMapping {
-
+    private String application_id;
     private String request_id;
     private String constructedFromRequest;
     private Set<String> dependentRequests;
     private Map<String, TopicEntity> allTopics;
 
     @JsonCreator
-    public RequestMapping(String request_id) {
+    public RequestMapping(String application_id, String request_id) {
+        this.application_id = application_id;
         this.request_id = request_id;
         this.constructedFromRequest = "";
         this.dependentRequests = new HashSet<>();
@@ -29,21 +30,24 @@ public class RequestMapping {
     }
 
     public  @JsonIgnore RequestMapping(RequestMapping requestMappingToClone) {
+        this.application_id = requestMappingToClone.application_id;
         this.request_id = requestMappingToClone.request_id;
         this.constructedFromRequest = requestMappingToClone.constructedFromRequest;
         this.dependentRequests = new HashSet<>(requestMappingToClone.dependentRequests);
-        this.allTopics = new ConcurrentHashMap<>(requestMappingToClone.allTopics);
+        this.allTopics = new ConcurrentHashMap<>();
+        requestMappingToClone.allTopics.forEach((key, value) -> {
+            this.allTopics.put(key, new TopicEntity(value));
+        });
     }
 
     public RequestMapping(Document bsonDocument) {
         this.request_id = bsonDocument.getString("request_id");
+        this.application_id = bsonDocument.getString("application_id");
         this.constructedFromRequest = bsonDocument.getString("constructed_from");
 
         this.dependentRequests = new HashSet<>();
         List<String> reqIDsList = (List<String>) bsonDocument.get("dependent_requests");
-        for (String s : reqIDsList) {
-            dependentRequests.add(s);
-        }
+        dependentRequests.addAll(reqIDsList);
 
         this.allTopics = new ConcurrentHashMap<>();
         Map<String, Document> topicsDoc = (Map<String, Document>) bsonDocument.get("all_topics");
@@ -56,12 +60,11 @@ public class RequestMapping {
         Document docToReturn = new Document();
 
         docToReturn.put("constructed_from", constructedFromRequest);
+        docToReturn.put("application_id", application_id);
         docToReturn.put("request_id", request_id);
 
         List<String> dependentRequestsText = new ArrayList<>();
-        for (String s : dependentRequests) {
-            dependentRequestsText.add(s);
-        }
+        dependentRequestsText.addAll(dependentRequests);
         docToReturn.put("dependent_requests", dependentRequestsText);
 
         Map<String, Document> bsonTopicEntityMap = new ConcurrentHashMap<>();
@@ -101,12 +104,22 @@ public class RequestMapping {
         for (Object o : allTopics.entrySet()) {
             Map.Entry pair = (Map.Entry) o;
             TopicEntity topicEntityTemp = (TopicEntity) pair.getValue();
-
             if (topicEntityTemp.isSink()) {
                 return topicEntityTemp;
             }
         }
         return null;
+    }
+
+    public @JsonIgnore boolean containsHealTopicEntities() {
+        for (Object o : allTopics.entrySet()) {
+            Map.Entry pair = (Map.Entry) o;
+            TopicEntity topicEntityTemp = (TopicEntity) pair.getValue();
+            if (topicEntityTemp.isForHeal()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public @JsonIgnore List<String> removeAllTopicsAfter(String topicStartingPoint) {
@@ -131,6 +144,15 @@ public class RequestMapping {
         this.constructedFromRequest = request_id;
     }
 
+    @JsonProperty("application_id")
+    public String getApplication_id() {
+        return application_id;
+    }
+
+    public void setApplication_id(String application_id) {
+        this.application_id = application_id;
+    }
+
     @JsonProperty("request_id")
     public String getRequest_id() {
         return request_id;
@@ -151,13 +173,76 @@ public class RequestMapping {
         return constructedFromRequest;
     }
 
-    // TODO
-    public void healRequestWith(QoOPipeline healPipeline) {
+    public void healRequestWith(QoOPipeline healPipeline, int nbRetries) {
+        TopicEntity newHealTopic = new TopicEntity(application_id + "_" + request_id + "_" + healPipeline.pipeline
+                //+ "-" + String.valueOf(nbRetries)
+                , getFinalSink().getObservationLevel());
+        newHealTopic.setForHeal(true);
 
+        TopicEntity finalSink = getFinalSink();
+        TopicEntity oldJustBeforeLastTopic = allTopics.get(getFinalSink().getParents().get(0));
+
+        finalSink.getParents().clear();
+        oldJustBeforeLastTopic.getChildren().clear();
+
+        oldJustBeforeLastTopic.getChildren().add(newHealTopic.getName());
+        newHealTopic.getParents().add(oldJustBeforeLastTopic.getName());
+        newHealTopic.getChildren().add(finalSink.getName());
+        newHealTopic.getEnforcedPipelines().put(finalSink.getName(), healPipeline.pipeline);
+        finalSink.getParents().add(newHealTopic.getName());
+
+        newHealTopic.setLevel(oldJustBeforeLastTopic.getLevel() + 1);
+        finalSink.setLevel(newHealTopic.getLevel() + 1);
+
+        allTopics.put(oldJustBeforeLastTopic.getName(), oldJustBeforeLastTopic);
+        allTopics.put(newHealTopic.getName(), newHealTopic);
+        allTopics.put(finalSink.getName(), finalSink);
     }
 
-    // TODO
     public void resetRequestHeal() {
+        TopicEntity currTopic = getPrimarySources().get(0);
+        TopicEntity lastBeforeHealTopic = currTopic;
+        TopicEntity finalSinkTopic = getFinalSink();
 
+        List<String> topicEntityToDelete = new ArrayList<>();
+        while (currTopic != null) {
+            if (currTopic.isForHeal()) {
+                topicEntityToDelete.add(currTopic.getName());
+            }
+            else if (!currTopic.isSink()) {
+                lastBeforeHealTopic = currTopic;
+            }
+
+            if (currTopic.getChildren().size() > 0) {
+                currTopic = allTopics.get(currTopic.getChildren().get(0));
+            }
+            else {
+                currTopic = null;
+            }
+        }
+
+        lastBeforeHealTopic.getChildren().clear();
+        finalSinkTopic.getParents().clear();
+
+        finalSinkTopic.getParents().add(lastBeforeHealTopic.getName());
+        lastBeforeHealTopic.getChildren().add(finalSinkTopic.getName());
+        finalSinkTopic.setLevel(lastBeforeHealTopic.getLevel() + 1);
+
+        allTopics.put(lastBeforeHealTopic.getName(), lastBeforeHealTopic);
+        allTopics.put(finalSinkTopic.getName(), finalSinkTopic);
+
+        for (String t : topicEntityToDelete) {
+            allTopics.remove(t);
+        }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        for (String k : allTopics.keySet()) {
+            TopicEntity v = allTopics.get(k);
+            s.append(k).append(": ").append(v.getName()).append("(" + v.isForHeal() + ")").append("     parents=").append(v.getParents().toString()).append("        children=").append(v.getChildren().toString()).append("\n");
+        }
+        return s.toString();
     }
 }

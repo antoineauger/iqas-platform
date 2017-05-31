@@ -3,7 +3,6 @@ package fr.isae.iqas.model.request;
 import fr.isae.iqas.model.jsonld.QoOPipeline;
 import fr.isae.iqas.model.quality.QoOAttribute;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +13,8 @@ import java.util.Map;
 public class HealRequest {
     private String concernedRequest;
     private QoOAttribute concernedAttr;
-    private Timestamp healStartDate;
-    private Timestamp observeUntil;
+    private long healStartDate;
+    private long observeUntil;
     private long observeDuration;
     private int retries;
     private boolean isHealing;
@@ -38,12 +37,7 @@ public class HealRequest {
 
     public boolean canPerformHeal() {
         long now = System.currentTimeMillis();
-        if (!isHealing) {
-            return true;
-        }
-        else {
-            return now >= observeUntil.getTime();
-        }
+        return !isHealing || now >= observeUntil;
     }
 
     public void performHeal(QoOAttribute concernedAttr, QoOPipeline healPipelineToApply, Map<String, String> params) {
@@ -52,9 +46,8 @@ public class HealRequest {
         triedRemedies.add(healPipelineToApply);
         paramsForRemedies.add(params);
 
-        long now = System.currentTimeMillis();
-        healStartDate = new Timestamp(now);
-        observeUntil = new Timestamp(now + observeDuration);
+        healStartDate = System.currentTimeMillis();
+        observeUntil = System.currentTimeMillis() + observeDuration;
         retries += 1;
         isHealing = true;
     }
@@ -107,7 +100,7 @@ public class HealRequest {
         return concernedRequest;
     }
 
-    public Timestamp getHealStartDate() {
+    public long getHealStartDate() {
         return healStartDate;
     }
 }

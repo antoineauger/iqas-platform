@@ -11,7 +11,6 @@ import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Sink;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import fr.isae.iqas.MainClass;
 import fr.isae.iqas.model.message.ObsRateReportMsg;
 import fr.isae.iqas.model.observation.RawData;
 import org.apache.kafka.clients.consumer.ConsumerRecord;

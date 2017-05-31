@@ -85,7 +85,7 @@ public class PlanActor extends UntypedActor {
 
     @Override
     public void preStart() {
-        future(() -> fusekiController._findAllSensors(), context().dispatcher())
+        future(() -> fusekiController.findAllSensors(), context().dispatcher())
                 .onComplete(new OnComplete<VirtualSensorList>() {
                     public void onComplete(Throwable throwable, VirtualSensorList virtualSensorListResult) {
                         if (throwable == null) { // Only continue if there was no error so far
@@ -114,14 +114,14 @@ public class PlanActor extends UntypedActor {
             // RFCs messages - Request CREATE
             if (rfcMsg.getRfc() == RFCMAPEK.CREATE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
                 Request incomingRequest = rfcMsg.getRequest();
-                RequestMapping requestMapping = rfcMsg.getRequestMapping();
+                RequestMapping requestMapping = rfcMsg.getNewRequestMapping();
 
                 // Creation of all topics
                 requestMapping.getAllTopics().forEach((key, value) -> {
                     if (!value.isSource()) {
                         ActionMsg action = new ActionMsg(ActionMAPEK.CREATE,
                                 EntityMAPEK.KAFKA_TOPIC,
-                                String.valueOf(key));
+                                key);
 
                         performAction(action);
                     }
@@ -161,6 +161,7 @@ public class PlanActor extends UntypedActor {
                                                 pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
                                                 pipeline.setTempID(requestMapping.getPrimarySources().get(0).getEnforcedPipelines()
                                                         .get(requestMapping.getFinalSink().getName()).split("_")[1]);
+
                                                 pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
                                                 pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
@@ -203,7 +204,7 @@ public class PlanActor extends UntypedActor {
 
             // RFCs messages - Sensor UPDATE
             else if (rfcMsg.getRfc() == RFCMAPEK.UPDATE && rfcMsg.getAbout() == EntityMAPEK.SENSOR) { // Sensor description has been updated on Fuseki
-                future(() -> fusekiController._findAllSensors(), context().dispatcher())
+                future(() -> fusekiController.findAllSensors(), context().dispatcher())
                         .onComplete(new OnComplete<VirtualSensorList>() {
                             public void onComplete(Throwable throwable, VirtualSensorList newVirtualSensorList) {
                                 if (throwable == null) { // Only continue if there was no error so far
@@ -221,12 +222,12 @@ public class PlanActor extends UntypedActor {
 
             // RFCs messages - Request HEAL
             else if (rfcMsg.getRfc() == RFCMAPEK.HEAL && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
-
+                healRequest(rfcMsg.getHealRequest(), rfcMsg.getOldRequestMapping(), rfcMsg.getNewRequestMapping());
             }
 
             // RFCs messages - Request RESET
             else if (rfcMsg.getRfc() == RFCMAPEK.RESET && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
-
+                resetRequest(rfcMsg.getOldRequestMapping(), rfcMsg.getNewRequestMapping());
             }
         }
         // TerminatedMsg messages
@@ -407,6 +408,9 @@ public class PlanActor extends UntypedActor {
             mappingTopicsActors.remove(topic);
         }
 
+        // For cleaning up resources in Monitor actor
+        monitorActor.tell(new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestToDelete), getSelf());
+
         // Removal of the corresponding RequestMapping
         actorPathRefs.remove(requestToDelete.getRequest_id());
         mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
@@ -500,14 +504,177 @@ public class PlanActor extends UntypedActor {
         return true;
     }
 
-    // TODO ActionMsg for that?
+    private void healRequest(HealRequest healRequest, RequestMapping oldRequestMapping, RequestMapping newRequestMapping) {
+        // We stop the sink and heal topics currently enforced
+        IPipeline pipelineAssociatedToFinalSink = stopHealAndSinkTopics(oldRequestMapping, false);
 
-    private void healRequest(RequestMapping currEnforcedRM, HealRequest request) {
-        //request.getConcernedRequest()
+        final String finalSink = newRequestMapping.getFinalSink().getName();
+        final String healTopic = newRequestMapping.getAllTopics().get(finalSink).getParents().get(0);
+        final String oldJustBeforeSinkTopic = newRequestMapping.getAllTopics().get(healTopic).getParents().get(0);
+
+        retrievePipeline(healRequest.getLastTriedRemedy().pipeline).whenComplete((retrievedHealPipeline, throwable) -> {
+            if (throwable != null) {
+                log.error(throwable.toString());
+            }
+            else {
+                ActionMsg action = new ActionMsg(ActionMAPEK.CREATE,
+                        EntityMAPEK.KAFKA_TOPIC,
+                        healTopic);
+                performAction(action);
+
+                retrievedHealPipeline.setAssociatedRequestID(healRequest.getConcernedRequest());
+                retrievedHealPipeline.setTempID(pipelineAssociatedToFinalSink.getTempID());
+                retrievedHealPipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
+                retrievedHealPipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), pipelineAssociatedToFinalSink.getQooParams());
+
+                // We set all customizable params of the retrieved pipeline for the healing
+                healRequest.getLastParamsForRemedies().forEach(retrievedHealPipeline::setCustomizableParameter);
+
+                Set<String> fromTopics = new HashSet<>();
+                fromTopics.add(oldJustBeforeSinkTopic);
+                ActionMsg action2 = new ActionMsg(ActionMAPEK.APPLY,
+                        EntityMAPEK.PIPELINE,
+                        retrievedHealPipeline,
+                        newRequestMapping.getFinalSink().getObservationLevel(),
+                        fromTopics,
+                        healTopic,
+                        newRequestMapping.getRequest_id(),
+                        newRequestMapping.getConstructedFromRequest(),
+                        -1);
+
+                performAction(action2);
+                log.info("Started " + fromTopics.toString() + " -> " + healTopic);
+
+                retrievePipeline("OutputPipeline").whenComplete((outputPipeline, throwable2) -> {
+                    if (throwable2 != null) {
+                        log.error(throwable2.toString());
+                    } else {
+                        // The OutputPipeline configuration does not change so we perform an exact copy
+                        ((OutputPipeline) outputPipeline).copyConfiguration((OutputPipeline) pipelineAssociatedToFinalSink);
+
+                        Set<String> fromTopics2 = new HashSet<>();
+                        fromTopics2.add(healTopic);
+                        ActionMsg action3 = new ActionMsg(ActionMAPEK.APPLY,
+                                EntityMAPEK.PIPELINE,
+                                outputPipeline,
+                                newRequestMapping.getFinalSink().getObservationLevel(),
+                                fromTopics2,
+                                finalSink,
+                                newRequestMapping.getRequest_id(),
+                                newRequestMapping.getConstructedFromRequest(),
+                                -1);
+
+                        performAction(action3);
+                        log.info("Started " + fromTopics2.toString() + " -> " + finalSink);
+                    }
+                });
+            }
+        });
     }
 
-    private void resetRequest(RequestMapping currEnforcedRM, HealRequest request) {
+    /**
+     * Method to delete any existing heal topic + stop the last actor (that publishes to finalSink).
+     * This method does not delete sinkTopic!
+     * @param requestMappingToIterate
+     * @return the old OutputPipeline that was used for producing observations to the old sinkTopic.
+     */
+    private IPipeline stopHealAndSinkTopics(RequestMapping requestMappingToIterate, boolean isARollback) {
+        IPipeline pipelineAssociatedToFinalSink = enforcedPipelines.get(mappingTopicsActors.get(requestMappingToIterate.getFinalSink().getName()));
+        Map<String, TopicEntity> allTopics = requestMappingToIterate.getAllTopics();
+        TopicEntity currTopic = requestMappingToIterate.getPrimarySources().get(0);
 
+        log.error("all topics : " + allTopics.toString());
+
+        Set<ActorRef> actorsToShutDown = new HashSet<>();
+        Set<String> kafkaTopicsToDelete = new HashSet<>();
+        Set<String> kafkaTopicsToReset = new HashSet<>();
+        while (currTopic != null) {
+            log.error("ze curr topic : " + currTopic.getName());
+            if (currTopic.isForHeal()) {
+                String currActorPathName = mappingTopicsActors.get(currTopic.getName());
+                execActorsCount.put(currActorPathName, execActorsCount.get(currActorPathName) - 1);
+                if (isARollback) {
+                    kafkaTopicsToDelete.add(currTopic.getName());
+                }
+                else {
+                    kafkaTopicsToReset.add(currTopic.getName());
+                }
+                actorsToShutDown.add(execActorsRefs.get(currActorPathName));
+            }
+            else if (currTopic.isSink()) {
+                String currActorPathName = mappingTopicsActors.get(currTopic.getName());
+                execActorsCount.put(currActorPathName, execActorsCount.get(currActorPathName) - 1);
+                actorsToShutDown.add(execActorsRefs.get(currActorPathName));
+            }
+
+            if (currTopic.getChildren().size() > 0) {
+                currTopic = allTopics.get(currTopic.getChildren().get(0));
+            }
+            else {
+                currTopic = null;
+            }
+        }
+
+        log.error("actorsToShutDown: " + actorsToShutDown.toString());
+        log.error("kafkaTopicsToDelete: " + kafkaTopicsToDelete.toString());
+
+        for (ActorRef actorRefToStop : actorsToShutDown) {
+            gracefulStop(actorRefToStop);
+            execActorsCount.remove(actorRefToStop.path().name());
+            execActorsRefs.remove(actorRefToStop.path().name());
+            monitorActor.tell(new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRefToStop.path().name()).getUniqueID()), getSelf());
+            enforcedPipelines.remove(actorRefToStop.path().name());
+            actorPathRefs.get(requestMappingToIterate.getRequest_id()).remove(actorRefToStop.path().name());
+        }
+
+        // We clean up the unused topics
+        for (String topic : kafkaTopicsToDelete) {
+            performAction(new ActionMsg(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
+            log.error("Removing: " + topic);
+            mappingTopicsActors.remove(topic);
+        }
+        for (String topic : kafkaTopicsToReset) {
+            performAction(new ActionMsg(ActionMAPEK.RESET, EntityMAPEK.KAFKA_TOPIC, topic));
+            log.error("Resetting: " + topic);
+            mappingTopicsActors.remove(topic);
+        }
+
+        mappingTopicsActors.remove(requestMappingToIterate.getFinalSink().getName()); // we remove the last sink from database only (not the Kafka topic)
+
+        return pipelineAssociatedToFinalSink;
+    }
+
+    private void resetRequest(RequestMapping oldRequestMappingToIterate, RequestMapping newRequestMappingToIterate) {
+        // We stop the sink and heal topics currently enforced
+        IPipeline pipelineAssociatedToFinalSink = stopHealAndSinkTopics(oldRequestMappingToIterate, true);
+
+        final String finalSink = newRequestMappingToIterate.getFinalSink().getName();
+        final String oldJustBeforeSinkTopic = newRequestMappingToIterate.getAllTopics().get(finalSink).getParents().get(0);
+
+        retrievePipeline("OutputPipeline").whenComplete((outputPipeline, throwable) -> {
+            if (throwable != null) {
+                log.error(throwable.toString());
+            }
+            else {
+                // The OutputPipeline configuration does not change so we perform an exact copy
+                ((OutputPipeline) outputPipeline).copyConfiguration((OutputPipeline) pipelineAssociatedToFinalSink);
+
+                Set<String> fromTopics = new HashSet<>();
+                fromTopics.add(oldJustBeforeSinkTopic);
+                ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
+                        EntityMAPEK.PIPELINE,
+                        outputPipeline,
+                        newRequestMappingToIterate.getFinalSink().getObservationLevel(),
+                        fromTopics,
+                        finalSink,
+                        newRequestMappingToIterate.getRequest_id(),
+                        newRequestMappingToIterate.getConstructedFromRequest(),
+                        -1);
+
+                performAction(action);
+                log.info("Started " + fromTopics.toString() + " -> " + finalSink);
+            }
+        });
     }
 
 }

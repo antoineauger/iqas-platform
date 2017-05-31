@@ -160,12 +160,6 @@ public class MonitorActor extends UntypedActor {
                 forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
             else if (requestTemp.getCurrent_status() == REMOVED) { // Request deleted by the user
-                qooQualityBuffer.remove(requestTemp.getRequest_id());
-                minObsRateByRequest.remove(requestTemp.getRequest_id());
-                numberObservedSymptomsObsRate.remove(requestTemp.getRequest_id());
-                startDateCount.remove(requestTemp.getRequest_id());
-                countByRequest.remove(requestTemp.getRequest_id());
-
                 SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestTemp);
                 forwardToSpecifiedActor(symptomMsgToForward, ActorUtils.getAnalyzeActor(getContext(), getSelf()));
             }
@@ -204,15 +198,24 @@ public class MonitorActor extends UntypedActor {
         // SymptomMsg messages
         else if (message instanceof SymptomMsg) {
             SymptomMsg symptomMAPEKMsg = (SymptomMsg) message;
-            if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.NEW && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline creation
+            if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.NEW && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline NEW
                 log.info("NEW IngestPipeline: {} {}", symptomMAPEKMsg.getUniqueIDPipeline(), symptomMAPEKMsg.getRequestID());
                 mappingPipelinesRequests.putIfAbsent(symptomMAPEKMsg.getUniqueIDPipeline(), new HashSet<>());
                 mappingPipelinesRequests.get(symptomMAPEKMsg.getUniqueIDPipeline()).add(symptomMAPEKMsg.getRequestID());
             }
-            else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.REMOVED && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline removal
-                log.info("IngestPipeline " + symptomMAPEKMsg.getUniqueIDPipeline() + " is no longer active, removing it");
-                numberObservedSymptomsObsRate.remove(symptomMAPEKMsg.getUniqueIDPipeline());
-                mappingPipelinesRequests.remove(symptomMAPEKMsg.getUniqueIDPipeline());
+            else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.REMOVED && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline REMOVED
+                if (mappingPipelinesRequests.containsKey(symptomMAPEKMsg.getUniqueIDPipeline())) {
+                    log.info("IngestPipeline " + symptomMAPEKMsg.getUniqueIDPipeline() + " is no longer active, removing it");
+                    mappingPipelinesRequests.remove(symptomMAPEKMsg.getUniqueIDPipeline());
+                }
+            }
+            else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.REMOVED && symptomMAPEKMsg.getAbout() == REQUEST) { // Request REMOVED
+                log.info("Request " + symptomMAPEKMsg.getAttachedRequest().getRequest_id() + " has been removed, cleaning up resources");
+                qooQualityBuffer.remove(symptomMAPEKMsg.getAttachedRequest().getRequest_id());
+                minObsRateByRequest.remove(symptomMAPEKMsg.getAttachedRequest().getRequest_id());
+                numberObservedSymptomsObsRate.remove(symptomMAPEKMsg.getAttachedRequest().getRequest_id());
+                startDateCount.remove(symptomMAPEKMsg.getAttachedRequest().getRequest_id());
+                countByRequest.remove(symptomMAPEKMsg.getAttachedRequest().getRequest_id());
             }
             else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.UPDATED && symptomMAPEKMsg.getAbout() == SENSOR) { // Sensor UPDATE
                 forwardToSpecifiedActor(new SymptomMsg(SymptomMAPEK.UPDATED, SENSOR), ActorUtils.getAnalyzeActor(getContext(), getSelf()));
@@ -312,7 +315,7 @@ public class MonitorActor extends UntypedActor {
     }
 
     private boolean storeVirtualSensorStates() {
-        future(() -> fusekiController._findAllSensors(), context().dispatcher())
+        future(() -> fusekiController.findAllSensors(), context().dispatcher())
                 .onComplete(new OnComplete<VirtualSensorList>() {
                     public void onComplete(Throwable throwable, VirtualSensorList virtualSensorList) {
                         if (throwable == null) { // Only continue if there was no error so far

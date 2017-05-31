@@ -19,6 +19,7 @@ import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.Knowledge;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
+import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
 import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.utils.JenaUtils;
 import org.apache.jena.ontology.OntClass;
@@ -75,6 +76,29 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
         this.pref = JenaUtils.getPrefixes(iqasConfig);
         this.qooC = JenaUtils.getUsefulOntClasses(iqasConfig, qooBaseModel);
         this.qooP = JenaUtils.getUsefulProperties(iqasConfig, qooBaseModel);
+    }
+
+    public void copyConfiguration(OutputPipeline outputPipelineToMimic) {
+        if (outputPipelineToMimic.getParams().containsKey("interested_in")) {
+            this.setCustomizableParameter("interested_in", outputPipelineToMimic.getParams().get("interested_in"));
+        }
+        if (outputPipelineToMimic.getParams().containsKey("age_max")) {
+            this.setCustomizableParameter("age_max", outputPipelineToMimic.getParams().get("age_max"));
+        }
+
+        this.setAssociatedRequestID(outputPipelineToMimic.getAssociatedRequest_id());
+        this.setTempID(outputPipelineToMimic.getTempID());
+        this.setOptionsForMAPEKReporting(outputPipelineToMimic.getMonitorActor(), outputPipelineToMimic.getReportFrequency());
+        this.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), outputPipelineToMimic.getQooParams());
+
+        this.qooBaseModel = outputPipelineToMimic.qooBaseModel;
+        this.allVirtualSensors.clear();
+        outputPipelineToMimic.allVirtualSensors.forEach((k, v) -> {
+            this.allVirtualSensors.put(k, v);
+        });
+        this.pref = outputPipelineToMimic.pref;
+        this.qooC = outputPipelineToMimic.qooC;
+        this.qooP = outputPipelineToMimic.qooP;
     }
 
     @Override
