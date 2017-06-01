@@ -422,9 +422,10 @@ public class AnalyzeActor extends UntypedActor {
     private void checkIfSomeHealedRequestsAreNowStable() {
         for (Iterator<Map.Entry<String, HealRequest>> it = currentlyHealedRequest.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<String, HealRequest> pair = it.next();
-            if (System.currentTimeMillis() - pair.getValue().getHealStartDate() > observeDuration
-                    && receivedObsRateSymptoms.containsKey(pair.getKey())
-                    && receivedObsRateSymptoms.get(pair.getKey()).size() == 0) {
+            if (!receivedObsRateSymptoms.containsKey(pair.getKey())
+                || (receivedObsRateSymptoms.containsKey(pair.getKey())
+                    && receivedObsRateSymptoms.get(pair.getKey()).size() == 0
+                    && System.currentTimeMillis() - pair.getValue().getHealStartDate() > observeDuration)) {
                 // We save changes into MongoDB
                 mongoController.getSpecificRequest(pair.getKey()).whenComplete((retrievedRequest, throwable) -> {
                     if (throwable == null) {
