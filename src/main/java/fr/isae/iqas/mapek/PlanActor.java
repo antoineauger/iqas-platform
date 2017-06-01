@@ -1,6 +1,7 @@
 package fr.isae.iqas.mapek;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSelection;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.dispatch.OnComplete;
@@ -40,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
 import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
+import static fr.isae.iqas.utils.ActorUtils.getPipelineWatcherActorFromMAPEKchild;
 import static fr.isae.iqas.utils.PipelineUtils.*;
 
 /**
@@ -222,12 +224,16 @@ public class PlanActor extends UntypedActor {
 
             // RFCs messages - Request HEAL
             else if (rfcMsg.getRfc() == RFCMAPEK.HEAL && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
-                healRequest(rfcMsg.getHealRequest(), rfcMsg.getOldRequestMapping(), rfcMsg.getNewRequestMapping());
+                if (actorPathRefs.containsKey(rfcMsg.getHealRequest().getConcernedRequest())) {
+                    healRequest(rfcMsg.getHealRequest(), rfcMsg.getOldRequestMapping(), rfcMsg.getNewRequestMapping());
+                }
             }
 
             // RFCs messages - Request RESET
             else if (rfcMsg.getRfc() == RFCMAPEK.RESET && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
-                resetRequest(rfcMsg.getOldRequestMapping(), rfcMsg.getNewRequestMapping());
+                if (actorPathRefs.containsKey(rfcMsg.getHealRequest().getConcernedRequest())) {
+                    resetRequest(rfcMsg.getOldRequestMapping(), rfcMsg.getNewRequestMapping());
+                }
             }
         }
         // TerminatedMsg messages
@@ -253,28 +259,21 @@ public class PlanActor extends UntypedActor {
 
     private CompletableFuture<IPipeline> retrievePipeline(String pipeline_id) {
         CompletableFuture<IPipeline> pipelineCompletableFuture = new CompletableFuture<>();
-        ActorUtils.getPipelineWatcherActor(getContext(), self()).onComplete(new OnComplete<ActorRef>() {
+        ActorSelection pipelineWatcherActor = getPipelineWatcherActorFromMAPEKchild(getContext(), self());
+
+        Patterns.ask(pipelineWatcherActor, new PipelineRequestMsg(pipeline_id), new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {
             @Override
-            public void onComplete(Throwable t, ActorRef pipelineWatcherActor) throws Throwable {
+            public void onComplete(Throwable t, Object pipelineObject) throws Throwable {
                 if (t != null) {
                     log.error("Unable to find the PipelineWatcherActor: " + t.toString());
                 } else {
-                    Patterns.ask(pipelineWatcherActor, new PipelineRequestMsg(pipeline_id), new Timeout(5, TimeUnit.SECONDS)).onComplete(new OnComplete<Object>() {
-                        @Override
-                        public void onComplete(Throwable t, Object pipelineObject) throws Throwable {
-                            if (t != null) {
-                                log.error("Unable to find the PipelineWatcherActor: " + t.toString());
-                            } else {
-                                ArrayList<Pipeline> castedResultPipelineObject = (ArrayList<Pipeline>) pipelineObject;
-                                if (castedResultPipelineObject.size() == 0) {
-                                    log.error("Unable to retrieve the specified QoO pipeline " + pipeline_id);
-                                } else {
-                                    IPipeline pipelineToEnforce = castedResultPipelineObject.get(0).getPipelineObject();
-                                    pipelineCompletableFuture.complete(pipelineToEnforce);
-                                }
-                            }
-                        }
-                    }, getContext().dispatcher());
+                    ArrayList<Pipeline> castedResultPipelineObject = (ArrayList<Pipeline>) pipelineObject;
+                    if (castedResultPipelineObject.size() == 0) {
+                        log.error("Unable to retrieve the specified QoO pipeline " + pipeline_id);
+                    } else {
+                        IPipeline pipelineToEnforce = castedResultPipelineObject.get(0).getPipelineObject();
+                        pipelineCompletableFuture.complete(pipelineToEnforce);
+                    }
                 }
             }
         }, getContext().dispatcher());

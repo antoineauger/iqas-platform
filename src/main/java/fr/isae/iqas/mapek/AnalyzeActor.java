@@ -1,6 +1,5 @@
 package fr.isae.iqas.mapek;
 
-import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.dispatch.OnComplete;
 import akka.event.Logging;
@@ -16,7 +15,6 @@ import fr.isae.iqas.model.request.HealRequest;
 import fr.isae.iqas.model.request.QoORequirements;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
-import fr.isae.iqas.utils.ActorUtils;
 import fr.isae.iqas.utils.QualityUtils;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.bson.types.ObjectId;
@@ -33,6 +31,7 @@ import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 import static fr.isae.iqas.model.quality.QoOAttribute.OBS_RATE;
 import static fr.isae.iqas.model.request.State.Status.ENFORCED;
 import static fr.isae.iqas.model.request.State.Status.HEALED;
+import static fr.isae.iqas.utils.ActorUtils.getPlanActorFromMAPEKchild;
 
 /**
  * Created by an.auger on 13/09/2016.
@@ -335,11 +334,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                             retrievedRequest.updateState(ENFORCED);
                                                                         }
 
-                                                                        log.error("BEFORE RESET" + oldRequestMapping.toString());
-                                                                        log.error("BEFORE RESET" + newRequestMapping.toString());
                                                                         newRequestMapping.resetRequestHeal();
-                                                                        log.error("AFTER RESET" + oldRequestMapping.toString());
-                                                                        log.error("AFTER RESET" + newRequestMapping.toString());
 
                                                                         // We save changes into MongoDB
                                                                         mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result4, throwable4) -> {
@@ -421,17 +416,7 @@ public class AnalyzeActor extends UntypedActor {
     }
 
     private void tellToPlanActor(RFCMsg rfcMsg) {
-        ActorUtils.getPlanActor(getContext(), getSelf()).onComplete(new OnComplete<ActorRef>() {
-            @Override
-            public void onComplete(Throwable t, ActorRef planActor) throws Throwable {
-                if (t != null) {
-                    log.error("Unable to find the PlanActor: " + t.toString());
-                }
-                else {
-                    planActor.tell(rfcMsg, getSelf());
-                }
-            }
-        }, getContext().dispatcher());
+        getPlanActorFromMAPEKchild(getContext(), getSelf()).tell(rfcMsg, getSelf());
     }
 
     private void checkIfSomeHealedRequestsAreNowStable() {
