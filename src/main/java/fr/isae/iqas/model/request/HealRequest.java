@@ -12,6 +12,7 @@ import java.util.Map;
  */
 public class HealRequest {
     private String concernedRequest;
+    private String uniqueIDPipeline;
     private QoOAttribute concernedAttr;
     private long healStartDate;
     private long observeUntil;
@@ -24,8 +25,9 @@ public class HealRequest {
     private List<QoOPipeline> triedRemedies;
     private List<Map<String, String>> paramsForRemedies;
 
-    public HealRequest(String concernedRequest, long observeDuration) {
+    public HealRequest(String concernedRequest, String uniqueIDPipeline, long observeDuration) {
         this.concernedRequest = concernedRequest;
+        this.uniqueIDPipeline = uniqueIDPipeline;
         this.retries = 0;
         this.isHealing = false;
         this.observeDuration = observeDuration;
@@ -102,5 +104,9 @@ public class HealRequest {
 
     public long getHealStartDate() {
         return healStartDate;
+    }
+
+    public String getUniqueIDPipeline() {
+        return uniqueIDPipeline;
     }
 }

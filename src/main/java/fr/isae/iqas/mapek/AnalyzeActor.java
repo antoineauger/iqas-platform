@@ -48,7 +48,7 @@ public class AnalyzeActor extends UntypedActor {
     private FusekiController fusekiController;
 
     private FiniteDuration tickMAPEK;
-    private FiniteDuration symptomLifetime;
+    private long symptomLifetime;
     private long observeDuration;
     private int max_retries;
     private int maxSymptomsBeforeAction;
@@ -64,7 +64,7 @@ public class AnalyzeActor extends UntypedActor {
         this.fusekiController = fusekiController;
 
         this.tickMAPEK = new FiniteDuration(Long.valueOf(prop.getProperty("tick_mapek_seconds")), TimeUnit.SECONDS);
-        this.symptomLifetime = new FiniteDuration(Long.valueOf(prop.getProperty("symptom_lifetime_seconds")), TimeUnit.SECONDS);
+        this.symptomLifetime = Long.valueOf(prop.getProperty("symptom_lifetime_seconds")) * 1000;
         this.observeDuration = Integer.valueOf(prop.getProperty("max_time_to_observe_effect_seconds")) * 1000;
         this.max_retries = Integer.parseInt(prop.getProperty("max_number_retries"));
         this.maxSymptomsBeforeAction = Integer.parseInt(prop.getProperty("nb_symptoms_before_action"));
@@ -243,7 +243,7 @@ public class AnalyzeActor extends UntypedActor {
                         log.info("Searching for Request " + request_id);
 
                         if (!requestsToIgnore.contains(request_id)) {
-                            currentlyHealedRequest.putIfAbsent(request_id, new HealRequest(request_id, observeDuration));
+                            currentlyHealedRequest.putIfAbsent(request_id, new HealRequest(request_id, symptomMsg.getUniqueIDPipeline(), observeDuration));
                             HealRequest currHealRequest = currentlyHealedRequest.get(request_id);
 
                             if (currHealRequest.canPerformHeal()) {
@@ -320,6 +320,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                     } else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
                                                                         // Already tried this solution and does not seem to work...
                                                                         requestsToIgnore.add(retrievedRequest.getRequest_id());
+                                                                        currentlyHealedRequest.remove(retrievedRequest.getRequest_id());
                                                                         retrievedRequest.addLog("Max retry attempts (" + String.valueOf(max_retries) + ") reached to heal this request. " +
                                                                                 "Last heal was tried with the pipeline " + currHealRequest.getLastTriedRemedy().pipeline + " to improve " +
                                                                                 currHealRequest.getLastHealFor().toString() + " with the following params: " +
@@ -351,6 +352,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                 } else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
                                                                     // No suitable Pipeline for healing, removing Request if its level is "GUARANTEED"
                                                                     requestsToIgnore.add(retrievedRequest.getRequest_id());
+                                                                    currentlyHealedRequest.remove(retrievedRequest.getRequest_id());
                                                                     if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
                                                                         retrievedRequest.addLog("No suitable pipeline for healing. " +
                                                                                 "Rejecting this request since it has a GUARANTEED Service Level Agreement.");
@@ -378,7 +380,6 @@ public class AnalyzeActor extends UntypedActor {
                                         log.warning("Unable to retrieve request " + request_id + ". Operation skipped!");
                                     }
                                 });
-                                receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).clear(); // We clear buffer for TOO_LOW OBS_RATE Symptoms
                             }
                         }
                     }
@@ -422,10 +423,12 @@ public class AnalyzeActor extends UntypedActor {
     private void checkIfSomeHealedRequestsAreNowStable() {
         for (Iterator<Map.Entry<String, HealRequest>> it = currentlyHealedRequest.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<String, HealRequest> pair = it.next();
-            if (!receivedObsRateSymptoms.containsKey(pair.getKey())
-                || (receivedObsRateSymptoms.containsKey(pair.getKey())
-                    && receivedObsRateSymptoms.get(pair.getKey()).size() == 0
-                    && System.currentTimeMillis() - pair.getValue().getHealStartDate() > observeDuration)) {
+            if (receivedObsRateSymptoms.containsKey(pair.getValue().getUniqueIDPipeline())
+                    && receivedObsRateSymptoms.get(pair.getValue().getUniqueIDPipeline()).size() == 0
+                    && System.currentTimeMillis() - pair.getValue().getHealStartDate() > observeDuration) {
+
+                receivedObsRateSymptoms.remove(pair.getValue().getUniqueIDPipeline());
+
                 // We save changes into MongoDB
                 mongoController.getSpecificRequest(pair.getKey()).whenComplete((retrievedRequest, throwable) -> {
                     if (throwable == null) {
@@ -449,17 +452,15 @@ public class AnalyzeActor extends UntypedActor {
      * @param mapToCheck
      * @param symptomLifetime
      */
-    private void clearExpiredSymptoms(Map<String, CircularFifoBuffer> mapToCheck, FiniteDuration symptomLifetime) {
-        FiniteDuration now = new FiniteDuration(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-        for (Iterator<Map.Entry<String, CircularFifoBuffer>> it = mapToCheck.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry<String, CircularFifoBuffer> pair = it.next();
+    private void clearExpiredSymptoms(Map<String, CircularFifoBuffer> mapToCheck, long symptomLifetime) {
+        for (Iterator<Map.Entry<String, CircularFifoBuffer>> it1 = mapToCheck.entrySet().iterator(); it1.hasNext(); ) {
+            Map.Entry<String, CircularFifoBuffer> pair = it1.next();
             CircularFifoBuffer buffer = pair.getValue();
-            buffer.removeIf(o -> {
-                MAPEKSymptomMsgWithDate msg = (MAPEKSymptomMsgWithDate) o;
-                return now.minus(msg.getSymptomCreationDate()).gt(symptomLifetime);
-            });
-            if (buffer.size() == 0) {
-                it.remove();
+            for (Iterator it2 = buffer.iterator(); it2.hasNext(); ) {
+                MAPEKSymptomMsgWithDate o = (MAPEKSymptomMsgWithDate) it2.next();
+                if (System.currentTimeMillis() - o.getSymptomCreationDate() > symptomLifetime) {
+                    it2.remove();
+                }
             }
         }
     }

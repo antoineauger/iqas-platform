@@ -25,7 +25,6 @@ import fr.isae.iqas.model.request.HealRequest;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.model.request.State;
 import fr.isae.iqas.pipelines.*;
-import fr.isae.iqas.utils.ActorUtils;
 import fr.isae.iqas.utils.JenaUtils;
 import fr.isae.iqas.utils.MapUtils;
 import org.apache.jena.ontology.OntModel;
@@ -403,7 +402,6 @@ public class PlanActor extends UntypedActor {
         // We clean up the unused topics
         for (String topic : kafkaTopicsToDelete) {
             performAction(new ActionMsg(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
-            log.error("Removing: " + topic);
             mappingTopicsActors.remove(topic);
         }
 
@@ -542,7 +540,6 @@ public class PlanActor extends UntypedActor {
                         -1);
 
                 performAction(action2);
-                log.info("Started " + fromTopics.toString() + " -> " + healTopic);
 
                 retrievePipeline("OutputPipeline").whenComplete((outputPipeline, throwable2) -> {
                     if (throwable2 != null) {
@@ -564,7 +561,6 @@ public class PlanActor extends UntypedActor {
                                 -1);
 
                         performAction(action3);
-                        log.info("Started " + fromTopics2.toString() + " -> " + finalSink);
                     }
                 });
             }
@@ -575,6 +571,7 @@ public class PlanActor extends UntypedActor {
      * Method to delete any existing heal topic + stop the last actor (that publishes to finalSink).
      * This method does not delete sinkTopic!
      * @param requestMappingToIterate
+     * @param isARollback
      * @return the old OutputPipeline that was used for producing observations to the old sinkTopic.
      */
     private IPipeline stopHealAndSinkTopics(RequestMapping requestMappingToIterate, boolean isARollback) {
@@ -582,13 +579,10 @@ public class PlanActor extends UntypedActor {
         Map<String, TopicEntity> allTopics = requestMappingToIterate.getAllTopics();
         TopicEntity currTopic = requestMappingToIterate.getPrimarySources().get(0);
 
-        log.error("all topics : " + allTopics.toString());
-
         Set<ActorRef> actorsToShutDown = new HashSet<>();
         Set<String> kafkaTopicsToDelete = new HashSet<>();
         Set<String> kafkaTopicsToReset = new HashSet<>();
         while (currTopic != null) {
-            log.error("ze curr topic : " + currTopic.getName());
             if (currTopic.isForHeal()) {
                 String currActorPathName = mappingTopicsActors.get(currTopic.getName());
                 execActorsCount.put(currActorPathName, execActorsCount.get(currActorPathName) - 1);
@@ -614,9 +608,6 @@ public class PlanActor extends UntypedActor {
             }
         }
 
-        log.error("actorsToShutDown: " + actorsToShutDown.toString());
-        log.error("kafkaTopicsToDelete: " + kafkaTopicsToDelete.toString());
-
         for (ActorRef actorRefToStop : actorsToShutDown) {
             gracefulStop(actorRefToStop);
             execActorsCount.remove(actorRefToStop.path().name());
@@ -629,12 +620,10 @@ public class PlanActor extends UntypedActor {
         // We clean up the unused topics
         for (String topic : kafkaTopicsToDelete) {
             performAction(new ActionMsg(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
-            log.error("Removing: " + topic);
             mappingTopicsActors.remove(topic);
         }
         for (String topic : kafkaTopicsToReset) {
             performAction(new ActionMsg(ActionMAPEK.RESET, EntityMAPEK.KAFKA_TOPIC, topic));
-            log.error("Resetting: " + topic);
             mappingTopicsActors.remove(topic);
         }
 
@@ -671,7 +660,6 @@ public class PlanActor extends UntypedActor {
                         -1);
 
                 performAction(action);
-                log.info("Started " + fromTopics.toString() + " -> " + finalSink);
             }
         });
     }
