@@ -4,7 +4,8 @@ import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.model.quality.QoOAttribute;
 import fr.isae.iqas.model.request.HealRequest;
 
-import static fr.isae.iqas.model.message.MAPEKenums.*;
+import static fr.isae.iqas.model.message.MAPEKenums.EntityMAPEK;
+import static fr.isae.iqas.model.message.MAPEKenums.RFCMAPEK;
 
 /**
  * Created by an.auger on 02/06/2017.

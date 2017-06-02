@@ -2,7 +2,8 @@ package fr.isae.iqas.model.message;
 
 import java.sql.Timestamp;
 
-import static fr.isae.iqas.model.message.MAPEKenums.*;
+import static fr.isae.iqas.model.message.MAPEKenums.EntityMAPEK;
+import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK;
 
 /**
  * Created by an.auger on 01/06/2017.

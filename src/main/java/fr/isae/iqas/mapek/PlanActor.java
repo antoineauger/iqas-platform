@@ -38,8 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
-import static fr.isae.iqas.utils.ActorUtils.getPipelineWatcherActorFromMAPEKchild;
 import static fr.isae.iqas.model.message.MAPEKenums.*;
+import static fr.isae.iqas.utils.ActorUtils.getPipelineWatcherActorFromMAPEKchild;
 import static fr.isae.iqas.utils.PipelineUtils.*;
 
 /**
@@ -120,7 +120,7 @@ public class PlanActor extends UntypedActor {
                 // Creation of all topics
                 requestMapping.getAllTopics().forEach((key, value) -> {
                     if (!value.isSource()) {
-                        ActionMsg action = new ActionMsg(ActionMAPEK.CREATE,
+                        ActionMsg action = new ActionMsgKafka(ActionMAPEK.CREATE,
                                 EntityMAPEK.KAFKA_TOPIC,
                                 key);
 
@@ -169,7 +169,7 @@ public class PlanActor extends UntypedActor {
                                                 // Specific settings since it is an OutputPipeline
                                                 setOptionsForOutputPipeline((OutputPipeline) pipeline, iqasConfig, incomingRequest, virtualSensorList, qooBaseModel);
 
-                                                ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
+                                                ActionMsg action = new ActionMsgPipeline(ActionMAPEK.APPLY,
                                                         EntityMAPEK.PIPELINE,
                                                         pipeline,
                                                         incomingRequest.getObs_level(),
@@ -317,7 +317,7 @@ public class PlanActor extends UntypedActor {
                 pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
                 pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
-                ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
+                ActionMsg action = new ActionMsgPipeline(ActionMAPEK.APPLY,
                         EntityMAPEK.PIPELINE,
                         pipeline,
                         incomingRequest.getObs_level(),
@@ -362,7 +362,7 @@ public class PlanActor extends UntypedActor {
                     pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
                     pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
-                    ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
+                    ActionMsg action = new ActionMsgPipeline(ActionMAPEK.APPLY,
                             EntityMAPEK.PIPELINE,
                             pipeline,
                             incomingRequest.getObs_level(),
@@ -404,7 +404,7 @@ public class PlanActor extends UntypedActor {
 
         // We clean up the unused topics
         for (String topic : kafkaTopicsToDelete) {
-            performAction(new ActionMsg(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
+            performAction(new ActionMsgKafka(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
             mappingTopicsActors.remove(topic);
         }
 
@@ -416,10 +416,11 @@ public class PlanActor extends UntypedActor {
         mongoController.deleteRequestMapping(requestToDelete.getRequest_id());
     }
 
-    private boolean performAction(ActionMsg actionMsg) {
-        log.info("Processing ActionMsg: {} {}", actionMsg.getAction(), actionMsg.getAbout());
+    private boolean performAction(ActionMsg actionMsgToCast) {
+        log.info("Processing ActionMsg: {} {}", actionMsgToCast.getAction(), actionMsgToCast.getAbout());
 
-        if (actionMsg.getAction() == ActionMAPEK.APPLY && actionMsg.getAbout() == EntityMAPEK.PIPELINE) {
+        if (actionMsgToCast.getAction() == ActionMAPEK.APPLY && actionMsgToCast.getAbout() == EntityMAPEK.PIPELINE) {
+            ActionMsgPipeline actionMsg = (ActionMsgPipeline) actionMsgToCast;
             ActorRef actorRefToStart;
             if (!mappingTopicsActors.containsKey(actionMsg.getTopicToPublish())) {
                 if (actionMsg.getPipelineToEnforce() instanceof IngestPipeline) {
@@ -485,7 +486,8 @@ public class PlanActor extends UntypedActor {
 
             log.info("Successfully started " + actorRefToStart.path());
         }
-        else if (actionMsg.getAction() == ActionMAPEK.CREATE && actionMsg.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
+        else if (actionMsgToCast.getAction() == ActionMAPEK.CREATE && actionMsgToCast.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
+            ActionMsgKafka actionMsg = (ActionMsgKafka) actionMsgToCast;
             Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
             Future<Object> future = Patterns.ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.CREATE, actionMsg.getKafkaTopicID()), timeout);
             try {
@@ -495,7 +497,8 @@ public class PlanActor extends UntypedActor {
                 return false;
             }
         }
-        else if (actionMsg.getAction() == ActionMAPEK.DELETE && actionMsg.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
+        else if (actionMsgToCast.getAction() == ActionMAPEK.DELETE && actionMsgToCast.getAbout() == EntityMAPEK.KAFKA_TOPIC) {
+            ActionMsgKafka actionMsg = (ActionMsgKafka) actionMsgToCast;
             Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
             Future<Object> future = Patterns.ask(kafkaAdminActor, new KafkaTopicMsg(KafkaTopicMsg.TopicAction.DELETE, actionMsg.getKafkaTopicID()), timeout);
             try {
@@ -522,7 +525,7 @@ public class PlanActor extends UntypedActor {
                 log.error(throwable.toString());
             }
             else {
-                ActionMsg action = new ActionMsg(ActionMAPEK.CREATE,
+                ActionMsg action = new ActionMsgKafka(ActionMAPEK.CREATE,
                         EntityMAPEK.KAFKA_TOPIC,
                         healTopic);
                 performAction(action);
@@ -537,7 +540,7 @@ public class PlanActor extends UntypedActor {
 
                 Set<String> fromTopics = new HashSet<>();
                 fromTopics.add(oldJustBeforeSinkTopic);
-                ActionMsg action2 = new ActionMsg(ActionMAPEK.APPLY,
+                ActionMsg action2 = new ActionMsgPipeline(ActionMAPEK.APPLY,
                         EntityMAPEK.PIPELINE,
                         retrievedHealPipeline,
                         newRequestMapping.getFinalSink().getObservationLevel(),
@@ -558,7 +561,7 @@ public class PlanActor extends UntypedActor {
 
                         Set<String> fromTopics2 = new HashSet<>();
                         fromTopics2.add(healTopic);
-                        ActionMsg action3 = new ActionMsg(ActionMAPEK.APPLY,
+                        ActionMsg action3 = new ActionMsgPipeline(ActionMAPEK.APPLY,
                                 EntityMAPEK.PIPELINE,
                                 outputPipeline,
                                 newRequestMapping.getFinalSink().getObservationLevel(),
@@ -631,11 +634,11 @@ public class PlanActor extends UntypedActor {
 
         // We clean up the unused topics
         for (String topic : kafkaTopicsToDelete) {
-            performAction(new ActionMsg(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
+            performAction(new ActionMsgKafka(ActionMAPEK.DELETE, EntityMAPEK.KAFKA_TOPIC, topic));
             mappingTopicsActors.remove(topic);
         }
         for (String topic : kafkaTopicsToReset) {
-            performAction(new ActionMsg(ActionMAPEK.RESET, EntityMAPEK.KAFKA_TOPIC, topic));
+            performAction(new ActionMsgKafka(ActionMAPEK.RESET, EntityMAPEK.KAFKA_TOPIC, topic));
             mappingTopicsActors.remove(topic);
         }
 
@@ -661,7 +664,7 @@ public class PlanActor extends UntypedActor {
 
                 Set<String> fromTopics = new HashSet<>();
                 fromTopics.add(oldJustBeforeSinkTopic);
-                ActionMsg action = new ActionMsg(ActionMAPEK.APPLY,
+                ActionMsg action = new ActionMsgPipeline(ActionMAPEK.APPLY,
                         EntityMAPEK.PIPELINE,
                         outputPipeline,
                         newRequestMappingToIterate.getFinalSink().getObservationLevel(),

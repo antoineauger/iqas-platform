@@ -2,7 +2,8 @@ package fr.isae.iqas.model.message;
 
 import fr.isae.iqas.model.request.Request;
 
-import static fr.isae.iqas.model.message.MAPEKenums.*;
+import static fr.isae.iqas.model.message.MAPEKenums.EntityMAPEK;
+import static fr.isae.iqas.model.message.MAPEKenums.RFCMAPEK;
 
 /**
  * Created by an.auger on 02/06/2017.

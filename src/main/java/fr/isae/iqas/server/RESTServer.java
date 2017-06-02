@@ -8,7 +8,6 @@ import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 import fr.isae.iqas.database.FusekiRESTController;
 import fr.isae.iqas.database.MongoRESTController;
-
 import fr.isae.iqas.model.message.RESTRequestMsg;
 import fr.isae.iqas.model.message.SymptomMsg;
 import fr.isae.iqas.model.request.Request;

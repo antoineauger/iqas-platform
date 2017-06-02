@@ -16,7 +16,8 @@ import fr.isae.iqas.model.request.Request;
 
 import java.util.Properties;
 
-import static fr.isae.iqas.model.message.MAPEKenums.*;
+import static fr.isae.iqas.model.message.MAPEKenums.EntityMAPEK;
+import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK;
 import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.*;
 import static fr.isae.iqas.model.request.State.Status.*;
 

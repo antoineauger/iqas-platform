@@ -22,10 +22,9 @@ import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
 import static fr.isae.iqas.model.message.MAPEKenums.EntityMAPEK.*;
-import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK.CONNECTION_REPORT;
-import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK.NEW;
-import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK.TOO_LOW;
+import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK.*;
 import static fr.isae.iqas.model.request.State.Status.*;
+import static fr.isae.iqas.model.request.State.Status.REMOVED;
 import static fr.isae.iqas.utils.ActorUtils.getAnalyzeActorFromMAPEKchild;
 import static fr.isae.iqas.utils.ActorUtils.getAutonomicManagerActorFromDirectChildren;
 
