@@ -5,9 +5,9 @@ package fr.isae.iqas.model.message;
  */
 public class MAPEKSymptomMsgWithDate {
     private long symptomCreationDate;
-    private MAPEKInternalMsg.SymptomMsg symptomMsg;
+    private SymptomMsg symptomMsg;
 
-    public MAPEKSymptomMsgWithDate(MAPEKInternalMsg.SymptomMsg symptomMsg) {
+    public MAPEKSymptomMsgWithDate(SymptomMsg symptomMsg) {
         this.symptomCreationDate = System.currentTimeMillis();
         this.symptomMsg = symptomMsg;
     }
@@ -16,7 +16,7 @@ public class MAPEKSymptomMsgWithDate {
         return symptomCreationDate;
     }
 
-    public MAPEKInternalMsg.SymptomMsg getSymptomMsg() {
+    public SymptomMsg getSymptomMsg() {
         return symptomMsg;
     }
 }

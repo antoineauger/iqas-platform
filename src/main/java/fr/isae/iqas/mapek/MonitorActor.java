@@ -8,9 +8,7 @@ import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.model.jsonld.VirtualSensor;
 import fr.isae.iqas.model.jsonld.VirtualSensorList;
-import fr.isae.iqas.model.message.ObsRateReportMsg;
-import fr.isae.iqas.model.message.QoOReportMsg;
-import fr.isae.iqas.model.message.TerminatedMsg;
+import fr.isae.iqas.model.message.*;
 import fr.isae.iqas.model.quality.ObservationRate;
 import fr.isae.iqas.model.request.Request;
 import fr.isae.iqas.utils.HttpUtils;
@@ -23,10 +21,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.*;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.TOO_LOW;
+import static fr.isae.iqas.model.message.MAPEKenums.EntityMAPEK.*;
+import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK.*;
 import static fr.isae.iqas.model.request.State.Status.*;
+import static fr.isae.iqas.model.request.State.Status.REMOVED;
 import static fr.isae.iqas.utils.ActorUtils.getAnalyzeActorFromMAPEKchild;
 import static fr.isae.iqas.utils.ActorUtils.getAutonomicManagerActorFromDirectChildren;
 
@@ -135,7 +133,7 @@ public class MonitorActor extends UntypedActor {
 
             for (Map.Entry<String, List<String>> entry : requestsWithInsuficientObsRate.entrySet()) {
                 getAnalyzeActorFromMAPEKchild(getContext(), getSelf())
-                        .tell(new SymptomMsg(TOO_LOW, OBS_RATE, entry.getKey(), entry.getValue()), getSelf());
+                        .tell(new SymptomMsgObsRate(TOO_LOW, OBS_RATE, entry.getKey(), entry.getValue()), getSelf());
             }
 
             if (System.currentTimeMillis() - lastPing > pingSensorsInterval.toMillis()) {
@@ -150,19 +148,17 @@ public class MonitorActor extends UntypedActor {
             log.info("Received Request : {}", requestTemp.getRequest_id());
 
             if (requestTemp.getCurrent_status() == SUBMITTED) { // Valid Request
-                SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.REQUEST, requestTemp);
+                SymptomMsgRequest symptomMsgToForward = new SymptomMsgRequest(NEW, REQUEST, requestTemp);
                 storeObsRateRequirements(requestTemp);
                 qooQualityBuffer.put(requestTemp.getRequest_id(), new CircularFifoBuffer(nbEventsBeforeSymptom));
                 numberObservedSymptomsObsRate.put(requestTemp.getRequest_id(), 0);
                 startDateCount.put(requestTemp.getRequest_id(), System.currentTimeMillis());
                 countByRequest.put(requestTemp.getRequest_id(), 0);
-                getAnalyzeActorFromMAPEKchild(getContext(), getSelf())
-                        .tell(symptomMsgToForward, getSelf());
+                getAnalyzeActorFromMAPEKchild(getContext(), getSelf()).tell(symptomMsgToForward, getSelf());
             }
             else if (requestTemp.getCurrent_status() == REMOVED) { // Request deleted by the user
-                SymptomMsg symptomMsgToForward = new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestTemp);
-                getAnalyzeActorFromMAPEKchild(getContext(), getSelf())
-                        .tell(symptomMsgToForward, getSelf());
+                SymptomMsgRequest symptomMsgToForward = new SymptomMsgRequest(MAPEKenums.SymptomMAPEK.REMOVED, REQUEST, requestTemp);
+                getAnalyzeActorFromMAPEKchild(getContext(), getSelf()).tell(symptomMsgToForward, getSelf());
             }
             else if (requestTemp.getCurrent_status() == REJECTED) {
                 // Do nothing since the Request has already been rejected
@@ -198,30 +194,32 @@ public class MonitorActor extends UntypedActor {
         }
         // SymptomMsg messages
         else if (message instanceof SymptomMsg) {
-            SymptomMsg symptomMAPEKMsg = (SymptomMsg) message;
-            if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.NEW && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline NEW
-                log.info("NEW IngestPipeline: {} {}", symptomMAPEKMsg.getUniqueIDPipeline(), symptomMAPEKMsg.getRequestID());
-                mappingPipelinesRequests.putIfAbsent(symptomMAPEKMsg.getUniqueIDPipeline(), new HashSet<>());
-                mappingPipelinesRequests.get(symptomMAPEKMsg.getUniqueIDPipeline()).add(symptomMAPEKMsg.getRequestID());
+            SymptomMsg symptomMsgToCast = (SymptomMsg) message;
+            if (symptomMsgToCast.getSymptom() == NEW && symptomMsgToCast.getAbout() == PIPELINE) { // Pipeline NEW
+                SymptomMsgPipelineCreation symptomMsg = (SymptomMsgPipelineCreation) symptomMsgToCast;
+                log.info("NEW IngestPipeline: {} {}", symptomMsg.getUniqueIDPipeline(), symptomMsg.getRequestID());
+                mappingPipelinesRequests.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new HashSet<>());
+                mappingPipelinesRequests.get(symptomMsg.getUniqueIDPipeline()).add(symptomMsg.getRequestID());
             }
-            else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.REMOVED && symptomMAPEKMsg.getAbout() == PIPELINE) { // Pipeline REMOVED
-                if (mappingPipelinesRequests.containsKey(symptomMAPEKMsg.getUniqueIDPipeline())) {
-                    log.info("IngestPipeline " + symptomMAPEKMsg.getUniqueIDPipeline() + " is no longer active, removing it");
-                    mappingPipelinesRequests.remove(symptomMAPEKMsg.getUniqueIDPipeline());
+            else if (symptomMsgToCast.getSymptom() == MAPEKenums.SymptomMAPEK.REMOVED && symptomMsgToCast.getAbout() == PIPELINE) { // Pipeline REMOVED
+                SymptomMsgRemovedPipeline symptomMsg = (SymptomMsgRemovedPipeline) symptomMsgToCast;
+                if (mappingPipelinesRequests.containsKey(symptomMsg.getUniqueIDPipeline())) {
+                    log.info("IngestPipeline " + symptomMsg.getUniqueIDPipeline() + " is no longer active, removing it");
+                    mappingPipelinesRequests.remove(symptomMsg.getUniqueIDPipeline());
                 }
             }
-            else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.REMOVED && symptomMAPEKMsg.getAbout() == REQUEST) { // Request REMOVED
-                log.info("Request " + symptomMAPEKMsg.getAttachedRequest().getRequest_id() + " has been removed, cleaning up resources");
-                qooQualityBuffer.remove(symptomMAPEKMsg.getAttachedRequest().getRequest_id());
-                minObsRateByRequest.remove(symptomMAPEKMsg.getAttachedRequest().getRequest_id());
-                numberObservedSymptomsObsRate.remove(symptomMAPEKMsg.getAttachedRequest().getRequest_id());
-                startDateCount.remove(symptomMAPEKMsg.getAttachedRequest().getRequest_id());
-                countByRequest.remove(symptomMAPEKMsg.getAttachedRequest().getRequest_id());
+            else if (symptomMsgToCast.getSymptom() == MAPEKenums.SymptomMAPEK.REMOVED && symptomMsgToCast.getAbout() == REQUEST) { // Request REMOVED
+                SymptomMsgRequest symptomMsg = (SymptomMsgRequest) symptomMsgToCast;
+                log.info("Request " + symptomMsg.getAttachedRequest().getRequest_id() + " has been removed, cleaning up resources");
+                qooQualityBuffer.remove(symptomMsg.getAttachedRequest().getRequest_id());
+                minObsRateByRequest.remove(symptomMsg.getAttachedRequest().getRequest_id());
+                numberObservedSymptomsObsRate.remove(symptomMsg.getAttachedRequest().getRequest_id());
+                startDateCount.remove(symptomMsg.getAttachedRequest().getRequest_id());
+                countByRequest.remove(symptomMsg.getAttachedRequest().getRequest_id());
             }
-            else if (symptomMAPEKMsg.getSymptom() == SymptomMAPEK.UPDATED && symptomMAPEKMsg.getAbout() == SENSOR) { // Sensor UPDATE
+            else if (symptomMsgToCast.getSymptom() == MAPEKenums.SymptomMAPEK.UPDATED && symptomMsgToCast.getAbout() == SENSOR) { // Sensor UPDATE
                 getAnalyzeActorFromMAPEKchild(getContext(), getSelf())
-                        .tell(new SymptomMsg(SymptomMAPEK.UPDATED, SENSOR), getSelf());
-                //forwardToSpecifiedActor(new SymptomMsg(SymptomMAPEK.UPDATED, SENSOR), ActorUtils.getAnalyzeActorFromMAPEKchild(getContext(), getSelf()));
+                        .tell(new SymptomMsg(MAPEKenums.SymptomMAPEK.UPDATED, SENSOR), getSelf());
             }
         }
         // TerminatedMsg messages
@@ -315,9 +313,9 @@ public class MonitorActor extends UntypedActor {
                                 connectedSensors.put(sensor_id, sensorIsConnected);
                             }
                             getAutonomicManagerActorFromDirectChildren(getContext(), getSelf())
-                                    .tell(new SymptomMsg(SymptomMAPEK.CONNECTION_REPORT, EntityMAPEK.SENSOR, connectedSensors), getSelf());
+                                    .tell(new SymptomMsgConnectionReport(CONNECTION_REPORT, SENSOR, connectedSensors), getSelf());
                             getAnalyzeActorFromMAPEKchild(getContext(), getSelf())
-                                    .tell(new SymptomMsg(SymptomMAPEK.CONNECTION_REPORT, EntityMAPEK.SENSOR, connectedSensors), getSelf());
+                                    .tell(new SymptomMsgConnectionReport(CONNECTION_REPORT, SENSOR, connectedSensors), getSelf());
                         }
                     }
                 }, context().dispatcher());

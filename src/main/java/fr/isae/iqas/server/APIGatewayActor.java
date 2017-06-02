@@ -10,12 +10,14 @@ import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.KafkaAdminActor;
 import fr.isae.iqas.mapek.AutonomicManagerActor;
-import fr.isae.iqas.model.message.MAPEKInternalMsg;
 import fr.isae.iqas.model.message.RESTRequestMsg;
+import fr.isae.iqas.model.message.SymptomMsg;
 import fr.isae.iqas.model.request.Request;
 
 import java.util.Properties;
 
+import static fr.isae.iqas.model.message.MAPEKenums.EntityMAPEK;
+import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK;
 import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.*;
 import static fr.isae.iqas.model.request.State.Status.*;
 
@@ -96,9 +98,9 @@ public class APIGatewayActor extends UntypedActor {
                 log.error("Unknown REST verb (" + requestSubject + ") for request with id " + incomingRequest.getRequest_id());
             }
         }
-        else if (message instanceof MAPEKInternalMsg.SymptomMsg) {
-            MAPEKInternalMsg.SymptomMsg symptomMsg = (MAPEKInternalMsg.SymptomMsg) message;
-            if (symptomMsg.getSymptom() == MAPEKInternalMsg.SymptomMAPEK.UPDATED && symptomMsg.getAbout() == MAPEKInternalMsg.EntityMAPEK.SENSOR) {
+        else if (message instanceof SymptomMsg) {
+            SymptomMsg symptomMsg = (SymptomMsg) message;
+            if (symptomMsg.getSymptom() == SymptomMAPEK.UPDATED && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
                 autoManager.tell(symptomMsg, getSelf());
             }
         }

@@ -8,8 +8,8 @@ import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
 import fr.isae.iqas.database.FusekiRESTController;
 import fr.isae.iqas.database.MongoRESTController;
-import fr.isae.iqas.model.message.MAPEKInternalMsg;
 import fr.isae.iqas.model.message.RESTRequestMsg;
+import fr.isae.iqas.model.message.SymptomMsg;
 import fr.isae.iqas.model.request.Request;
 import org.bson.types.ObjectId;
 
@@ -19,8 +19,8 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import static akka.http.javadsl.server.PathMatchers.segment;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.EntityMAPEK.SENSOR;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.UPDATED;
+import static fr.isae.iqas.model.message.MAPEKenums.EntityMAPEK.SENSOR;
+import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK.UPDATED;
 import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.DELETE;
 import static fr.isae.iqas.model.message.RESTRequestMsg.RequestSubject.POST;
 
@@ -218,7 +218,7 @@ public class RESTServer extends AllDirectives {
                                 path(segment("sensors").slash(segment()), update_keyword ->
                                         extractExecutionContext(ctx -> onSuccess(() -> {
                                             if (update_keyword.equals("update")) {
-                                                apiGatewayActor.tell(new MAPEKInternalMsg.SymptomMsg(UPDATED, SENSOR), ActorRef.noSender());
+                                                apiGatewayActor.tell(new SymptomMsg(UPDATED, SENSOR), ActorRef.noSender());
                                                 return CompletableFuture.supplyAsync(() ->
                                                         complete(HttpResponse.create()
                                                                 .withStatus(200)
