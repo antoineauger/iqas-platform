@@ -9,8 +9,7 @@ import fr.isae.iqas.database.MongoController;
 import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
 import fr.isae.iqas.model.jsonld.*;
-import fr.isae.iqas.model.message.MAPEKSymptomMsgWithDate;
-import fr.isae.iqas.model.message.TerminatedMsg;
+import fr.isae.iqas.model.message.*;
 import fr.isae.iqas.model.request.HealRequest;
 import fr.isae.iqas.model.request.QoORequirements;
 import fr.isae.iqas.model.request.Request;
@@ -25,8 +24,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.SymptomMAPEK.*;
+import static fr.isae.iqas.model.message.MAPEKenums.*;
+import static fr.isae.iqas.model.message.MAPEKenums.EntityMAPEK.REQUEST;
+import static fr.isae.iqas.model.message.MAPEKenums.EntityMAPEK.SENSOR;
+import static fr.isae.iqas.model.message.MAPEKenums.RFCMAPEK.HEAL;
+import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK.CONNECTION_REPORT;
+import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK.TOO_LOW;
+import static fr.isae.iqas.model.message.MAPEKenums.SymptomMAPEK.UPDATED;
 import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 import static fr.isae.iqas.model.quality.QoOAttribute.OBS_RATE;
 import static fr.isae.iqas.model.request.State.Status.ENFORCED;
@@ -111,10 +115,11 @@ public class AnalyzeActor extends UntypedActor {
         }
         // SymptomMsg messages [received from MonitorActor]
         else if (message instanceof SymptomMsg) {
-            SymptomMsg symptomMsg = (SymptomMsg) message;
+            SymptomMsg symptomMsgToCast = (SymptomMsg) message;
 
             // SymptomMsg messages - Requests
-            if (symptomMsg.getAbout() == EntityMAPEK.REQUEST) {
+            if (symptomMsgToCast.getAbout() == REQUEST) {
+                SymptomMsgRequest symptomMsg = (SymptomMsgRequest) symptomMsgToCast;
                 log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getAttachedRequest().toString());
                 Request requestTemp = symptomMsg.getAttachedRequest();
 
@@ -151,7 +156,7 @@ public class AnalyzeActor extends UntypedActor {
 
                                     mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
                                         mongoController.updateRequestMapping(similarRequest.getRequest_id(), similarMappings).whenComplete((result3, throwable3) -> {
-                                            tellToPlanActor(new RFCMsg(RFCMAPEK.CREATE, EntityMAPEK.REQUEST, requestTemp, requestMapping));
+                                            tellToPlanActor(new RFCMsg(RFCMAPEK.CREATE, REQUEST, requestTemp, requestMapping));
                                         });
                                     });
                                 }
@@ -223,16 +228,17 @@ public class AnalyzeActor extends UntypedActor {
                             requestMapping.addLink(lastQoOTopic.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
 
                             mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
-                                tellToPlanActor(new RFCMsg(RFCMAPEK.CREATE, EntityMAPEK.REQUEST, requestTemp, requestMapping));
+                                tellToPlanActor(new RFCMsg(RFCMAPEK.CREATE, REQUEST, requestTemp, requestMapping));
                             });
                         }
                     });
                 } else if (requestTemp.getCurrent_status() == State.Status.REMOVED) { // Request deleted by the user
-                    tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, requestTemp));
+                    tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, REQUEST, requestTemp));
                 }
             }
             // SymptomMsg messages - Obs Rate
-            else if (symptomMsg.getSymptom() == TOO_LOW && symptomMsg.getAbout() == EntityMAPEK.OBS_RATE) {
+            else if (symptomMsgToCast.getSymptom() == TOO_LOW && symptomMsgToCast.getAbout() == EntityMAPEK.OBS_RATE) {
+                SymptomMsgObsRate symptomMsg = (SymptomMsgObsRate) symptomMsgToCast;
                 log.info("Received Symptom : {} {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getUniqueIDPipeline(), symptomMsg.getConcernedRequests().toString());
                 receivedObsRateSymptoms.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new CircularFifoBuffer(maxSymptomsBeforeAction));
                 receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).add(new MAPEKSymptomMsgWithDate(symptomMsg));
@@ -309,7 +315,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                         // We save changes into MongoDB
                                                                         mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result4, throwable4) -> {
                                                                             if (throwable4 == null) {
-                                                                                tellToPlanActor(new RFCMsg(RFCMAPEK.HEAL, EntityMAPEK.REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
+                                                                                tellToPlanActor(new RFCMsg(HEAL, REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
                                                                                 mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result5, throwable5) -> {
                                                                                     if (throwable5 != null) {
                                                                                         log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
@@ -328,7 +334,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                         if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
                                                                             retrievedRequest.addLog("Removing this request since it has a GUARANTEED Service Level Agreement.");
                                                                             retrievedRequest.updateState(State.Status.REMOVED);
-                                                                            tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, retrievedRequest));
+                                                                            tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, REQUEST, retrievedRequest));
                                                                         } else {
                                                                             retrievedRequest.addLog("Impossible to ensure an acceptable QoO level for this request. " +
                                                                                     "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
@@ -340,7 +346,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                         // We save changes into MongoDB
                                                                         mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result4, throwable4) -> {
                                                                             if (throwable4 == null) {
-                                                                                tellToPlanActor(new RFCMsg(RFCMAPEK.RESET, EntityMAPEK.REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
+                                                                                tellToPlanActor(new RFCMsg(RFCMAPEK.RESET, REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
                                                                                 mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result5, throwable5) -> {
                                                                                     if (throwable5 != null) {
                                                                                         log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
@@ -357,7 +363,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                         retrievedRequest.addLog("No suitable pipeline for healing. " +
                                                                                 "Rejecting this request since it has a GUARANTEED Service Level Agreement.");
                                                                         retrievedRequest.updateState(State.Status.REMOVED);
-                                                                        tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, EntityMAPEK.REQUEST, retrievedRequest));
+                                                                        tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, REQUEST, retrievedRequest));
                                                                     } else {
                                                                         retrievedRequest.addLog("No suitable pipeline for healing. " +
                                                                                 "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
@@ -386,11 +392,13 @@ public class AnalyzeActor extends UntypedActor {
                 }
             }
             // SymptomMsg messages - Virtual Sensors
-            else if (symptomMsg.getSymptom() == CONNECTION_REPORT && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
+            else if (symptomMsgToCast.getSymptom() == CONNECTION_REPORT && symptomMsgToCast.getAbout() == SENSOR) {
+                SymptomMsgConnectionReport symptomMsg = (SymptomMsgConnectionReport) symptomMsgToCast;
                 log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getConnectedSensors().toString());
                 // Only to log the symptom. Not doing anything since it only affects future iQAS Requests.
             }
-            else if (symptomMsg.getSymptom() == UPDATED && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
+            else if (symptomMsgToCast.getSymptom() == UPDATED && symptomMsgToCast.getAbout() == SENSOR) {
+                SymptomMsg symptomMsg = symptomMsgToCast;
                 log.info("Received Symptom : {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout());
                 future(() -> fusekiController.findAllTopics(), context().dispatcher())
                         .onComplete(new OnComplete<TopicList>() {
@@ -400,7 +408,7 @@ public class AnalyzeActor extends UntypedActor {
                                 }
                             }
                         }, context().dispatcher());
-                tellToPlanActor(new RFCMsg(RFCMAPEK.UPDATE, EntityMAPEK.SENSOR));
+                tellToPlanActor(new RFCMsg(RFCMAPEK.UPDATE, SENSOR));
             }
         }
         // TerminatedMsg messages

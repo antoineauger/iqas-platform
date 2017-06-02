@@ -18,8 +18,7 @@ import fr.isae.iqas.kafka.TopicEntity;
 import fr.isae.iqas.model.jsonld.SensorCapability;
 import fr.isae.iqas.model.jsonld.SensorCapabilityList;
 import fr.isae.iqas.model.jsonld.VirtualSensorList;
-import fr.isae.iqas.model.message.PipelineRequestMsg;
-import fr.isae.iqas.model.message.TerminatedMsg;
+import fr.isae.iqas.model.message.*;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
 import fr.isae.iqas.model.request.HealRequest;
 import fr.isae.iqas.model.request.Request;
@@ -39,8 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static akka.dispatch.Futures.future;
-import static fr.isae.iqas.model.message.MAPEKInternalMsg.*;
 import static fr.isae.iqas.utils.ActorUtils.getPipelineWatcherActorFromMAPEKchild;
+import static fr.isae.iqas.model.message.MAPEKenums.*;
 import static fr.isae.iqas.utils.PipelineUtils.*;
 
 /**
@@ -108,7 +107,7 @@ public class PlanActor extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
         // RFCs messages
-        if (message instanceof RFCMsg) {
+        if (message instanceof MAPEKenums.RFCMsg) {
             log.info("Received RFC message: {}", message);
             RFCMsg rfcMsg = (RFCMsg) message;
 
@@ -395,7 +394,7 @@ public class PlanActor extends UntypedActor {
             gracefulStop(actorRef);
             execActorsCount.remove(actorRef.path().name());
             execActorsRefs.remove(actorRef.path().name());
-            monitorActor.tell(new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRef.path().name()).getUniqueID()), getSelf());
+            monitorActor.tell(new SymptomMsgRemovedPipeline(SymptomMAPEK.REMOVED, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRef.path().name()).getUniqueID()), getSelf());
             enforcedPipelines.remove(actorRef.path().name());
         }
 
@@ -406,7 +405,7 @@ public class PlanActor extends UntypedActor {
         }
 
         // For cleaning up resources in Monitor actor
-        monitorActor.tell(new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestToDelete), getSelf());
+        monitorActor.tell(new SymptomMsgRequest(SymptomMAPEK.REMOVED, EntityMAPEK.REQUEST, requestToDelete), getSelf());
 
         // Removal of the corresponding RequestMapping
         actorPathRefs.remove(requestToDelete.getRequest_id());
@@ -451,7 +450,12 @@ public class PlanActor extends UntypedActor {
             execActorsCount.put(actorRefToStart.path().name(), execActorsCount.get(actorRefToStart.path().name()) + 1);
 
             if (actionMsg.getPipelineToEnforce() instanceof IngestPipeline) {
-                monitorActor.tell(new SymptomMsg(SymptomMAPEK.NEW, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRefToStart.path().name()).getUniqueID(), actionMsg.getAssociatedRequest_id()), getSelf());
+                monitorActor.tell(new SymptomMsgPipelineCreation(
+                        SymptomMAPEK.NEW,
+                        EntityMAPEK.PIPELINE,
+                        enforcedPipelines.get(actorRefToStart.path().name()).getUniqueID(),
+                        actionMsg.getAssociatedRequest_id()),
+                        getSelf());
             }
 
             if (!actionMsg.getConstructedFromRequest().equals("")) { // Additional steps to perform if the request depends on another one
@@ -612,7 +616,11 @@ public class PlanActor extends UntypedActor {
             gracefulStop(actorRefToStop);
             execActorsCount.remove(actorRefToStop.path().name());
             execActorsRefs.remove(actorRefToStop.path().name());
-            monitorActor.tell(new SymptomMsg(SymptomMAPEK.REMOVED, EntityMAPEK.PIPELINE, enforcedPipelines.get(actorRefToStop.path().name()).getUniqueID()), getSelf());
+            monitorActor.tell(new SymptomMsgRemovedPipeline(
+                    SymptomMAPEK.REMOVED,
+                    EntityMAPEK.PIPELINE,
+                    enforcedPipelines.get(actorRefToStop.path().name()).getUniqueID()),
+                    getSelf());
             enforcedPipelines.remove(actorRefToStop.path().name());
             actorPathRefs.get(requestMappingToIterate.getRequest_id()).remove(actorRefToStop.path().name());
         }

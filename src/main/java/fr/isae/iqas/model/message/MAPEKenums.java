@@ -15,7 +15,7 @@ import java.util.Set;
 /**
  * Created by an.auger on 21/02/2017.
  */
-public class MAPEKInternalMsg {
+public class MAPEKenums {
     public enum SymptomMAPEK {
         NEW,
         UPDATED,
@@ -49,111 +49,6 @@ public class MAPEKInternalMsg {
         TURN_ON,
         TURN_OFF,
         SENSOR_API
-    }
-
-    /**
-     * Symptoms (Emitted by Monitor)
-     */
-
-    public static class SymptomMsg {
-        private Map<String, Boolean> connectedSensors;
-        private List<String> concernedRequests;
-        private Timestamp creationDate;
-        private SymptomMAPEK symptom;
-        private EntityMAPEK about;
-        private Request attachedRequest;
-        private String uniqueIDPipeline;
-        private String requestID;
-
-        // UPDATE for Sensors
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about) {
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.symptom = symptom;
-            this.about = about;
-        }
-
-        // For Requests
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Request attachedRequest) {
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.symptom = symptom;
-            this.about = about;
-            this.attachedRequest = attachedRequest;
-        }
-
-        // For removed Pipelines (cleanup)
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String uniqueIDRemovedPipeline) {
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.symptom = symptom;
-            this.about = about;
-            this.uniqueIDPipeline = uniqueIDRemovedPipeline;
-        }
-
-        // For Virtual Sensors connection report
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, Map<String, Boolean> connectedSensors) {
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.symptom = symptom;
-            this.about = about;
-            this.connectedSensors = connectedSensors;
-        }
-
-        // For OBS_RATE TOO_LOW
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String concernedUniqueIDPipeline, List<String> concernedRequests) {
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.symptom = symptom;
-            this.about = about;
-            this.uniqueIDPipeline = concernedUniqueIDPipeline;
-            this.concernedRequests = concernedRequests;
-        }
-
-        // For TOO_HIGH / TOO_LOW QoOAttributes (except OBS_RATE)
-        /*public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String concernedUniqueIDPipeline, List<String> concernedRequests) {
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.symptom = symptom;
-            this.about = about;
-            this.uniqueIDPipeline = concernedUniqueIDPipeline;
-            this.concernedRequests = concernedRequests;
-        }*/
-
-        // For Pipeline creation (Plan -> Monitor)
-        public SymptomMsg(SymptomMAPEK symptom, EntityMAPEK about, String uniqueIDPipeline, String requestID) {
-            this.creationDate = new Timestamp(System.currentTimeMillis());
-            this.symptom = symptom;
-            this.about = about;
-            this.uniqueIDPipeline = uniqueIDPipeline;
-            this.requestID = requestID;
-        }
-
-        public Timestamp getCreationDate() {
-            return creationDate;
-        }
-
-        public SymptomMAPEK getSymptom() {
-            return symptom;
-        }
-
-        public EntityMAPEK getAbout() {
-            return about;
-        }
-
-        public Request getAttachedRequest() {
-            return attachedRequest;
-        }
-
-        public String getUniqueIDPipeline() {
-            return uniqueIDPipeline;
-        }
-
-        public String getRequestID() {
-            return requestID;
-        }
-
-        public List<String> getConcernedRequests() {
-            return concernedRequests;
-        }
-
-        public Map<String, Boolean> getConnectedSensors() {
-            return connectedSensors;
-        }
     }
 
     /**
