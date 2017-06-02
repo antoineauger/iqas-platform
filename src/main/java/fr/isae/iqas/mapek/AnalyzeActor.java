@@ -156,7 +156,7 @@ public class AnalyzeActor extends UntypedActor {
 
                                     mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
                                         mongoController.updateRequestMapping(similarRequest.getRequest_id(), similarMappings).whenComplete((result3, throwable3) -> {
-                                            tellToPlanActor(new RFCMsg(RFCMAPEK.CREATE, REQUEST, requestTemp, requestMapping));
+                                            tellToPlanActor(new RFCMsgRequestCreate(RFCMAPEK.CREATE, REQUEST, requestTemp, requestMapping));
                                         });
                                     });
                                 }
@@ -228,12 +228,12 @@ public class AnalyzeActor extends UntypedActor {
                             requestMapping.addLink(lastQoOTopic.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
 
                             mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
-                                tellToPlanActor(new RFCMsg(RFCMAPEK.CREATE, REQUEST, requestTemp, requestMapping));
+                                tellToPlanActor(new RFCMsgRequestCreate(RFCMAPEK.CREATE, REQUEST, requestTemp, requestMapping));
                             });
                         }
                     });
                 } else if (requestTemp.getCurrent_status() == State.Status.REMOVED) { // Request deleted by the user
-                    tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, REQUEST, requestTemp));
+                    tellToPlanActor(new RFCMsgRequestRemove(RFCMAPEK.REMOVE, REQUEST, requestTemp));
                 }
             }
             // SymptomMsg messages - Obs Rate
@@ -315,7 +315,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                         // We save changes into MongoDB
                                                                         mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result4, throwable4) -> {
                                                                             if (throwable4 == null) {
-                                                                                tellToPlanActor(new RFCMsg(HEAL, REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
+                                                                                tellToPlanActor(new RFCMsgQoOAttr(HEAL, REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
                                                                                 mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result5, throwable5) -> {
                                                                                     if (throwable5 != null) {
                                                                                         log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
@@ -334,7 +334,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                         if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
                                                                             retrievedRequest.addLog("Removing this request since it has a GUARANTEED Service Level Agreement.");
                                                                             retrievedRequest.updateState(State.Status.REMOVED);
-                                                                            tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, REQUEST, retrievedRequest));
+                                                                            tellToPlanActor(new RFCMsgRequestRemove(RFCMAPEK.REMOVE, REQUEST, retrievedRequest));
                                                                         } else {
                                                                             retrievedRequest.addLog("Impossible to ensure an acceptable QoO level for this request. " +
                                                                                     "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
@@ -346,7 +346,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                         // We save changes into MongoDB
                                                                         mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result4, throwable4) -> {
                                                                             if (throwable4 == null) {
-                                                                                tellToPlanActor(new RFCMsg(RFCMAPEK.RESET, REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
+                                                                                tellToPlanActor(new RFCMsgQoOAttr(RFCMAPEK.RESET, REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
                                                                                 mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result5, throwable5) -> {
                                                                                     if (throwable5 != null) {
                                                                                         log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
@@ -363,7 +363,7 @@ public class AnalyzeActor extends UntypedActor {
                                                                         retrievedRequest.addLog("No suitable pipeline for healing. " +
                                                                                 "Rejecting this request since it has a GUARANTEED Service Level Agreement.");
                                                                         retrievedRequest.updateState(State.Status.REMOVED);
-                                                                        tellToPlanActor(new RFCMsg(RFCMAPEK.REMOVE, REQUEST, retrievedRequest));
+                                                                        tellToPlanActor(new RFCMsgRequestRemove(RFCMAPEK.REMOVE, REQUEST, retrievedRequest));
                                                                     } else {
                                                                         retrievedRequest.addLog("No suitable pipeline for healing. " +
                                                                                 "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");

@@ -107,12 +107,13 @@ public class PlanActor extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
         // RFCs messages
-        if (message instanceof MAPEKenums.RFCMsg) {
+        if (message instanceof RFCMsg) {
             log.info("Received RFC message: {}", message);
-            RFCMsg rfcMsg = (RFCMsg) message;
+            RFCMsg rfcMsgToCast = (RFCMsg) message;
 
             // RFCs messages - Request CREATE
-            if (rfcMsg.getRfc() == RFCMAPEK.CREATE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
+            if (rfcMsgToCast.getRfc() == RFCMAPEK.CREATE && rfcMsgToCast.getAbout() == EntityMAPEK.REQUEST) {
+                RFCMsgRequestCreate rfcMsg = (RFCMsgRequestCreate) rfcMsgToCast;
                 Request incomingRequest = rfcMsg.getRequest();
                 RequestMapping requestMapping = rfcMsg.getNewRequestMapping();
 
@@ -197,13 +198,14 @@ public class PlanActor extends UntypedActor {
             }
 
             // RFCs messages - Request REMOVE
-            else if (rfcMsg.getRfc() == RFCMAPEK.REMOVE && rfcMsg.getAbout() == EntityMAPEK.REQUEST) { // Request deleted by the user
+            else if (rfcMsgToCast.getRfc() == RFCMAPEK.REMOVE && rfcMsgToCast.getAbout() == EntityMAPEK.REQUEST) { // Request deleted by the user
+                RFCMsgRequestRemove rfcMsg = (RFCMsgRequestRemove) rfcMsgToCast;
                 Request requestToDelete = rfcMsg.getRequest();
                 deleteRequest(requestToDelete);
             }
 
             // RFCs messages - Sensor UPDATE
-            else if (rfcMsg.getRfc() == RFCMAPEK.UPDATE && rfcMsg.getAbout() == EntityMAPEK.SENSOR) { // Sensor description has been updated on Fuseki
+            else if (rfcMsgToCast.getRfc() == RFCMAPEK.UPDATE && rfcMsgToCast.getAbout() == EntityMAPEK.SENSOR) { // Sensor description has been updated on Fuseki
                 future(() -> fusekiController.findAllSensors(), context().dispatcher())
                         .onComplete(new OnComplete<VirtualSensorList>() {
                             public void onComplete(Throwable throwable, VirtualSensorList newVirtualSensorList) {
@@ -221,14 +223,16 @@ public class PlanActor extends UntypedActor {
             }
 
             // RFCs messages - Request HEAL
-            else if (rfcMsg.getRfc() == RFCMAPEK.HEAL && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
+            else if (rfcMsgToCast.getRfc() == RFCMAPEK.HEAL && rfcMsgToCast.getAbout() == EntityMAPEK.REQUEST) {
+                RFCMsgQoOAttr rfcMsg = (RFCMsgQoOAttr) rfcMsgToCast;
                 if (actorPathRefs.containsKey(rfcMsg.getHealRequest().getConcernedRequest())) {
                     healRequest(rfcMsg.getHealRequest(), rfcMsg.getOldRequestMapping(), rfcMsg.getNewRequestMapping());
                 }
             }
 
             // RFCs messages - Request RESET
-            else if (rfcMsg.getRfc() == RFCMAPEK.RESET && rfcMsg.getAbout() == EntityMAPEK.REQUEST) {
+            else if (rfcMsgToCast.getRfc() == RFCMAPEK.RESET && rfcMsgToCast.getAbout() == EntityMAPEK.REQUEST) {
+                RFCMsgQoOAttr rfcMsg = (RFCMsgQoOAttr) rfcMsgToCast;
                 if (actorPathRefs.containsKey(rfcMsg.getHealRequest().getConcernedRequest())) {
                     resetRequest(rfcMsg.getOldRequestMapping(), rfcMsg.getNewRequestMapping());
                 }
