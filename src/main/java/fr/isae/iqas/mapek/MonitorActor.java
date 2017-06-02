@@ -154,13 +154,11 @@ public class MonitorActor extends UntypedActor {
                 numberObservedSymptomsObsRate.put(requestTemp.getRequest_id(), 0);
                 startDateCount.put(requestTemp.getRequest_id(), System.currentTimeMillis());
                 countByRequest.put(requestTemp.getRequest_id(), 0);
-                getAnalyzeActorFromMAPEKchild(getContext(), getSelf())
-                        .tell(symptomMsgToForward, getSelf());
+                getAnalyzeActorFromMAPEKchild(getContext(), getSelf()).tell(symptomMsgToForward, getSelf());
             }
             else if (requestTemp.getCurrent_status() == REMOVED) { // Request deleted by the user
                 SymptomMsgRequest symptomMsgToForward = new SymptomMsgRequest(MAPEKenums.SymptomMAPEK.REMOVED, REQUEST, requestTemp);
-                getAnalyzeActorFromMAPEKchild(getContext(), getSelf())
-                        .tell(symptomMsgToForward, getSelf());
+                getAnalyzeActorFromMAPEKchild(getContext(), getSelf()).tell(symptomMsgToForward, getSelf());
             }
             else if (requestTemp.getCurrent_status() == REJECTED) {
                 // Do nothing since the Request has already been rejected
