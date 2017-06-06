@@ -1,156 +1,97 @@
-<!DOCTYPE html>
+<!doctype html>
+
+<!--
+  Website of the iQAS platform
+    Antoine AUGER
+    ISAE-SUPAERO, Toulouse
+    2017
+-->
+
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>API gateway</title>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Website of the iQAS platform.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>iQAS platform</title>
+
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" sizes="192x192" href="/iqas_logo_favicon.png">
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Material Design Lite">
+    <link rel="apple-touch-icon-precomposed" href="/iqas_logo_favicon.png">
+
+    <!-- Tile icon for Win8 (144x144 + tile color) -->
+    <meta name="msapplication-TileImage" content="/iqas_logo_favicon.png">
+    <meta name="msapplication-TileColor" content="#3372DF">
+
+    <link rel="shortcut icon" href="/iqas_logo_favicon.png">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-red.min.css">
     <link rel="stylesheet" type="text/css" href="/style.css">
-</head>
-<body>
+  </head>
 
-<div style="width: 80%; text-align: center; margin-left: auto; margin-right: auto">
-    <img src="/iqas_logo.png" />
-    <p> Welcome on the homepage of the API gateway for the iQAS platform. <br/>
-        This API allows you to interact with the iQAS platform in order to subscribe to high-quality sensor observations.
-    </p>
-</div>
+  <body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
+      <header class="mdl-navigation mdl-layout__header is-casting-shadow">
+        <div class="mdl-layout__header-row">
+          <span class="mdl-layout-title"><span style="font-weight: bold;">i</span>ntegration platform for
+            <span style="font-weight: bold;">Q</span>oO
+            <span style="font-weight: bold;">A</span>ssessment
+            as a <span style="font-weight: bold;">S</span>ervice (iQAS)</span>
+        </div>
+      </header>
 
-<h2>GET endpoints</h2>
+      <div class="mdl-layout__drawer">
 
-<table class="border" width="80%" style="margin-left: auto; margin-right: auto">
-    <tr>
-        <th>Sensors</th>
-        <th>Requests</th>
-        <th>Places</th>
-        <th>Topics</th>
-        <th>Pipelines</th>
-    </tr>
-    <tr>
-        <td width="15%">
-            <ul>
-                <li><a href="/sensors">/sensors</a></li>
-                <li>/sensors/[sensor_id]</li>
-            </ul>
-        </td>
-        <td width="15%">
-            <ul>
-                <li><a href="/requests">/requests</a></li>
-                <li>/requests/[request_id]</li>
-            </ul>
-        </td>
-        <td width="15%">
-            <ul>
-                <li><a href="/places">/places</a></li>
-                <li>/places?nearTo=[location]</li>
-            </ul>
-        </td>
-        <td width="15%">
-            <ul>
-                <li><a href="/topics">/topics</a></li>
-                <li>/topics/[topic_id]</li>
-            </ul>
-        </td>
-        <td width="15%">
-            <ul>
-                <li><a href="/pipelines">/pipelines</a></li>
-                <li>/pipelines/[pipeline_id]</li>
-                <li><a href="/pipelines?print=ids">/pipelines?print=ids</a></li>
-            </ul>
-        </td>
-    </tr>
-</table>
+        <header class="logo-drawer-header">
+          <a href="/"><img src="/iqas_logo.png"></a>
+        </header>
 
-<h2>POST endpoints</h2>
-<ul>
-    <li>/requests</li>
-</ul>
+        <nav class="mdl-navigation">
+          <a class="mdl-navigation__link active-link" href="#">
+            <i class="material-icons">home</i> Home
+          </a>
+          <a class="mdl-navigation__link" href="#">
+            <i class="material-icons is-active">content_paste</i> New request
+          </a>
+          <a class="mdl-navigation__link" href="/api">
+            <i class="material-icons">info</i> API documentation
+          </a>
+          <a class="mdl-navigation__link" href="#">
+            <i class="material-icons">mode_edit</i> Configuration
+          </a>
+          <a class="mdl-navigation__link" href="#">
+            <i class="material-icons">people</i> About
+          </a>
+          <div class="mdl-layout-spacer"></div>
+        </nav>
+      </div> <!-- mdl-layout__drawer -->
 
-<h3>Request syntax</h3>
+      <main class="mdl-layout__content">
 
-For submitting a new iQAS request, the format is the following (bold parameters are mandatory):
-<table width="80%" style="margin-left: auto; margin-right: auto">
-    <tr>
-        <td width="40%">
-            <div class="code">
-                Content-Type: application/json<br/>
-                {<br/>
-                    <div style="margin-left: 30px;">
-                        <b>"application_id"</b>: "[application_id]",<br/>
-                        <b>"topic"</b>: "[topic]" / "ALL",<br/>
-                        <b>"location"</b>: "[location]" / "ALL",<br/>
-                        "obs_level": "RAW_DATA" / "INFORMATION" / "KNOWLEDGE", (default: RAW_DATA)<br/>
-                        "qoo": {<br/>
-                            <div style="margin-left: 30px;">
-                                <b>"interested_in"</b>: [QoO_attributes_list],<br/>
-                                "iqas_params": {<br/>
-                                <div style="margin-left: 30px;">
-                                    "[iqas_param_name]": "[iqas_param_value]",<br/>
-                                    <div style="margin-left: 30px;">
-                                        ...
-                                    </div>
-                                </div>
-                                },<br/>
-                                "custom_params": {<br/>
-                                <div style="margin-left: 30px;">
-                                    "[custom_param_name]": "[custom_param_value]",<br/>
-                                    <div style="margin-left: 30px;">
-                                        ...
-                                    </div>
-                                </div>
-                                }<br/>
-                                "sla_level": "BEST_EFFORT" / "GUARANTEED", (default: BEST_EFFORT)<br/>
-                                <!-- "operator": "NONE" / "AVG" / "MIN" / "MAX" (default: NONE)<br/> -->
-                            </div>
-                        }
-                </div>
-                }
+        <div class="mdl-grid">
+
+          <div class="mdl-cell mdl-cell--12-col center-card">
+            <div class="mdl-card mdl-shadow--2dp">
+              <div class="mdl-card__supporting-text">
+                Welcome on the website of the iQAS platform!<br/>
+                This website allows you to interact with the iQAS platform and subscribe to high-quality sensor observations.
+              </div>
             </div>
-        </td>
+          </div> <!-- mdl-cell -->
 
-        <td width="40%">
-            <script src="https://gist.github.com/antoineauger/7fad731f1340dbbecca731325e6c200d.js"></script>
-        </td>
-    </tr>
+        </div> <!-- mdl-grid -->
 
-</table>
+      </main> <!-- mdl-layout__content -->
 
-<br/>
-
-When present, the <span class="code">qoo</span> parameter represents a "QoO Service Level Agreement" and should be expressed as follow:
-<ul>
-    <li><span class="code"><b>interested_in</b></span> contains an ordered list
-        (first=very important, last=less important) of QoO attributes that matter for the given application.
-        See <a href="/qoo/attributes">/qoo/attributes</a> for the current supported QoO attributes.</li>
-
-    <li><span class="code">iqas_params</span> can be used to specify some additional QoO requirements
-        that the iQAS platform natively supports.
-        Visit <a href="/qoo/iqas_params">/qoo/iqas_params</a> for more details.</li>
-
-    <li><span class="code">custom_params</span> can be used to specify additional QoO requirements
-        that have been set as customizable for a custom QoO Pipeline.
-        Visit <a href="/qoo/custom_params">/qoo/custom_params</a> to see what parameters can be customized.</li>
-</ul>
-
-<ul>
-    <li>/sensors/update</li>
-</ul>
-
-An empty POST to this address forces the iQAS platform to refresh Context cache for sensors from Fuseki server.
-
-<h2>DELETE endpoints</h2>
-<ul>
-    <li>/requests/[request_id]</li>
-</ul>
-
-<hr/><br/>
-
-<div>
-    <span style="font-weight: bold">Successfully loaded QoO pipelines:</span>
-    <ul id="qoo_pipeline_list">
-        <!-- Here goes the result of the jQuery request to display the successfully loaded QoO pipelines -->
-    </ul>
-</div>
-
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<script type="text/javascript" src="/script.js"></script>
-</body>
+    </div> <!-- mdl-layout -->
+    <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  </body>
 </html>

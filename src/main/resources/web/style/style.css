@@ -1,10 +1,56 @@
-body {
-    margin-left: 20px;
-    margin-right: 20px;
+.center-card {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: 75% !important;
+}
+
+.center-card > .mdl-card {
+  width: auto !important;
+  min-height: auto !important;
+}
+
+.mdl-layout__drawer-button {
+  top: 22px !important;
+}
+
+.mdl-card__actions {
+  text-align: right;
+}
+
+.mdl-card__supporting-text {
+  width: auto !important;
+}
+
+.active-link {
+  color: rgb(255,82,82) !important;
+}
+
+.mdl-layout__header-row {
+  height: 102px;
 }
 
 .code {
-    font-family: monospace;
+  font-family: monospace;
+  margin-left: 30px;
+}
+
+.inline-code {
+  font-family: monospace;
+}
+
+.logo-drawer-header {
+  box-sizing: border-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-justify-content: flex-end;
+      -ms-flex-pack: end;
+          justify-content: flex-end;
+  padding: 16px;
+  height: 151px;
 }
 
 .border {

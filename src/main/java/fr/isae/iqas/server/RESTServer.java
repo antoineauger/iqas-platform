@@ -108,6 +108,9 @@ public class RESTServer extends AllDirectives {
                                 pathSingleSlash(() ->
                                         getFromResource("web/index.html", ContentTypes.TEXT_HTML_UTF8)
                                 ),
+                                path(segment("api"), () ->
+                                        getFromResource("web/api.html")
+                                ),
                                 path(segment("style.css"), () ->
                                         getFromResource("web/style/style.css")
                                 ),
@@ -116,6 +119,9 @@ public class RESTServer extends AllDirectives {
                                 ),
                                 path(segment("iqas_logo.png"), () ->
                                         getFromResource("web/figures/iqas_logo.png")
+                                ),
+                                path(segment("iqas_logo_favicon.png"), () ->
+                                        getFromResource("web/figures/iqas_logo_favicon.png")
                                 ),
 
                                 // REST APIs
@@ -186,9 +192,6 @@ public class RESTServer extends AllDirectives {
                                         extractExecutionContext(ctx ->
                                                 onSuccess(() -> getAllQoOCustomizableAttributes(ctx), Function.identity())
                                         )
-                                ),
-                                path(segment("qoo").slash(segment("iqas_params")), () ->
-                                        getFromResource("web/iqas_params.html", ContentTypes.TEXT_HTML_UTF8)
                                 ),
                                 path(segment("qoo").slash(segment("attributes")), () ->
                                         extractExecutionContext(ctx ->

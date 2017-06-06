@@ -1,0 +1,320 @@
+<!doctype html>
+
+<!--
+  Website of the iQAS platform
+    Antoine AUGER
+    ISAE-SUPAERO, Toulouse
+    2017
+-->
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Website of the iQAS platform.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>iQAS platform</title>
+
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" sizes="192x192" href="/iqas_logo_favicon.png">
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Material Design Lite">
+    <link rel="apple-touch-icon-precomposed" href="/iqas_logo_favicon.png">
+
+    <!-- Tile icon for Win8 (144x144 + tile color) -->
+    <meta name="msapplication-TileImage" content="/iqas_logo_favicon.png">
+    <meta name="msapplication-TileColor" content="#3372DF">
+
+    <link rel="shortcut icon" href="/iqas_logo_favicon.png">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-red.min.css">
+    <link rel="stylesheet" type="text/css" href="/style.css">
+  </head>
+
+  <body>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
+      <header class="mdl-navigation mdl-layout__header is-casting-shadow">
+        <div class="mdl-layout__header-row">
+          <span class="mdl-layout-title">API documentation</span>
+        </div>
+        <div class="mdl-layout__tab-bar">
+          <a href="#scroll-tab-1" class="mdl-layout__tab is-active">GET</a>
+          <a href="#scroll-tab-2" class="mdl-layout__tab">POST</a>
+          <a href="#scroll-tab-3" class="mdl-layout__tab">DELETE</a>
+        </div>
+      </header>
+
+      <div class="mdl-layout__drawer">
+
+        <header class="logo-drawer-header">
+          <a href="/"><img src="/iqas_logo.png"></a>
+        </header>
+
+        <nav class="mdl-navigation">
+          <a class="mdl-navigation__link" href="/">
+            <i class="material-icons">home</i> Home
+          </a>
+          <a class="mdl-navigation__link" href="#">
+            <i class="material-icons is-active">content_paste</i> New request
+          </a>
+          <a class="mdl-navigation__link active-link" href="#">
+            <i class="material-icons">info</i> API documentation
+          </a>
+          <a class="mdl-navigation__link" href="#">
+            <i class="material-icons">mode_edit</i> Configuration
+          </a>
+          <a class="mdl-navigation__link" href="#">
+            <i class="material-icons">people</i> About
+          </a>
+          <div class="mdl-layout-spacer"></div>
+        </nav>
+      </div> <!-- mdl-layout__drawer -->
+
+      <main class="mdl-layout__content">
+
+        <section class="mdl-layout__tab-panel is-active" id="scroll-tab-1">
+          <div class="page-content">
+
+            <div class="mdl-grid">
+
+              <div class="mdl-cell mdl-cell--12-col center-card">
+                  <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                      <h2 class="mdl-card__title-text">Sensors</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                      Retrieval of sensors that have been inserted in the Fuseki database. Each sensor is described according to the QoO Ontology (QoOnto). <br/><br/>
+                      <div class="code">
+                        <a href="/sensors" target="_blank">/sensors</a><br/>
+                        /sensors/[sensor_id]
+                      </div>
+                    </div>
+                  </div>
+                </div> <!-- mdl-cell -->
+
+              <div class="mdl-cell mdl-cell--12-col center-card">
+                  <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                      <h2 class="mdl-card__title-text">Requests</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                      Retrieval of requests that have been submitted to the iQAS platform. <br/><br/>
+                      <div class="code">
+                        <a href="/requests" target="_blank">/requests</a><br/>
+                          /requests/[request_id]
+                      </div>
+                    </div>
+                  </div>
+                </div> <!-- mdl-cell -->
+
+              <div class="mdl-cell mdl-cell--12-col center-card">
+                  <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                      <h2 class="mdl-card__title-text">Pipelines</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                      Retrieval of available QoO pipelines that are currently available in order to perform heal processes (during iQAS adaptation or reconfiguration).<br/><br/>
+                      <div class="code">
+                        <a href="/pipelines" target="_blank">/pipelines</a><br/>
+                          /pipelines/[pipeline_id]<br/>
+                          <a href="/pipelines?print=ids" target="_blank">/pipelines?print=ids</a><br/>
+                      </div>
+                    </div>
+                  </div>
+                </div> <!-- mdl-cell -->
+
+                <div class="mdl-cell mdl-cell--12-col center-card">
+                  <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                      <h2 class="mdl-card__title-text">Quality of Observation (QoO)</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                      Retrieval of diverse QoO-related attributes or paramaters currently considers by the iQAS platform. Each attribute/parameter is described according to the QoO Ontology (QoOnto).<br/><br/>
+                      <div class="code">
+                        <a href="/qoo/attributes" target="_blank">/qoo/attributes</a><br/>
+                        <a href="/qoo/custom_params" target="_blank">/qoo/custom_params</a>
+                      </div>
+
+                      <br/>
+
+                      Here's the documentation for the natively-supported iQAS parameters:
+                      <table class="border" width="100%" style="margin-left: auto; margin-right: auto">
+                          <tr>
+                              <th>iqas_param_name</th>
+                              <th>Documentation</th>
+                              <th>Examples</th>
+                              <th>Related QoO attribute</th>
+                          </tr>
+                          <tr>
+                              <td style="text-align: center"><span class="inline-code">obsRate_min</span></td>
+                              <td>A string that indicates the lowest admissible observation rate under the format int/unit. <br/>
+                                  Accepted units: s, min, hour.</td>
+                              <td style="text-align: center" class="inline-code">"1/s"<br/>"2/min"<br/>"3/hour"</td>
+                              <td style="text-align: center">OBS_RATE</td>
+                          </tr>
+                          <tr>
+                              <td style="text-align: center"><span class="inline-code">obsRate_max</span></td>
+                              <td>A string that indicates the maximum admissible observation rate under the format int/unit.<br/>
+                                  Accepted units: s, min, mins, hour, hours.<br/>
+                                  If both <span class="inline-code">obsRate_min</span> and <span class="inline-code">obsRate_max</span> are specified, only <span class="inline-code">obsRate_max</span> is considered.</td>
+                              <td style="text-align: center" class="inline-code">"1/s"<br/>"2/min"<br/>"3/hour"</td>
+                              <td style="text-align: center">OBS_RATE</td>
+                          </tr>
+                          <tr>
+                              <td style="text-align: center"><span class="inline-code">age_max</span></td>
+                              <td>A string that indicates the maximum admissible end-to-end latency for an observation under the format int[space]unit.<br/>
+                                  Accepted units: ms, s, min, mins, hour, hours.</td>
+                              <td style="text-align: center" class="inline-code">"150 ms"<br/>"1 s"<br/>"1 min"<br/>"15 mins"<br/>"1 hour"<br/>"3 hours"</td>
+                              <td style="text-align: center">OBS_FRESHNESS</td>
+                          </tr>
+                          <tr>
+                              <td style="text-align: center"><span class="inline-code">threshold_min</span></td>
+                              <td>A string (float) that indicates the lowest admissible value for incoming observations.</td>
+                              <td style="text-align: center" class="inline-code">"-50.0"<br/>"0.0"</td>
+                              <td style="text-align: center">OBS_ACCURACY</td>
+                          </tr>
+                          <tr>
+                              <td style="text-align: center"><span class="inline-code">threshold_max</span></td>
+                              <td>A string (float) that indicates the maximum admissible value for incoming observations.</td>
+                              <td style="text-align: center" class="inline-code">"125.0"<br/>"-3.0"</td>
+                              <td style="text-align: center">OBS_ACCURACY</td>
+                          </tr>
+                      </table>
+                    </div>
+                  </div>
+                </div> <!-- mdl-cell -->
+
+                <div class="mdl-cell mdl-cell--12-col center-card">
+                  <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                      <h2 class="mdl-card__title-text">Places</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                      Retrieval of declared places that are associated with one or more sensors. Each place is described according to the QoO Ontology (QoOnto).<br/><br/>
+                      <div class="code">
+                        <a href="/places" target="_blank">/places</a><br/>
+                          /places?nearTo=[location]
+                      </div>
+                    </div>
+                  </div>
+                </div> <!-- mdl-cell -->
+
+            </div> <!-- mdl-grid -->
+
+          </div>
+        </section>
+
+        <section class="mdl-layout__tab-panel" id="scroll-tab-2">
+          <div class="page-content">
+
+            <div class="mdl-grid">
+
+              <div class="mdl-cell mdl-cell--12-col center-card" id="postRequest">
+                <div class="mdl-card mdl-shadow--2dp">
+                  <div class="mdl-card__title">
+                    <h2 class="mdl-card__title-text">Requests</h2>
+                  </div>
+                  <div class="mdl-card__supporting-text">
+                    You can submit new requests to the endpoint <span class="inline-code">/requests</span>.<br/><br/>
+
+                    For submitting a new iQAS request, the format is the following (bold parameters are mandatory):<br/>
+                    <div class="inline-code">
+                        Content-Type: application/json<br/>
+                        {<br/>
+                            <div style="margin-left: 30px;">
+                                <b>"application_id"</b>: "[application_id]",<br/>
+                                <b>"topic"</b>: "[topic]" / "ALL",<br/>
+                                <b>"location"</b>: "[location]" / "ALL",<br/>
+                                "obs_level": "RAW_DATA" / "INFORMATION" / "KNOWLEDGE", (default: RAW_DATA)<br/>
+                                "qoo": {<br/>
+                                    <div style="margin-left: 30px;">
+                                        <b>"interested_in"</b>: [QoO_attributes_list],<br/>
+                                        "iqas_params": {<br/>
+                                        <div style="margin-left: 30px;">
+                                            "[iqas_param_name]": "[iqas_param_value]",<br/>
+                                            <div style="margin-left: 30px;">
+                                                ...
+                                            </div>
+                                        </div>
+                                        },<br/>
+                                        "custom_params": {<br/>
+                                        <div style="margin-left: 30px;">
+                                            "[custom_param_name]": "[custom_param_value]",<br/>
+                                            <div style="margin-left: 30px;">
+                                                ...
+                                            </div>
+                                        </div>
+                                        }<br/>
+                                        "sla_level": "BEST_EFFORT" / "GUARANTEED", (default: BEST_EFFORT)<br/>
+                                        <!-- "operator": "NONE" / "AVG" / "MIN" / "MAX" (default: NONE)<br/> -->
+                                    </div>
+                                }
+                        </div>
+                        }
+                    </div>
+
+                    <br/>
+
+                    <div>
+                      When present, the <span class="inline-code">qoo</span> parameter represents a "QoO Service Level Agreement" and should be expressed as follow:
+                      <ul>
+                          <li><span class="inline-code"><b>interested_in</b></span> contains an ordered list
+                              (first=very important, last=less important) of QoO attributes that matter for the given application.</li>
+
+                          <li><span class="inline-code">iqas_params</span> can be used to specify some additional QoO requirements
+                              that the iQAS platform natively supports.</li>
+
+                          <li><span class="inline-code">custom_params</span> can be used to specify additional QoO requirements
+                              that have been set as customizable for a custom QoO Pipeline.</li>
+                      </ul>
+                      Visit the GET API tab (&para; Quality of Observation) for more details about these 3 parameters.
+                    </div>
+                  </div>
+                  <div class="mdl-card__actions mdl-card--border">
+                    <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" href="https://gist.githubusercontent.com/antoineauger/7fad731f1340dbbecca731325e6c200d/raw/8999d7f6c21ef774881ffee93b9dc914290544fa/iqas_request_example.json" target="_blank">
+                      Show a request example <i class="material-icons">arrow_forward</i>
+                    </a>
+                  </div>
+                </div>
+              </div> <!-- mdl-cell -->
+
+            </div> <!-- mdl-grid -->
+          </div>
+        </section>
+
+        <section class="mdl-layout__tab-panel" id="scroll-tab-3">
+          <div class="page-content">
+
+            <div class="mdl-grid">
+
+              <div class="mdl-cell mdl-cell--12-col center-card">
+                <div class="mdl-card mdl-shadow--2dp">
+                  <div class="mdl-card__title">
+                    <h2 class="mdl-card__title-text">Requests</h2>
+                  </div>
+                  <div class="mdl-card__supporting-text">
+                    To cancel a request previously submitted to the iQAS platform, just perform a DELETE operation on:<br/><br/>
+                    <div class="code">
+                      /requests/[request_id]
+                    </div>
+                  </div>
+                </div>
+              </div> <!-- mdl-cell -->
+
+            </div> <!-- mdl-grid -->
+
+          </div>
+        </section>
+
+      </main> <!-- mdl-layout__content -->
+
+    </div> <!-- mdl-layout -->
+    <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  </body>
+</html>
