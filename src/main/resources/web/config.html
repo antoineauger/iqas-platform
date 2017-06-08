@@ -41,10 +41,12 @@
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
       <header class="mdl-navigation mdl-layout__header is-casting-shadow">
         <div class="mdl-layout__header-row">
-          <span class="mdl-layout-title"><span style="font-weight: bold;">i</span>ntegration platform for
-            <span style="font-weight: bold;">Q</span>oO
-            <span style="font-weight: bold;">A</span>ssessment
-            as a <span style="font-weight: bold;">S</span>ervice (iQAS)</span>
+          <span class="mdl-layout-title">Configuration</span>
+        </div>
+        <div class="mdl-layout__tab-bar">
+          <a href="#scroll-tab-1" class="mdl-layout__tab is-active">Platform</a>
+          <a href="#scroll-tab-2" class="mdl-layout__tab">Sensors</a>
+          <a href="#scroll-tab-3" class="mdl-layout__tab">QoO Pipelines</a>
         </div>
       </header>
 
@@ -55,7 +57,7 @@
         </header>
 
         <nav class="mdl-navigation">
-          <a class="mdl-navigation__link active-link" href="#">
+          <a class="mdl-navigation__link" href="/">
             <i class="material-icons">home</i> Home
           </a>
           <a class="mdl-navigation__link" href="#">
@@ -64,7 +66,7 @@
           <a class="mdl-navigation__link" href="/api">
             <i class="material-icons">info</i> API documentation
           </a>
-          <a class="mdl-navigation__link" href="/configuration">
+          <a class="mdl-navigation__link active-link" href="#">
             <i class="material-icons">mode_edit</i> Configuration
           </a>
           <a class="mdl-navigation__link" href="#">
@@ -76,23 +78,63 @@
 
       <main class="mdl-layout__content">
 
-        <div class="mdl-grid">
+        <section class="mdl-layout__tab-panel is-active" id="scroll-tab-1">
+          <div class="page-content">
 
-          <div class="mdl-cell mdl-cell--12-col center-card">
-            <div class="mdl-card mdl-shadow--2dp">
-              <div class="mdl-card__supporting-text">
-                Welcome on the website of the iQAS platform!<br/>
-                This website allows you to interact with the iQAS platform and subscribe to high-quality sensor observations.
-              </div>
-            </div>
-          </div> <!-- mdl-cell -->
+              <div class="mdl-grid">
 
-        </div> <!-- mdl-grid -->
+                  <div class="mdl-cell mdl-cell--12-col center-card">
+                      <div class="mdl-card mdl-shadow--2dp">
+                          <div class="mdl-card__supporting-text important-note">
+                              To modify following parameters, you have to manually edit iQAS configuration files and then restart the platform for the changes to take effect.
+                          </div>
+                      </div>
+                  </div> <!-- mdl-cell -->
+
+                  <div class="mdl-cell mdl-cell--12-col center-card">
+                      <div class="mdl-card mdl-shadow--2dp">
+                          <div class="mdl-card__title">
+                              <h2 class="mdl-card__title-text">iQAS configuration</h2>
+                          </div>
+                          <div class="mdl-card__supporting-text">
+                              <pre id="iqas-config"></pre>
+                          </div>
+                      </div>
+                  </div> <!-- mdl-cell -->
+
+                  <div class="mdl-cell mdl-cell--12-col center-card">
+                      <div class="mdl-card mdl-shadow--2dp">
+                          <div class="mdl-card__title">
+                              <h2 class="mdl-card__title-text">Ontology imports</h2>
+                          </div>
+                          <div class="mdl-card__supporting-text">
+                              <pre id="onto-config"></pre>
+                          </div>
+                      </div>
+                  </div> <!-- mdl-cell -->
+
+              </div> <!-- mdl-mdl-grid -->
+
+          </div>
+        </section>
+
+        <section class="mdl-layout__tab-panel" id="scroll-tab-2">
+          <div class="page-content">
+
+          </div>
+        </section>
+
+        <section class="mdl-layout__tab-panel" id="scroll-tab-3">
+          <div class="page-content">
+
+          </div>
+        </section>
 
       </main> <!-- mdl-layout__content -->
 
     </div> <!-- mdl-layout -->
-
     <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/script-config.js"></script>
   </body>
 </html>

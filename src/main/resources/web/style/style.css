@@ -21,7 +21,7 @@
   width: auto !important;
 }
 
-.active-link {
+.active-link, .important-note {
   color: rgb(255,82,82) !important;
 }
 
