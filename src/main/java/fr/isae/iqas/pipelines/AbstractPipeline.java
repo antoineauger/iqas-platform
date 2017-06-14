@@ -17,7 +17,7 @@ import static fr.isae.iqas.model.observation.ObservationLevel.RAW_DATA;
 /**
  * Created by an.auger on 08/02/2017.
  */
-public abstract class AbstractPipeline {
+public abstract class AbstractPipeline implements IPipeline {
     final FiniteDuration ONE_SECOND = FiniteDuration.create(1, TimeUnit.SECONDS);
 
     private String pipelineName;
