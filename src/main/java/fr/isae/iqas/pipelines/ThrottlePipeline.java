@@ -24,7 +24,7 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * ThrottlePipeline is an example of QoO pipeline provided by the iQAS platform.
  * It can be modified according to user needs.
  */
-public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
+public class ThrottlePipeline extends AbstractPipeline {
     private Graph runnableGraph = null;
 
     public ThrottlePipeline() {
