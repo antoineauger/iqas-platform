@@ -20,7 +20,7 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * FilterPipeline is an example of QoO pipeline provided by the iQAS platform.
  * It can be modified according to user needs.
  */
-public class FilterPipeline extends AbstractPipeline {
+public class FilterPipeline extends AbstractPipeline implements IPipeline {
     private Graph runnableGraph = null;
 
     public FilterPipeline() {

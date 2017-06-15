@@ -31,7 +31,7 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * SensorFilterPipeline is a QoO pipeline provided by the iQAS platform.
  * It should not be modified.
  */
-public class IngestPipeline extends AbstractPipeline {
+public class IngestPipeline extends AbstractPipeline implements IPipeline {
     private Logger logger = LoggerFactory.getLogger(IngestPipeline.class);
 
     private Graph runnableGraph = null;

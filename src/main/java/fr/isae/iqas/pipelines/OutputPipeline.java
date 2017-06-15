@@ -47,7 +47,7 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * ForwardPipeline is a QoO pipeline provided by the iQAS platform.
  * It should not be modified.
  */
-public class OutputPipeline extends AbstractPipeline {
+public class OutputPipeline extends AbstractPipeline implements IPipeline {
     private Logger logger = LoggerFactory.getLogger(OutputPipeline.class);
 
     private Map<String, VirtualSensor> allVirtualSensors; // <sensor_id, VirtualSensor>
