@@ -54,7 +54,6 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                 long timestamp_now = System.currentTimeMillis();
-                                //logger.warn("INPUT " + sensorDataObject.getString("value") + " at time " + String.valueOf(t));
                                 return new RawData(
                                         sensorDataObject.getString("date"),
                                         sensorDataObject.getString("value"),
