@@ -123,6 +123,9 @@ public class RESTServer extends AllDirectives {
                                 path(segment("style.css"), () ->
                                         getFromResource("web/style/style.css")
                                 ),
+                                path(segment("script-home.js"), () ->
+                                        getFromResource("web/js/script-home.js")
+                                ),
                                 path(segment("script-config.js"), () ->
                                         getFromResource("web/js/script-config.js")
                                 ),
