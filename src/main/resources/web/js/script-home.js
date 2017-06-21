@@ -17,6 +17,53 @@ function extractStartTime(logs) {
     return logs[logs.length-1].match(regex);
 }
 
+function updateApplicationAndSensorNumber() {
+    var bodyToSend = '{"size":0,"query":{"exists":{"field":"application_id.keyword"}},"aggs":{"ze_countAppli":{"cardinality":{"field":"application_id.keyword"}},"ze_countSensor":{"cardinality":{"field":"provenance.keyword"}}}}';
+    $.ajax({
+        type: "POST",
+        contentType: 'application/json; charset=utf-8',
+        crossDomain: true,
+        data: bodyToSend,
+        dataType: 'json',
+        url: 'http://10.161.3.181:9200/logstash-*/_search',
+        success: function (data) {
+            if (data.hasOwnProperty('aggregations') && data.aggregations.hasOwnProperty('ze_countAppli')) {
+                $("#nb_applications").text(data.aggregations.ze_countAppli.value);
+            }
+            else {
+                $("#nb_applications").text("0");
+            }
+
+            if (data.hasOwnProperty('aggregations') && data.aggregations.hasOwnProperty('ze_countSensor')) {
+                $("#nb_sensors").text(data.aggregations.ze_countSensor.value);
+            }
+            else {
+                $("#nb_sensors").text("0");
+            }
+        }
+    });
+}
+
+function updateContainerNumber() {
+    var bodyToSend = '{"size":0,"query":{"exists":{"field":"containerName"}},"aggs":{"ze_count":{"cardinality":{"field":"containerName"}}}}';
+    $.ajax({
+        type: "POST",
+        contentType: 'application/json; charset=utf-8',
+        crossDomain: true,
+        data: bodyToSend,
+        dataType: 'json',
+        url: 'http://10.161.3.181:9200/dockbeat-*/_search',
+        success: function (data) {
+            if (data.hasOwnProperty('aggregations')) {
+                $("#nb_containers").text(data.aggregations.ze_count.value);
+            }
+            else {
+                $("#nb_containers").text("0");
+            }
+        }
+    });
+}
+
 $(function () {
 
     var timeoutRef;
@@ -24,6 +71,11 @@ $(function () {
     var image_iqas_ok_status = new Image();
 
     (function worker() {
+        // Elasticsearch
+        updateApplicationAndSensorNumber();
+        updateContainerNumber();
+
+        // Requests
         $("#table_requests_rows").empty()
         $.ajax({
             dataType: "json",
@@ -90,6 +142,7 @@ $(function () {
                 timeoutRef = setTimeout(worker, 15000);
             }
         });
+
     })();
 
 });
