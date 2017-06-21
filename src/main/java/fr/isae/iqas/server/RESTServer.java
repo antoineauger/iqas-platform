@@ -123,17 +123,11 @@ public class RESTServer extends AllDirectives {
                                 path(segment("style.css"), () ->
                                         getFromResource("web/style/style.css")
                                 ),
-                                path(segment("script-home.js"), () ->
-                                        getFromResource("web/js/script-home.js")
+                                path(segment("js").slash(segment()), wanted_script ->
+                                        getFromResource("web/js/" + wanted_script)
                                 ),
-                                path(segment("script-config.js"), () ->
-                                        getFromResource("web/js/script-config.js")
-                                ),
-                                path(segment("iqas_logo.png"), () ->
-                                        getFromResource("web/figures/iqas_logo.png")
-                                ),
-                                path(segment("iqas_logo_favicon.png"), () ->
-                                        getFromResource("web/figures/iqas_logo_favicon.png")
+                                path(segment("figures").slash(segment()), wanted_figure ->
+                                        getFromResource("web/figures/" + wanted_figure)
                                 ),
 
                                 // REST APIs

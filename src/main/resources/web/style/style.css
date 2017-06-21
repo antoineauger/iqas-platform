@@ -1,56 +1,61 @@
+.iqas-accronym {
+    font-weight: bold !important;
+}
+
 .center-card {
-  margin-left: auto !important;
-  margin-right: auto !important;
-  width: 75% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 75% !important;
 }
 
 .center-card > .mdl-card {
-  width: auto !important;
-  min-height: auto !important;
+    width: auto !important;
+    min-height: 50px !important;
 }
 
 .mdl-layout__drawer-button {
-  top: 22px !important;
+    top: 22px !important;
 }
 
 .mdl-card__actions {
-  text-align: right;
+    text-align: right;
 }
 
 .mdl-card__supporting-text {
-  width: auto !important;
+    width: auto !important;
+    overflow: auto;
 }
 
 .active-link, .important-note {
-  color: rgb(255,82,82) !important;
+    color: rgb(255, 82, 82) !important;
 }
 
 .mdl-layout__header-row {
-  height: 102px;
+    height: 102px;
 }
 
 .code {
-  font-family: monospace;
-  margin-left: 30px;
+    font-family: monospace;
+    margin-left: 30px;
 }
 
 .inline-code {
-  font-family: monospace;
+    font-family: monospace;
 }
 
 .logo-drawer-header {
-  box-sizing: border-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-flex-direction: column;
-      -ms-flex-direction: column;
-          flex-direction: column;
-  -webkit-justify-content: flex-end;
-      -ms-flex-pack: end;
-          justify-content: flex-end;
-  padding: 16px;
-  height: 151px;
+    box-sizing: border-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-justify-content: flex-end;
+    -ms-flex-pack: end;
+    justify-content: flex-end;
+    padding: 16px;
+    height: 151px;
 }
 
 .border {
@@ -64,4 +69,62 @@
 
 .border td {
     border: 1px solid black;
+}
+
+#requests_card > .mdl-card__title {
+    height: 176px;
+    background: url('/figures/iot_illustration.jpg') center / cover;
+}
+
+#requests_card h2 {
+    background-color: white;
+    padding: 5px;
+    opacity: 0.85;
+    filter: alpha(opacity=85); /* For IE8 and earlier */
+}
+
+#iqas_status_icon {
+    height: 60px;
+    position: absolute;
+    right: 15px;
+    top: 21px;
+}
+
+#requests_card table {
+    width: 100%;
+}
+
+#more_infos_grid {
+    margin-right: auto;
+    margin-left: auto;
+    width: 75%;
+    justify-content: center;
+}
+
+#more_infos_grid .mdl-card {
+    width: auto !important;
+}
+
+#more_infos_grid .mdl-cell--3-col {
+    min-width: 300px !important;
+}
+
+#table_requests_rows a {
+    color: #757575;;
+}
+
+@media screen and (max-width: 1024px) {
+    .mdl-layout__header-row {
+        padding-right: 90px;
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    .responsive-indicators {
+        width: calc(25% - 20px) !important;
+    }
+
+    #more_infos_grid .mdl-cell--3-col {
+        width: calc(33% - 16px);
+    }
 }

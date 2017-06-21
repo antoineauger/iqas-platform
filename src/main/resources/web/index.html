@@ -8,7 +8,7 @@
 -->
 
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="Website of the iQAS platform.">
@@ -17,84 +17,208 @@
 
     <!-- Add to homescreen for Chrome on Android -->
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="icon" sizes="192x192" href="/iqas_logo_favicon.png">
+    <link rel="icon" sizes="192x192" href="/figures/iqas_logo_favicon.png">
 
     <!-- Add to homescreen for Safari on iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Material Design Lite">
-    <link rel="apple-touch-icon-precomposed" href="/iqas_logo_favicon.png">
+    <link rel="apple-touch-icon-precomposed" href="/figures/iqas_logo_favicon.png">
 
     <!-- Tile icon for Win8 (144x144 + tile color) -->
-    <meta name="msapplication-TileImage" content="/iqas_logo_favicon.png">
+    <meta name="msapplication-TileImage" content="/figures/iqas_logo_favicon.png">
     <meta name="msapplication-TileColor" content="#3372DF">
 
-    <link rel="shortcut icon" href="/iqas_logo_favicon.png">
+    <link rel="shortcut icon" href="/figures/iqas_logo_favicon.png">
 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-red.min.css">
     <link rel="stylesheet" type="text/css" href="/style.css">
-  </head>
+</head>
 
-  <body>
-    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
-      <header class="mdl-navigation mdl-layout__header is-casting-shadow">
+<body>
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
+    <header class="mdl-navigation mdl-layout__header is-casting-shadow">
         <div class="mdl-layout__header-row">
-          <span class="mdl-layout-title"><span style="font-weight: bold;">i</span>ntegration platform for
-            <span style="font-weight: bold;">Q</span>oO
-            <span style="font-weight: bold;">A</span>ssessment
-            as a <span style="font-weight: bold;">S</span>ervice (iQAS)</span>
+          <span class="mdl-layout-title"><span class="iqas-accronym">i</span>ntegration platform for
+            <span class="iqas-accronym">Q</span>oO
+            <span class="iqas-accronym">A</span>ssessment
+            as a <span class="iqas-accronym">S</span>ervice (iQAS)</span>
         </div>
-      </header>
 
-      <div class="mdl-layout__drawer">
+        <a href="#" title="iQAS platform is currently running"><img id="iqas_status_icon" src="/figures/iqas_status_ok.png"></a>
+
+    </header>
+
+    <div class="mdl-layout__drawer">
 
         <header class="logo-drawer-header">
-          <a href="/"><img src="/iqas_logo.png"></a>
+            <a href="/"><img src="/figures/iqas_logo.png"></a>
         </header>
 
         <nav class="mdl-navigation">
-          <a class="mdl-navigation__link active-link" href="#">
-            <i class="material-icons">home</i> Home
-          </a>
-          <a class="mdl-navigation__link" href="#">
-            <i class="material-icons is-active">content_paste</i> New request
-          </a>
-          <a class="mdl-navigation__link" href="/api">
-            <i class="material-icons">info</i> API endpoints
-          </a>
-          <a class="mdl-navigation__link" href="/configuration">
-            <i class="material-icons">mode_edit</i> Configuration
-          </a>
-          <a class="mdl-navigation__link" href="#">
-            <i class="material-icons">people</i> About
-          </a>
-          <div class="mdl-layout-spacer"></div>
+            <a class="mdl-navigation__link active-link" href="#">
+                <i class="material-icons">home</i> Home
+            </a>
+            <a class="mdl-navigation__link" href="#">
+                <i class="material-icons is-active">content_paste</i> New request
+            </a>
+            <a class="mdl-navigation__link" href="/api">
+                <i class="material-icons">info</i> API endpoints
+            </a>
+            <a class="mdl-navigation__link" href="/configuration">
+                <i class="material-icons">mode_edit</i> Configuration
+            </a>
+            <a class="mdl-navigation__link" href="#">
+                <i class="material-icons">people</i> About
+            </a>
+            <div class="mdl-layout-spacer"></div>
         </nav>
-      </div> <!-- mdl-layout__drawer -->
+    </div> <!-- mdl-layout__drawer -->
 
-      <main class="mdl-layout__content">
+    <main class="mdl-layout__content">
 
         <div class="mdl-grid">
 
-          <div class="mdl-cell mdl-cell--12-col center-card">
-            <div class="mdl-card mdl-shadow--2dp">
-              <div class="mdl-card__supporting-text">
-                Welcome on the website of the iQAS platform!<br/>
-                This website allows you to interact with the iQAS platform and subscribe to high-quality sensor observations.
-              </div>
-            </div>
-          </div> <!-- mdl-cell -->
+            <div id="presentation_card" class="mdl-cell mdl-cell--12-col center-card">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__supporting-text">
+                        Welcome on the website of the iQAS platform!<br/>
+                        This website allows you to interact with the iQAS platform and subscribe to high-quality sensor
+                        observations.
+                    </div>
+                    <div class="mdl-card__menu">
+                        <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect"
+                                onclick="hidePresentationText()">
+                            <i class="material-icons">clear</i>
+                        </button>
+                    </div>
+                </div>
+            </div> <!-- mdl-cell -->
+
+            <div class="mdl-cell mdl-cell--12-col center-card">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__supporting-text" style="text-align: center">
+                        <div class="mdl-cell responsive-indicators" style="text-align: center; display: inline-grid;">
+                        <span style="font-family: Roboto,monospace; font-size: 50px; font-weight: 400; line-height: 50px;">
+                            82
+                        </span>
+                            <span style="font-family: Roboto,serif; font-size: 20px;">
+                            containers
+                        </span>
+                        </div>
+                        <div class="mdl-cell responsive-indicators" style="text-align: center;display: inline-grid;">
+                        <span style="font-family: Roboto,monospace; font-size: 50px; font-weight: 400; line-height: 50px;">
+                            82
+                        </span>
+                            <span style="font-family: Roboto,serif; font-size: 20px;">
+                            sensors
+                        </span>
+                        </div>
+                        <div class="mdl-cell responsive-indicators" style="text-align: center;display: inline-grid;">
+                        <span style="font-family: Roboto,monospace; font-size: 50px; font-weight: 400; line-height: 50px;">
+                            82
+                        </span>
+                            <span style="font-family: Roboto,serif; font-size: 20px;">
+                            applications
+                        </span>
+                        </div>
+                        <div class="mdl-cell responsive-indicators" style="text-align: center;display: inline-grid;">
+                        <span style="font-family: Roboto,monospace; font-size: 50px; font-weight: 400; line-height: 50px;">
+                            82
+                        </span>
+                            <span style="font-family: Roboto,serif; font-size: 20px;">
+                            requests
+                        </span>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- mdl-cell -->
+
+            <div class="mdl-cell mdl-cell--12-col center-card">
+                <div id="requests_card" class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Requests</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text" style="text-align: center">
+                        <table class="mdl-data-table mdl-js-data-table">
+                            <thead>
+                            <tr>
+                                <th class="mdl-data-table__cell--non-numeric">Date</th>
+                                <th class="mdl-data-table__cell--non-numeric">Request ID</th>
+                                <th class="mdl-data-table__cell--non-numeric">Application</th>
+                                <th class="mdl-data-table__cell--non-numeric">Observation level</th>
+                                <th class="mdl-data-table__cell--non-numeric">Status</th>
+                                <th class="mdl-data-table__cell--non-numeric"> </th>
+                            </tr>
+                            </thead>
+                            <tbody id="table_requests_rows">
+                                <!-- Here goes the retrieved Requests -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div> <!-- mdl-cell -->
+
+            <div class="mdl-cell mdl-cell--12-col center-card">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Platform overhead</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text" style="text-align: center">
+                        <iframe src="http://10.161.3.181:5601/app/kibana#/visualize/edit/ef12c230-365a-11e7-8722-c7ff488f4da4?embed=true&_g=(refreshInterval%3A(display%3AOff%2Cpause%3A!f%2Cvalue%3A0)%2Ctime%3A(from%3Anow-5m%2Cmode%3Arelative%2Cto%3Anow))"
+                                height="600" width="100%"></iframe>
+                    </div>
+                </div>
+            </div> <!-- mdl-cell -->
 
         </div> <!-- mdl-grid -->
 
-      </main> <!-- mdl-layout__content -->
+        <div id="more_infos_grid" class="mdl-grid">
 
-    </div> <!-- mdl-layout -->
+            <div class="mdl-cell mdl-cell--3-col">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">iQAS</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text" style="text-align: center">
+                        TODO
+                    </div>
+                </div>
+            </div> <!-- mdl-cell -->
 
-    <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script type="text/javascript" src="/script-home.js"></script>
-  </body>
+            <div class="mdl-cell mdl-cell--3-col">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">iQAS</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text" style="text-align: center">
+                        TODO
+                    </div>
+                </div>
+            </div> <!-- mdl-cell -->
+
+            <div class="mdl-cell mdl-cell--3-col">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">iQAS</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text" style="text-align: center">
+                        TODO
+                    </div>
+                </div>
+            </div> <!-- mdl-cell -->
+
+        </div> <!-- mdl-grid -->
+
+    </main> <!-- mdl-layout__content -->
+
+</div> <!-- mdl-layout -->
+
+<script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="/js/script-home.js"></script>
+</body>
 </html>
