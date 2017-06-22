@@ -1,12 +1,116 @@
 <!DOCTYPE html>
+
+<!--
+  Website of the iQAS platform
+    Antoine AUGER
+    ISAE-SUPAERO, Toulouse
+    2017
+-->
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Website of the iQAS platform.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>iQAS platform</title>
+
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" sizes="192x192" href="/figures/iqas_logo_favicon.png">
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Material Design Lite">
+    <link rel="apple-touch-icon-precomposed" href="/figures/iqas_logo_favicon.png">
+
+    <!-- Tile icon for Win8 (144x144 + tile color) -->
+    <meta name="msapplication-TileImage" content="/figures/iqas_logo_favicon.png">
+    <meta name="msapplication-TileColor" content="#3372DF">
+
+    <link rel="shortcut icon" href="/figures/iqas_logo_favicon.png">
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-red.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/css/style_view_requests.css">
 </head>
+
 <body>
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
+    <header class="mdl-navigation mdl-layout__header is-casting-shadow">
+        <div class="mdl-layout__header-row">
+            <div>
+                <span class="mdl-layout-title">Request <span id="span_request_id"></span></span>
+            </div>
+            <div id="request_addtional_infos">
+                <table>
+                    <tr>
+                        <td>Created on: <span id="rai_date">N/A</span> by <span id="rai_appli">N/A</span></td>
+                    </tr>
+                    <tr>
+                        <td>Topic: <span id="rai_topic">N/A</span></td>
+                    </tr>
+                    <tr>
+                        <td>Location: <span id="rai_location">N/A</span></td>
+                    </tr>
+                    <tr>
+                        <td>Observation level asked: <span id="rai_obs_level">N/A</span></td>
+                    </tr>
+                    <tr>
+                        <td>Current state: <span id="rai_curr_state">N/A</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
 
+        <a href="#" title="iQAS platform is currently running"><img id="iqas_status_icon" src="/figures/iqas_status_ok.png"></a>
 
+        <button id="button_viewRequest_back" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"
+                onclick="window.location='/';">
+            <i class="material-icons">arrow_back</i>
+        </button>
 
+    </header>
+
+    <div class="mdl-layout__drawer">
+
+        <header class="logo-drawer-header">
+            <a href="/"><img src="/figures/iqas_logo.png"></a>
+        </header>
+
+        <nav class="mdl-navigation">
+            <a class="mdl-navigation__link" href="/">
+                <i class="material-icons">home</i> Home
+            </a>
+            <a class="mdl-navigation__link" href="#">
+                <i class="material-icons">content_paste</i> New request
+            </a>
+            <a class="mdl-navigation__link" href="/api">
+                <i class="material-icons">info</i> API endpoints
+            </a>
+            <a class="mdl-navigation__link" href="/configuration">
+                <i class="material-icons">mode_edit</i> Configuration
+            </a>
+            <a class="mdl-navigation__link" href="#">
+                <i class="material-icons">people</i> About
+            </a>
+            <div class="mdl-layout-spacer"></div>
+        </nav>
+    </div> <!-- mdl-layout__drawer -->
+
+    <main class="mdl-layout__content">
+
+    </main> <!-- mdl-layout__content -->
+
+</div> <!-- mdl-layout -->
+
+<script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="/js/script_common.js"></script>
+<script type="text/javascript" src="/js/script_view_request.js"></script>
 </body>
 </html>

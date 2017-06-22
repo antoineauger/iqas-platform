@@ -1,0 +1,26 @@
+.mdl-layout__header-row {
+    height: 230px !important;
+    align-items: left !important;
+    padding-top: 50px !important;
+    flex-direction: column !important;
+}
+
+#request_addtional_infos {
+    margin-top: 10px;
+}
+
+@media screen and (max-width: 1024px) {
+    #button_viewRequest_back {
+        position: fixed;
+        top: 204px;
+        left: 72px;
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    #button_viewRequest_back {
+        position: fixed;
+        top: 204px;
+        left: 280px;
+    }
+}

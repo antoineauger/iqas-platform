@@ -114,14 +114,17 @@ public class RESTServer extends AllDirectives {
                                 path(segment("configuration"), () ->
                                         getFromResource("web/config.html")
                                 ),
+                                path(segment("viewRequest"), () ->
+                                        getFromResource("web/view_request.html")
+                                ),
                                 path(segment("configuration").slash("iqas"), () ->
                                         getFromResource("iqas.properties")
                                 ),
                                 path(segment("configuration").slash("ontologies"), () ->
                                         getFromResource("ontologies.yml")
                                 ),
-                                path(segment("style.css"), () ->
-                                        getFromResource("web/style/style.css")
+                                path(segment("css").slash(segment()), wanted_style ->
+                                        getFromResource("web/style/" + wanted_style)
                                 ),
                                 path(segment("js").slash(segment()), wanted_script ->
                                         getFromResource("web/js/" + wanted_script)

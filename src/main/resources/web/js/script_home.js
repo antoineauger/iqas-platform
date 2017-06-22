@@ -66,9 +66,7 @@ function updateContainerNumber() {
 
 $(function () {
 
-    var timeoutRef;
-    var image_iqas_nok_status = new Image();
-    var image_iqas_ok_status = new Image();
+    var timeoutRetrieveRequests;
 
     (function worker() {
         // Elasticsearch
@@ -93,7 +91,13 @@ $(function () {
 
                     oneRow += '<td class="mdl-data-table__cell--non-numeric">';
                     oneRow += '<a href=""></a>';
+                    if (val.current_status === 'ENFORCED') {
+                        oneRow += '<a href="/viewRequest?request_id=' + val.request_id + '">';
+                    }
                     oneRow += val.request_id ;
+                    if (val.current_status === 'ENFORCED') {
+                        oneRow += '</a>';
+                    }
                     oneRow += '</td>';
 
                     oneRow += '<td class="mdl-data-table__cell--non-numeric">';
@@ -126,20 +130,12 @@ $(function () {
                 else {
                     $("#table_requests_rows").append(' <td class="mdl-data-table__cell--non-numeric" colspan="6">No requests have been submitted yet...</td>');
                 }
-
-                image_iqas_ok_status.src = '/figures/iqas_status_ok.png';
-                image_iqas_nok_status.src = '/figures/iqas_status_nok.png';
-
-                $("#iqas_status_icon").attr("src", "/figures/iqas_status_ok.png");
-                $("#iqas_status_icon").attr("title", "iQAS platform is currently running")
             },
             error: function (jqXHR, textStatus, errorThrown) {
-                $("#iqas_status_icon").attr("src", "/figures/iqas_status_nok.png");
-                $("#iqas_status_icon").attr("title", "Error: make sure that the iQAS platform is running")
                 $("#table_requests_rows").append(' <td class="mdl-data-table__cell--non-numeric" colspan="6">Impossible to retrieve iQAS requests...</td>');
             },
             complete: function (jqXHR, textStatus) {
-                timeoutRef = setTimeout(worker, 15000);
+                timeoutRetrieveRequests = setTimeout(worker, 15000);
             }
         });
 
