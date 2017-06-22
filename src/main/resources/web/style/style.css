@@ -101,6 +101,10 @@
     justify-content: center;
 }
 
+#more_infos_grid .mdl-card__supporting-text, #requests_card .mdl-data-table__cell--non-numeric {
+    font-size: 1rem !important;
+}
+
 #more_infos_grid .mdl-card {
     width: auto !important;
 }

@@ -40,6 +40,10 @@ function updateApplicationAndSensorNumber() {
             else {
                 $("#nb_sensors").text("0");
             }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            $("#nb_applications").text("0");
+            $("#nb_sensors").text("0");
         }
     });
 }
@@ -60,6 +64,44 @@ function updateContainerNumber() {
             else {
                 $("#nb_containers").text("0");
             }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            $("#nb_containers").text("0");
+        }
+    });
+}
+
+function updateQoOPipelines() {
+    $.ajax({
+        type: "GET",
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        url: '/pipelines?print=ids',
+        success: function (data) {
+            $("#infos_qoo_pipelines").find(".mdl-card__supporting-text").empty();
+            if (data.length > 0) {
+                var allHTML = '<ul class="demo-list-icon mdl-list">';
+                $.each(data, function(i, item) {
+                    allHTML += '<li class="mdl-list__item">';
+                    allHTML += '<span class="mdl-list__item-primary-content">';
+                    allHTML += '<i class="material-icons mdl-list__item-icon">linear_scale</i>';
+                    allHTML += '<a href="/pipelines/' + item + '" target="_blank">';
+                    allHTML += item;
+                    allHTML += '</a>';
+                    allHTML += '</span>';
+                    allHTML += '</li>';
+                });
+                allHTML += '</ul>';
+
+                $("#infos_qoo_pipelines").find(".mdl-card__supporting-text").append(allHTML);
+            }
+            else {
+                $("#infos_qoo_pipelines").find(".mdl-card__supporting-text").append("No QoO Pipelines available yet.");
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            $("#infos_qoo_pipelines").find(".mdl-card__supporting-text").empty();
+            $("#infos_qoo_pipelines").find(".mdl-card__supporting-text").append("Impossible to retrieve QoO Pipelines...");
         }
     });
 }
@@ -72,6 +114,7 @@ $(function () {
         // Elasticsearch
         updateApplicationAndSensorNumber();
         updateContainerNumber();
+        updateQoOPipelines();
 
         // Requests
         $("#table_requests_rows").empty()
@@ -128,11 +171,11 @@ $(function () {
                     }
                 }
                 else {
-                    $("#table_requests_rows").append(' <td class="mdl-data-table__cell--non-numeric" colspan="6">No requests have been submitted yet...</td>');
+                    $("#table_requests_rows").append('<td class="mdl-data-table__cell--non-numeric" colspan="6">No requests have been submitted yet...</td>');
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
-                $("#table_requests_rows").append(' <td class="mdl-data-table__cell--non-numeric" colspan="6">Impossible to retrieve iQAS requests...</td>');
+                $("#table_requests_rows").append('<td class="mdl-data-table__cell--non-numeric" colspan="6">Impossible to retrieve iQAS requests...</td>');
             },
             complete: function (jqXHR, textStatus) {
                 timeoutRetrieveRequests = setTimeout(worker, 15000);

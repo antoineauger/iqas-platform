@@ -179,15 +179,8 @@ public class FusekiRESTController extends AllDirectives {
         }, context.dispatcher());
 
         routeResponse = pipelines.thenApply((result) -> {
-            if (result.size() == 0) {
-                return complete((HttpResponse.create()
-                        .withStatus(400)
-                        .withEntity("No pipeline has been found!")));
-            }
-            else {
-                mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                return completeOKWithFuture(pipelines, Jackson.marshaller(mapper));
-            }
+            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+            return completeOKWithFuture(pipelines, Jackson.marshaller(mapper));
         });
 
         return routeResponse;
@@ -217,15 +210,8 @@ public class FusekiRESTController extends AllDirectives {
         }, context.dispatcher());
 
         routeResponse = pipelines.thenApply((result) -> {
-            if (result.size() == 0) {
-                return complete((HttpResponse.create()
-                        .withStatus(400)
-                        .withEntity("No pipeline has been found!")));
-            }
-            else {
-                mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                return completeOKWithFuture(pipelines, Jackson.marshaller(mapper));
-            }
+            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+            return completeOKWithFuture(pipelines, Jackson.marshaller(mapper));
         });
 
         return routeResponse;
@@ -255,15 +241,8 @@ public class FusekiRESTController extends AllDirectives {
         }, context.dispatcher());
 
         routeResponse = pipeline.thenApply((result) -> {
-            if (result.size() == 0) {
-                return complete((HttpResponse.create()
-                        .withStatus(400)
-                        .withEntity("No pipeline found with id \"" + pipeline_id + "\"")));
-            }
-            else {
-                mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                return completeOKWithFuture(pipeline, Jackson.marshaller(mapper));
-            }
+            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+            return completeOKWithFuture(pipeline, Jackson.marshaller(mapper));
         });
 
         return routeResponse;

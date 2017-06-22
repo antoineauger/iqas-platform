@@ -83,7 +83,7 @@ public class PipelineWatcherActor extends UntypedActor {
             ArrayList<Pipeline> objectToReturn = new ArrayList<>();
             PipelineRequestMsg request = (PipelineRequestMsg) message;
             if (request.isGetAllPipelines()) { // Only used for displaying Pipeline names on iQAS API homepage
-                log.info("PipelineRequestMsg: all available and concrete pipelines have been asked");
+                log.debug("PipelineRequestMsg: all available and concrete pipelines have been asked");
                 pipelineObjects.forEach((k, v) -> {
                     try {
                         IPipeline pipelineTemp = (IPipeline) v.newInstance();
