@@ -117,6 +117,9 @@ public class RESTServer extends AllDirectives {
                                 path(segment("viewRequest"), () ->
                                         getFromResource("web/view_request.html")
                                 ),
+                                path(segment("newRequest"), () ->
+                                        getFromResource("web/new_request.html")
+                                ),
                                 path(segment("configuration").slash("iqas"), () ->
                                         getFromResource("iqas.properties")
                                 ),
