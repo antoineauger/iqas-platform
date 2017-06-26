@@ -83,7 +83,7 @@
     filter: alpha(opacity=85); /* For IE8 and earlier */
 }
 
-#iqas_status_icon {
+#iqas_status_icon_ok, #iqas_status_icon_nok {
     height: 60px;
     position: absolute;
     right: 15px;

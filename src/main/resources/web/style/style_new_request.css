@@ -5,14 +5,22 @@
     width: 75%;
 }
 
-.form-card-wide form {
-    width: 50%;
-}
-
 .mdl-card__supporting-text {
     display: flex;
 }
 
 .mdl-selectfield--floating-label.is-focused .mdl-selectfield__label, .mdl-selectfield--floating-label.is-dirty .mdl-selectfield__label {
-    color: rgb(255, 82, 82) !important;
+    color: rgb(96,125,139); !important;
+}
+
+#info_form {
+    padding-left: 50px;
+}
+
+#div_form {
+    width: 50%;
+}
+
+div.full-width {
+    width: 100%;
 }
