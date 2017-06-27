@@ -14,7 +14,9 @@ function askDeletionOfRequest(request_id) {
 
 function extractStartTime(logs) {
     var regex = /(.*):/g;
-    return logs[logs.length-1].match(regex);
+    var tempDate = logs[logs.length-1].match(regex).toString();
+    tempDate = tempDate.substring(0, tempDate.length - 1);
+    return tempDate;
 }
 
 function updateApplicationAndSensorNumber() {
@@ -127,9 +129,7 @@ $(function () {
                 $.each(data, function (key, val) {
                     var oneRow = '<tr>';
                     oneRow += '<td class="mdl-data-table__cell--non-numeric">';
-                    var tempDate = extractStartTime(val.logs).toString();
-                    tempDate = tempDate.substring(0, tempDate.length - 1);
-                    oneRow += tempDate ;
+                    oneRow += extractStartTime(val.logs);
                     oneRow += '</td>';
 
                     oneRow += '<td class="mdl-data-table__cell--non-numeric">';

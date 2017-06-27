@@ -5,7 +5,7 @@ $(function () {
     (function worker() {
         $.ajax({
             dataType: "json",
-            url: '/requests',
+            url: '/qoo/attributes',
             success: function (data) {
                 $("#iqas_status_icon_nok").css("display", "none");
                 $("#text_status_iqas").attr("title", "iQAS platform is currently running");
