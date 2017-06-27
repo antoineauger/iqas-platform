@@ -302,12 +302,7 @@ public class FusekiController {
             }
         }
 
-        if (sensorList.sensors.size() == 0) {
-            return null;
-        }
-        else {
-            return sensorList;
-        }
+        return sensorList;
     }
 
     /**
@@ -540,10 +535,14 @@ public class FusekiController {
         customizableParamList.customizable_params = new ArrayList<>();
 
         final String req = baseStringForRequests +
-                "SELECT ?param ?doc ?impact ?paramVariation ?attrVariation\n" +
+                "SELECT ?param ?doc ?impact ?paramType ?paramInitialValue ?paramMinValue ?paramMaxValue ?paramVariation ?attrVariation\n" +
                 "WHERE {\n" +
                 "  ?param rdf:type qoo:QoOCustomizableParameter .\n" +
+                "  ?param qoo:paramType ?paramType .\n" +
                 "  ?param qoo:documentation ?doc .\n" +
+                "  ?param qoo:paramMinValue ?paramMinValue .\n" +
+                "  ?param qoo:paramMaxValue ?paramMaxValue .\n" +
+                "  ?param qoo:paramInitialValue ?paramInitialValue .\n" +
                 "  ?param qoo:has ?effect .\n" +
                 "  ?effect qoo:impacts ?impact .\n" +
                 "  ?effect qoo:paramVariation ?paramVariation .\n" +
@@ -562,6 +561,10 @@ public class FusekiController {
                 Resource impact = (Resource) binding.get("impact");
                 String impactName = impact.getURI().split("#")[1];
                 Literal paramVariation = binding.getLiteral("paramVariation");
+                Literal paramType = binding.getLiteral("paramType");
+                Literal paramMaxValue = binding.getLiteral("paramMaxValue");
+                Literal paramMinValue = binding.getLiteral("paramMinValue");
+                Literal paramInitialValue = binding.getLiteral("paramInitialValue");
                 Literal attrVariation = binding.getLiteral("attrVariation");
 
                 QoOCustomizableParam paramTemp;
@@ -570,6 +573,10 @@ public class FusekiController {
                     paramTemp.param_name = paramName;
                     paramTemp.documentation = doc.getString();
                     paramTemp.has = new ArrayList<>();
+                    paramTemp.paramMinValue = paramMinValue.getString();
+                    paramTemp.paramMaxValue = paramMaxValue.getString();
+                    paramTemp.paramType = paramType.getString();
+                    paramTemp.paramInitialValue = paramInitialValue.getString();
                 } else {
                     paramTemp = processedParams.get(paramName);
                 }

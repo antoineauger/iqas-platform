@@ -24,3 +24,7 @@
 div.full-width {
     width: 100%;
 }
+
+#info_form span {
+    font-size: 14px !important;
+}

@@ -27,11 +27,11 @@ function clearForm(){
 
     $('#obs_level option[value=obs-level-RAW_DATA]').prop('selected', true);
 
-    $("#qoo_iqas_params").val('');
-    $("#qoo_iqas_params").parent().removeClass('is-dirty is-focused');
+    $("#qoo-iqas_params").val('');
+    $("#qoo-iqas_params").parent().removeClass('is-dirty is-focused');
 
-    $("#qoo_custom_params").val('');
-    $("#qoo_custom_params").parent().removeClass('is-dirty is-focused');
+    $("#qoo-custom_params").val('');
+    $("#qoo-custom_params").parent().removeClass('is-dirty is-focused');
 
     $("#qoo_constraints").prop('checked', false);
     $("#qoo_constraints").parent().removeClass('is-checked');
@@ -40,13 +40,105 @@ function clearForm(){
     return false;
 }
 
+function checkCorrectForm(){
+    var isCorrect = true;
+    if ($("#application_id").val() === '' ||
+        $("#topic").val() === '' ||
+        $("#location").val() === '') {
+        isCorrect = false;
+    }
+
+    if ($("#qoo_constraints").is(':checked')) {
+        try {
+            if ($("#qoo-iqas_params").val() !== '') {
+                var dummyResult1 = JSON.parse($("#qoo-iqas_params").val());
+            }
+            if ($("#qoo-custom_params").val() !== '') {
+                var dummyResult2 = JSON.parse($("#qoo-custom_params").val());
+            }
+        }
+        catch (e) {
+            isCorrect = false;
+        }
+    }
+    return isCorrect;
+}
+
 function sendIqasRequest(){
-    alert($("#submit_request_form").serialize());
+    if (checkCorrectForm()) {
+        var dataJSON = $("#submit_request_form").serializeArray();
+        var properParamsToSend = {};
+        var interestedInParams = [];
+        var qooParams = {};
+        dataJSON.forEach(function (item) {
+            if (item.name !== 'qoo_constraints' && item.value !== '') { // Do not include the checkbox value
+                if (item.name.match("^qoo-")) {
+                    var qooParamName = item.name.split("-")[1];
+                    if (item.name.match("^qoo-OBS_") && item.value === 'on') {
+                        interestedInParams.push(qooParamName);
+                    }
+                    else {
+                        qooParams[qooParamName] = item.value;
+                    }
+                }
+                else {
+                    properParamsToSend[item.name] = item.value;
+                }
+            }
+        });
+
+        qooParams['interested_in'] = interestedInParams;
+        if ($("#qoo-iqas_params").val() !== '') {
+            qooParams['iqas_params'] = JSON.parse($("#qoo-iqas_params").val());
+        }
+        if ($("#qoo-custom_params").val() !== '') {
+            qooParams['custom_params'] = JSON.parse($("#qoo-custom_params").val());
+        }
+        properParamsToSend['qoo'] = qooParams;
+
+        $.ajax({
+            type: "POST",
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: JSON.stringify(properParamsToSend),
+            url: '/requests',
+            success: function (iQASResponse) {
+                window.location.href = "/viewRequest?request_id=" + iQASResponse.request_id;
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert(errorThrown);
+            }
+        });
+    }
+    else {
+        alert("The form is not correctly filled, please check the supplied inputs.");
+    }
     return false;
 }
 
 $(function () {
     showOrHideQoODiv();
+
+    $("#location").focusin(function(){
+        $("#info_form_location").css("display", "block");
+    });
+    $("#location").focusout(function(){
+        $("#info_form_location").css("display", "none");
+    });
+
+    $("#qoo-iqas_params").focusin(function(){
+        $("#info_form_iqas_params").css("display", "block");
+    });
+    $("#qoo-iqas_params").focusout(function(){
+        $("#info_form_iqas_params").css("display", "none");
+    });
+
+    $("#qoo-custom_params").focusin(function(){
+        $("#info_form_custom_params").css("display", "block");
+    });
+    $("#qoo-custom_params").focusout(function(){
+        $("#info_form_custom_params").css("display", "none");
+    });
 
     $.ajax({
         type: "GET",
@@ -58,8 +150,8 @@ $(function () {
             if (data.qoo_attributes.length > 0) {
                 var allHTML = "";
                 $.each(data.qoo_attributes, function(i, item) {
-                    allHTML += '<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="checkbox-' + item['@id'] + '">';
-                    allHTML += '<input id="checkbox-' + item['@id'] + '" class="mdl-checkbox__input" type="checkbox" name="checkbox-' + item['@id'] + '">';
+                    allHTML += '<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="qoo-' + item['@id'] + '">';
+                    allHTML += '<input id="qoo-' + item['@id'] + '" class="mdl-checkbox__input" type="checkbox" name="qoo-' + item['@id'] + '">';
                     allHTML += '<span class="mdl-checkbox__label">' + item['@id'] + '</span>';
                     allHTML += '</label>';
                 });
