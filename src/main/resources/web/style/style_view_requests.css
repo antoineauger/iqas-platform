@@ -9,6 +9,24 @@
     margin-top: 10px;
 }
 
+#view_request_obs table {
+    width: 100% !important;
+}
+
+#view_request_obs p {
+    line-height: normal !important;
+}
+
+#view_request_obs div.mdl-card__supporting-text {
+    max-height: 252px;
+    margin-bottom: 16px;
+    overflow: auto;
+}
+
+.mdl-card__supporting-text, #view_request_obs .mdl-data-table__cell--non-numeric {
+    font-size: 1rem !important;
+}
+
 @media screen and (max-width: 1024px) {
     #button_viewRequest_back {
         position: fixed;
@@ -24,3 +42,4 @@
         left: 280px;
     }
 }
+

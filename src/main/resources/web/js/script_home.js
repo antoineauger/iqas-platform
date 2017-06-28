@@ -161,6 +161,7 @@ $(function () {
                         oneRow += '<a id="deleteLinkRequest' + val.request_id + '" href="#" onclick="askDeletionOfRequest(\'' + val.request_id + '\');"><i class="material-icons">delete</i></a>' ;
                     }
                     oneRow += '</td>';
+                    oneRow += '</tr>';
 
                     items.push(oneRow);
                 });
@@ -171,11 +172,11 @@ $(function () {
                     }
                 }
                 else {
-                    $("#table_requests_rows").append('<td class="mdl-data-table__cell--non-numeric" colspan="6">No requests have been submitted yet...</td>');
+                    $("#table_requests_rows").append('<tr><td class="mdl-data-table__cell--non-numeric" colspan="6">No requests have been submitted yet...</td></tr>');
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
-                $("#table_requests_rows").append('<td class="mdl-data-table__cell--non-numeric" colspan="6">Impossible to retrieve iQAS requests...</td>');
+                $("#table_requests_rows").append('<tr><td class="mdl-data-table__cell--non-numeric" colspan="6">Impossible to retrieve iQAS requests...</td></tr>');
             },
             complete: function (jqXHR, textStatus) {
                 timeoutRetrieveRequests = setTimeout(worker, 15000);
