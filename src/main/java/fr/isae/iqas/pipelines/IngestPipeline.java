@@ -66,6 +66,9 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
 
                     final FlowShape<RawData, RawData> filteredInformationBySensor = builder.add(
                             Flow.of(RawData.class).filter(r -> {
+                                if (r.getProducer().startsWith("oppSensor_")) {
+                                    return true;
+                                }
                                 String[] allowedSensors = getParams().get("allowed_sensors").split(";");
                                 List<String> allowedSensorList = Arrays.asList(allowedSensors);
                                 return allowedSensorList.contains(r.getProducer());
