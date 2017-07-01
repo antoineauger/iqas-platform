@@ -1,8 +1,8 @@
 package fr.isae.iqas.mapek;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
 import akka.dispatch.OnComplete;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -37,7 +37,7 @@ import static fr.isae.iqas.model.request.State.Status.*;
  * Created by an.auger on 25/09/2016.
  */
 
-public class AutonomicManagerActor extends UntypedActor {
+public class AutonomicManagerActor extends AbstractActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private MongoController mongoController;
@@ -89,79 +89,85 @@ public class AutonomicManagerActor extends UntypedActor {
     }
 
     @Override
-    public void onReceive(Object message) throws Exception {
-        // TerminatedMsg messages
-        if (message instanceof TerminatedMsg) {
-            TerminatedMsg terminatedMsg = (TerminatedMsg) message;
-            if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
-                log.info("Received TerminatedMsg message: {}", message);
-                if (monitorActor != null) {
-                    getContext().stop(monitorActor);
-                }
-                if (analyzeActor != null) {
-                    getContext().stop(analyzeActor);
-                }
-                if (planActor != null) {
-                    getContext().stop(planActor);
-                }
-                getContext().stop(self());
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(TerminatedMsg.class, this::stopThisActor)
+                .match(Request.class, this::actionsOnRequestMsg)
+                .match(SymptomMsgConnectionReport.class, this::actionsOnSymptomMsgConnectionReportMsg)
+                .match(SymptomMsg.class, this::actionsOnSymptomMsg)
+                .build();
+    }
+
+    private void stopThisActor(TerminatedMsg msg) {
+        if (msg.getTargetToStop().path().equals(getSelf().path())) {
+            log.info("Received TerminatedMsg message: {}", msg);
+            if (monitorActor != null) {
+                getContext().stop(monitorActor);
             }
+            if (analyzeActor != null) {
+                getContext().stop(analyzeActor);
+            }
+            if (planActor != null) {
+                getContext().stop(planActor);
+            }
+            getContext().stop(self());
         }
-        // Request messages
-        else if (message instanceof Request) {
-            Request incomingReq = (Request) message;
-            if (incomingReq.getCurrent_status() == CREATED) { // A Request has just been submitted, we check if we can satisfy it
-                future(() -> fusekiController.findAllSensorsWithConditions(incomingReq.getLocation(), incomingReq.getTopic()), context().dispatcher())
-                        .onComplete(new OnComplete<VirtualSensorList>() {
-                            public void onComplete(Throwable throwable, VirtualSensorList virtualSensorList) {
-                                if (throwable == null) { // Only continue if there was no error so far
-                                    // TODO: uncomment
-                                    /*Iterator<VirtualSensor> it = virtualSensorList.sensors.iterator();
-                                    while (it.hasNext()) {
-                                        VirtualSensor sensor = it.next();
-                                        String sensorID = sensor.sensor_id.split("#")[1];
-                                        if (!connectedSensors.containsKey(sensorID) || !connectedSensors.get(sensorID)) { // if no info is available or if the sensor is disconnected
-                                            it.remove();
-                                        }
-                                    }*/
-                                    if (virtualSensorList.sensors.size() > 0) {
-                                        incomingReq.addLog("Found couple (" + incomingReq.getTopic() + " / " + incomingReq.getLocation() + "), request forwarded to Monitor.");
-                                        incomingReq.updateState(SUBMITTED);
-                                    } else {
-                                        incomingReq.addLog("No sensor found for (" + incomingReq.getTopic() + " / " + incomingReq.getLocation() + ").");
-                                        incomingReq.updateState(REJECTED);
+    }
+
+    private void actionsOnRequestMsg(Request msg) {
+        if (msg.getCurrent_status() == CREATED) { // A Request has just been submitted, we check if we can satisfy it
+            future(() -> fusekiController.findAllSensorsWithConditions(msg.getLocation(), msg.getTopic()), context().dispatcher())
+                    .onComplete(new OnComplete<VirtualSensorList>() {
+                        public void onComplete(Throwable throwable, VirtualSensorList virtualSensorList) {
+                            if (throwable == null) { // Only continue if there was no error so far
+                                // TODO: uncomment
+                                /*Iterator<VirtualSensor> it = virtualSensorList.sensors.iterator();
+                                while (it.hasNext()) {
+                                    VirtualSensor sensor = it.next();
+                                    String sensorID = sensor.sensor_id.split("#")[1];
+                                    if (!connectedSensors.containsKey(sensorID) || !connectedSensors.get(sensorID)) { // if no info is available or if the sensor is disconnected
+                                        it.remove();
                                     }
-                                    mongoController.updateRequest(incomingReq.getRequest_id(), incomingReq).whenComplete((result, throwable2) -> {
-                                        if (result) {
-                                            monitorActor.tell(incomingReq, getSelf());
-                                        } else {
-                                            log.error("Update of the Request " + incomingReq.getRequest_id() + " has failed. " +
-                                                    "Not telling anything to Monitor. " + throwable2.toString());
-                                        }
-                                    });
+                                }*/
+                                if (virtualSensorList.sensors.size() > 0) {
+                                    msg.addLog("Found couple (" + msg.getTopic() + " / " + msg.getLocation() + "), request forwarded to Monitor.");
+                                    msg.updateState(SUBMITTED);
+                                } else {
+                                    msg.addLog("No sensor found for (" + msg.getTopic() + " / " + msg.getLocation() + ").");
+                                    msg.updateState(REJECTED);
                                 }
+                                mongoController.updateRequest(msg.getRequest_id(), msg).whenComplete((result, throwable2) -> {
+                                    if (result) {
+                                        monitorActor.tell(msg, getSelf());
+                                    } else {
+                                        log.error("Update of the Request " + msg.getRequest_id() + " has failed. " +
+                                                "Not telling anything to Monitor. " + throwable2.toString());
+                                    }
+                                });
                             }
-                        }, context().dispatcher());
-            }
-            else if (incomingReq.getCurrent_status() == REMOVED) {
-                monitorActor.tell(incomingReq, getSelf());
-            }
-            else { // Other cases should raise an error
-                log.error("Unknown state for request " + incomingReq.getRequest_id() + " at this stage");
-            }
+                        }
+                    }, context().dispatcher());
         }
-        else if (message instanceof SymptomMsg) {
-            SymptomMsg messageToCast = (SymptomMsg) message;
-            // SymptomMsg messages [received from Monitor]
-            if (messageToCast.getSymptom() == CONNECTION_REPORT && messageToCast.getAbout() == SENSOR) {
-                SymptomMsgConnectionReport symptomMsg = (SymptomMsgConnectionReport) messageToCast;
-                connectedSensors = symptomMsg.getConnectedSensors();
-                log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), connectedSensors.toString());
-            }
-            // Sensor UPDATE in Fuseki
-            else if (messageToCast.getSymptom() == UPDATED && messageToCast.getAbout() == SENSOR) {
-                monitorActor.tell(new SymptomMsg(UPDATED, SENSOR), getSelf());
-            }
+        else if (msg.getCurrent_status() == REMOVED) {
+            monitorActor.tell(msg, getSelf());
+        }
+        else { // Other cases should raise an error
+            log.error("Unknown state for request " + msg.getRequest_id() + " at this stage");
+        }
+    }
+
+    private void actionsOnSymptomMsgConnectionReportMsg(SymptomMsgConnectionReport msg) {
+        // SymptomMsg messages [received from Monitor]
+        if (msg.getSymptom() == CONNECTION_REPORT && msg.getAbout() == SENSOR) {
+            connectedSensors = msg.getConnectedSensors();
+            log.info("Received Symptom : {} {} {}", msg.getSymptom(), msg.getAbout(), connectedSensors.toString());
+        }
+    }
+
+    private void actionsOnSymptomMsg(SymptomMsg msg) {
+        // Sensor UPDATE in Fuseki
+        if (msg.getSymptom() == UPDATED && msg.getAbout() == SENSOR) {
+            monitorActor.tell(new SymptomMsg(UPDATED, SENSOR), getSelf());
         }
     }
 }

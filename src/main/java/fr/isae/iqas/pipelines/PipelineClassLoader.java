@@ -53,8 +53,8 @@ public class PipelineClassLoader extends ClassLoader {
         byte[] classBytes = null;
         while (dirs.hasNext()) {
             String dir = (String) dirs.next();
-            //replace '.' in the class name with File.separatorChar & append .class to the name
-            classFileName.replace('.', File.separatorChar);
+            // Replace '.' in the class name with File.separatorChar & append .class to the name
+            classFileName = classFileName.replace('.', File.separatorChar);
             classFileName += ".class";
             try {
                 File file = new File(dir, classFileName);

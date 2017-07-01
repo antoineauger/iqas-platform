@@ -1,7 +1,7 @@
 package fr.isae.iqas.database;
 
+import akka.actor.ActorContext;
 import akka.actor.ActorRef;
-import akka.actor.UntypedActorContext;
 import akka.dispatch.OnComplete;
 import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.model.HttpResponse;
@@ -36,10 +36,10 @@ public class FusekiRESTController extends AllDirectives {
 
     private String baseQoOIRI = null;
     private FusekiController controller = null;
-    private UntypedActorContext context;
+    private ActorContext context;
     private String pathPipelineWatcherActor;
 
-    public FusekiRESTController(Config iqasConfig, UntypedActorContext context, String pathPipelineWatcherActor) {
+    public FusekiRESTController(Config iqasConfig, ActorContext context, String pathPipelineWatcherActor) {
         this.controller = new FusekiController(iqasConfig);
         this.baseQoOIRI = iqasConfig.getIRIForPrefix("qoo", false);
         this.context = context;

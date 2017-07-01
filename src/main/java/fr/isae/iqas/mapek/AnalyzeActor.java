@@ -1,6 +1,6 @@
 package fr.isae.iqas.mapek;
 
-import akka.actor.UntypedActor;
+import akka.actor.AbstractActor;
 import akka.dispatch.OnComplete;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -39,7 +39,7 @@ import static fr.isae.iqas.utils.ActorUtils.getPlanActorFromMAPEKchild;
  * Created by an.auger on 13/09/2016.
  */
 
-public class AnalyzeActor extends UntypedActor {
+public class AnalyzeActor extends AbstractActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private final static int INC_STEP_FOR_INTEGER_PARAM = 1;
@@ -99,9 +99,20 @@ public class AnalyzeActor extends UntypedActor {
     }
 
     @Override
-    public void onReceive(Object message) throws Exception {
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(String.class, this::actionsOnStringMsg)
+                .match(SymptomMsgRequest.class, this::actionsOnSymptomMsgRequestMsg)
+                .match(SymptomMsgObsRate.class, this::actionsOnSymptomMsgObsRateMsg)
+                .match(SymptomMsgConnectionReport.class, this::actionsOnSymptomMsgConnectionReportMsg)
+                .match(SymptomMsg.class, this::actionsOnSymptomMsg)
+                .match(TerminatedMsg.class, this::stopThisActor)
+                .build();
+    }
+
+    private void actionsOnStringMsg(String msg) {
         // Tick messages
-        if (message.equals("tick")) {
+        if (msg.equals("tick")) {
             // send another periodic tick after the specified delay
             getContext().system().scheduler().scheduleOnce(
                     tickMAPEK,
@@ -111,314 +122,314 @@ public class AnalyzeActor extends UntypedActor {
             clearExpiredSymptoms(receivedQoOSymptoms, symptomLifetime);
             checkIfSomeHealedRequestsAreNowStable();
         }
-        // SymptomMsg messages [received from MonitorActor]
-        else if (message instanceof SymptomMsg) {
-            SymptomMsg symptomMsgToCast = (SymptomMsg) message;
+    }
 
-            // SymptomMsg messages - Requests
-            if (symptomMsgToCast.getAbout() == REQUEST) {
-                SymptomMsgRequest symptomMsg = (SymptomMsgRequest) symptomMsgToCast;
-                log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getAttachedRequest().toString());
-                Request requestTemp = symptomMsg.getAttachedRequest();
+    private void actionsOnSymptomMsgRequestMsg(SymptomMsgRequest msg) {
+        // SymptomMsg messages - Requests
+        if (msg.getAbout() == REQUEST) {
+            log.info("Received Symptom : {} {} {}", msg.getSymptom(), msg.getAbout(), msg.getAttachedRequest().toString());
+            Request requestTemp = msg.getAttachedRequest();
 
-                if (requestTemp.getCurrent_status() == State.Status.SUBMITTED) { // Valid Request
-                    mongoController.getExactSameRequestsAs(requestTemp).whenComplete((result, throwable) -> {
-                        if (throwable != null) {
-                            log.error(throwable.toString());
-                        } else if (result.size() > 0) { // The incoming request may reuse existing enforced requests
-                            String tempIDForPipelines = new ObjectId().toString();
-                            Request similarRequest = result.get(0);
+            if (requestTemp.getCurrent_status() == State.Status.SUBMITTED) { // Valid Request
+                mongoController.getExactSameRequestsAs(requestTemp).whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        log.error(throwable.toString());
+                    } else if (result.size() > 0) { // The incoming request may reuse existing enforced requests
+                        String tempIDForPipelines = new ObjectId().toString();
+                        Request similarRequest = result.get(0);
 
-                            mongoController.getSpecificRequestMapping(similarRequest.getRequest_id()).whenComplete((similarMappings, throwable2) -> {
-                                if (throwable2 != null) {
-                                    log.error(throwable2.toString());
-                                } else {
-                                    similarMappings.addDependentRequest(requestTemp);
+                        mongoController.getSpecificRequestMapping(similarRequest.getRequest_id()).whenComplete((similarMappings, throwable2) -> {
+                            if (throwable2 != null) {
+                                log.error(throwable2.toString());
+                            } else {
+                                similarMappings.addDependentRequest(requestTemp);
 
-                                    RequestMapping requestMapping = new RequestMapping(requestTemp.getApplication_id(), requestTemp.getRequest_id());
-                                    requestMapping.setConstructedFromRequest(similarRequest.getRequest_id());
+                                RequestMapping requestMapping = new RequestMapping(requestTemp.getApplication_id(), requestTemp.getRequest_id());
+                                requestMapping.setConstructedFromRequest(similarRequest.getRequest_id());
 
-                                    String fromTopicName = similarMappings.getFinalSink().getParents().get(0);
-                                    TopicEntity fromTopic = new TopicEntity(similarMappings.getAllTopics().get(fromTopicName));
-                                    // Cleaning retrieved TopicEntity object
-                                    fromTopic.getChildren().clear();
-                                    fromTopic.getEnforcedPipelines().clear();
-                                    fromTopic.setSource(fromTopicName);
-                                    requestMapping.getAllTopics().put(fromTopic.getName(), fromTopic);
+                                String fromTopicName = similarMappings.getFinalSink().getParents().get(0);
+                                TopicEntity fromTopic = new TopicEntity(similarMappings.getAllTopics().get(fromTopicName));
+                                // Cleaning retrieved TopicEntity object
+                                fromTopic.getChildren().clear();
+                                fromTopic.getEnforcedPipelines().clear();
+                                fromTopic.setSource(fromTopicName);
+                                requestMapping.getAllTopics().put(fromTopic.getName(), fromTopic);
 
-                                    TopicEntity sinkForApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id(), requestTemp.getObs_level());
-                                    requestMapping.getAllTopics().put(sinkForApp.getName(), sinkForApp);
-                                    sinkForApp.setSink(requestTemp.getApplication_id());
+                                TopicEntity sinkForApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id(), requestTemp.getObs_level());
+                                requestMapping.getAllTopics().put(sinkForApp.getName(), sinkForApp);
+                                sinkForApp.setSink(requestTemp.getApplication_id());
 
-                                    requestMapping.addLink(fromTopic.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
+                                requestMapping.addLink(fromTopic.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
 
-                                    mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
-                                        mongoController.updateRequestMapping(similarRequest.getRequest_id(), similarMappings).whenComplete((result3, throwable3) -> {
-                                            tellToPlanActor(new RFCMsgRequestCreate(RFCMAPEK.CREATE, REQUEST, requestTemp, requestMapping));
-                                        });
+                                mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
+                                    mongoController.updateRequestMapping(similarRequest.getRequest_id(), similarMappings).whenComplete((result3, throwable3) -> {
+                                        tellToPlanActor(new RFCMsgRequestCreate(RFCMAPEK.CREATE, REQUEST, requestTemp, requestMapping));
                                     });
-                                }
-                            });
-                        } else {  // The incoming request has no common points with the enforced ones
-                            String tempIDForPipelines = new ObjectId().toString();
-                            RequestMapping requestMapping = new RequestMapping(requestTemp.getApplication_id(), requestTemp.getRequest_id());
+                                });
+                            }
+                        });
+                    } else {  // The incoming request has no common points with the enforced ones
+                        String tempIDForPipelines = new ObjectId().toString();
+                        RequestMapping requestMapping = new RequestMapping(requestTemp.getApplication_id(), requestTemp.getRequest_id());
 
-                            TopicEntity topicJustBeforeSink = new TopicEntity(requestTemp.getTopic() + "_" + requestTemp.getLocation() + "_" + requestTemp.getAbbrvObsLevel(),
-                                    requestTemp.getObs_level());
-                            requestMapping.getAllTopics().put(topicJustBeforeSink.getName(), topicJustBeforeSink);
+                        TopicEntity topicJustBeforeSink = new TopicEntity(requestTemp.getTopic() + "_" + requestTemp.getLocation() + "_" + requestTemp.getAbbrvObsLevel(),
+                                requestTemp.getObs_level());
+                        requestMapping.getAllTopics().put(topicJustBeforeSink.getName(), topicJustBeforeSink);
 
-                            TopicEntity sinkForApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id(),
-                                    requestTemp.getObs_level());
-                            sinkForApp.setSink(requestTemp.getApplication_id());
-                            requestMapping.getAllTopics().put(sinkForApp.getName(), sinkForApp);
+                        TopicEntity sinkForApp = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id(),
+                                requestTemp.getObs_level());
+                        sinkForApp.setSink(requestTemp.getApplication_id());
+                        requestMapping.getAllTopics().put(sinkForApp.getName(), sinkForApp);
 
-                            if (requestTemp.getTopic().equals("ALL")) { // (Location = x, Topic = ALL) or (Location = ALL, Topic = ALL)
-                                for (Topic topicObject : topicList.topics) {
-                                    String topicName = topicObject.topic.split("#")[1];
-                                    TopicEntity topicBase = new TopicEntity(topicName, RAW_DATA);
-                                    topicBase.setSource(topicName);
-                                    requestMapping.getAllTopics().put(topicName, topicBase);
-                                    requestMapping.addLink(topicBase.getName(), topicJustBeforeSink.getName(), "IngestPipeline_" + tempIDForPipelines);
-                                }
-                            } else { // (Location = x, Topic = y) or (Location = ALL, Topic = x)
-                                TopicEntity topicBase = new TopicEntity(requestTemp.getTopic(), RAW_DATA);
-                                topicBase.setSource(requestTemp.getTopic());
-                                requestMapping.getAllTopics().put(topicBase.getName(), topicBase);
+                        if (requestTemp.getTopic().equals("ALL")) { // (Location = x, Topic = ALL) or (Location = ALL, Topic = ALL)
+                            for (Topic topicObject : topicList.topics) {
+                                String topicName = topicObject.topic.split("#")[1];
+                                TopicEntity topicBase = new TopicEntity(topicName, RAW_DATA);
+                                topicBase.setSource(topicName);
+                                requestMapping.getAllTopics().put(topicName, topicBase);
                                 requestMapping.addLink(topicBase.getName(), topicJustBeforeSink.getName(), "IngestPipeline_" + tempIDForPipelines);
                             }
-
-                            /**
-                             * Resolution of iQAS parameters before enforcing the Request
-                             * This allows to have observations of higher quality more quickly.
-                             *
-                             * The natural order is FilterPipeline -> ThrottlePipeline -> OutputPipeline
-                             */
-
-                            TopicEntity lastQoOTopic = topicJustBeforeSink;
-                            int counterQoO = 0;
-
-                            // If there is some QoO constraints about OBS_ACCURACY, we add a FilterPipeline
-                            if (requestTemp.getQooConstraints().getIqas_params().containsKey("threshold_min")
-                                    || requestTemp.getQooConstraints().getIqas_params().containsKey("threshold_max")) {
-                                counterQoO += 1;
-
-                                TopicEntity accurObsTopic = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO" + String.valueOf(counterQoO),
-                                        requestTemp.getObs_level());
-                                requestMapping.getAllTopics().put(accurObsTopic.getName(), accurObsTopic);
-
-                                requestMapping.addLink(lastQoOTopic.getName(), accurObsTopic.getName(), "FilterPipeline_" + tempIDForPipelines);
-                                lastQoOTopic = accurObsTopic;
-                            }
-                            // If there is some QoO constraints about OBS_RATE, we add a ThrottlePipeline
-                            if (requestTemp.getQooConstraints().getIqas_params().containsKey("obsRate_max")) {
-                                counterQoO += 1;
-
-                                TopicEntity rateObsTopic = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO" + String.valueOf(counterQoO),
-                                        requestTemp.getObs_level());
-                                requestMapping.getAllTopics().put(rateObsTopic.getName(), rateObsTopic);
-
-                                requestMapping.addLink(lastQoOTopic.getName(), rateObsTopic.getName(), "ThrottlePipeline_" + tempIDForPipelines);
-                                lastQoOTopic = rateObsTopic;
-                            }
-
-                            // Last edge for graph
-                            // QoO constraints about OBS_FRESHNESS are enforced at this level
-                            requestMapping.addLink(lastQoOTopic.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
-
-                            mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
-                                tellToPlanActor(new RFCMsgRequestCreate(RFCMAPEK.CREATE, REQUEST, requestTemp, requestMapping));
-                            });
+                        } else { // (Location = x, Topic = y) or (Location = ALL, Topic = x)
+                            TopicEntity topicBase = new TopicEntity(requestTemp.getTopic(), RAW_DATA);
+                            topicBase.setSource(requestTemp.getTopic());
+                            requestMapping.getAllTopics().put(topicBase.getName(), topicBase);
+                            requestMapping.addLink(topicBase.getName(), topicJustBeforeSink.getName(), "IngestPipeline_" + tempIDForPipelines);
                         }
-                    });
-                } else if (requestTemp.getCurrent_status() == State.Status.REMOVED) { // Request deleted by the user
-                    tellToPlanActor(new RFCMsgRequestRemove(RFCMAPEK.REMOVE, REQUEST, requestTemp));
-                }
+
+                        /**
+                         * Resolution of iQAS parameters before enforcing the Request
+                         * This allows to have observations of higher quality more quickly.
+                         *
+                         * The natural order is FilterPipeline -> ThrottlePipeline -> OutputPipeline
+                         */
+
+                        TopicEntity lastQoOTopic = topicJustBeforeSink;
+                        int counterQoO = 0;
+
+                        // If there is some QoO constraints about OBS_ACCURACY, we add a FilterPipeline
+                        if (requestTemp.getQooConstraints().getIqas_params().containsKey("threshold_min")
+                                || requestTemp.getQooConstraints().getIqas_params().containsKey("threshold_max")) {
+                            counterQoO += 1;
+
+                            TopicEntity accurObsTopic = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO" + String.valueOf(counterQoO),
+                                    requestTemp.getObs_level());
+                            requestMapping.getAllTopics().put(accurObsTopic.getName(), accurObsTopic);
+
+                            requestMapping.addLink(lastQoOTopic.getName(), accurObsTopic.getName(), "FilterPipeline_" + tempIDForPipelines);
+                            lastQoOTopic = accurObsTopic;
+                        }
+                        // If there is some QoO constraints about OBS_RATE, we add a ThrottlePipeline
+                        if (requestTemp.getQooConstraints().getIqas_params().containsKey("obsRate_max")) {
+                            counterQoO += 1;
+
+                            TopicEntity rateObsTopic = new TopicEntity(requestTemp.getApplication_id() + "_" + requestTemp.getRequest_id() + "_QOO" + String.valueOf(counterQoO),
+                                    requestTemp.getObs_level());
+                            requestMapping.getAllTopics().put(rateObsTopic.getName(), rateObsTopic);
+
+                            requestMapping.addLink(lastQoOTopic.getName(), rateObsTopic.getName(), "ThrottlePipeline_" + tempIDForPipelines);
+                            lastQoOTopic = rateObsTopic;
+                        }
+
+                        // Last edge for graph
+                        // QoO constraints about OBS_FRESHNESS are enforced at this level
+                        requestMapping.addLink(lastQoOTopic.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
+
+                        mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
+                            tellToPlanActor(new RFCMsgRequestCreate(RFCMAPEK.CREATE, REQUEST, requestTemp, requestMapping));
+                        });
+                    }
+                });
+            } else if (requestTemp.getCurrent_status() == State.Status.REMOVED) { // Request deleted by the user
+                tellToPlanActor(new RFCMsgRequestRemove(RFCMAPEK.REMOVE, REQUEST, requestTemp));
             }
-            // SymptomMsg messages - Obs Rate
-            else if (symptomMsgToCast.getSymptom() == TOO_LOW && symptomMsgToCast.getAbout() == EntityMAPEK.OBS_RATE) {
-                SymptomMsgObsRate symptomMsg = (SymptomMsgObsRate) symptomMsgToCast;
-                log.info("Received Symptom : {} {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getUniqueIDPipeline(), symptomMsg.getConcernedRequests().toString());
-                receivedObsRateSymptoms.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new CircularFifoBuffer(maxSymptomsBeforeAction));
-                receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).add(new MAPEKSymptomMsgWithDate(symptomMsg));
+        }
+    }
 
-                if (receivedObsRateSymptoms.get(symptomMsg.getUniqueIDPipeline()).size() >= maxSymptomsBeforeAction) {
-                    for (String request_id : symptomMsg.getConcernedRequests()) {
+    private void actionsOnSymptomMsgObsRateMsg(SymptomMsgObsRate msg) {
+        // SymptomMsg messages - Obs Rate
+        if (msg.getSymptom() == TOO_LOW && msg.getAbout() == EntityMAPEK.OBS_RATE) {
+            log.info("Received Symptom : {} {} {} {}", msg.getSymptom(), msg.getAbout(), msg.getUniqueIDPipeline(), msg.getConcernedRequests().toString());
+            receivedObsRateSymptoms.putIfAbsent(msg.getUniqueIDPipeline(), new CircularFifoBuffer(maxSymptomsBeforeAction));
+            receivedObsRateSymptoms.get(msg.getUniqueIDPipeline()).add(new MAPEKSymptomMsgWithDate(msg));
 
-                        log.info("Searching for Request " + request_id);
+            if (receivedObsRateSymptoms.get(msg.getUniqueIDPipeline()).size() >= maxSymptomsBeforeAction) {
+                for (String request_id : msg.getConcernedRequests()) {
 
-                        if (!requestsToIgnore.contains(request_id)) {
-                            currentlyHealedRequest.putIfAbsent(request_id, new HealRequest(request_id, symptomMsg.getUniqueIDPipeline(), observeDuration));
-                            HealRequest currHealRequest = currentlyHealedRequest.get(request_id);
+                    log.info("Searching for Request " + request_id);
 
-                            if (currHealRequest.canPerformHeal()) {
-                                log.info("We can perform heal for Request " + request_id);
-                                mongoController.getSpecificRequest(request_id).whenComplete((retrievedRequest, throwable) -> {
-                                    if (throwable == null) {
+                    if (!requestsToIgnore.contains(request_id)) {
+                        currentlyHealedRequest.putIfAbsent(request_id, new HealRequest(request_id, msg.getUniqueIDPipeline(), observeDuration));
+                        HealRequest currHealRequest = currentlyHealedRequest.get(request_id);
 
-                                        mongoController.getSpecificRequestMapping(retrievedRequest.getRequest_id()).whenComplete((oldRequestMapping, throwable2) -> {
-                                            RequestMapping newRequestMapping = new RequestMapping(oldRequestMapping);
+                        if (currHealRequest.canPerformHeal()) {
+                            log.info("We can perform heal for Request " + request_id);
+                            mongoController.getSpecificRequest(request_id).whenComplete((retrievedRequest, throwable) -> {
+                                if (throwable == null) {
 
-                                            if (throwable2 == null) {
+                                    mongoController.getSpecificRequestMapping(retrievedRequest.getRequest_id()).whenComplete((oldRequestMapping, throwable2) -> {
+                                        RequestMapping newRequestMapping = new RequestMapping(oldRequestMapping);
 
-                                                future(() -> fusekiController.findMatchingPipelinesToHeal(OBS_RATE, retrievedRequest.getQooConstraints().getInterested_in()), context().dispatcher())
-                                                        .onComplete(new OnComplete<QoOPipelineList>() {
-                                                            public void onComplete(Throwable throwable3, QoOPipelineList qoOPipelineList) {
+                                        if (throwable2 == null) {
 
-                                                                if (throwable3 == null && qoOPipelineList.qoOPipelines.size() > 0) { // Only continue if there was no error so far
-                                                                    QoOPipeline qoOPipelineToApplyForHeal = qoOPipelineList.qoOPipelines.get(0); // TODO not static decision
-                                                                    if (currHealRequest.getLastHealFor() == null
-                                                                            || !currHealRequest.getLastHealFor().equals(OBS_RATE)
-                                                                            || (currHealRequest.getLastHealFor().equals(OBS_RATE) && currHealRequest.getRetries() < max_retries)
-                                                                            || !currHealRequest.hasAlreadyBeenTried(OBS_RATE, qoOPipelineToApplyForHeal)) {
+                                            future(() -> fusekiController.findMatchingPipelinesToHeal(OBS_RATE, retrievedRequest.getQooConstraints().getInterested_in()), context().dispatcher())
+                                                    .onComplete(new OnComplete<QoOPipelineList>() {
+                                                        public void onComplete(Throwable throwable3, QoOPipelineList qoOPipelineList) {
 
-                                                                        retrievedRequest.updateState(HEALED);
-                                                                        retrievedRequest.addLog("On the point to heal request with " + qoOPipelineToApplyForHeal.pipeline +
-                                                                                " for the time #" + String.valueOf(currHealRequest.getRetries() + 1));
+                                                            if (throwable3 == null && qoOPipelineList.qoOPipelines.size() > 0) { // Only continue if there was no error so far
+                                                                QoOPipeline qoOPipelineToApplyForHeal = qoOPipelineList.qoOPipelines.get(0); // TODO not static decision
+                                                                if (currHealRequest.getLastHealFor() == null
+                                                                        || !currHealRequest.getLastHealFor().equals(OBS_RATE)
+                                                                        || (currHealRequest.getLastHealFor().equals(OBS_RATE) && currHealRequest.getRetries() < max_retries)
+                                                                        || !currHealRequest.hasAlreadyBeenTried(OBS_RATE, qoOPipelineToApplyForHeal)) {
 
-                                                                        log.info("On the point to heal request with " + qoOPipelineToApplyForHeal.pipeline +
-                                                                                " for the time #" + String.valueOf(currHealRequest.getRetries() + 1));
+                                                                    retrievedRequest.updateState(HEALED);
+                                                                    retrievedRequest.addLog("On the point to heal request with " + qoOPipelineToApplyForHeal.pipeline +
+                                                                            " for the time #" + String.valueOf(currHealRequest.getRetries() + 1));
 
-                                                                        QoOCustomizableParam qoOCustomizableParam = qoOPipelineToApplyForHeal.customizable_params.get(0);
-                                                                        Map<String, String> newHealParams = new ConcurrentHashMap<>();
+                                                                    log.info("On the point to heal request with " + qoOPipelineToApplyForHeal.pipeline +
+                                                                            " for the time #" + String.valueOf(currHealRequest.getRetries() + 1));
 
-                                                                        if (currHealRequest.getRetries() == 0) {
-                                                                            newHealParams.put(qoOCustomizableParam.param_name, qoOCustomizableParam.paramInitialValue);
-                                                                        } else if (qoOCustomizableParam.paramType.equals("Integer")) {
+                                                                    QoOCustomizableParam qoOCustomizableParam = qoOPipelineToApplyForHeal.customizable_params.get(0);
+                                                                    Map<String, String> newHealParams = new ConcurrentHashMap<>();
 
-                                                                            String variationDir = decideToIncreaseOrIncrease(symptomMsg.getSymptom(), qoOCustomizableParam);
-                                                                            if (variationDir != null) {
-                                                                                Map<String, String> oldParams = currHealRequest.getLastParamsForRemedies();
-                                                                                for (Map.Entry<String, String> entry : oldParams.entrySet()) {
-                                                                                    switch (variationDir) {
-                                                                                        case "HIGH":
-                                                                                            newHealParams.put(entry.getKey(), String.valueOf(Integer.valueOf(entry.getValue()) + INC_STEP_FOR_INTEGER_PARAM));
-                                                                                            break;
-                                                                                        case "LOW":
-                                                                                            newHealParams.put(entry.getKey(), String.valueOf(Integer.valueOf(entry.getValue()) - DEC_STEP_FOR_INTEGER_PARAM));
-                                                                                            break;
-                                                                                        default:
-                                                                                            break;
-                                                                                    }
+                                                                    if (currHealRequest.getRetries() == 0) {
+                                                                        newHealParams.put(qoOCustomizableParam.param_name, qoOCustomizableParam.paramInitialValue);
+                                                                    } else if (qoOCustomizableParam.paramType.equals("Integer")) {
+
+                                                                        String variationDir = decideToIncreaseOrIncrease(msg.getSymptom(), qoOCustomizableParam);
+                                                                        if (variationDir != null) {
+                                                                            Map<String, String> oldParams = currHealRequest.getLastParamsForRemedies();
+                                                                            for (Map.Entry<String, String> entry : oldParams.entrySet()) {
+                                                                                switch (variationDir) {
+                                                                                    case "HIGH":
+                                                                                        newHealParams.put(entry.getKey(), String.valueOf(Integer.valueOf(entry.getValue()) + INC_STEP_FOR_INTEGER_PARAM));
+                                                                                        break;
+                                                                                    case "LOW":
+                                                                                        newHealParams.put(entry.getKey(), String.valueOf(Integer.valueOf(entry.getValue()) - DEC_STEP_FOR_INTEGER_PARAM));
+                                                                                        break;
+                                                                                    default:
+                                                                                        break;
                                                                                 }
-                                                                            } else {
-                                                                                newHealParams = currHealRequest.getLastParamsForRemedies();
                                                                             }
-                                                                        }
-
-                                                                        currHealRequest.performHeal(OBS_RATE, qoOPipelineToApplyForHeal, newHealParams);
-                                                                        currentlyHealedRequest.put(request_id, currHealRequest);
-                                                                        newRequestMapping.resetRequestHeal();
-                                                                        newRequestMapping.healRequestWith(qoOPipelineToApplyForHeal, currHealRequest.getRetries());
-
-                                                                        // We save changes into MongoDB
-                                                                        mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result4, throwable4) -> {
-                                                                            if (throwable4 == null) {
-                                                                                tellToPlanActor(new RFCMsgQoOAttr(HEAL, REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
-                                                                                mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result5, throwable5) -> {
-                                                                                    if (throwable5 != null) {
-                                                                                        log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
-                                                                                    }
-                                                                                });
-                                                                            }
-                                                                        });
-                                                                    } else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
-                                                                        // Already tried this solution and does not seem to work...
-                                                                        requestsToIgnore.add(retrievedRequest.getRequest_id());
-                                                                        currentlyHealedRequest.remove(retrievedRequest.getRequest_id());
-                                                                        retrievedRequest.addLog("Max retry attempts (" + String.valueOf(max_retries) + ") reached to heal this request. " +
-                                                                                "Last heal was tried with the pipeline " + currHealRequest.getLastTriedRemedy().pipeline + " to improve " +
-                                                                                currHealRequest.getLastHealFor().toString() + " with the following params: " +
-                                                                                currHealRequest.getLastParamsForRemedies().toString() + ".");
-                                                                        if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
-                                                                            retrievedRequest.addLog("Removing this request since it has a GUARANTEED Service Level Agreement.");
-                                                                            retrievedRequest.updateState(State.Status.REMOVED);
-                                                                            tellToPlanActor(new RFCMsgRequestRemove(RFCMAPEK.REMOVE, REQUEST, retrievedRequest));
                                                                         } else {
-                                                                            retrievedRequest.addLog("Impossible to ensure an acceptable QoO level for this request. " +
-                                                                                    "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
-                                                                            retrievedRequest.updateState(ENFORCED);
+                                                                            newHealParams = currHealRequest.getLastParamsForRemedies();
                                                                         }
-
-                                                                        newRequestMapping.resetRequestHeal();
-
-                                                                        // We save changes into MongoDB
-                                                                        mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result4, throwable4) -> {
-                                                                            if (throwable4 == null) {
-                                                                                tellToPlanActor(new RFCMsgQoOAttr(RFCMAPEK.RESET, REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
-                                                                                mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result5, throwable5) -> {
-                                                                                    if (throwable5 != null) {
-                                                                                        log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
-                                                                                    }
-                                                                                });
-                                                                            }
-                                                                        });
                                                                     }
+
+                                                                    currHealRequest.performHeal(OBS_RATE, qoOPipelineToApplyForHeal, newHealParams);
+                                                                    currentlyHealedRequest.put(request_id, currHealRequest);
+                                                                    newRequestMapping.resetRequestHeal();
+                                                                    newRequestMapping.healRequestWith(qoOPipelineToApplyForHeal, currHealRequest.getRetries());
+
+                                                                    // We save changes into MongoDB
+                                                                    mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result4, throwable4) -> {
+                                                                        if (throwable4 == null) {
+                                                                            tellToPlanActor(new RFCMsgQoOAttr(HEAL, REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
+                                                                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result5, throwable5) -> {
+                                                                                if (throwable5 != null) {
+                                                                                    log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                                                }
+                                                                            });
+                                                                        }
+                                                                    });
                                                                 } else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
-                                                                    // No suitable Pipeline for healing, removing Request if its level is "GUARANTEED"
+                                                                    // Already tried this solution and does not seem to work...
                                                                     requestsToIgnore.add(retrievedRequest.getRequest_id());
                                                                     currentlyHealedRequest.remove(retrievedRequest.getRequest_id());
+                                                                    retrievedRequest.addLog("Max retry attempts (" + String.valueOf(max_retries) + ") reached to heal this request. " +
+                                                                            "Last heal was tried with the pipeline " + currHealRequest.getLastTriedRemedy().pipeline + " to improve " +
+                                                                            currHealRequest.getLastHealFor().toString() + " with the following params: " +
+                                                                            currHealRequest.getLastParamsForRemedies().toString() + ".");
                                                                     if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
-                                                                        retrievedRequest.addLog("No suitable pipeline for healing. " +
-                                                                                "Rejecting this request since it has a GUARANTEED Service Level Agreement.");
+                                                                        retrievedRequest.addLog("Removing this request since it has a GUARANTEED Service Level Agreement.");
                                                                         retrievedRequest.updateState(State.Status.REMOVED);
                                                                         tellToPlanActor(new RFCMsgRequestRemove(RFCMAPEK.REMOVE, REQUEST, retrievedRequest));
                                                                     } else {
-                                                                        retrievedRequest.addLog("No suitable pipeline for healing. " +
+                                                                        retrievedRequest.addLog("Impossible to ensure an acceptable QoO level for this request. " +
                                                                                 "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
                                                                         retrievedRequest.updateState(ENFORCED);
                                                                     }
+
+                                                                    newRequestMapping.resetRequestHeal();
+
                                                                     // We save changes into MongoDB
-                                                                    mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
-                                                                        if (throwable != null) {
-                                                                            log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                                    mongoController.updateRequestMapping(retrievedRequest.getRequest_id(), newRequestMapping).whenComplete((result4, throwable4) -> {
+                                                                        if (throwable4 == null) {
+                                                                            tellToPlanActor(new RFCMsgQoOAttr(RFCMAPEK.RESET, REQUEST, currHealRequest, oldRequestMapping, newRequestMapping));
+                                                                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result5, throwable5) -> {
+                                                                                if (throwable5 != null) {
+                                                                                    log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                                                }
+                                                                            });
                                                                         }
                                                                     });
                                                                 }
+                                                            } else if (!requestsToIgnore.contains(retrievedRequest.getRequest_id())) {
+                                                                // No suitable Pipeline for healing, removing Request if its level is "GUARANTEED"
+                                                                requestsToIgnore.add(retrievedRequest.getRequest_id());
+                                                                currentlyHealedRequest.remove(retrievedRequest.getRequest_id());
+                                                                if (retrievedRequest.getQooConstraints().getSla_level().equals(QoORequirements.SLALevel.GUARANTEED)) {
+                                                                    retrievedRequest.addLog("No suitable pipeline for healing. " +
+                                                                            "Rejecting this request since it has a GUARANTEED Service Level Agreement.");
+                                                                    retrievedRequest.updateState(State.Status.REMOVED);
+                                                                    tellToPlanActor(new RFCMsgRequestRemove(RFCMAPEK.REMOVE, REQUEST, retrievedRequest));
+                                                                } else {
+                                                                    retrievedRequest.addLog("No suitable pipeline for healing. " +
+                                                                            "However, this request won't be removed since it has a BEST EFFORT Service Level Agreement.");
+                                                                    retrievedRequest.updateState(ENFORCED);
+                                                                }
+                                                                // We save changes into MongoDB
+                                                                mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result, throwable) -> {
+                                                                    if (throwable != null) {
+                                                                        log.error("Update of the Request " + retrievedRequest.getRequest_id() + " has failed");
+                                                                    }
+                                                                });
                                                             }
-                                                        }, context().dispatcher());
-                                            } else {
-                                                log.warning("Unable to retrieve Request Mapping for Request " + request_id + ". Operation skipped!");
-                                            }
-                                        });
-                                    } else {
-                                        log.warning("Unable to retrieve request " + request_id + ". Operation skipped!");
-                                    }
-                                });
-                            }
+                                                        }
+                                                    }, context().dispatcher());
+                                        } else {
+                                            log.warning("Unable to retrieve Request Mapping for Request " + request_id + ". Operation skipped!");
+                                        }
+                                    });
+                                } else {
+                                    log.warning("Unable to retrieve request " + request_id + ". Operation skipped!");
+                                }
+                            });
                         }
                     }
                 }
             }
-            // SymptomMsg messages - Virtual Sensors
-            else if (symptomMsgToCast.getSymptom() == CONNECTION_REPORT && symptomMsgToCast.getAbout() == SENSOR) {
-                SymptomMsgConnectionReport symptomMsg = (SymptomMsgConnectionReport) symptomMsgToCast;
-                log.info("Received Symptom : {} {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout(), symptomMsg.getConnectedSensors().toString());
-                // Only to log the symptom. Not doing anything since it only affects future iQAS Requests.
-            }
-            else if (symptomMsgToCast.getSymptom() == UPDATED && symptomMsgToCast.getAbout() == SENSOR) {
-                SymptomMsg symptomMsg = symptomMsgToCast;
-                log.info("Received Symptom : {} {}", symptomMsg.getSymptom(), symptomMsg.getAbout());
-                future(() -> fusekiController.findAllTopics(), context().dispatcher())
-                        .onComplete(new OnComplete<TopicList>() {
-                            public void onComplete(Throwable throwable, TopicList topicListResult) {
-                                if (throwable == null) { // Only continue if there was no error so far
-                                    topicList = topicListResult;
-                                }
+        }
+    }
+
+    private void actionsOnSymptomMsgConnectionReportMsg(SymptomMsgConnectionReport msg) {
+        // SymptomMsg messages - Virtual Sensors
+        if (msg.getSymptom() == CONNECTION_REPORT && msg.getAbout() == SENSOR) {
+            log.info("Received Symptom : {} {} {}", msg.getSymptom(), msg.getAbout(), msg.getConnectedSensors().toString());
+            // Only to log the symptom. Not doing anything since it only affects future iQAS Requests.
+        }
+    }
+
+    private void actionsOnSymptomMsg(SymptomMsg msg) {
+        // SymptomMsg messages - Virtual Sensors
+        if (msg.getSymptom() == UPDATED && msg.getAbout() == SENSOR) {
+            log.info("Received Symptom : {} {}", msg.getSymptom(), msg.getAbout());
+            future(() -> fusekiController.findAllTopics(), context().dispatcher())
+                    .onComplete(new OnComplete<TopicList>() {
+                        public void onComplete(Throwable throwable, TopicList topicListResult) {
+                            if (throwable == null) { // Only continue if there was no error so far
+                                topicList = topicListResult;
                             }
-                        }, context().dispatcher());
-                tellToPlanActor(new RFCMsg(RFCMAPEK.UPDATE, SENSOR));
-            }
+                        }
+                    }, context().dispatcher());
+            tellToPlanActor(new RFCMsg(RFCMAPEK.UPDATE, SENSOR));
         }
-        // TerminatedMsg messages
-        else if (message instanceof TerminatedMsg) {
-            TerminatedMsg terminatedMsg = (TerminatedMsg) message;
-            if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
-                log.info("Received TerminatedMsg message: {}", message);
-                getContext().stop(self());
-            }
-        }
-        else if (message instanceof String) {
-            log.info("Received String message: {}", message);
+    }
+
+    private void stopThisActor(TerminatedMsg msg) {
+        if (msg.getTargetToStop().path().equals(getSelf().path())) {
+            log.info("Received TerminatedMsg message: " + msg);
+            getContext().stop(self());
         }
     }
 
