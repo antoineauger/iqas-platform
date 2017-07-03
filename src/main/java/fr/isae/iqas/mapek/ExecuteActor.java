@@ -1,8 +1,8 @@
 package fr.isae.iqas.mapek;
 
 import akka.Done;
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Pair;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
  * Created by an.auger on 13/09/2016.
  */
 
-public class ExecuteActor extends UntypedActor {
+public class ExecuteActor extends AbstractActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource;
@@ -100,44 +100,47 @@ public class ExecuteActor extends UntypedActor {
     }
 
     @Override
-    public void onReceive(Object message) throws Exception {
-        // TerminatedMsg messages
-        if (message instanceof TerminatedMsg) {
-            TerminatedMsg terminatedMsg = (TerminatedMsg) message;
-            if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
-                log.info("Received TerminatedMsg message: {}", message);
-                if (stream != null) {
-                    killSwitch.shutdown();
-                }
-                if (kafkaActor != null) {
-                    log.info("Trying to stop " + kafkaActor.path().name());
-                    try {
-                        Future<Boolean> stopped = Patterns.gracefulStop(kafkaActor, Duration.create(5, TimeUnit.SECONDS));
-                        Await.result(stopped, Duration.create(5, TimeUnit.SECONDS));
-                        log.info("Successfully stopped " + kafkaActor.path());
-                    } catch (Exception e) {
-                        log.error(e.toString());
-                    }
-                    getContext().stop(kafkaActor);
-                }
-                getContext().stop(getSelf());
-            }
-        }
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(IPipeline.class, this::actionsOnIPipelineMsg)
+                .match(TerminatedMsg.class, this::stopThisActor)
+                .build();
+    }
+
+    private void actionsOnIPipelineMsg(IPipeline msg) {
         // IPipeline messages (= live UPDATE of the Pipeline)
-        else if (message instanceof IPipeline) {
-            // We use the UniqueKillSwitch to stop current stream
-            killSwitch.shutdown();
+        // We use the UniqueKillSwitch to stop current stream
+        killSwitch.shutdown();
 
-            IPipeline newPipelineToEnforce = (IPipeline) message;
-            log.info("Updating pipeline " + newPipelineToEnforce.getUniqueID());
+        log.info("Updating pipeline " + msg.getUniqueID());
 
-            stream = kafkaSource
-                    .viaMat(KillSwitches.single(), Keep.right())
-                    .viaMat(newPipelineToEnforce.getPipelineGraph(), Keep.both())
-                    .toMat(kafkaSink, Keep.both())
-                    .run(materializer);
+        stream = kafkaSource
+                .viaMat(KillSwitches.single(), Keep.right())
+                .viaMat(msg.getPipelineGraph(), Keep.both())
+                .toMat(kafkaSink, Keep.both())
+                .run(materializer);
 
-            killSwitch = stream.first().first();
+        killSwitch = stream.first().first();
+    }
+
+    private void stopThisActor(TerminatedMsg msg) {
+        if (msg.getTargetToStop().path().equals(getSelf().path())) {
+            log.info("Received TerminatedMsg message: {}", msg);
+            if (stream != null) {
+                killSwitch.shutdown();
+            }
+            if (kafkaActor != null) {
+                log.info("Trying to stop " + kafkaActor.path().name());
+                try {
+                    Future<Boolean> stopped = Patterns.gracefulStop(kafkaActor, Duration.create(5, TimeUnit.SECONDS));
+                    Await.result(stopped, Duration.create(5, TimeUnit.SECONDS));
+                    log.info("Successfully stopped " + kafkaActor.path());
+                } catch (Exception e) {
+                    log.error(e.toString());
+                }
+                getContext().stop(kafkaActor);
+            }
+            getContext().stop(getSelf());
         }
     }
 

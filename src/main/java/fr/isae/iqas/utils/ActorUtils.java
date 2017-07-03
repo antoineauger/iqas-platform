@@ -1,8 +1,8 @@
 package fr.isae.iqas.utils;
 
+import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
-import akka.actor.UntypedActorContext;
 import akka.util.Timeout;
 import scala.concurrent.Future;
 
@@ -13,25 +13,25 @@ import java.util.concurrent.TimeUnit;
  */
 public class ActorUtils {
 
-    public static ActorSelection getAutonomicManagerActorFromDirectChildren(UntypedActorContext context, ActorRef self) {
+    public static ActorSelection getAutonomicManagerActorFromDirectChildren(ActorContext context, ActorRef self) {
         return context.actorSelection(self.path().parent());
     }
 
-    public static ActorSelection getAnalyzeActorFromMAPEKchild(UntypedActorContext context, ActorRef self) {
+    public static ActorSelection getAnalyzeActorFromMAPEKchild(ActorContext context, ActorRef self) {
         return context.actorSelection(self.path().parent().child("analyzeActor"));
     }
 
-    public static ActorSelection getPlanActorFromMAPEKchild(UntypedActorContext context, ActorRef self) {
+    public static ActorSelection getPlanActorFromMAPEKchild(ActorContext context, ActorRef self) {
         return context.actorSelection(self.path().parent().child("planActor"));
         //return context.actorSelection(self.path().parent() + "/planActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
-    public static ActorSelection getPipelineWatcherActorFromMAPEKchild(UntypedActorContext context, ActorRef self) {
+    public static ActorSelection getPipelineWatcherActorFromMAPEKchild(ActorContext context, ActorRef self) {
         return context.actorSelection(self.path().parent().parent().parent().child("pipelineWatcherActor"));
         //return context.actorSelection(self.path().parent().parent().parent() + "/pipelineWatcherActor").resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 
-    public static Future<ActorRef> getPipelineWatcherActor(UntypedActorContext context, String pathPipelineWatcherActor) {
+    public static Future<ActorRef> getPipelineWatcherActor(ActorContext context, String pathPipelineWatcherActor) {
         return context.actorSelection(pathPipelineWatcherActor).resolveOne(new Timeout(5, TimeUnit.SECONDS));
     }
 

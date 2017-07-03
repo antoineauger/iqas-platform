@@ -1,8 +1,8 @@
 package fr.isae.iqas.server;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.config.Config;
@@ -26,7 +26,7 @@ import static fr.isae.iqas.model.request.State.Status.*;
  * The APIGatewayActor is in charge of pre-determine if incoming Requests can be satisfy or not
  * It is also responsible of storing and maintaining a repository with all Requests
  */
-public class APIGatewayActor extends UntypedActor {
+public class APIGatewayActor extends AbstractActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private Properties prop;
@@ -51,58 +51,63 @@ public class APIGatewayActor extends UntypedActor {
     }
 
     @Override
-    public void onReceive(Object message) throws Throwable {
-        if (message instanceof RESTRequestMsg) {
-            RESTRequestMsg.RequestSubject requestSubject = ((RESTRequestMsg) message).getRequestSubject();
-            Request incomingRequest = ((RESTRequestMsg) message).getRequest();
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(RESTRequestMsg.class, this::actionsOnRESTRequestMsg)
+                .match(SymptomMsg.class, this::actionsOnSymptomMsgMsg)
+                .build();
+    }
 
-            log.info("Received " + requestSubject + " action for request with id " + incomingRequest.getRequest_id());
+    private void actionsOnRESTRequestMsg(RESTRequestMsg msg) {
+        RESTRequestMsg.RequestSubject requestSubject = msg.getRequestSubject();
+        Request incomingRequest = msg.getRequest();
 
-            if (requestSubject.equals(POST)) { // Creation
-                mongoController.putRequest(incomingRequest).whenComplete((result, throwable) -> {
-                    if (result) {
-                        autoManager.tell(incomingRequest, getSelf());
-                    }
-                    else {
-                        log.error("Insert of the Request " + incomingRequest.getRequest_id() + " has failed. " +
-                                "Not telling anything to Autonomic Managers.");
-                    }
-                });
-            }
-            else if (requestSubject.equals(GET)) {
-                log.error("This should never happen: GET responsibility is directly handled by RESTServer");
-            }
-            else if (requestSubject.equals(DELETE)) { // Deletion
-                mongoController.getSpecificRequest(incomingRequest.getRequest_id()).whenComplete((retrievedRequest, throwable) -> {
-                    if (throwable == null) {
-                        if (retrievedRequest.isInState(ENFORCED) || retrievedRequest.isInState(HEALED)) {
-                            retrievedRequest.addLog("Request deleted by the user.");
-                            retrievedRequest.updateState(REMOVED);
-                            mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result2, throwable2) -> {
-                                if (result2) {
-                                    log.info("Request with id " + retrievedRequest.getRequest_id() + " successfully marked for deletion.");
-                                    autoManager.tell(retrievedRequest, getSelf());
-                                } else {
-                                    log.warning("Unable to mark request " + retrievedRequest.getRequest_id() + " for deletion. " +
-                                            "Operation skipped!");
-                                }
-                            });
-                        }
-                    }
-                    else {
-                        log.warning("Unable to retrieve request " + incomingRequest.getRequest_id() + ". Operation skipped!");
-                    }
-                });
-            }
-            else {
-                log.error("Unknown REST verb (" + requestSubject + ") for request with id " + incomingRequest.getRequest_id());
-            }
+        log.info("Received " + requestSubject + " action for request with id " + incomingRequest.getRequest_id());
+
+        if (requestSubject.equals(POST)) { // Creation
+            mongoController.putRequest(incomingRequest).whenComplete((result, throwable) -> {
+                if (result) {
+                    autoManager.tell(incomingRequest, getSelf());
+                }
+                else {
+                    log.error("Insert of the Request " + incomingRequest.getRequest_id() + " has failed. " +
+                            "Not telling anything to Autonomic Managers.");
+                }
+            });
         }
-        else if (message instanceof SymptomMsg) {
-            SymptomMsg symptomMsg = (SymptomMsg) message;
-            if (symptomMsg.getSymptom() == SymptomMAPEK.UPDATED && symptomMsg.getAbout() == EntityMAPEK.SENSOR) {
-                autoManager.tell(symptomMsg, getSelf());
-            }
+        else if (requestSubject.equals(GET)) {
+            log.error("This should never happen: GET responsibility is directly handled by RESTServer");
+        }
+        else if (requestSubject.equals(DELETE)) { // Deletion
+            mongoController.getSpecificRequest(incomingRequest.getRequest_id()).whenComplete((retrievedRequest, throwable) -> {
+                if (throwable == null) {
+                    if (retrievedRequest.isInState(ENFORCED) || retrievedRequest.isInState(HEALED)) {
+                        retrievedRequest.addLog("Request deleted by the user.");
+                        retrievedRequest.updateState(REMOVED);
+                        mongoController.updateRequest(retrievedRequest.getRequest_id(), retrievedRequest).whenComplete((result2, throwable2) -> {
+                            if (result2) {
+                                log.info("Request with id " + retrievedRequest.getRequest_id() + " successfully marked for deletion.");
+                                autoManager.tell(retrievedRequest, getSelf());
+                            } else {
+                                log.warning("Unable to mark request " + retrievedRequest.getRequest_id() + " for deletion. " +
+                                        "Operation skipped!");
+                            }
+                        });
+                    }
+                }
+                else {
+                    log.warning("Unable to retrieve request " + incomingRequest.getRequest_id() + ". Operation skipped!");
+                }
+            });
+        }
+        else {
+            log.error("Unknown REST verb (" + requestSubject + ") for request with id " + incomingRequest.getRequest_id());
+        }
+    }
+
+    private void actionsOnSymptomMsgMsg(SymptomMsg msg) {
+        if (msg.getSymptom() == SymptomMAPEK.UPDATED && msg.getAbout() == EntityMAPEK.SENSOR) {
+            autoManager.tell(msg, getSelf());
         }
     }
 }

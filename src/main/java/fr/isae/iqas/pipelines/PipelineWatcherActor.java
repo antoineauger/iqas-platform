@@ -1,6 +1,6 @@
 package fr.isae.iqas.pipelines;
 
-import akka.actor.UntypedActor;
+import akka.actor.AbstractActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import fr.isae.iqas.config.Config;
@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * Created by an.auger on 02/02/2017.
  */
 
-public class PipelineWatcherActor extends UntypedActor {
+public class PipelineWatcherActor extends AbstractActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private final List<Class> providedPipelines = Arrays.asList(new Class[] {
@@ -70,8 +70,15 @@ public class PipelineWatcherActor extends UntypedActor {
     }
 
     @Override
-    public void onReceive(Object message) throws Throwable {
-        if (message.equals("tick")) {
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(String.class, this::actionsOnStringMsg)
+                .match(PipelineRequestMsg.class, this::actionsOnPipelineRequestMsg)
+                .build();
+    }
+
+    private void actionsOnStringMsg(String msg) {
+        if (msg.equals("tick")) {
             // send another periodic tick after the specified delay
             getContext().system().scheduler().scheduleOnce(
                     rateToCheck,
@@ -79,31 +86,35 @@ public class PipelineWatcherActor extends UntypedActor {
 
             checkPipelines();
         }
-        else if (message instanceof PipelineRequestMsg) {
-            ArrayList<Pipeline> objectToReturn = new ArrayList<>();
-            PipelineRequestMsg request = (PipelineRequestMsg) message;
-            if (request.isGetAllPipelines()) { // Only used for displaying Pipeline names on iQAS API homepage
-                log.debug("PipelineRequestMsg: all available and concrete pipelines have been asked");
-                pipelineObjects.forEach((k, v) -> {
-                    try {
-                        IPipeline pipelineTemp = (IPipeline) v.newInstance();
-                        if (!providedPipelines.contains(pipelineTemp.getClass())) { // If the pipeline is a custom-defined one
-                            objectToReturn.add(new Pipeline(pipelineTemp.getPipelineID(), pipelineTemp.getPipelineName(), pipelineTemp));
-                        }
-                    } catch (InstantiationException | IllegalAccessException e) {
-                        e.printStackTrace();
+    }
+
+    private void actionsOnPipelineRequestMsg(PipelineRequestMsg msg) {
+        ArrayList<Pipeline> objectToReturn = new ArrayList<>();
+        if (msg.isGetAllPipelines()) { // Only used for displaying Pipeline names on iQAS API homepage
+            log.debug("PipelineRequestMsg: all available and concrete pipelines have been asked");
+            pipelineObjects.forEach((k, v) -> {
+                try {
+                    IPipeline pipelineTemp = (IPipeline) v.newInstance();
+                    if (!providedPipelines.contains(pipelineTemp.getClass())) { // If the pipeline is a custom-defined one
+                        objectToReturn.add(new Pipeline(pipelineTemp.getPipelineID(), pipelineTemp.getPipelineName(), pipelineTemp));
                     }
-                });
-            }
-            else {
-                if (pipelineObjects.containsKey(request.getSpecificPipelineToGet())) {
-                    log.info("PipelineRequestMsg: concrete pipeline with id \"" + request.getSpecificPipelineToGet() + "\" has been asked");
-                    IPipeline pipelineTemp = (IPipeline) pipelineObjects.get(request.getSpecificPipelineToGet()).newInstance();
+                } catch (InstantiationException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+        else {
+            if (pipelineObjects.containsKey(msg.getSpecificPipelineToGet())) {
+                log.info("PipelineRequestMsg: concrete pipeline with id \"" + msg.getSpecificPipelineToGet() + "\" has been asked");
+                try {
+                    IPipeline pipelineTemp = (IPipeline) pipelineObjects.get(msg.getSpecificPipelineToGet()).newInstance();
                     objectToReturn.add(new Pipeline(pipelineTemp.getPipelineID(), pipelineTemp.getPipelineName(), pipelineTemp));
+                } catch (InstantiationException | IllegalAccessException e) {
+                    e.printStackTrace();
                 }
             }
-            getSender().tell(objectToReturn, getSelf());
         }
+        getSender().tell(objectToReturn, getSelf());
     }
 
     private List<String> getAllPipelineFiles() {

@@ -1,6 +1,6 @@
 package fr.isae.iqas.kafka;
 
-import akka.actor.UntypedActor;
+import akka.actor.AbstractActor;
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
 import kafka.utils.ZKStringSerializer$;
@@ -13,7 +13,7 @@ import java.util.Properties;
 /**
  * Created by an.auger on 09/02/2017.
  */
-public class KafkaAdminActor extends UntypedActor {
+public class KafkaAdminActor extends AbstractActor {
     private static final int sessionTimeoutMs = 10 * 1000;
     private static final int connectionTimeoutMs = 8 * 1000;
 
@@ -24,21 +24,24 @@ public class KafkaAdminActor extends UntypedActor {
     }
 
     @Override
-    public void onReceive(Object message) throws Throwable {
-        if (message instanceof KafkaTopicMsg) {
-            KafkaTopicMsg kafkaTopicMsg = (KafkaTopicMsg) message;
-            boolean result = false;
-            if (kafkaTopicMsg.getTopicAction() == KafkaTopicMsg.TopicAction.CREATE) {
-                result = createTopic(kafkaTopicMsg.getTopic());
-            }
-            else if (kafkaTopicMsg.getTopicAction() == KafkaTopicMsg.TopicAction.DELETE) {
-                result = deleteTopic(kafkaTopicMsg.getTopic());
-            }
-            else if (kafkaTopicMsg.getTopicAction() == KafkaTopicMsg.TopicAction.RESET) {
-                result = resetTopic(kafkaTopicMsg.getTopic());
-            }
-            getSender().tell(result, getSelf());
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(KafkaTopicMsg.class, this::actionsOnKafkaTopicMsg)
+                .build();
+    }
+
+    private void actionsOnKafkaTopicMsg(KafkaTopicMsg msg) {
+        boolean result = false;
+        if (msg.getTopicAction() == KafkaTopicMsg.TopicAction.CREATE) {
+            result = createTopic(msg.getTopic());
         }
+        else if (msg.getTopicAction() == KafkaTopicMsg.TopicAction.DELETE) {
+            result = deleteTopic(msg.getTopic());
+        }
+        else if (msg.getTopicAction() == KafkaTopicMsg.TopicAction.RESET) {
+            result = resetTopic(msg.getTopic());
+        }
+        getSender().tell(result, getSelf());
     }
 
     private boolean resetTopic(String kafkaTopicToReset) {

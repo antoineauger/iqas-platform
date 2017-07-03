@@ -1,6 +1,6 @@
 package fr.isae.iqas.mapek;
 
-import akka.actor.UntypedActor;
+import akka.actor.AbstractActor;
 import akka.dispatch.OnComplete;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -32,7 +32,7 @@ import static fr.isae.iqas.utils.ActorUtils.getAutonomicManagerActorFromDirectCh
  * Created by an.auger on 13/09/2016.
  */
 
-public class MonitorActor extends UntypedActor {
+public class MonitorActor extends AbstractActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private Properties prop;
@@ -102,9 +102,20 @@ public class MonitorActor extends UntypedActor {
     }
 
     @Override
-    public void onReceive(Object message) {
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(String.class, this::actionsOnStringMsg)
+                .match(Request.class, this::actionsOnRequestMsg)
+                .match(ObsRateReportMsg.class, this::actionsOnObsRateReportMsg)
+                .match(QoOReportMsg.class, this::actionsOnQoOReportMsg)
+                .match(SymptomMsg.class, this::actionsOnSymptomMsg)
+                .match(TerminatedMsg.class, this::stopThisActor)
+                .build();
+    }
+
+    private void actionsOnStringMsg(String msg) {
         // Tick messages
-        if (message.equals("tick")) {
+        if (msg.equals("tick")) {
             // send another periodic tick after the specified delay
             getContext().system().scheduler().scheduleOnce(
                     tickMAPEK,
@@ -142,96 +153,87 @@ public class MonitorActor extends UntypedActor {
                 //storeVirtualSensorStates();
             }
         }
-        // Request messages
-        else if (message instanceof Request) {
-            Request requestTemp = (Request) message;
-            log.info("Received Request : {}", requestTemp.getRequest_id());
+    }
 
-            if (requestTemp.getCurrent_status() == SUBMITTED) { // Valid Request
-                SymptomMsgRequest symptomMsgToForward = new SymptomMsgRequest(NEW, REQUEST, requestTemp);
-                storeObsRateRequirements(requestTemp);
-                qooQualityBuffer.put(requestTemp.getRequest_id(), new CircularFifoBuffer(nbEventsBeforeSymptom));
-                numberObservedSymptomsObsRate.put(requestTemp.getRequest_id(), 0);
-                startDateCount.put(requestTemp.getRequest_id(), System.currentTimeMillis());
-                countByRequest.put(requestTemp.getRequest_id(), 0);
-                getAnalyzeActorFromMAPEKchild(getContext(), getSelf()).tell(symptomMsgToForward, getSelf());
-            }
-            else if (requestTemp.getCurrent_status() == REMOVED) { // Request deleted by the user
-                SymptomMsgRequest symptomMsgToForward = new SymptomMsgRequest(MAPEKenums.SymptomMAPEK.REMOVED, REQUEST, requestTemp);
-                getAnalyzeActorFromMAPEKchild(getContext(), getSelf()).tell(symptomMsgToForward, getSelf());
-            }
-            else if (requestTemp.getCurrent_status() == REJECTED) {
-                // Do nothing since the Request has already been rejected
-            }
-            else { // Other cases should raise an error
-                log.error("Unknown state for request " + requestTemp.getRequest_id() + " at this stage");
-            }
+    private void actionsOnRequestMsg(Request msg) {
+        log.info("Received Request : {}", msg.getRequest_id());
+        if (msg.getCurrent_status() == SUBMITTED) { // Valid Request
+            SymptomMsgRequest symptomMsgToForward = new SymptomMsgRequest(NEW, REQUEST, msg);
+            storeObsRateRequirements(msg);
+            qooQualityBuffer.put(msg.getRequest_id(), new CircularFifoBuffer(nbEventsBeforeSymptom));
+            numberObservedSymptomsObsRate.put(msg.getRequest_id(), 0);
+            startDateCount.put(msg.getRequest_id(), System.currentTimeMillis());
+            countByRequest.put(msg.getRequest_id(), 0);
+            getAnalyzeActorFromMAPEKchild(getContext(), getSelf()).tell(symptomMsgToForward, getSelf());
         }
-        // ObsRateReportMsg messages
-        else if (message instanceof ObsRateReportMsg) {
-            ObsRateReportMsg tempObsRateReportMsg = (ObsRateReportMsg) message;
-            int totalObsFromSensors = 0;
-            if (tempObsRateReportMsg.getObsRateByTopic().size() > 0) {
-                log.info("QoO report message: {} {}", tempObsRateReportMsg.getUniquePipelineID(), tempObsRateReportMsg.getObsRateByTopic().toString());
-                totalObsFromSensors = tempObsRateReportMsg.getObsRateByTopic().values().stream().mapToInt(Number::intValue).sum();
-            }
-            if (mappingPipelinesRequests.containsKey(tempObsRateReportMsg.getUniquePipelineID())) { // if there is a constraint on OBS_RATE for a Request using this Pipeline
-                for (String s : mappingPipelinesRequests.get(tempObsRateReportMsg.getUniquePipelineID())) { // for all concerned Requests associated with this base Pipeline
-                    if (countByRequest.containsKey(s)) {
-                        countByRequest.put(s, countByRequest.get(s) + totalObsFromSensors);
-                    }
+        else if (msg.getCurrent_status() == REMOVED) { // Request deleted by the user
+            SymptomMsgRequest symptomMsgToForward = new SymptomMsgRequest(MAPEKenums.SymptomMAPEK.REMOVED, REQUEST, msg);
+            getAnalyzeActorFromMAPEKchild(getContext(), getSelf()).tell(symptomMsgToForward, getSelf());
+        }
+        else if (msg.getCurrent_status() == REJECTED) {
+            // Do nothing since the Request has already been rejected
+        }
+        else { // Other cases should raise an error
+            log.error("Unknown state for request " + msg.getRequest_id() + " at this stage");
+        }
+    }
+
+    private void actionsOnObsRateReportMsg(ObsRateReportMsg msg) {
+        int totalObsFromSensors = 0;
+        if (msg.getObsRateByTopic().size() > 0) {
+            log.info("QoO report message: {} {}", msg.getUniquePipelineID(), msg.getObsRateByTopic().toString());
+            totalObsFromSensors = msg.getObsRateByTopic().values().stream().mapToInt(Number::intValue).sum();
+        }
+        if (mappingPipelinesRequests.containsKey(msg.getUniquePipelineID())) { // if there is a constraint on OBS_RATE for a Request using this Pipeline
+            for (String s : mappingPipelinesRequests.get(msg.getUniquePipelineID())) { // for all concerned Requests associated with this base Pipeline
+                if (countByRequest.containsKey(s)) {
+                    countByRequest.put(s, countByRequest.get(s) + totalObsFromSensors);
                 }
             }
         }
-        // QoOReportMsg messages
-        else if (message instanceof QoOReportMsg) {
-            QoOReportMsg tempQoOReportMsg = (QoOReportMsg) message;
-            if (tempQoOReportMsg.getQooAttributesMap().size() > 0) {
-                log.info("QoO report message: {} {} {} {}", tempQoOReportMsg.getUniquePipelineID(), tempQoOReportMsg.getProducer(), tempQoOReportMsg.getRequestID(), tempQoOReportMsg.getQooAttributesMap().toString());
-                qooQualityBuffer.putIfAbsent(tempQoOReportMsg.getRequestID(), new CircularFifoBuffer(5));
-                qooQualityBuffer.get(tempQoOReportMsg.getRequestID()).add(new QoOReportMsg(tempQoOReportMsg));
+    }
+
+    private void actionsOnQoOReportMsg(QoOReportMsg msg) {
+        if (msg.getQooAttributesMap().size() > 0) {
+            log.info("QoO report message: {} {} {} {}", msg.getUniquePipelineID(), msg.getProducer(), msg.getRequestID(), msg.getQooAttributesMap().toString());
+            qooQualityBuffer.putIfAbsent(msg.getRequestID(), new CircularFifoBuffer(5));
+            qooQualityBuffer.get(msg.getRequestID()).add(new QoOReportMsg(msg));
+        }
+    }
+
+    private void actionsOnSymptomMsg(SymptomMsg msg) {
+        if (msg.getSymptom() == NEW && msg.getAbout() == PIPELINE) { // Pipeline NEW
+            SymptomMsgPipelineCreation symptomMsg = (SymptomMsgPipelineCreation) msg;
+            log.info("NEW IngestPipeline: {} {}", symptomMsg.getUniqueIDPipeline(), symptomMsg.getRequestID());
+            mappingPipelinesRequests.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new HashSet<>());
+            mappingPipelinesRequests.get(symptomMsg.getUniqueIDPipeline()).add(symptomMsg.getRequestID());
+        }
+        else if (msg.getSymptom() == MAPEKenums.SymptomMAPEK.REMOVED && msg.getAbout() == PIPELINE) { // Pipeline REMOVED
+            SymptomMsgRemovedPipeline symptomMsg = (SymptomMsgRemovedPipeline) msg;
+            if (mappingPipelinesRequests.containsKey(symptomMsg.getUniqueIDPipeline())) {
+                log.info("IngestPipeline " + symptomMsg.getUniqueIDPipeline() + " is no longer active, removing it");
+                mappingPipelinesRequests.remove(symptomMsg.getUniqueIDPipeline());
             }
         }
-        // SymptomMsg messages
-        else if (message instanceof SymptomMsg) {
-            SymptomMsg symptomMsgToCast = (SymptomMsg) message;
-            if (symptomMsgToCast.getSymptom() == NEW && symptomMsgToCast.getAbout() == PIPELINE) { // Pipeline NEW
-                SymptomMsgPipelineCreation symptomMsg = (SymptomMsgPipelineCreation) symptomMsgToCast;
-                log.info("NEW IngestPipeline: {} {}", symptomMsg.getUniqueIDPipeline(), symptomMsg.getRequestID());
-                mappingPipelinesRequests.putIfAbsent(symptomMsg.getUniqueIDPipeline(), new HashSet<>());
-                mappingPipelinesRequests.get(symptomMsg.getUniqueIDPipeline()).add(symptomMsg.getRequestID());
-            }
-            else if (symptomMsgToCast.getSymptom() == MAPEKenums.SymptomMAPEK.REMOVED && symptomMsgToCast.getAbout() == PIPELINE) { // Pipeline REMOVED
-                SymptomMsgRemovedPipeline symptomMsg = (SymptomMsgRemovedPipeline) symptomMsgToCast;
-                if (mappingPipelinesRequests.containsKey(symptomMsg.getUniqueIDPipeline())) {
-                    log.info("IngestPipeline " + symptomMsg.getUniqueIDPipeline() + " is no longer active, removing it");
-                    mappingPipelinesRequests.remove(symptomMsg.getUniqueIDPipeline());
-                }
-            }
-            else if (symptomMsgToCast.getSymptom() == MAPEKenums.SymptomMAPEK.REMOVED && symptomMsgToCast.getAbout() == REQUEST) { // Request REMOVED
-                SymptomMsgRequest symptomMsg = (SymptomMsgRequest) symptomMsgToCast;
-                log.info("Request " + symptomMsg.getAttachedRequest().getRequest_id() + " has been removed, cleaning up resources");
-                qooQualityBuffer.remove(symptomMsg.getAttachedRequest().getRequest_id());
-                minObsRateByRequest.remove(symptomMsg.getAttachedRequest().getRequest_id());
-                numberObservedSymptomsObsRate.remove(symptomMsg.getAttachedRequest().getRequest_id());
-                startDateCount.remove(symptomMsg.getAttachedRequest().getRequest_id());
-                countByRequest.remove(symptomMsg.getAttachedRequest().getRequest_id());
-            }
-            else if (symptomMsgToCast.getSymptom() == MAPEKenums.SymptomMAPEK.UPDATED && symptomMsgToCast.getAbout() == SENSOR) { // Sensor UPDATE
-                getAnalyzeActorFromMAPEKchild(getContext(), getSelf())
-                        .tell(new SymptomMsg(MAPEKenums.SymptomMAPEK.UPDATED, SENSOR), getSelf());
-            }
+        else if (msg.getSymptom() == MAPEKenums.SymptomMAPEK.REMOVED && msg.getAbout() == REQUEST) { // Request REMOVED
+            SymptomMsgRequest symptomMsg = (SymptomMsgRequest) msg;
+            log.info("Request " + symptomMsg.getAttachedRequest().getRequest_id() + " has been removed, cleaning up resources");
+            qooQualityBuffer.remove(symptomMsg.getAttachedRequest().getRequest_id());
+            minObsRateByRequest.remove(symptomMsg.getAttachedRequest().getRequest_id());
+            numberObservedSymptomsObsRate.remove(symptomMsg.getAttachedRequest().getRequest_id());
+            startDateCount.remove(symptomMsg.getAttachedRequest().getRequest_id());
+            countByRequest.remove(symptomMsg.getAttachedRequest().getRequest_id());
         }
-        // TerminatedMsg messages
-        else if (message instanceof TerminatedMsg) {
-            TerminatedMsg terminatedMsg = (TerminatedMsg) message;
-            if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
-                log.info("Received TerminatedMsg message: {}", message);
-                getContext().stop(self());
-            }
+        else if (msg.getSymptom() == MAPEKenums.SymptomMAPEK.UPDATED && msg.getAbout() == SENSOR) { // Sensor UPDATE
+            getAnalyzeActorFromMAPEKchild(getContext(), getSelf())
+                    .tell(new SymptomMsg(MAPEKenums.SymptomMAPEK.UPDATED, SENSOR), getSelf());
         }
-        else {
-            unhandled(message);
+    }
+
+    private void stopThisActor(TerminatedMsg msg) {
+        if (msg.getTargetToStop().path().equals(getSelf().path())) {
+            log.info("Received TerminatedMsg message: " + msg);
+            getContext().stop(self());
         }
     }
 

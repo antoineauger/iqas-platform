@@ -1,9 +1,9 @@
 package fr.isae.iqas.mapek;
 
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
 import akka.dispatch.OnComplete;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -45,7 +45,7 @@ import static fr.isae.iqas.utils.PipelineUtils.*;
 /**
  * Created by an.auger on 13/09/2016.
  */
-public class PlanActor extends UntypedActor {
+public class PlanActor extends AbstractActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private Config iqasConfig;
@@ -105,146 +105,148 @@ public class PlanActor extends UntypedActor {
     }
 
     @Override
-    public void onReceive(Object message) throws Exception {
-        // RFCs messages
-        if (message instanceof RFCMsg) {
-            log.info("Received RFC message: {}", message);
-            RFCMsg rfcMsgToCast = (RFCMsg) message;
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(RFCMsgRequestCreate.class, this::actionsOnRFCMsgRequestCreateMsg)
+                .match(RFCMsgRequestRemove.class, this::actionsOnRFCMsgRequestRemoveMsg)
+                .match(RFCMsgQoOAttr.class, this::actionsOnRFCMsgQoOAttrMsg)
+                .match(RFCMsg.class, this::actionsOnRFCMsg)
+                .match(TerminatedMsg.class, this::stopThisActor)
+                .build();
+    }
 
-            // RFCs messages - Request CREATE
-            if (rfcMsgToCast.getRfc() == RFCMAPEK.CREATE && rfcMsgToCast.getAbout() == EntityMAPEK.REQUEST) {
-                RFCMsgRequestCreate rfcMsg = (RFCMsgRequestCreate) rfcMsgToCast;
-                Request incomingRequest = rfcMsg.getRequest();
-                RequestMapping requestMapping = rfcMsg.getNewRequestMapping();
+    private void actionsOnRFCMsgRequestCreateMsg(RFCMsgRequestCreate msg) {
+        // RFCs messages - Request CREATE
+        if (msg.getRfc() == RFCMAPEK.CREATE && msg.getAbout() == EntityMAPEK.REQUEST) {
+            Request incomingRequest = msg.getRequest();
+            RequestMapping requestMapping = msg.getNewRequestMapping();
 
-                // Creation of all topics
-                requestMapping.getAllTopics().forEach((key, value) -> {
-                    if (!value.isSource()) {
-                        ActionMsg action = new ActionMsgKafka(ActionMAPEK.CREATE,
-                                EntityMAPEK.KAFKA_TOPIC,
-                                key);
+            // Creation of all topics
+            requestMapping.getAllTopics().forEach((key, value) -> {
+                if (!value.isSource()) {
+                    ActionMsg action = new ActionMsgKafka(ActionMAPEK.CREATE,
+                            EntityMAPEK.KAFKA_TOPIC,
+                            key);
 
-                        performAction(action);
-                    }
-                });
+                    performAction(action);
+                }
+            });
 
-                future(() -> fusekiController.findAllSensorCapabilities(), context().dispatcher())
-                        .onComplete(new OnComplete<SensorCapabilityList>() {
-                            public void onComplete(Throwable throwable, SensorCapabilityList sensorCapabilityList) {
-                                if (throwable != null) {
-                                    log.error("Error when retrieving sensor capabilities. " + throwable.toString());
+            future(() -> fusekiController.findAllSensorCapabilities(), context().dispatcher())
+                    .onComplete(new OnComplete<SensorCapabilityList>() {
+                        public void onComplete(Throwable throwable, SensorCapabilityList sensorCapabilityList) {
+                            if (throwable != null) {
+                                log.error("Error when retrieving sensor capabilities. " + throwable.toString());
+                            } else {
+                                Map<String, Map<String, String>> qooParamsForAllTopics = new ConcurrentHashMap<>();
+                                for (SensorCapability s : sensorCapabilityList.sensorCapabilities) {
+                                    qooParamsForAllTopics.putIfAbsent(s.sensor_id, new ConcurrentHashMap<>());
+                                    qooParamsForAllTopics.get(s.sensor_id).put("min_value", s.min_value);
+                                    qooParamsForAllTopics.get(s.sensor_id).put("max_value", s.max_value);
                                 }
-                                else {
-                                    Map<String, Map<String, String>> qooParamsForAllTopics = new ConcurrentHashMap<>();
-                                    for (SensorCapability s : sensorCapabilityList.sensorCapabilities) {
-                                        qooParamsForAllTopics.putIfAbsent(s.sensor_id, new ConcurrentHashMap<>());
-                                        qooParamsForAllTopics.get(s.sensor_id).put("min_value", s.min_value);
-                                        qooParamsForAllTopics.get(s.sensor_id).put("max_value", s.max_value);
-                                    }
 
-                                    // The incoming request has no common points with the enforced ones
-                                    if (requestMapping.getConstructedFromRequest().equals("")) {
-                                        buildGraphForFirstTime(requestMapping, incomingRequest, qooParamsForAllTopics);
-                                    }
-                                    else { // The incoming request may reuse existing enforced requests
-                                        TopicEntity beforeLastTopic = requestMapping.getPrimarySources().get(0);
-                                        Set<String> currTopicSet = new HashSet<>();
-                                        currTopicSet.add(beforeLastTopic.getName());
-                                        final int finalmaxLevelDepth = beforeLastTopic.getLevel();
-                                        TopicEntity finalSinkForApp = requestMapping.getFinalSink();
+                                // The incoming request has no common points with the enforced ones
+                                if (requestMapping.getConstructedFromRequest().equals("")) {
+                                    buildGraphForFirstTime(requestMapping, incomingRequest, qooParamsForAllTopics);
+                                } else { // The incoming request may reuse existing enforced requests
+                                    TopicEntity beforeLastTopic = requestMapping.getPrimarySources().get(0);
+                                    Set<String> currTopicSet = new HashSet<>();
+                                    currTopicSet.add(beforeLastTopic.getName());
+                                    final int finalmaxLevelDepth = beforeLastTopic.getLevel();
+                                    TopicEntity finalSinkForApp = requestMapping.getFinalSink();
 
-                                        retrievePipeline("OutputPipeline").whenComplete((pipeline, throwable2) -> {
-                                            if (throwable2 != null) {
-                                                log.error(throwable2.toString());
-                                            }
-                                            else {
-                                                // Setting request_id, temp_id and other options for the retrieved Pipeline
-                                                pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
-                                                pipeline.setTempID(requestMapping.getPrimarySources().get(0).getEnforcedPipelines()
-                                                        .get(requestMapping.getFinalSink().getName()).split("_")[1]);
+                                    retrievePipeline("OutputPipeline").whenComplete((pipeline, throwable2) -> {
+                                        if (throwable2 != null) {
+                                            log.error(throwable2.toString());
+                                        } else {
+                                            // Setting request_id, temp_id and other options for the retrieved Pipeline
+                                            pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
+                                            pipeline.setTempID(requestMapping.getPrimarySources().get(0).getEnforcedPipelines()
+                                                    .get(requestMapping.getFinalSink().getName()).split("_")[1]);
 
-                                                pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
-                                                pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
+                                            pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
+                                            pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
-                                                // Specific settings since it is an OutputPipeline
-                                                setOptionsForOutputPipeline((OutputPipeline) pipeline, iqasConfig, incomingRequest, virtualSensorList, qooBaseModel);
+                                            // Specific settings since it is an OutputPipeline
+                                            setOptionsForOutputPipeline((OutputPipeline) pipeline, iqasConfig, incomingRequest, virtualSensorList, qooBaseModel);
 
-                                                ActionMsg action = new ActionMsgPipeline(ActionMAPEK.APPLY,
-                                                        EntityMAPEK.PIPELINE,
-                                                        pipeline,
-                                                        incomingRequest.getObs_level(),
-                                                        currTopicSet,
-                                                        finalSinkForApp.getName(),
-                                                        requestMapping.getRequest_id(),
-                                                        requestMapping.getConstructedFromRequest(),
-                                                        finalmaxLevelDepth);
+                                            ActionMsg action = new ActionMsgPipeline(ActionMAPEK.APPLY,
+                                                    EntityMAPEK.PIPELINE,
+                                                    pipeline,
+                                                    incomingRequest.getObs_level(),
+                                                    currTopicSet,
+                                                    finalSinkForApp.getName(),
+                                                    requestMapping.getRequest_id(),
+                                                    requestMapping.getConstructedFromRequest(),
+                                                    finalmaxLevelDepth);
 
-                                                performAction(action);
-                                            }
-                                        });
-                                    }
-                                }
-                            }
-                        }, context().dispatcher());
-
-                incomingRequest.addLog("Successfully created pipeline graph by enforcing following qoo constraints: "
-                        + incomingRequest.getQooConstraints().getIqas_params().toString());
-                incomingRequest.updateState(State.Status.ENFORCED);
-                mongoController.updateRequest(incomingRequest.getRequest_id(), incomingRequest).whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        log.error("Update of the Request " + incomingRequest.getRequest_id() + " has failed");
-                    }
-                });
-            }
-
-            // RFCs messages - Request REMOVE
-            else if (rfcMsgToCast.getRfc() == RFCMAPEK.REMOVE && rfcMsgToCast.getAbout() == EntityMAPEK.REQUEST) { // Request deleted by the user
-                RFCMsgRequestRemove rfcMsg = (RFCMsgRequestRemove) rfcMsgToCast;
-                Request requestToDelete = rfcMsg.getRequest();
-                deleteRequest(requestToDelete);
-            }
-
-            // RFCs messages - Sensor UPDATE
-            else if (rfcMsgToCast.getRfc() == RFCMAPEK.UPDATE && rfcMsgToCast.getAbout() == EntityMAPEK.SENSOR) { // Sensor description has been updated on Fuseki
-                future(() -> fusekiController.findAllSensors(), context().dispatcher())
-                        .onComplete(new OnComplete<VirtualSensorList>() {
-                            public void onComplete(Throwable throwable, VirtualSensorList newVirtualSensorList) {
-                                if (throwable == null) { // Only continue if there was no error so far
-                                    virtualSensorList = newVirtualSensorList;
-                                    enforcedPipelines.forEach((actorPathName, pipelineObject) -> {
-                                        if (pipelineObject instanceof OutputPipeline) {
-                                            ((OutputPipeline) pipelineObject).setSensorContext(iqasConfig, virtualSensorList, qooBaseModel);
-                                            execActorsRefs.get(actorPathName).tell(pipelineObject, getSelf());
+                                            performAction(action);
                                         }
                                     });
                                 }
                             }
-                        }, context().dispatcher());
-            }
+                        }
+                    }, context().dispatcher());
 
-            // RFCs messages - Request HEAL
-            else if (rfcMsgToCast.getRfc() == RFCMAPEK.HEAL && rfcMsgToCast.getAbout() == EntityMAPEK.REQUEST) {
-                RFCMsgQoOAttr rfcMsg = (RFCMsgQoOAttr) rfcMsgToCast;
-                if (actorPathRefs.containsKey(rfcMsg.getHealRequest().getConcernedRequest())) {
-                    healRequest(rfcMsg.getHealRequest(), rfcMsg.getOldRequestMapping(), rfcMsg.getNewRequestMapping());
+            incomingRequest.addLog("Successfully created pipeline graph by enforcing following qoo constraints: "
+                    + incomingRequest.getQooConstraints().getIqas_params().toString());
+            incomingRequest.updateState(State.Status.ENFORCED);
+            mongoController.updateRequest(incomingRequest.getRequest_id(), incomingRequest).whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    log.error("Update of the Request " + incomingRequest.getRequest_id() + " has failed");
                 }
-            }
+            });
+        }
+    }
 
-            // RFCs messages - Request RESET
-            else if (rfcMsgToCast.getRfc() == RFCMAPEK.RESET && rfcMsgToCast.getAbout() == EntityMAPEK.REQUEST) {
-                RFCMsgQoOAttr rfcMsg = (RFCMsgQoOAttr) rfcMsgToCast;
-                if (actorPathRefs.containsKey(rfcMsg.getHealRequest().getConcernedRequest())) {
-                    resetRequest(rfcMsg.getOldRequestMapping(), rfcMsg.getNewRequestMapping());
-                }
+    private void actionsOnRFCMsgRequestRemoveMsg(RFCMsgRequestRemove msg) {
+        // RFCs messages - Request REMOVE
+        if (msg.getRfc() == RFCMAPEK.REMOVE && msg.getAbout() == EntityMAPEK.REQUEST) { // Request deleted by the user
+            Request requestToDelete = msg.getRequest();
+            deleteRequest(requestToDelete);
+        }
+    }
+
+    private void actionsOnRFCMsgQoOAttrMsg(RFCMsgQoOAttr msg) {
+        // RFCs messages - Request HEAL
+        if (msg.getRfc() == RFCMAPEK.HEAL && msg.getAbout() == EntityMAPEK.REQUEST) {
+            if (actorPathRefs.containsKey(msg.getHealRequest().getConcernedRequest())) {
+                healRequest(msg.getHealRequest(), msg.getOldRequestMapping(), msg.getNewRequestMapping());
             }
         }
-        // TerminatedMsg messages
-        else if (message instanceof TerminatedMsg) {
-            TerminatedMsg terminatedMsg = (TerminatedMsg) message;
-            if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
-                log.info("Received TerminatedMsg message: {}", message);
-                getContext().stop(self());
+        // RFCs messages - Request RESET
+        else if (msg.getRfc() == RFCMAPEK.RESET && msg.getAbout() == EntityMAPEK.REQUEST) {
+            if (actorPathRefs.containsKey(msg.getHealRequest().getConcernedRequest())) {
+                resetRequest(msg.getOldRequestMapping(), msg.getNewRequestMapping());
             }
+        }
+    }
+
+    private void actionsOnRFCMsg(RFCMsg msg) {
+        log.info("Received RFC message: {}", msg);
+        // RFCs messages - Sensor UPDATE
+        if (msg.getRfc() == RFCMAPEK.UPDATE && msg.getAbout() == EntityMAPEK.SENSOR) { // Sensor description has been updated on Fuseki
+            future(() -> fusekiController.findAllSensors(), context().dispatcher())
+                    .onComplete(new OnComplete<VirtualSensorList>() {
+                        public void onComplete(Throwable throwable, VirtualSensorList newVirtualSensorList) {
+                            if (throwable == null) { // Only continue if there was no error so far
+                                virtualSensorList = newVirtualSensorList;
+                                enforcedPipelines.forEach((actorPathName, pipelineObject) -> {
+                                    if (pipelineObject instanceof OutputPipeline) {
+                                        ((OutputPipeline) pipelineObject).setSensorContext(iqasConfig, virtualSensorList, qooBaseModel);
+                                        execActorsRefs.get(actorPathName).tell(pipelineObject, getSelf());
+                                    }
+                                });
+                            }
+                        }
+                    }, context().dispatcher());
+        }
+    }
+
+    private void stopThisActor(TerminatedMsg msg) {
+        if (msg.getTargetToStop().path().equals(getSelf().path())) {
+            log.info("Received TerminatedMsg message: " + msg);
+            getContext().stop(self());
         }
     }
 

@@ -1,10 +1,10 @@
 package fr.isae.iqas;
 
 import akka.NotUsed;
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.http.javadsl.ConnectHttp;
@@ -43,7 +43,7 @@ import java.util.concurrent.CompletionStage;
  */
 public class MainClass extends AllDirectives{
 
-    private static class LocalMaster extends UntypedActor {
+    private static class LocalMaster extends AbstractActor {
         private LoggingAdapter log;
 
         public LocalMaster(Config iqasConfig, ActorSystem system, Http http, Materializer materializer) {
@@ -99,13 +99,16 @@ public class MainClass extends AllDirectives{
         }
 
         @Override
-        public void onReceive(Object message) throws Throwable {
-            if (message instanceof TerminatedMsg) {
-                TerminatedMsg terminatedMsg = (TerminatedMsg) message;
-                if (terminatedMsg.getTargetToStop().path().equals(getSelf().path())) {
-                    log.info("Received TerminatedMsg message: " + message);
-                    getContext().stop(self());
-                }
+        public Receive createReceive() {
+            return receiveBuilder()
+                    .match(TerminatedMsg.class, this::stopThisActor)
+                    .build();
+        }
+
+        private void stopThisActor(TerminatedMsg msg) {
+            if (msg.getTargetToStop().path().equals(getSelf().path())) {
+                log.info("Received TerminatedMsg message: " + msg);
+                getContext().stop(self());
             }
         }
     }
