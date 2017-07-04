@@ -140,9 +140,9 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                     }
 
                     if (askedLevelFinal == RAW_DATA) {
-                        final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
+                        //final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
-                        final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
+                        /*final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                     long timestamp_now = System.currentTimeMillis();
@@ -185,14 +185,22 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                     mapper.enable(SerializationFeature.INDENT_OUTPUT);
                                     return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                                 })
+                        );*/
+
+                        final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
+                                Flow.of(ConsumerRecord.class).map(r -> {
+                                    return new ProducerRecord(
+                                            getTopicToPublish(),
+                                            r.value());
+                                })
                         );
 
-                        builder.from(consumRecordToRawData.out())
-                                .via(removeOutdatedObs)
-                                .viaFanOut(bcast)
-                                .toInlet(rawDataToProdRecord.in());
+                        /*builder.from(testBenchmark.out())
+                                //.via(removeOutdatedObs)
+                                //.viaFanOut(bcast)
+                                .toInlet(testBenchmark.in());*/
 
-                        builder.from(bcast)
+                        /*builder.from(bcast)
                                 .via(builder.add(Flow.of(RawData.class)
                                         .groupedWithin(Integer.MAX_VALUE, getReportFrequency())
                                         .map(l -> {
@@ -213,14 +221,14 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                         qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), v.getQoOAttribute(OBS_ACCURACY));
                                         getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
                                     });
-                                })));
+                                })));*/
 
-                        return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
+                        return new FlowShape<>(testBenchmark.in(), testBenchmark.out());
 
                     } else if (askedLevelFinal == INFORMATION) {
-                        final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
+                        //final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
 
-                        final FlowShape<ConsumerRecord, Information> consumRecordToInfo = builder.add(
+                        /*final FlowShape<ConsumerRecord, Information> consumRecordToInfo = builder.add(
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                     String producer = sensorDataObject.getString("producer");
@@ -268,14 +276,22 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                     mapper.enable(SerializationFeature.INDENT_OUTPUT);
                                     return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                                 })
+                        );*/
+
+                        final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
+                                Flow.of(ConsumerRecord.class).map(r -> {
+                                    return new ProducerRecord(
+                                            getTopicToPublish(),
+                                            r.value());
+                                })
                         );
 
-                        builder.from(consumRecordToInfo.out())
-                                .via(removeOutdatedObs)
-                                .viaFanOut(bcast)
-                                .toInlet(infoToProdRecord.in());
+                        /*builder.from(testBenchmark.out())
+                                //.via(removeOutdatedObs)
+                                //.viaFanOut(bcast)
+                                .toInlet(testBenchmark.in());*/
 
-                        builder.from(bcast)
+                        /*builder.from(bcast)
                                 .via(builder.add(Flow.of(Information.class)
                                         .groupedWithin(Integer.MAX_VALUE, getReportFrequency())
                                         .map(l -> {
@@ -296,14 +312,14 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                         qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), v.getQoOAttribute(OBS_ACCURACY));
                                         getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
                                     });
-                                })));
+                                })));*/
 
-                        return new FlowShape<>(consumRecordToInfo.in(), infoToProdRecord.out());
+                        return new FlowShape<>(testBenchmark.in(), testBenchmark.out());
 
                     } else if (askedLevelFinal == KNOWLEDGE) {
-                        final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
+                        //final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
-                        final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
+                        /*final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                                 Flow.of(ConsumerRecord.class).map(r -> {
                                     JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                     long timestamp_now = System.currentTimeMillis();
@@ -362,14 +378,23 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
 
                                     return new ProducerRecord<byte[], String>(getTopicToPublish(), knowledgeTemp.toString());
                                 })
+                        );*/
+
+                        final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
+                                Flow.of(ConsumerRecord.class).map(r -> {
+                                    return new ProducerRecord(
+                                            getTopicToPublish(),
+                                            r.value());
+                                })
                         );
 
-                        builder.from(consumRecordToRawData.out())
-                                .via(removeOutdatedObs)
-                                .viaFanOut(bcast)
-                                .toInlet(rawDataToProdRecord.in());
 
-                        builder.from(bcast)
+                        /*builder.from(testBenchmark.out())
+                                //.via(removeOutdatedObs)
+                                //.viaFanOut(bcast)
+                                .toInlet(testBenchmark.in());*/
+
+                        /*builder.from(bcast)
                                 .via(builder.add(Flow.of(RawData.class)
                                         .groupedWithin(Integer.MAX_VALUE, getReportFrequency())
                                         .map(l -> {
@@ -390,9 +415,9 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                         qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), v.getQoOAttribute(OBS_ACCURACY));
                                         getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
                                     });
-                                })));
+                                })));*/
 
-                        return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
+                        return new FlowShape<>(testBenchmark.in(), testBenchmark.out());
 
                     } else { // other observation levels are not supported
                         return null;

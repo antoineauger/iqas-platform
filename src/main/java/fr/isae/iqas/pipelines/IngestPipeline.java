@@ -48,9 +48,17 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
         runnableGraph = GraphDSL
                 .create(builder -> {
                     // Definition of the broadcast for the MAPE-K monitoring
-                    final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
+                    //final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
-                    final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
+                    final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
+                            Flow.of(ConsumerRecord.class).map(r -> {
+                                return new ProducerRecord(
+                                        getTopicToPublish(),
+                                        r.value());
+                            })
+                    );
+
+                    /*final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {
                                 JSONObject sensorDataObject = new JSONObject(r.value().toString());
                                 long timestamp_now = System.currentTimeMillis();
@@ -81,16 +89,16 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
                                 return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                             })
-                    );
+                    );*/
 
-                    builder.from(consumRecordToRawData.out())
-                            .via(filteredInformationBySensor)
-                            .viaFanOut(bcast)
-                            .toInlet(rawDataToProdRecord.in());
+                    /*builder.from(testBenchmark.out())
+                            //.via(filteredInformationBySensor)
+                            //.viaFanOut(bcast)
+                            .toInlet(testBenchmark.in());*/
 
                     // Do not remove - useful for MAPE-K monitoring
 
-                    builder.from(bcast)
+                    /*builder.from(bcast)
                             .via(builder.add(Flow.of(RawData.class).map(p -> p.getProducer())))
                             .via(builder.add(getFlowToComputeObsRate()))
                             .to(builder.add(Sink.foreach(elem -> {
@@ -98,9 +106,9 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                                 ObsRateReportMsg obsRateReportMsg = new ObsRateReportMsg(getUniqueID());
                                 obsRateReportMsg.setObsRateByTopic(obsRateByTopic);
                                 getMonitorActor().tell(obsRateReportMsg, ActorRef.noSender());
-                            })));
+                            })));*/
 
-                    return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
+                    return new FlowShape<>(testBenchmark.in(), testBenchmark.out());
                 });
 
         return runnableGraph;

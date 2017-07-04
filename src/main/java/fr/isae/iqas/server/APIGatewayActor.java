@@ -2,9 +2,11 @@ package fr.isae.iqas.server;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.stream.Materializer;
 import fr.isae.iqas.config.Config;
 import fr.isae.iqas.database.FusekiController;
 import fr.isae.iqas.database.MongoController;
@@ -36,14 +38,14 @@ public class APIGatewayActor extends AbstractActor {
     private ActorRef autoManager;
     private ActorRef kafkaAdminActor;
 
-    public APIGatewayActor(Config iqasConfig, MongoController mongoController, FusekiController fusekiController) {
+    public APIGatewayActor(Config iqasConfig, ActorSystem system, Materializer materializer, MongoController mongoController, FusekiController fusekiController) {
         this.prop = iqasConfig.getProp();
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
 
         this.kafkaAdminActor = getContext().actorOf(Props.create(KafkaAdminActor.class, prop), "KafkaAdminActor");
         this.autoManager = getContext()
-                .actorOf(Props.create(AutonomicManagerActor.class, iqasConfig, this.kafkaAdminActor, this.mongoController, this.fusekiController), "autoManager");
+                .actorOf(Props.create(AutonomicManagerActor.class, iqasConfig, system, materializer, this.kafkaAdminActor, this.mongoController, this.fusekiController), "autoManager");
     }
 
     @Override
