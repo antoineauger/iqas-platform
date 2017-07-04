@@ -192,7 +192,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                     return new ProducerRecord(
                                             getTopicToPublish(),
                                             r.value());
-                                })
+                                }).async()
                         );
 
                         /*builder.from(testBenchmark.out())
@@ -283,7 +283,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                     return new ProducerRecord(
                                             getTopicToPublish(),
                                             r.value());
-                                })
+                                }).async()
                         );
 
                         /*builder.from(testBenchmark.out())
@@ -385,7 +385,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                     return new ProducerRecord(
                                             getTopicToPublish(),
                                             r.value());
-                                })
+                                }).async()
                         );
 
 

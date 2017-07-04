@@ -193,7 +193,7 @@ public class AnalyzeActor extends AbstractActor {
                             TopicEntity topicBase = new TopicEntity(requestTemp.getTopic(), RAW_DATA);
                             topicBase.setSource(requestTemp.getTopic());
                             requestMapping.getAllTopics().put(topicBase.getName(), topicBase);
-                            requestMapping.addLink(topicBase.getName(), sinkForApp.getName(), "IngestPipeline_" + tempIDForPipelines);
+                            requestMapping.addLink(topicBase.getName(), topicJustBeforeSink.getName(), "IngestPipeline_" + tempIDForPipelines);
                         }
 
                         /**
@@ -207,7 +207,7 @@ public class AnalyzeActor extends AbstractActor {
                         int counterQoO = 0;
 
                         // If there is some QoO constraints about OBS_ACCURACY, we add a FilterPipeline
-                        /*if (requestTemp.getQooConstraints().getIqas_params().containsKey("threshold_min")
+                        if (requestTemp.getQooConstraints().getIqas_params().containsKey("threshold_min")
                                 || requestTemp.getQooConstraints().getIqas_params().containsKey("threshold_max")) {
                             counterQoO += 1;
 
@@ -228,11 +228,11 @@ public class AnalyzeActor extends AbstractActor {
 
                             requestMapping.addLink(lastQoOTopic.getName(), rateObsTopic.getName(), "ThrottlePipeline_" + tempIDForPipelines);
                             lastQoOTopic = rateObsTopic;
-                        }*/
+                        }
 
                         // Last edge for graph
                         // QoO constraints about OBS_FRESHNESS are enforced at this level
-                        //requestMapping.addLink(lastQoOTopic.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
+                        requestMapping.addLink(lastQoOTopic.getName(), sinkForApp.getName(), "OutputPipeline_" + tempIDForPipelines);
 
                         mongoController.putRequestMapping(requestMapping).whenComplete((result1, throwable1) -> {
                             tellToPlanActor(new RFCMsgRequestCreate(RFCMAPEK.CREATE, REQUEST, requestTemp, requestMapping));

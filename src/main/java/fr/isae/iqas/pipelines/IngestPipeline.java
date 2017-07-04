@@ -51,11 +51,10 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                     //final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
                     final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
-                            Flow.of(ConsumerRecord.class).map(r -> {
-                                return new ProducerRecord(
-                                        getTopicToPublish(),
-                                        r.value());
-                            })
+                            Flow.of(ConsumerRecord.class)
+                                    .map(r -> new ProducerRecord(
+                                            getTopicToPublish(),
+                                            r.value())).async()
                     );
 
                     /*final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
@@ -91,22 +90,22 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                             })
                     );*/
 
-                    /*builder.from(testBenchmark.out())
-                            //.via(filteredInformationBySensor)
+                    /*builder.from(consumRecordToRawData.out())
+                            .via(filteredInformationBySensor)
                             //.viaFanOut(bcast)
-                            .toInlet(testBenchmark.in());*/
+                            .toInlet(rawDataToProdRecord.in());*/
 
                     // Do not remove - useful for MAPE-K monitoring
 
                     /*builder.from(bcast)
-                            .via(builder.add(Flow.of(RawData.class).map(p -> p.getProducer())))
-                            .via(builder.add(getFlowToComputeObsRate()))
+                            .via(builder.add(Flow.of(RawData.class).map(p -> p.getProducer()))).async()
+                            .via(builder.add(getFlowToComputeObsRate())).async()
                             .to(builder.add(Sink.foreach(elem -> {
                                 Map<String, Integer> obsRateByTopic = (Map<String, Integer>) elem;
                                 ObsRateReportMsg obsRateReportMsg = new ObsRateReportMsg(getUniqueID());
                                 obsRateReportMsg.setObsRateByTopic(obsRateByTopic);
                                 getMonitorActor().tell(obsRateReportMsg, ActorRef.noSender());
-                            })));*/
+                            }))).async();*/
 
                     return new FlowShape<>(testBenchmark.in(), testBenchmark.out());
                 });

@@ -100,8 +100,8 @@ public class ExecuteActor extends AbstractActor {
     @Override
     public void preStart() {
         stream = kafkaSource
-                .viaMat(KillSwitches.single(), Keep.right())
-                .viaMat(pipelineToEnforce.getPipelineGraph(), Keep.both())
+                .viaMat(KillSwitches.single(), Keep.right()).async()
+                .viaMat(pipelineToEnforce.getPipelineGraph(), Keep.both()).async()
                 .toMat(kafkaSink, Keep.both())
                 .run(materializer);
 
