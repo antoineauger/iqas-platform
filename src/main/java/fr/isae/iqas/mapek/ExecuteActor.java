@@ -99,7 +99,7 @@ public class ExecuteActor extends AbstractActor {
 
     @Override
     public void preStart() {
-        stream = kafkaSource
+        stream = kafkaSource.async()
                 .viaMat(KillSwitches.single(), Keep.right()).async()
                 .viaMat(pipelineToEnforce.getPipelineGraph(), Keep.both()).async()
                 .toMat(kafkaSink, Keep.both())
@@ -123,9 +123,9 @@ public class ExecuteActor extends AbstractActor {
 
         log.info("Updating pipeline " + msg.getUniqueID());
 
-        stream = kafkaSource
-                .viaMat(KillSwitches.single(), Keep.right())
-                .viaMat(msg.getPipelineGraph(), Keep.both())
+        stream = kafkaSource.async()
+                .viaMat(KillSwitches.single(), Keep.right()).async()
+                .viaMat(msg.getPipelineGraph(), Keep.both()).async()
                 .toMat(kafkaSink, Keep.both())
                 .run(materializer);
 
