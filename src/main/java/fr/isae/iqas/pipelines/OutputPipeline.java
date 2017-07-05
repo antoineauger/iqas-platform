@@ -188,7 +188,8 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         );*/
 
                         final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
-                                Flow.of(ConsumerRecord.class).map(r -> {
+                                Flow.of(ConsumerRecord.class).async()
+                                        .map(r -> {
                                     return new ProducerRecord(
                                             getTopicToPublish(),
                                             r.value());
@@ -279,7 +280,8 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         );*/
 
                         final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
-                                Flow.of(ConsumerRecord.class).map(r -> {
+                                Flow.of(ConsumerRecord.class).async()
+                                        .map(r -> {
                                     return new ProducerRecord(
                                             getTopicToPublish(),
                                             r.value());
@@ -381,7 +383,8 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         );*/
 
                         final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
-                                Flow.of(ConsumerRecord.class).map(r -> {
+                                Flow.of(ConsumerRecord.class).async()
+                                        .map(r -> {
                                     return new ProducerRecord(
                                             getTopicToPublish(),
                                             r.value());

@@ -51,7 +51,7 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                     //final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
                     final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
-                            Flow.of(ConsumerRecord.class)
+                            Flow.of(ConsumerRecord.class).async()
                                     .map(r -> new ProducerRecord(
                                             getTopicToPublish(),
                                             r.value())).async()
