@@ -3,6 +3,7 @@ package fr.isae.iqas.model.message;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.pipelines.IPipeline;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import static fr.isae.iqas.model.message.MAPEKenums.ActionMAPEK;
@@ -31,7 +32,7 @@ public class ActionMsgPipeline extends ActionMsg {
         super(action, about);
         this.askedObsLevel = askedObsLevel;
         this.pipelineToEnforce = pipelineToEnforce;
-        this.topicsToPullFrom = topicsToPullFrom;
+        this.topicsToPullFrom = new HashSet<>(topicsToPullFrom);
         this.topicToPublish = topicToPublish;
         this.associatedRequest_id = associatedRequest_id;
         this.constructedFromRequest = constructedFromRequest;

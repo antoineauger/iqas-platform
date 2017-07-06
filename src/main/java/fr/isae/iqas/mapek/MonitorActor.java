@@ -181,7 +181,7 @@ public class MonitorActor extends AbstractActor {
     private void actionsOnObsRateReportMsg(ObsRateReportMsg msg) {
         int totalObsFromSensors = 0;
         if (msg.getObsRateByTopic().size() > 0) {
-            log.info("QoO report message: {} {}", msg.getUniquePipelineID(), msg.getObsRateByTopic().toString());
+            log.info("ObsRate report message: {} {}", msg.getUniquePipelineID(), msg.getObsRateByTopic().toString());
             totalObsFromSensors = msg.getObsRateByTopic().values().stream().mapToInt(Number::intValue).sum();
         }
         if (mappingPipelinesRequests.containsKey(msg.getUniquePipelineID())) { // if there is a constraint on OBS_RATE for a Request using this Pipeline

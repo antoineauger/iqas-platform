@@ -8,6 +8,7 @@ import akka.dispatch.OnComplete;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.pattern.Patterns;
+import akka.stream.Materializer;
 import akka.util.Timeout;
 import fr.isae.iqas.config.Config;
 import fr.isae.iqas.database.FusekiController;
@@ -17,6 +18,7 @@ import fr.isae.iqas.kafka.RequestMapping;
 import fr.isae.iqas.kafka.TopicEntity;
 import fr.isae.iqas.model.jsonld.SensorCapability;
 import fr.isae.iqas.model.jsonld.SensorCapabilityList;
+import fr.isae.iqas.model.jsonld.VirtualSensor;
 import fr.isae.iqas.model.jsonld.VirtualSensorList;
 import fr.isae.iqas.model.message.*;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
@@ -27,6 +29,7 @@ import fr.isae.iqas.pipelines.*;
 import fr.isae.iqas.utils.JenaUtils;
 import fr.isae.iqas.utils.MapUtils;
 import org.apache.jena.ontology.OntModel;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -57,6 +60,8 @@ public class PlanActor extends AbstractActor {
     private VirtualSensorList virtualSensorList;
     private OntModel qooBaseModel;
 
+    private Materializer materializer;
+    private KafkaProducer<byte[], String> kafkaProducer;
     private ActorRef kafkaAdminActor;
     private ActorRef monitorActor;
 
@@ -66,12 +71,21 @@ public class PlanActor extends AbstractActor {
     private Map<String, IPipeline> enforcedPipelines; // ActorPathNames <-> IPipeline objects
     private Map<String, String> mappingTopicsActors; // DestinationTopic <-> ActorPathNames
 
-    public PlanActor(Config iqasConfig, MongoController mongoController, FusekiController fusekiController, ActorRef kafkaAdminActor) {
+    public PlanActor(Config iqasConfig,
+                     MongoController mongoController,
+                     FusekiController fusekiController,
+                     ActorRef kafkaAdminActor,
+                     KafkaProducer<byte[], String> kafkaProducer,
+                     Materializer materializer) {
+
         this.iqasConfig = iqasConfig;
         this.prop = iqasConfig.getProp();
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
+
         this.kafkaAdminActor = kafkaAdminActor;
+        this.kafkaProducer = kafkaProducer;
+        this.materializer = materializer;
 
         this.reportIntervalRateAndQoO = new FiniteDuration(Long.valueOf(prop.getProperty("report_interval_seconds")), TimeUnit.SECONDS);
 
@@ -310,26 +324,54 @@ public class PlanActor extends AbstractActor {
             }
             else {
                 if (pipeline instanceof IngestPipeline) {
-                    setOptionsForIngestPipeline((IngestPipeline) pipeline, incomingRequest, fusekiController, context());
+
+                    final CompletableFuture<VirtualSensorList> future = CompletableFuture.supplyAsync(() -> fusekiController.findAllSensorsWithConditions(incomingRequest.getLocation(), incomingRequest.getTopic()), getContext().dispatcher());
+                    future.whenComplete((vList, throwable) -> {
+                        StringBuilder sensorsToKeep = new StringBuilder();
+                        for (VirtualSensor v : vList.sensors) {
+                            sensorsToKeep.append(v.sensor_id.split("#")[1]).append(";");
+                        }
+                        sensorsToKeep = new StringBuilder(sensorsToKeep.substring(0, sensorsToKeep.length() - 1));
+                        pipeline.setCustomizableParameter("allowed_sensors", sensorsToKeep.toString());
+
+                        // Setting request_id, temp_id and other options for the retrieved Pipeline
+                        pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
+                        pipeline.setTempID(finalTempID);
+                        pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
+                        pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
+
+                        ActionMsg action = new ActionMsgPipeline(ActionMAPEK.APPLY,
+                                EntityMAPEK.PIPELINE,
+                                pipeline,
+                                incomingRequest.getObs_level(),
+                                topicBaseToPullFrom,
+                                finalNextTopicName,
+                                requestMapping.getRequest_id(),
+                                requestMapping.getConstructedFromRequest(),
+                                -1);
+
+                        performAction(action);
+                    });
                 }
+                else {
+                    // Setting request_id, temp_id and other options for the retrieved Pipeline
+                    pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
+                    pipeline.setTempID(finalTempID);
+                    pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
+                    pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
 
-                // Setting request_id, temp_id and other options for the retrieved Pipeline
-                pipeline.setAssociatedRequestID(incomingRequest.getRequest_id());
-                pipeline.setTempID(finalTempID);
-                pipeline.setOptionsForMAPEKReporting(monitorActor, reportIntervalRateAndQoO);
-                pipeline.setOptionsForQoOComputation(new MySpecificQoOAttributeComputation(), qooParamsForAllTopics);
+                    ActionMsg action = new ActionMsgPipeline(ActionMAPEK.APPLY,
+                            EntityMAPEK.PIPELINE,
+                            pipeline,
+                            incomingRequest.getObs_level(),
+                            topicBaseToPullFrom,
+                            finalNextTopicName,
+                            requestMapping.getRequest_id(),
+                            requestMapping.getConstructedFromRequest(),
+                            -1);
 
-                ActionMsg action = new ActionMsgPipeline(ActionMAPEK.APPLY,
-                        EntityMAPEK.PIPELINE,
-                        pipeline,
-                        incomingRequest.getObs_level(),
-                        topicBaseToPullFrom,
-                        finalNextTopicName,
-                        requestMapping.getRequest_id(),
-                        requestMapping.getConstructedFromRequest(),
-                        -1);
-
-                performAction(action);
+                    performAction(action);
+                }
             }
         });
 
@@ -430,15 +472,18 @@ public class PlanActor extends AbstractActor {
                             prop,
                             actionMsg.getPipelineToEnforce(),
                             actionMsg.getAskedObsLevel(),
+                            kafkaProducer,
+                            materializer,
                             actionMsg.getTopicsToPullFrom(),
-                            actionMsg.getTopicToPublish())
-                            .withDispatcher("dispatchers.pipelines.ingest"));
+                            actionMsg.getTopicToPublish()));
                 }
                 else {
                     actorRefToStart = getContext().actorOf(Props.create(ExecuteActor.class,
                             prop,
                             actionMsg.getPipelineToEnforce(),
                             actionMsg.getAskedObsLevel(),
+                            kafkaProducer,
+                            materializer,
                             actionMsg.getTopicsToPullFrom(),
                             actionMsg.getTopicToPublish()));
                 }

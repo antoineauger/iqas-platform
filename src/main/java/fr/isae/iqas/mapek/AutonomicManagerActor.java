@@ -2,10 +2,13 @@ package fr.isae.iqas.mapek;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.dispatch.OnComplete;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.kafka.ProducerSettings;
+import akka.stream.Materializer;
 import akka.util.Timeout;
 import fr.isae.iqas.config.Config;
 import fr.isae.iqas.database.FusekiController;
@@ -19,6 +22,9 @@ import fr.isae.iqas.model.message.SymptomMsg;
 import fr.isae.iqas.model.message.SymptomMsgConnectionReport;
 import fr.isae.iqas.model.message.TerminatedMsg;
 import fr.isae.iqas.model.request.Request;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.Map;
 import java.util.Properties;
@@ -50,18 +56,22 @@ public class AutonomicManagerActor extends AbstractActor {
     private ActorRef analyzeActor;
     private ActorRef planActor;
 
-    public AutonomicManagerActor(Config iqasConfig, ActorRef kafkaAdminActor, MongoController mongoController, FusekiController fusekiController) {
+    public AutonomicManagerActor(Config iqasConfig, ActorSystem system, Materializer materializer, ActorRef kafkaAdminActor, MongoController mongoController, FusekiController fusekiController) {
         Properties prop = iqasConfig.getProp();
 
         this.kafkaAdminActor = kafkaAdminActor;
         this.mongoController = mongoController;
         this.fusekiController = fusekiController;
-
         this.connectedSensors = new ConcurrentHashMap<>();
+
+        ProducerSettings<byte[], String> producerSettings = ProducerSettings
+                .create(system, new ByteArraySerializer(), new StringSerializer())
+                .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"));
+        KafkaProducer<byte[], String> kafkaProducer = producerSettings.createKafkaProducer();
 
         this.monitorActor = getContext().actorOf(Props.create(MonitorActor.class, prop, mongoController, fusekiController), "monitorActor");
         this.analyzeActor = getContext().actorOf(Props.create(AnalyzeActor.class, prop, mongoController, fusekiController), "analyzeActor");
-        this.planActor = getContext().actorOf(Props.create(PlanActor.class, iqasConfig, mongoController, fusekiController, kafkaAdminActor), "planActor");
+        this.planActor = getContext().actorOf(Props.create(PlanActor.class, iqasConfig, mongoController, fusekiController, kafkaAdminActor, kafkaProducer, materializer), "planActor");
     }
 
     @Override

@@ -70,8 +70,12 @@ public class MainClass extends AllDirectives{
             final ActorRef pipelineWatcherActor = getContext().actorOf(Props.create(PipelineWatcherActor.class, iqasConfig), "pipelineWatcherActor");
 
             // API Gateway actor creation
-            final ActorRef apiGatewayActor = getContext().actorOf(Props.create(APIGatewayActor.class, iqasConfig,
-                    mongoRESTController.getController(), fusekiRESTController.getController()),
+            final ActorRef apiGatewayActor = getContext().actorOf(Props.create(APIGatewayActor.class,
+                    iqasConfig,
+                    system,
+                    materializer,
+                    mongoRESTController.getController(),
+                    fusekiRESTController.getController()),
                     prop.getProperty("api_gateway_actor_name"));
 
             // REST server creation
@@ -146,6 +150,7 @@ public class MainClass extends AllDirectives{
         final ActorSystem system = ActorSystem.create("SystemActor");
         final Http http = Http.get(system);
         final Materializer materializer = ActorMaterializer.create(system);
+
         final ActorRef localMaster = system.actorOf(Props.create(LocalMaster.class, iqasConfig, system, http, materializer), "LocalMasterActor");
     }
 
