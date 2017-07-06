@@ -29,6 +29,6 @@ public class ObsRateReportMsg {
     }
 
     public void setObsRateByTopic(Map<String, Integer> obsRateByTopic) {
-        this.obsRateByTopic = obsRateByTopic;
+        this.obsRateByTopic = new ConcurrentHashMap<>(obsRateByTopic);
     }
 }

@@ -187,7 +187,7 @@ public class AnalyzeActor extends AbstractActor {
                                 TopicEntity topicBase = new TopicEntity(topicName, RAW_DATA);
                                 topicBase.setSource(topicName);
                                 requestMapping.getAllTopics().put(topicName, topicBase);
-                                requestMapping.addLink(topicBase.getName(), sinkForApp.getName(), "IngestPipeline_" + tempIDForPipelines);
+                                requestMapping.addLink(topicBase.getName(), topicJustBeforeSink.getName(), "IngestPipeline_" + tempIDForPipelines);
                             }
                         } else { // (Location = x, Topic = y) or (Location = ALL, Topic = x)
                             TopicEntity topicBase = new TopicEntity(requestTemp.getTopic(), RAW_DATA);

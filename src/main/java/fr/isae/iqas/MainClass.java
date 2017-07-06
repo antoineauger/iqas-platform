@@ -151,7 +151,6 @@ public class MainClass extends AllDirectives{
         final Http http = Http.get(system);
         final Materializer materializer = ActorMaterializer.create(system);
 
-        logger.error(String.valueOf(Runtime.getRuntime().availableProcessors()));
         final ActorRef localMaster = system.actorOf(Props.create(LocalMaster.class, iqasConfig, system, http, materializer), "LocalMasterActor");
     }
 

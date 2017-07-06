@@ -13,7 +13,6 @@ import akka.kafka.Subscriptions;
 import akka.kafka.javadsl.Consumer;
 import akka.kafka.javadsl.Producer;
 import akka.pattern.Patterns;
-import akka.stream.ActorMaterializer;
 import akka.stream.KillSwitches;
 import akka.stream.Materializer;
 import akka.stream.UniqueKillSwitch;
@@ -33,9 +32,10 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import scala.concurrent.Await;
 import scala.concurrent.Future;
+import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.util.HashSet;
 import java.util.Properties;
@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
 public class ExecuteActor extends AbstractActor {
     private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+    private ActorRef kafkaActor;
     private Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource;
     private Sink<ProducerRecord<byte[], String>, CompletionStage<Done>> kafkaSink;
 
@@ -62,46 +63,43 @@ public class ExecuteActor extends AbstractActor {
 
     public ExecuteActor(Properties prop, IPipeline pipelineToEnforce,
                         ObservationLevel askedObsLevel,
-                        Source<ConsumerRecord<byte[], String>, Consumer.Control> kafkaSource,
-                        Sink<ProducerRecord<byte[], String>, CompletionStage<Done>> kafkaSink,
+                        KafkaProducer<byte[], String> kafkaProducer,
                         Materializer materializer,
                         Set<String> topicsToPullFrom,
                         String topicToPublish) {
 
-        /*ConsumerSettings consumerSettings = ConsumerSettings.create(getContext().system(), new ByteArrayDeserializer(), new StringDeserializer())
+        ConsumerSettings<byte[], String> consumerSettings = ConsumerSettings.create(getContext().getSystem(), new ByteArrayDeserializer(), new StringDeserializer())
                 .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"))
-                .withGroupId("group_" + pipelineToEnforce.getUniqueID())
-                .withClientId("client_" + pipelineToEnforce.getUniqueID())
-                .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");*/
+                .withGroupId("consumer-" + pipelineToEnforce.getUniqueID())
+                .withClientId("consumer-" + pipelineToEnforce.getUniqueID())
+                .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
-        /*ProducerSettings producerSettings = ProducerSettings
+        ProducerSettings<byte[], String> producerSettings = ProducerSettings
                 .create(getContext().system(), new ByteArraySerializer(), new StringSerializer())
-                .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"));*/
+                .withBootstrapServers(prop.getProperty("kafka_endpoint_address") + ":" + prop.getProperty("kafka_endpoint_port"));
 
         // Kafka source
-        //this.kafkaActor = getContext().actorOf((KafkaConsumerActor.props(consumerSettings)));
-        this.kafkaSource = kafkaSource;
-                //Consumer.plainExternalSource(kafkaConsumer, Subscriptions.assignment(watchedTopics));
+        Set<TopicPartition> watchedTopics = new HashSet<>();
+        watchedTopics.addAll(topicsToPullFrom.stream().map(s -> new TopicPartition(s, 0)).collect(Collectors.toList()));
+        this.kafkaActor = getContext().actorOf((KafkaConsumerActor.props(consumerSettings)).withDispatcher("akka.kafka.kafkaActor-dispatcher"));
+        this.kafkaSource = Consumer.plainExternalSource(kafkaActor, Subscriptions.assignment(watchedTopics));
 
-        // Sinks
-        this.kafkaSink = kafkaSink;
-        //this.kafkaProducer = kafkaProducer;
+        // Kafka sink
+        this.kafkaSink = Producer.plainSink(producerSettings, kafkaProducer);
 
         // Mandatory Pipeline configuration
         pipelineToEnforce.setupPipelineGraph(topicToPublish, askedObsLevel, Operator.NONE);
         this.pipelineToEnforce = pipelineToEnforce;
 
-        this.materializer = materializer;
-
         // Materializer to run graphs (QoO pipelines)
-        //this.materializer = ActorMaterializer.create(getContext().system());
+        this.materializer = materializer;
     }
 
     @Override
     public void preStart() {
-        stream = kafkaSource.async()
-                .viaMat(KillSwitches.single(), Keep.right()).async()
-                .viaMat(pipelineToEnforce.getPipelineGraph(), Keep.both()).async()
+        stream = kafkaSource
+                .viaMat(KillSwitches.single(), Keep.right())
+                .viaMat(pipelineToEnforce.getPipelineGraph(), Keep.both())
                 .toMat(kafkaSink, Keep.both())
                 .run(materializer);
 
@@ -123,9 +121,9 @@ public class ExecuteActor extends AbstractActor {
 
         log.info("Updating pipeline " + msg.getUniqueID());
 
-        stream = kafkaSource.async()
-                .viaMat(KillSwitches.single(), Keep.right()).async()
-                .viaMat(msg.getPipelineGraph(), Keep.both()).async()
+        stream = kafkaSource
+                .viaMat(KillSwitches.single(), Keep.right())
+                .viaMat(msg.getPipelineGraph(), Keep.both())
                 .toMat(kafkaSink, Keep.both())
                 .run(materializer);
 
@@ -135,10 +133,11 @@ public class ExecuteActor extends AbstractActor {
     private void stopThisActor(TerminatedMsg msg) {
         if (msg.getTargetToStop().path().equals(getSelf().path())) {
             log.info("Received TerminatedMsg message: {}", msg);
+            kafkaSource.completionTimeout(new FiniteDuration(0, TimeUnit.SECONDS));
             if (stream != null) {
                 killSwitch.shutdown();
             }
-            /*if (kafkaActor != null) {
+            if (kafkaActor != null) {
                 log.info("Trying to stop " + kafkaActor.path().name());
                 try {
                     Future<Boolean> stopped = Patterns.gracefulStop(kafkaActor, Duration.create(5, TimeUnit.SECONDS));
@@ -148,7 +147,7 @@ public class ExecuteActor extends AbstractActor {
                     log.error(e.toString());
                 }
                 getContext().stop(kafkaActor);
-            }*/
+            }
             getContext().stop(getSelf());
         }
     }

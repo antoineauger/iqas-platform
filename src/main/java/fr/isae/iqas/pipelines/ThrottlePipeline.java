@@ -25,7 +25,6 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * It can be modified according to user needs.
  */
 public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
-    private Graph runnableGraph = null;
 
     public ThrottlePipeline() {
         super("Throttle Pipeline", "ThrottlePipeline", true);
@@ -52,7 +51,7 @@ public class ThrottlePipeline extends AbstractPipeline implements IPipeline {
         }
         TimeUnit finalUnit = unit;
 
-        runnableGraph = GraphDSL
+        Graph runnableGraph = GraphDSL
                 .create(builder -> {
                     final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                             Flow.of(ConsumerRecord.class).map(r -> {

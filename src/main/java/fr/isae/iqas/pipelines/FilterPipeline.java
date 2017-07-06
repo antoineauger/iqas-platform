@@ -21,7 +21,6 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * It can be modified according to user needs.
  */
 public class FilterPipeline extends AbstractPipeline implements IPipeline {
-    private Graph runnableGraph = null;
 
     public FilterPipeline() {
         super("Filter Pipeline", "FilterPipeline", true);
@@ -33,7 +32,7 @@ public class FilterPipeline extends AbstractPipeline implements IPipeline {
 
     @Override
     public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph() {
-        runnableGraph = GraphDSL
+        Graph runnableGraph = GraphDSL
                 .create(builder -> {
 
                     final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
@@ -47,17 +46,17 @@ public class FilterPipeline extends AbstractPipeline implements IPipeline {
                             })
                     );
 
+                    final FlowShape<RawData, RawData> filteringMechanism = builder.add(
+                            Flow.of(RawData.class).filter(r -> (r.getValue() >= Double.valueOf(getParams().get("threshold_min")))
+                                    && (r.getValue() <= Double.valueOf(getParams().get("threshold_max"))))
+                    );
+
                     final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
                             Flow.of(RawData.class).map(r -> {
                                 ObjectMapper mapper = new ObjectMapper();
                                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
                                 return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
                             })
-                    );
-
-                    final FlowShape<RawData, RawData> filteringMechanism = builder.add(
-                            Flow.of(RawData.class).filter(r -> (r.getValue() >= Double.valueOf(getParams().get("threshold_min")))
-                                    && (r.getValue() <= Double.valueOf(getParams().get("threshold_max"))))
                     );
 
                     builder.from(consumRecordToRawData.out())

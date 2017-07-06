@@ -21,6 +21,7 @@ import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
 import fr.isae.iqas.model.quality.QoOAttribute;
+import fr.isae.iqas.pipelines.mechanisms.QoOReporter;
 import fr.isae.iqas.utils.JenaUtils;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
@@ -32,7 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -56,14 +60,19 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
     private Map<String, Property> qooP; // <Abbreviated Property identifier (e.g. qoo:hasQoO), Property>
     private OntModel qooBaseModel;
 
+    private ObjectMapper mapper;
+
     public OutputPipeline() {
         super("Output Pipeline", "OutputPipeline", false);
 
-        setParameter("age_max", "24 hours", true);
+        setParameter("age_max", "unset", true);
         setParameter("interested_in", "", true);
         addSupportedOperator(NONE);
 
         this.allVirtualSensors = new ConcurrentHashMap<>();
+
+        mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
     public void setSensorContext(Config iqasConfig, VirtualSensorList virtualSensorList, OntModel qooBaseModel) {
@@ -103,330 +112,235 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
 
     @Override
     public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph() {
-        String[] ageMaxStr = getParams().get("age_max").split(" ");
-        long ageLongValue = Long.valueOf(ageMaxStr[0]);
         TimeUnit unit = null;
-        switch (ageMaxStr[1]) {
-            case "ms":
-                unit = TimeUnit.MILLISECONDS;
-                break;
-            case "s":
-                unit = TimeUnit.SECONDS;
-                break;
-            case "min":
-                unit = TimeUnit.MINUTES;
-                break;
-            case "mins":
-                unit = TimeUnit.MINUTES;
-                break;
-            case "hour":
-                unit = TimeUnit.HOURS;
-                break;
-            case "hours":
-                unit = TimeUnit.HOURS;
-                break;
+        long ageLongValue;
+        if (!getParams().get("age_max").equals("unset")) {
+            String[] ageMaxStr = getParams().get("age_max").split(" ");
+            ageLongValue = Long.valueOf(ageMaxStr[0]);
+            switch (ageMaxStr[1]) {
+                case "ms":
+                    unit = TimeUnit.MILLISECONDS;
+                    break;
+                case "s":
+                    unit = TimeUnit.SECONDS;
+                    break;
+                case "min":
+                    unit = TimeUnit.MINUTES;
+                    break;
+                case "mins":
+                    unit = TimeUnit.MINUTES;
+                    break;
+                case "hour":
+                    unit = TimeUnit.HOURS;
+                    break;
+                case "hours":
+                    unit = TimeUnit.HOURS;
+                    break;
+            }
+        }
+        else {
+            unit = TimeUnit.HOURS;
+            ageLongValue = 24;
         }
         final long ageMaxAllowed = new FiniteDuration(ageLongValue, unit).toMillis();
 
         final ObservationLevel askedLevelFinal = getAskedLevel();
-        Graph runnableGraph = GraphDSL
-                .create(builder -> {
-                    List<QoOAttribute> interestAttr = new ArrayList<>();
-                    if (getParams().get("interested_in") != null) {
-                        String[] allowedSensors = getParams().get("interested_in").split(";");
-                        for (String s : Arrays.asList(allowedSensors)) {
-                            interestAttr.add(QoOAttribute.valueOf(s));
-                        }
-                    }
 
-                    if (askedLevelFinal == RAW_DATA) {
-                        //final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
+        List<QoOAttribute> interestAttr = new ArrayList<>();
+        if (getParams().get("interested_in") != null) {
+            String[] allowedSensors = getParams().get("interested_in").split(";");
+            for (String s : Arrays.asList(allowedSensors)) {
+                interestAttr.add(QoOAttribute.valueOf(s));
+            }
+        }
 
-                        /*final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
-                                Flow.of(ConsumerRecord.class).map(r -> {
-                                    JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                    long timestamp_now = System.currentTimeMillis();
-                                    //logger.warn("OUTPUT " + sensorDataObject.getString("value") + " at time " + String.valueOf(timestamp_now));
-                                    RawData rawDataTemp = new RawData(
-                                            sensorDataObject.getString("date"),
-                                            sensorDataObject.getString("value"),
-                                            sensorDataObject.getString("producer"),
-                                            sensorDataObject.getString("timestamps"),
-                                            "iQAS_out",
-                                            timestamp_now);
+        Graph runnableGraph = GraphDSL.create(builder -> {
 
-                                    if (getQooParams().size() > 0) {
-                                        if (interestAttr.contains(OBS_ACCURACY)) {
-                                            rawDataTemp.setQoOAttribute(OBS_ACCURACY,
-                                                    String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(rawDataTemp, getQooParams())));
-                                        }
-                                        if (interestAttr.contains(OBS_FRESHNESS)) {
-                                            rawDataTemp.setQoOAttribute(OBS_FRESHNESS,
-                                                    String.valueOf(getComputeAttributeHelper().computeQoOFreshness(rawDataTemp)));
-                                        }
-                                    }
+            if (askedLevelFinal == RAW_DATA) {
+                final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
-                                    return rawDataTemp;
-                                })
-                        );
+                final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
+                        Flow.of(ConsumerRecord.class).map(r -> {
+                            JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                            RawData rawDataTemp = new RawData(
+                                    sensorDataObject.getString("date"),
+                                    sensorDataObject.getString("value"),
+                                    sensorDataObject.getString("producer"),
+                                    sensorDataObject.getString("timestamps"),
+                                    "iQAS_out",
+                                    System.currentTimeMillis());
 
-                        final FlowShape<RawData, RawData> removeOutdatedObs = builder.add(
-                                Flow.of(RawData.class)
-                                        .filter(r -> {
-                                            String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
-                                            long timestampProduced = Long.valueOf(timestampProducedStr[1]);
-                                            return (System.currentTimeMillis() - timestampProduced) < ageMaxAllowed;
-                                        })
-                        );
+                            if (getQooParams().size() > 0) {
+                                if (interestAttr.contains(OBS_ACCURACY)) {
+                                    rawDataTemp.setQoOAttribute(OBS_ACCURACY,
+                                            String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(rawDataTemp, getQooParams())));
+                                }
+                                if (interestAttr.contains(OBS_FRESHNESS)) {
+                                    rawDataTemp.setQoOAttribute(OBS_FRESHNESS,
+                                            String.valueOf(getComputeAttributeHelper().computeQoOFreshness(rawDataTemp)));
+                                }
+                            }
 
-                        final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
-                                Flow.of(RawData.class).map(r -> {
-                                    ObjectMapper mapper = new ObjectMapper();
-                                    mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                    return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
-                                })
-                        );*/
+                            return rawDataTemp;
+                        })
+                );
 
-                        final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
-                                Flow.of(ConsumerRecord.class).async()
-                                        .map(r -> {
-                                    return new ProducerRecord(
-                                            getTopicToPublish(),
-                                            r.value());
-                                }).async()
-                        );
+                final FlowShape<RawData, RawData> removeOutdatedObs = builder.add(
+                        Flow.of(RawData.class).filter(r -> {
+                            String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
+                            return getParams().get("age_max").equals("unset") || (System.currentTimeMillis() - Long.valueOf(timestampProducedStr[1])) < ageMaxAllowed;
+                        })
+                );
 
-                        /*builder.from(testBenchmark.out())
-                                //.via(removeOutdatedObs)
-                                //.viaFanOut(bcast)
-                                .toInlet(testBenchmark.in());*/
+                final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
+                        Flow.of(RawData.class).map(r -> new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r)))
+                );
 
-                        /*builder.from(bcast)
-                                .via(builder.add(Flow.of(RawData.class)
-                                        .groupedWithin(Integer.MAX_VALUE, getReportFrequency())
-                                        .map(l -> {
-                                            Map<String, RawData> relevantInfoForAllProducers = new HashMap<>();
-                                            for (RawData i : l) {
-                                                relevantInfoForAllProducers.put(i.getProducer(), i);
-                                            }
-                                            return relevantInfoForAllProducers;
-                                        }))
-                                )
-                                .to(builder.add(Sink.foreach(elem -> {
-                                    Map<String, RawData> infoMapTemp = (Map<String, RawData>) elem;
-                                    infoMapTemp.forEach((k, v) -> {
-                                        final QoOReportMsg qoOReportAttributes = new QoOReportMsg(getUniqueID());
-                                        qoOReportAttributes.setProducerName(k);
-                                        qoOReportAttributes.setRequestID(getAssociatedRequest_id());
-                                        qoOReportAttributes.setQooAttribute(OBS_FRESHNESS.toString(), v.getQoOAttribute(OBS_FRESHNESS));
-                                        qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), v.getQoOAttribute(OBS_ACCURACY));
-                                        getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
-                                    });
-                                })));*/
+                builder.from(consumRecordToRawData.out())
+                        .via(removeOutdatedObs)
+                        .viaFanOut(bcast)
+                        .toInlet(rawDataToProdRecord.in());
 
-                        return new FlowShape<>(testBenchmark.in(), testBenchmark.out());
+                builder.from(bcast)
+                        .via(builder.add(new QoOReporter(getUniqueID(), getAssociatedRequest_id())))
+                        .to(builder.add(Sink.foreach(elem -> getMonitorActor().tell(new QoOReportMsg((QoOReportMsg) elem), ActorRef.noSender()))));
 
-                    } else if (askedLevelFinal == INFORMATION) {
-                        //final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
+                return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
 
-                        /*final FlowShape<ConsumerRecord, Information> consumRecordToInfo = builder.add(
-                                Flow.of(ConsumerRecord.class).map(r -> {
-                                    JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                    String producer = sensorDataObject.getString("producer");
-                                    long timestamp_now = System.currentTimeMillis();
-                                    //logger.warn("OUTPUT " + sensorDataObject.getString("value") + " at time " + String.valueOf(timestamp_now));
-                                    Information informationTemp = new Information(
-                                            sensorDataObject.getString("date"),
-                                            sensorDataObject.getString("value"),
-                                            producer,
-                                            sensorDataObject.getString("timestamps"),
-                                            "iQAS_out",
-                                            timestamp_now);
+            } else if (askedLevelFinal == INFORMATION) {
+                final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
 
-                                    if (getQooParams().size() > 0) {
-                                        if (interestAttr.contains(OBS_ACCURACY)) {
-                                            informationTemp.setQoOAttribute(OBS_ACCURACY,
-                                                    String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(informationTemp, getQooParams())));
-                                        }
-                                        if (interestAttr.contains(OBS_FRESHNESS)) {
-                                            informationTemp.setQoOAttribute(OBS_FRESHNESS,
-                                                    String.valueOf(getComputeAttributeHelper().computeQoOFreshness(informationTemp)));
-                                        }
-                                    }
+                final FlowShape<ConsumerRecord, Information> consumRecordToInfo = builder.add(
+                        Flow.of(ConsumerRecord.class).map(r -> {
+                            JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                            String producer = sensorDataObject.getString("producer");
+                            Information informationTemp = new Information(
+                                    sensorDataObject.getString("date"),
+                                    sensorDataObject.getString("value"),
+                                    producer,
+                                    sensorDataObject.getString("timestamps"),
+                                    "iQAS_out",
+                                    System.currentTimeMillis());
 
-                                    if (allVirtualSensors.containsKey(producer)) {
-                                        informationTemp.setContext(allVirtualSensors.get(producer));
-                                    }
+                            if (getQooParams().size() > 0) {
+                                if (interestAttr.contains(OBS_ACCURACY)) {
+                                    informationTemp.setQoOAttribute(OBS_ACCURACY,
+                                            String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(informationTemp, getQooParams())));
+                                }
+                                if (interestAttr.contains(OBS_FRESHNESS)) {
+                                    informationTemp.setQoOAttribute(OBS_FRESHNESS,
+                                            String.valueOf(getComputeAttributeHelper().computeQoOFreshness(informationTemp)));
+                                }
+                            }
 
-                                    return informationTemp;
-                                })
-                        );
+                            if (allVirtualSensors.containsKey(producer)) {
+                                informationTemp.setContext(allVirtualSensors.get(producer));
+                            }
 
-                        final FlowShape<Information, Information> removeOutdatedObs = builder.add(
-                                Flow.of(Information.class)
-                                        .filter(r -> {
-                                            String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
-                                            long timestampProduced = Long.valueOf(timestampProducedStr[1]);
-                                            return (System.currentTimeMillis() - timestampProduced) < ageMaxAllowed;
-                                        })
-                        );
+                            return informationTemp;
+                        })
+                );
 
-                        final FlowShape<Information, ProducerRecord> infoToProdRecord = builder.add(
-                                Flow.of(Information.class).map(r -> {
-                                    ObjectMapper mapper = new ObjectMapper();
-                                    mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                    return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
-                                })
-                        );*/
+                final FlowShape<Information, Information> removeOutdatedObs = builder.add(
+                        Flow.of(Information.class).filter(r -> {
+                            String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
+                            return getParams().get("age_max").equals("unset") || (System.currentTimeMillis() - Long.valueOf(timestampProducedStr[1])) < ageMaxAllowed;
+                        })
+                );
 
-                        final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
-                                Flow.of(ConsumerRecord.class).async()
-                                        .map(r -> {
-                                    return new ProducerRecord(
-                                            getTopicToPublish(),
-                                            r.value());
-                                }).async()
-                        );
+                final FlowShape<Information, ProducerRecord> infoToProdRecord = builder.add(
+                        Flow.of(Information.class).map(r -> new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r)))
+                );
 
-                        /*builder.from(testBenchmark.out())
-                                //.via(removeOutdatedObs)
-                                //.viaFanOut(bcast)
-                                .toInlet(testBenchmark.in());*/
+                builder.from(consumRecordToInfo.out())
+                        .via(removeOutdatedObs)
+                        .viaFanOut(bcast)
+                        .toInlet(infoToProdRecord.in());
 
-                        /*builder.from(bcast)
-                                .via(builder.add(Flow.of(Information.class)
-                                        .groupedWithin(Integer.MAX_VALUE, getReportFrequency())
-                                        .map(l -> {
-                                            Map<String, Information> relevantInfoForAllProducers = new HashMap<>();
-                                            for (Information i : l) {
-                                                relevantInfoForAllProducers.put(i.getProducer(), i);
-                                            }
-                                            return relevantInfoForAllProducers;
-                                        }))
-                                )
-                                .to(builder.add(Sink.foreach(elem -> {
-                                    Map<String, Information> infoMapTemp = (Map<String, Information>) elem;
-                                    infoMapTemp.forEach((k, v) -> {
-                                        final QoOReportMsg qoOReportAttributes = new QoOReportMsg(getUniqueID());
-                                        qoOReportAttributes.setProducerName(k);
-                                        qoOReportAttributes.setRequestID(getAssociatedRequest_id());
-                                        qoOReportAttributes.setQooAttribute(OBS_FRESHNESS.toString(), v.getQoOAttribute(OBS_FRESHNESS));
-                                        qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), v.getQoOAttribute(OBS_ACCURACY));
-                                        getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
-                                    });
-                                })));*/
+                builder.from(bcast)
+                        .via(builder.add(new QoOReporter(getUniqueID(), getAssociatedRequest_id())))
+                        .to(builder.add(Sink.foreach(elem -> getMonitorActor().tell(new QoOReportMsg((QoOReportMsg) elem), ActorRef.noSender()))));
 
-                        return new FlowShape<>(testBenchmark.in(), testBenchmark.out());
+                return new FlowShape<>(consumRecordToInfo.in(), infoToProdRecord.out());
 
-                    } else if (askedLevelFinal == KNOWLEDGE) {
-                        //final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
+            }
+            else if (askedLevelFinal == KNOWLEDGE) {
+                final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
-                        /*final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
-                                Flow.of(ConsumerRecord.class).map(r -> {
-                                    JSONObject sensorDataObject = new JSONObject(r.value().toString());
-                                    long timestamp_now = System.currentTimeMillis();
-                                    //logger.warn("OUTPUT " + sensorDataObject.getString("value") + " at time " + String.valueOf(timestamp_now));
-                                    RawData rawDataTemp = new RawData(
-                                            sensorDataObject.getString("date"),
-                                            sensorDataObject.getString("value"),
-                                            sensorDataObject.getString("producer"),
-                                            sensorDataObject.getString("timestamps"),
-                                            "iQAS_out",
-                                            timestamp_now);
+                final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
+                        Flow.of(ConsumerRecord.class).map(r -> {
+                            JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                            RawData rawDataTemp = new RawData(
+                                    sensorDataObject.getString("date"),
+                                    sensorDataObject.getString("value"),
+                                    sensorDataObject.getString("producer"),
+                                    sensorDataObject.getString("timestamps"),
+                                    "iQAS_out",
+                                    System.currentTimeMillis());
 
-                                    if (getQooParams().size() > 0) {
-                                        if (interestAttr.contains(OBS_ACCURACY)) {
-                                            rawDataTemp.setQoOAttribute(OBS_ACCURACY,
-                                                    String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(rawDataTemp, getQooParams())));
-                                        }
-                                        if (interestAttr.contains(OBS_FRESHNESS)) {
-                                            rawDataTemp.setQoOAttribute(OBS_FRESHNESS,
-                                                    String.valueOf(getComputeAttributeHelper().computeQoOFreshness(rawDataTemp)));
-                                        }
-                                    }
+                            if (getQooParams().size() > 0) {
+                                if (interestAttr.contains(OBS_ACCURACY)) {
+                                    rawDataTemp.setQoOAttribute(OBS_ACCURACY,
+                                            String.valueOf(getComputeAttributeHelper().computeQoOAccuracy(rawDataTemp, getQooParams())));
+                                }
+                                if (interestAttr.contains(OBS_FRESHNESS)) {
+                                    rawDataTemp.setQoOAttribute(OBS_FRESHNESS,
+                                            String.valueOf(getComputeAttributeHelper().computeQoOFreshness(rawDataTemp)));
+                                }
+                            }
 
-                                    return rawDataTemp;
-                                })
-                        );
+                            return rawDataTemp;
+                        })
+                );
 
-                        final FlowShape<RawData, RawData> removeOutdatedObs = builder.add(
-                                Flow.of(RawData.class)
-                                        .filter(r -> {
-                                            String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
-                                            long timestampProduced = Long.valueOf(timestampProducedStr[1]);
-                                            return (System.currentTimeMillis() - timestampProduced) < ageMaxAllowed;
-                                        })
-                        );
+                final FlowShape<RawData, RawData> removeOutdatedObs = builder.add(
+                        Flow.of(RawData.class).filter(r -> {
+                            String[] timestampProducedStr = r.getTimestamps().split(";")[0].split(":");
+                            return getParams().get("age_max").equals("unset") || (System.currentTimeMillis() - Long.valueOf(timestampProducedStr[1])) < ageMaxAllowed;
+                        })
+                );
 
-                        final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
-                                Flow.of(RawData.class).map(rawDataTemp -> {
+                final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
+                        Flow.of(RawData.class).map(rawDataTemp -> {
 
-                                    Knowledge knowledgeTemp = new Knowledge(
-                                            rawDataTemp,
-                                            allVirtualSensors.get(rawDataTemp.getProducer()),
-                                            pref,
-                                            qooC,
-                                            qooP,
-                                            qooBaseModel);
+                            Knowledge knowledgeTemp = new Knowledge(
+                                    rawDataTemp,
+                                    allVirtualSensors.get(rawDataTemp.getProducer()),
+                                    pref,
+                                    qooC,
+                                    qooP,
+                                    qooBaseModel);
 
-                                    if (getQooParams().size() > 0) {
-                                        if (interestAttr.contains(OBS_ACCURACY)) {
-                                            knowledgeTemp.setQoOAttribute(OBS_ACCURACY, rawDataTemp.getQoOAttribute(OBS_ACCURACY));
-                                        }
-                                        if (interestAttr.contains(OBS_FRESHNESS)) {
-                                            knowledgeTemp.setQoOAttribute(OBS_FRESHNESS, rawDataTemp.getQoOAttribute(OBS_FRESHNESS));
-                                        }
-                                    }
+                            if (getQooParams().size() > 0) {
+                                if (interestAttr.contains(OBS_ACCURACY)) {
+                                    knowledgeTemp.setQoOAttribute(OBS_ACCURACY, rawDataTemp.getQoOAttribute(OBS_ACCURACY));
+                                }
+                                if (interestAttr.contains(OBS_FRESHNESS)) {
+                                    knowledgeTemp.setQoOAttribute(OBS_FRESHNESS, rawDataTemp.getQoOAttribute(OBS_FRESHNESS));
+                                }
+                            }
 
-                                    return new ProducerRecord<byte[], String>(getTopicToPublish(), knowledgeTemp.toString());
-                                })
-                        );*/
-
-                        final FlowShape<ConsumerRecord, ProducerRecord> testBenchmark = builder.add(
-                                Flow.of(ConsumerRecord.class).async()
-                                        .map(r -> {
-                                    return new ProducerRecord(
-                                            getTopicToPublish(),
-                                            r.value());
-                                }).async()
-                        );
+                            return new ProducerRecord<byte[], String>(getTopicToPublish(), knowledgeTemp.toString());
+                        })
+                );
 
 
-                        /*builder.from(testBenchmark.out())
-                                //.via(removeOutdatedObs)
-                                //.viaFanOut(bcast)
-                                .toInlet(testBenchmark.in());*/
+                builder.from(consumRecordToRawData.out())
+                        .via(removeOutdatedObs)
+                        .viaFanOut(bcast)
+                        .toInlet(rawDataToProdRecord.in());
 
-                        /*builder.from(bcast)
-                                .via(builder.add(Flow.of(RawData.class)
-                                        .groupedWithin(Integer.MAX_VALUE, getReportFrequency())
-                                        .map(l -> {
-                                            Map<String, RawData> relevantInfoForAllProducers = new HashMap<>();
-                                            for (RawData i : l) {
-                                                relevantInfoForAllProducers.put(i.getProducer(), i);
-                                            }
-                                            return relevantInfoForAllProducers;
-                                        }))
-                                )
-                                .to(builder.add(Sink.foreach(elem -> {
-                                    Map<String, RawData> infoMapTemp = (Map<String, RawData>) elem;
-                                    infoMapTemp.forEach((k, v) -> {
-                                        final QoOReportMsg qoOReportAttributes = new QoOReportMsg(getUniqueID());
-                                        qoOReportAttributes.setProducerName(k);
-                                        qoOReportAttributes.setRequestID(getAssociatedRequest_id());
-                                        qoOReportAttributes.setQooAttribute(OBS_FRESHNESS.toString(), v.getQoOAttribute(OBS_FRESHNESS));
-                                        qoOReportAttributes.setQooAttribute(OBS_ACCURACY.toString(), v.getQoOAttribute(OBS_ACCURACY));
-                                        getMonitorActor().tell(qoOReportAttributes, ActorRef.noSender());
-                                    });
-                                })));*/
+                builder.from(bcast)
+                        .via(builder.add(new QoOReporter(getUniqueID(), getAssociatedRequest_id())))
+                        .to(builder.add(Sink.foreach(elem -> getMonitorActor().tell(new QoOReportMsg((QoOReportMsg) elem), ActorRef.noSender()))));
 
-                        return new FlowShape<>(testBenchmark.in(), testBenchmark.out());
+                return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
 
-                    } else { // other observation levels are not supported
-                        return null;
-                    }
+            } else { // other observation levels are not supported
+                return null;
+            }
 
-                });
+        });
 
         return runnableGraph;
     }

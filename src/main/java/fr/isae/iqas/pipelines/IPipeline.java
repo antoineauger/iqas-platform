@@ -9,6 +9,7 @@ import akka.stream.javadsl.Flow;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.isae.iqas.model.observation.ObservationLevel;
+import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.quality.IComputeQoOAttributes;
 import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -28,8 +29,6 @@ import java.util.Set;
         "tempID", "uniqueID", "topicToPublish", "pipelineGraph", "askedLevel", "operatorToApply"})
 public interface IPipeline {
     ActorRef getMonitorActor();
-
-    Flow<String, Map<String,Integer>, NotUsed> getFlowToComputeObsRate();
 
     void setOptionsForQoOComputation(IComputeQoOAttributes computeAttributeHelper,
                                      Map<String, Map<String, String>> qooParams);

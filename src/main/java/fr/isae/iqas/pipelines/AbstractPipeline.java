@@ -1,8 +1,6 @@
 package fr.isae.iqas.pipelines;
 
-import akka.NotUsed;
 import akka.actor.ActorRef;
-import akka.stream.javadsl.Flow;
 import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.quality.IComputeQoOAttributes;
 import fr.isae.iqas.model.request.Operator;
@@ -143,21 +141,6 @@ public abstract class AbstractPipeline {
 
     public void setReportFrequency(FiniteDuration reportFrequency) {
         this.reportFrequency = reportFrequency;
-    }
-
-    public Flow<String, Map<String,Integer>, NotUsed> getFlowToComputeObsRate() {
-        return Flow.of(String.class).keepAlive(reportFrequency.div(2), "KEEP_ALIVE"::toString)
-                .groupedWithin(Integer.MAX_VALUE, reportFrequency)
-                .map(obsProducerList -> {
-                    Map<String, Integer> obsRateByTopic = new ConcurrentHashMap<>();
-                    for (String p : obsProducerList) {
-                        if (!p.equals("KEEP_ALIVE")) {
-                            obsRateByTopic.putIfAbsent(p, 0);
-                            obsRateByTopic.put(p, obsRateByTopic.get(p) + 1);
-                        }
-                    }
-                    return obsRateByTopic;
-                });
     }
 
     public IComputeQoOAttributes getComputeAttributeHelper() {

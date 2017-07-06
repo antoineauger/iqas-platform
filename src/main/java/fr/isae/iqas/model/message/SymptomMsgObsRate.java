@@ -1,5 +1,6 @@
 package fr.isae.iqas.model.message;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,7 +13,7 @@ public class SymptomMsgObsRate extends SymptomMsg {
     public SymptomMsgObsRate(MAPEKenums.SymptomMAPEK symptom, MAPEKenums.EntityMAPEK about, String concernedUniqueIDPipeline, List<String> concernedRequests) {
         super(symptom, about);
         this.uniqueIDPipeline = concernedUniqueIDPipeline;
-        this.concernedRequests = concernedRequests;
+        this.concernedRequests = new ArrayList<>(concernedRequests);
     }
 
     public String getUniqueIDPipeline() {
