@@ -125,8 +125,10 @@ $(function () {
                             if (val.current_status === 'REMOVED' || val.current_status === 'REJECTED') {
                                 clearTimeout(timeoutRetrieveRequests);
                                 $("#table_latest_obs").append('<tr><td class="mdl-data-table__cell--non-numeric" colspan="6">Request has been removed...</td></tr>');
+                                $("#id_kafka_topic").text('N/A');
                             }
                             else {
+                                $("#id_kafka_topic").text(val.application_id + '_' + request_id);
                                 updateApplicationAndSensorNumber(request_id);
                                 timeoutRetrieveRequests = setTimeout(worker, 15000);
                             }
