@@ -1,15 +1,12 @@
 package fr.isae.iqas.pipelines;
 
-import akka.NotUsed;
 import akka.actor.ActorRef;
 import akka.stream.FlowShape;
 import akka.stream.Graph;
 import akka.stream.Materializer;
-import akka.stream.javadsl.Flow;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.isae.iqas.model.observation.ObservationLevel;
-import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.quality.IComputeQoOAttributes;
 import fr.isae.iqas.model.request.Operator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
