@@ -169,7 +169,7 @@
                                         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label full-width">
                                             <input class="mdl-textfield__input" type="text" pattern="[a-zA-Z0-9]+" id="sensor_id" name="sensor_id">
                                             <label class="mdl-textfield__label" for="sensor_id">Sensor ID</label>
-                                            <span class="mdl-textfield__error">SensorID should only contains letters and numbers!</span>
+                                            <span class="mdl-textfield__error">Sensor ID should only contain letters and numbers!</span>
                                         </div>
 
                                         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label full-width">
@@ -297,7 +297,71 @@
         <section class="mdl-layout__tab-panel" id="scroll-tab-3">
             <div class="page-content">
 
-            </div>
+                <div class="mdl-grid">
+
+                    <div class="mdl-cell mdl-cell--12-col center-card">
+                        <div id="pipelines_card" class="mdl-card mdl-shadow--2dp">
+                            <div class="mdl-card__title">
+                                <h2 class="mdl-card__title-text">Registered QoO Pipelines</h2>
+                            </div>
+                            <div class="mdl-card__supporting-text no_top_padding">
+                                <table class="mdl-data-table mdl-js-data-table">
+                                    <thead>
+                                    <tr>
+                                        <th class="mdl-data-table__cell--non-numeric">Pipeline ID</th>
+                                        <th class="mdl-data-table__cell--non-numeric">Name</th>
+                                        <th class="mdl-data-table__cell--non-numeric">Adaptable</th>
+                                        <th class="mdl-data-table__cell--non-numeric">Customizable parameters</th>
+                                        <th class="mdl-data-table__cell--non-numeric"></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="table_pipelines_rows">
+                                    <!-- Here goes the retrieved Sensors -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div> <!-- mdl-cell -->
+
+                    <div class="mdl-cell mdl-cell--12-col center-card" id="postPipeline">
+
+                        <div class="form-card-wide mdl-card mdl-shadow--2dp">
+                            <div class="mdl-card__title">
+                                <h2 class="mdl-card__title-text">Add new QoO Pipeline</h2>
+                            </div>
+                            <div class="mdl-card__supporting-text no_top_padding">
+                                <div id="div_form2">
+                                    <form id="submit_pipeline_form" action="#">
+
+                                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label full-width">
+                                            <textarea class="mdl-textfield__input" type="text" rows= "30" id="pipelineTextarea" name="pipelineTextarea"></textarea>
+                                            <label class="mdl-textfield__label" for="pipelineTextarea">SPARQL request for the new QoO Pipeline</label>
+                                        </div>
+
+                                    </form>
+                                </div>
+
+                            </div> <!-- mdl-card__supporting-text -->
+
+                            <div class="mdl-card__actions mdl-card--border">
+                                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onclick="loadPipelineTemplate();">
+                                    Load template
+                                </a>
+                                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onclick="clearForm2();">
+                                    Reset
+                                </a>
+                                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onclick="postNewPipeline();">
+                                    Submit
+                                </a>
+                            </div> <!-- mdl-card__actions -->
+
+                        </div> <!-- mdl-card -->
+
+                    </div> <!-- mdl-cell -->
+
+                </div> <!--mdl-grid -->
+
+            </div> <!--page-content -->
         </section>
 
     </main> <!-- mdl-layout__content -->

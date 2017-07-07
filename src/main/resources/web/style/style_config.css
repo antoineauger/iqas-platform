@@ -21,22 +21,26 @@
     width: 50%;
 }
 
+#div_form2 {
+    width: 100%;
+}
+
 div.full-width {
     width: 100%;
 }
 
-#info_form span {
+#info_form span, #info_form2 span {
     font-size: 14px !important;
 }
 
-#table_sensors_rows a {
+#table_sensors_rows a, #table_pipelines_rows a {
     color: #757575;;
 }
 
-#sensors_card .mdl-data-table__cell--non-numeric {
+#sensors_card .mdl-data-table__cell--non-numeric, #pipelines_card .mdl-data-table__cell--non-numeric {
     font-size: 1rem !important;
 }
 
-#sensors_card table {
+#sensors_card table, #pipelines_card table {
     width: 100%;
 }

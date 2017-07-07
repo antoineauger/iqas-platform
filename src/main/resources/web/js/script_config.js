@@ -1,4 +1,5 @@
 var alreadyRegisteredSensors = [];
+var pipelineDirectory = "";
 
 function checkCorrectForm(){
     var isCorrect = true;
@@ -31,6 +32,10 @@ function askDeletionOfSensor(sensor_id) {
             }
         });
     }
+}
+
+function askDeletionOfPipeline(pipeline_id) {
+    alert("To delete " + pipeline_id + ", simply remove its corresponding .class file from the QoO Pipelines directory and refresh the page.");
 }
 
 function updateSensorList() {
@@ -85,6 +90,53 @@ function updateSensorList() {
     });
 }
 
+function updatePipelineList() {
+    $.ajax({
+        type: "GET",
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        url: '/pipelines',
+        success: function (data) {
+            $("#table_pipelines_rows").empty();
+            if (data.length > 0) {
+                $.each(data, function(key, val) {
+
+                    var oneRow = '<tr>';
+
+                    oneRow += '<td class="mdl-data-table__cell--non-numeric">';
+                    oneRow += '<a href="/pipelines/' + val["pipeline_id"] + '" target="_blank">' + val["pipeline_id"] + '</a>';
+                    oneRow += '</td>';
+
+                    oneRow += '<td class="mdl-data-table__cell--non-numeric">';
+                    oneRow += val["pipeline_name"] ;
+                    oneRow += '</td>';
+
+                    oneRow += '<td class="mdl-data-table__cell--non-numeric">';
+                    oneRow += val["pipeline_object"]["is_adaptable"] ;
+                    oneRow += '</td>';
+
+                    oneRow += '<td class="mdl-data-table__cell--non-numeric">';
+                    oneRow += val["pipeline_object"]["customizable_params"].toString() ;
+                    oneRow += '</td>';
+
+                    oneRow += '<td class="mdl-data-table__cell--non-numeric">';
+                    oneRow += '<a href="#" onclick="askDeletionOfPipeline(\'' + val["pipeline_id"] + '\');"><i class="material-icons">delete</i></a>' ;
+                    oneRow += '</td>';
+
+                    $("#table_pipelines_rows").append(oneRow);
+                });
+            }
+            else {
+                $("#table_pipelines_rows").append('<tr><td class="mdl-data-table__cell--non-numeric" colspan="5">No QoO Pipelines available yet.</td></tr>');
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            $("#table_pipelines_rows").empty();
+            $("#table_pipelines_rows").append('<tr><td class="mdl-data-table__cell--non-numeric" colspan="5">Impossible to retrieve QoO Pipelines...</td></tr>');
+        }
+    });
+}
+
 function clearForm() {
     $("#sensor_id").val('');
     $("#sensor_id").parent().removeClass('is-dirty is-focused');
@@ -105,6 +157,11 @@ function clearForm() {
     $('#topic option[value="qoo:temperature"]').prop('selected', true);
     $('#quantityKind option[value="m3-lite:Temperature"]').prop('selected', true);
     $('#unit option[value="m3-lite:DegreeCelsius"]').prop('selected', true);
+}
+
+function clearForm2() {
+    $("#pipelineTextarea").val('');
+    $("#pipelineTextarea").parent().removeClass('is-dirty is-focused');
 }
 
 function postNewSensor() {
@@ -197,12 +254,81 @@ function postNewSensor() {
     }
 }
 
+function postNewPipeline() {
+    var payload = $("#pipelineTextarea").val();
+    if (payload !== '') {
+        $.ajax({
+            url: 'http://10.161.3.181:3030/qoo-onto/update',
+            contentType: "application/sparql-update",
+            data: payload,
+            type: 'POST',
+            processData: false,
+            success: function (data) {
+                clearForm2();
+                alert("You should now place the corresponding pipeline in the directory " + pipelineDirectory + ' and refresh the page to see your QoO Pipeline in the list.');
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("An error has occurred! Reason: " + errorThrown);
+            }
+        });
+    }
+    else {
+        alert("Cannot submit an empty SPARQL request. If you don't know where to start, give a try to the button 'LOAD TEMPLATE'.");
+    }
+}
+
+function loadPipelineTemplate() {
+    $("#pipelineTextarea").parent().addClass('is-dirty');
+
+    var prefixes = 'PREFIX qoo: <http://isae.fr/iqas/qoo-ontology#>\n' +
+        'PREFIX ssn: <http://purl.oclc.org/NET/ssnx/ssn#>\n' +
+        'PREFIX iot-lite: <http://purl.oclc.org/NET/UNIS/fiware/iot-lite#>\n' +
+        'PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>\n' +
+        'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n' +
+        'PREFIX owl: <http://www.w3.org/2002/07/owl#>\n' +
+        'PREFIX m3-lite: <http://purl.org/iot/vocab/m3-lite#>\n\n';
+
+    var query = 'INSERT DATA {\n';
+    query += '   <http://isae.fr/iqas/qoo-ontology#iQAS> qoo:provides qoo:MY_PIPELINE .\n\n';
+
+    query += '   <http://isae.fr/iqas/qoo-ontology#MY_PIPELINE> rdf:type qoo:QoOPipeline ;\n';
+    query += '      qoo:allowsToSet qoo:MY_PARAMETER1 .\n\n';
+
+    query += '   <http://isae.fr/iqas/qoo-ontology#MY_PARAMETER1> rdf:type qoo:QoOCustomizableParameter ;\n';
+    query += '      qoo:documentation "Documentation for MY_PARAMETER1" ;\n';
+    query += '      qoo:paramType "Integer" ;\n';
+    query += '      qoo:paramMinValue "0" ;\n';
+    query += '      qoo:paramMaxValue "+INF" ;\n';
+    query += '      qoo:paramInitialValue "1" ;\n';
+    query += '      qoo:has qoo:MY_PARAMETER1_EFFECT1 ;\n';
+    query += '      qoo:has qoo:MY_PARAMETER1_EFFECT2 .\n\n';
+
+    query += '   <http://isae.fr/iqas/qoo-ontology#MY_PARAMETER1_EFFECT1> rdf:type qoo:QoOEffect ;\n';
+    query += '      qoo:paramVariation "HIGH" ;\n';
+    query += '      qoo:qooAttributeVariation "HIGH" ;\n';
+    query += '      qoo:impacts qoo:OBS_RATE .\n\n';
+
+    query += '   <http://isae.fr/iqas/qoo-ontology#MY_PARAMETER1_EFFECT2> rdf:type qoo:QoOEffect ;\n';
+    query += '      qoo:paramVariation "CONSTANT" ;\n';
+    query += '      qoo:qooAttributeVariation "LOW" ;\n';
+    query += '      qoo:impacts qoo:OBS_FRESHNESS .\n\n';
+
+    query += '}';
+
+    $("#pipelineTextarea").val(prefixes + query);
+}
+
 $(function(){
+    var myRegexp = /qoo_pipelines_dir=(.*)/g;
+
     updateSensorList();
+    updatePipelineList();
 
     $.ajax({
         url: "/configuration/iqas",
         success: function( result ) {
+            var match = myRegexp.exec(result);
+            pipelineDirectory = match[1];
             $( "#iqas-config" ).text( result );
         }
     });
