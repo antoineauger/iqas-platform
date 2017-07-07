@@ -1,0 +1,42 @@
+.form-card-wide {
+    margin-left: auto;
+    margin-right: auto;
+    width: 75%;
+}
+
+.mdl-card__supporting-text {
+    display: flex;
+}
+
+.mdl-selectfield--floating-label.is-focused .mdl-selectfield__label, .mdl-selectfield--floating-label.is-dirty .mdl-selectfield__label {
+    color: rgb(96,125,139); !important;
+}
+
+#info_form {
+    width: 50%;
+    padding-left: 50px;
+}
+
+#div_form {
+    width: 50%;
+}
+
+div.full-width {
+    width: 100%;
+}
+
+#info_form span {
+    font-size: 14px !important;
+}
+
+#table_sensors_rows a {
+    color: #757575;;
+}
+
+#sensors_card .mdl-data-table__cell--non-numeric {
+    font-size: 1rem !important;
+}
+
+#sensors_card table {
+    width: 100%;
+}

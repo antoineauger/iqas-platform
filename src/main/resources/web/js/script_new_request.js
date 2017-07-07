@@ -11,13 +11,11 @@ function clearForm(){
     $("#application_id").val('');
     $("#application_id").parent().removeClass('is-dirty is-focused');
 
-    $("#topic").val('');
-    $("#topic").parent().removeClass('is-dirty is-focused');
+    $('#topic option[value=ALL]').prop('selected', true);
 
-    $("#location").val('');
-    $("#location").parent().removeClass('is-dirty is-focused');
+    $('#location option[value=ALL]').prop('selected', true);
 
-    $('#sla option[value=sla-BEST_EFFORT]').prop('selected', true);
+    $('#sla option[value=BEST_EFFORT]').prop('selected', true);
 
     $('form input[type=checkbox]').each(function (index, element) {
         $(element).parent().removeClass('is-checked');
@@ -25,7 +23,7 @@ function clearForm(){
     })
     componentHandler.upgradeDom('MaterialCheckbox');
 
-    $('#obs_level option[value=obs-level-RAW_DATA]').prop('selected', true);
+    $('#obs_level option[value=RAW_DATA]').prop('selected', true);
 
     $("#qoo-iqas_params").val('');
     $("#qoo-iqas_params").parent().removeClass('is-dirty is-focused');
@@ -118,13 +116,6 @@ function sendIqasRequest(){
 
 $(function () {
     showOrHideQoODiv();
-
-    $("#location").focusin(function(){
-        $("#info_form_location").css("display", "block");
-    });
-    $("#location").focusout(function(){
-        $("#info_form_location").css("display", "none");
-    });
 
     $("#qoo-iqas_params").focusin(function(){
         $("#info_form_iqas_params").css("display", "block");
