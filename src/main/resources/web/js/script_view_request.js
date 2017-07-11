@@ -1,3 +1,8 @@
+var chart;
+var consumedDates = [];
+var obsFreshnessValues = [];
+var obsAccuracyValues = [];
+
 function hidePresentationText() {
     $("#presentation_card").addClass("mdl-cell--hide-phone mdl-cell--hide-tablet mdl-cell--hide-desktop");
 }
@@ -21,7 +26,12 @@ function extractStartTime(logs) {
     return tempDate;
 }
 
-function updateApplicationAndSensorNumber(request_id) {
+function updateDataForRequest(request_id) {
+    // Reset graph values
+    consumedDates = [];
+    obsFreshnessValues = [];
+    obsAccuracyValues = [];
+
     var bodyToSend = '{"sort":[{"@timestamp":{"order":"desc"}}],"size":20,"query":{"term":{"request_id":"' + request_id + '"}}}';
     $.ajax({
         type: "POST",
@@ -32,6 +42,7 @@ function updateApplicationAndSensorNumber(request_id) {
         url: 'http://10.161.3.181:9200/logstash-*/_search',
         success: function (data) {
             if (data && data.hasOwnProperty('hits') && data.hits.hasOwnProperty('hits') && data.hits.hits.length > 0) {
+
                 $.each(data.hits.hits, function (key, val) {
                     var oneRow = '<tr>';
 
@@ -49,10 +60,10 @@ function updateApplicationAndSensorNumber(request_id) {
                     oneRow += '</td>';
 
                     oneRow += '<td class="mdl-data-table__cell--non-numeric">';
-                    oneRow += '<p style="margin: 0px !important;">E2E: ';
+                    oneRow += '<p style="margin: 0 !important;">E2E: ';
                     oneRow += parseInt(val['_source']['timestamps']['consumed']) - parseInt(val['_source']['timestamps']['produced']);
                     oneRow += '</p>';
-                    oneRow += '<p style="margin: 0px !important;">iQAS: ';
+                    oneRow += '<p style="margin: 0 !important;">iQAS: ';
                     oneRow += parseInt(val['_source']['timestamps']['iQAS_out']) - parseInt(val['_source']['timestamps']['iQAS_in']);
                     oneRow += '</p>';
                     oneRow += '</td>';
@@ -60,9 +71,13 @@ function updateApplicationAndSensorNumber(request_id) {
                     if (val['_source'].hasOwnProperty('qoo') && Object.keys(val['_source']['qoo']).length > 0) {
                         oneRow += '<td class="mdl-data-table__cell--non-numeric">';
                         $.each(val['_source']['qoo'], function (key2, val2) {
-                            oneRow += '<p style="margin: 0px !important;">' + key2 + ": " + val2 + '</p>';
+                            oneRow += '<p style="margin: 0 !important;">' + key2 + ": " + val2 + '</p>';
                         });
                         oneRow += '</td>';
+
+                        consumedDates.push(moment(parseInt(val['_source']['timestamps']['consumed'])));
+                        obsFreshnessValues.push(parseInt(val['_source']['qoo']['OBS_FRESHNESS']));
+                        obsAccuracyValues.push(parseInt(val['_source']['qoo']['OBS_ACCURACY']));
                     }
                     else {
                         oneRow += '<td class="mdl-data-table__cell--non-numeric">';
@@ -85,6 +100,8 @@ function updateApplicationAndSensorNumber(request_id) {
 
                     $("#table_latest_obs").append(oneRow);
                 });
+
+                updateChartRendering(chart, consumedDates, obsFreshnessValues, obsAccuracyValues);
             }
             else {
                 $("#table_latest_obs").append('<tr><td class="mdl-data-table__cell--non-numeric" colspan="6">No observations are available for this Request yet...</td></tr>');
@@ -94,6 +111,42 @@ function updateApplicationAndSensorNumber(request_id) {
             $("#table_latest_obs").append('<tr><td class="mdl-data-table__cell--non-numeric" colspan="6">Impossible to retrieve latest observations for this Request...</td></tr>');
         }
     });
+}
+
+function clearGraphDatasets(chart, update) {
+    consumedDates = [];
+    obsFreshnessValues = [];
+    obsAccuracyValues = [];
+    if (update) {
+        updateChartRendering(chart, consumedDates, obsFreshnessValues, obsAccuracyValues);
+    }
+}
+
+function updateChartRendering(chart, consumedDates, obsFreshnessValues, obsAccuracyValues) {
+    chart.data.labels = [];
+    chart.data.datasets[0].data = [];
+    chart.data.datasets[1].data = [];
+
+    if (obsFreshnessValues.length > 0 || obsAccuracyValues.length > 0) {
+        consumedDates.reverse().forEach(function (element) {
+            chart.data.labels.push(element);
+        });
+
+        obsFreshnessValues.reverse().forEach(function (element) {
+            chart.data.datasets[0].data.push(element);
+        });
+
+        obsAccuracyValues.reverse().forEach(function (element) {
+            chart.data.datasets[1].data.push(element);
+        });
+
+        $("#view_request_qoo").removeClass("mdl-cell--hide-phone mdl-cell--hide-tablet mdl-cell--hide-desktop");
+    }
+    else {
+        $("#view_request_qoo").addClass("mdl-cell--hide-phone mdl-cell--hide-tablet mdl-cell--hide-desktop");
+    }
+
+    chart.update();
 }
 
 $(function () {
@@ -124,12 +177,13 @@ $(function () {
 
                             if (val.current_status === 'REMOVED' || val.current_status === 'REJECTED') {
                                 clearTimeout(timeoutRetrieveRequests);
+                                clearGraphDatasets(chart, true);
                                 $("#table_latest_obs").append('<tr><td class="mdl-data-table__cell--non-numeric" colspan="6">Request has been removed...</td></tr>');
                                 $("#id_kafka_topic").text('N/A');
                             }
                             else {
                                 $("#id_kafka_topic").text(val.application_id + '_' + request_id);
-                                updateApplicationAndSensorNumber(request_id);
+                                updateDataForRequest(request_id);
                                 timeoutRetrieveRequests = setTimeout(worker, 15000);
                             }
                         }
@@ -137,10 +191,12 @@ $(function () {
                 }
                 else {
                     clearTimeout(timeoutRetrieveRequests);
+                    clearGraphDatasets(chart, true);
                     $("#table_latest_obs").append('<tr><td class="mdl-data-table__cell--non-numeric" colspan="6">Impossible to retrieve latest observations for this Request...</td></tr>');
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
+                clearGraphDatasets(chart, true);
                 clearTimeout(timeoutRetrieveRequests);
                 $("#table_latest_obs").append('<tr><td class="mdl-data-table__cell--non-numeric" colspan="6">Impossible to retrieve latest observations for this Request...</td></tr>');
             }
@@ -148,5 +204,63 @@ $(function () {
 
     })();
 
-});
+    var ctx = document.getElementById('myChart').getContext('2d');
+    chart = new Chart(ctx, {
+        // The type of chart we want to create
+        type: 'line',
 
+        // The data for our dataset
+        data: {
+            labels: [],
+            datasets: [{
+                label: "OBS_FRESHNESS",
+                yAxisID: 'A',
+                borderColor: 'rgb(96,125,139)',
+                bezierCurve: false,
+                lineTension: 0,
+                data: []
+            }, {
+                label: "OBS_ACCURACY",
+                yAxisID: 'B',
+                borderColor: 'rgb(255,82,82)',
+                backgroundColor: 'transparent',
+                bezierCurve: false,
+                lineTension: 0,
+                data: []
+            }]
+        },
+
+        // Configuration options go here
+        options: {
+            responsive: true,
+
+            scales: {
+                xAxes: [{
+                    type: 'time',
+                    display: true,
+                    time: {
+                        format: "HH:mm:ss A",
+                        unit: 'second',
+                        unitStepSize: 15
+                    }
+                }],
+                yAxes: [{
+                    id: 'A',
+                    type: 'linear',
+                    position: 'left',
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }, {
+                    id: 'B',
+                    type: 'linear',
+                    position: 'right',
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+
+});
