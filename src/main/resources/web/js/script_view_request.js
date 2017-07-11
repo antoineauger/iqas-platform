@@ -246,6 +246,7 @@ $(function () {
                 }],
                 yAxes: [{
                     id: 'A',
+                    label: 'freshness (ms)',
                     type: 'linear',
                     position: 'left',
                     ticks: {
@@ -253,6 +254,7 @@ $(function () {
                     }
                 }, {
                     id: 'B',
+                    label: 'accuracy (%)',
                     type: 'linear',
                     position: 'right',
                     ticks: {

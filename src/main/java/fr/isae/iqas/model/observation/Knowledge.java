@@ -96,6 +96,19 @@ public class Knowledge extends RawData {
         }
     }
 
+    @Override
+    public void addTimestamp(String stepName, long timestamp) {
+        Individual obsValueInd = obsModel.getIndividual( pref.get("qoo") + "obsValue");
+        String previousValue = obsValueInd.getProperty(qooP.get("qoo:obsTimestampsValue")).getString();
+        if (previousValue.equals("")) {
+            previousValue = previousValue.concat(stepName + ":" + String.valueOf(timestamp));
+        }
+        else {
+            previousValue = previousValue.concat(";" + stepName + ":" + String.valueOf(timestamp));
+        }
+        obsValueInd.setPropertyValue(qooP.get("qoo:obsTimestampsValue"), obsModel.createLiteral(previousValue));
+    }
+
     /**
      * Getters and setters for a specific QoO attribute
      */

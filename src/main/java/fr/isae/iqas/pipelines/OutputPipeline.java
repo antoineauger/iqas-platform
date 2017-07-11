@@ -166,9 +166,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                     sensorDataObject.getString("date"),
                                     sensorDataObject.getString("value"),
                                     sensorDataObject.getString("producer"),
-                                    sensorDataObject.getString("timestamps"),
-                                    "iQAS_out",
-                                    System.currentTimeMillis());
+                                    sensorDataObject.getString("timestamps"));
 
                             if (getQooParams().size() > 0) {
                                 if (interestAttr.contains(OBS_ACCURACY)) {
@@ -193,7 +191,10 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                 );
 
                 final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
-                        Flow.of(RawData.class).map(r -> new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r)))
+                        Flow.of(RawData.class).map(r -> {
+                            r.addTimestamp("iQAS_out", System.currentTimeMillis());
+                            return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
+                        })
                 );
 
                 builder.from(consumRecordToRawData.out())
@@ -218,9 +219,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                     sensorDataObject.getString("date"),
                                     sensorDataObject.getString("value"),
                                     producer,
-                                    sensorDataObject.getString("timestamps"),
-                                    "iQAS_out",
-                                    System.currentTimeMillis());
+                                    sensorDataObject.getString("timestamps"));
 
                             if (getQooParams().size() > 0) {
                                 if (interestAttr.contains(OBS_ACCURACY)) {
@@ -249,7 +248,10 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                 );
 
                 final FlowShape<Information, ProducerRecord> infoToProdRecord = builder.add(
-                        Flow.of(Information.class).map(r -> new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r)))
+                        Flow.of(Information.class).map(r -> {
+                            r.addTimestamp("iQAS_out", System.currentTimeMillis());
+                            return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
+                        })
                 );
 
                 builder.from(consumRecordToInfo.out())
@@ -274,9 +276,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                     sensorDataObject.getString("date"),
                                     sensorDataObject.getString("value"),
                                     sensorDataObject.getString("producer"),
-                                    sensorDataObject.getString("timestamps"),
-                                    "iQAS_out",
-                                    System.currentTimeMillis());
+                                    sensorDataObject.getString("timestamps"));
 
                             if (getQooParams().size() > 0) {
                                 if (interestAttr.contains(OBS_ACCURACY)) {
@@ -320,6 +320,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                                 }
                             }
 
+                            knowledgeTemp.addTimestamp("iQAS_out", System.currentTimeMillis());
                             return new ProducerRecord<byte[], String>(getTopicToPublish(), knowledgeTemp.toString());
                         })
                 );

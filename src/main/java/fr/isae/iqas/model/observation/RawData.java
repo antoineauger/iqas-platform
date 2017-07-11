@@ -103,12 +103,12 @@ public class RawData {
         return timestamps;
     }
 
-    public void addTimestamp(String stepName, String timestampString) {
+    public void addTimestamp(String stepName, long timestamp) {
         if (this.timestamps.equals("")) {
-            this.timestamps = this.timestamps.concat(stepName + ":" + timestampString);
+            this.timestamps = this.timestamps.concat(stepName + ":" + String.valueOf(timestamp));
         }
         else {
-            this.timestamps = this.timestamps.concat(";" + stepName + ":" + timestampString);
+            this.timestamps = this.timestamps.concat(";" + stepName + ":" + String.valueOf(timestamp));
         }
     }
 
