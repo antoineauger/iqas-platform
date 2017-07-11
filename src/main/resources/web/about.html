@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+
+<!--
+  Website of the iQAS platform
+    Antoine AUGER
+    ISAE-SUPAERO, Toulouse
+    2017
+-->
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Website of the iQAS platform.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>iQAS platform</title>
+
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" sizes="192x192" href="/figures/iqas_logo_favicon.png">
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Material Design Lite">
+    <link rel="apple-touch-icon-precomposed" href="/figures/iqas_logo_favicon.png">
+
+    <!-- Tile icon for Win8 (144x144 + tile color) -->
+    <meta name="msapplication-TileImage" content="/figures/iqas_logo_favicon.png">
+    <meta name="msapplication-TileColor" content="#3372DF">
+
+    <link rel="shortcut icon" href="/figures/iqas_logo_favicon.png">
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-red.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/mdl-selectfield.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/css/style_new_request.css">
+</head>
+
+<body>
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
+    <header class="mdl-navigation mdl-layout__header is-casting-shadow">
+        <div class="mdl-layout__header-row">
+            <div>
+                <span class="mdl-layout-title">About</span>
+            </div>
+        </div>
+
+        <a href="#" id="text_status_iqas" title="iQAS platform is currently running">
+            <img id="iqas_status_icon_ok" src="/figures/iqas_status_ok.png">
+            <img id="iqas_status_icon_nok" src="/figures/iqas_status_nok.png">
+        </a>
+
+    </header>
+
+    <div class="mdl-layout__drawer">
+
+        <header class="logo-drawer-header">
+            <a href="/"><img src="/figures/iqas_logo.png"></a>
+        </header>
+
+        <nav class="mdl-navigation">
+            <a class="mdl-navigation__link" href="/">
+                <i class="material-icons">home</i> Home
+            </a>
+            <a class="mdl-navigation__link" href="/newRequest">
+                <i class="material-icons">content_paste</i> New request
+            </a>
+            <a class="mdl-navigation__link" href="/api">
+                <i class="material-icons">info</i> API endpoints
+            </a>
+            <a class="mdl-navigation__link" href="/configuration">
+                <i class="material-icons">mode_edit</i> Configuration
+            </a>
+            <a class="mdl-navigation__link active-link" href="#">
+                <i class="material-icons">people</i> About
+            </a>
+            <div class="mdl-layout-spacer"></div>
+        </nav>
+    </div> <!-- mdl-layout__drawer -->
+
+    <main class="mdl-layout__content">
+
+        <div class="form-card-wide mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">About the project</h2>
+            </div>
+
+            <div class="mdl-card__supporting-text no_top_padding">
+                The iQAS platform has been developed during the PhD thesis of Antoine Auger at ISAE-SUPAERO (2014-2017).<br/>
+                This research was supported in part by the French Ministry of Defence through financial support of the Direction Générale de l’Armement (DGA).
+            </div>
+        </div>
+
+        <div class="form-card-wide mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">License</h2>
+            </div>
+
+            <div class="mdl-card__supporting-text no_top_padding" style="text-align: center; display: block;">
+                <div>
+                    The source code of iQAS may be found online on Github.<br/>
+                    <a href="https://github.com/antoineauger/iqas-platform" target="_blank">https://github.com/antoineauger/iqas-platform</a>
+                </div>
+
+                <div style="margin-top: 30px">
+                    The iQAS platform is licensed under the GNU General Public License v3.0.<br/>
+                    <a href="/license" target="_blank">View</a> license file.
+                </div>
+
+                <div style="margin-top: 30px">
+                    Copyright 20014-2017 Antoine Auger<br/>
+                    See Google Scholar's <a href="https://scholar.google.fr/citations?user=g_2BlP0AAAAJ&hl=fr" target="_blank">profile</a>.
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    </div> <!-- mdl-layout -->
+
+<script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+<script type="text/javascript" src="/js/mdl-selectfield.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="/js/script_common.js"></script>
+<script type="text/javascript" src="/js/script_new_request.js"></script>
+</body>
+</html>
