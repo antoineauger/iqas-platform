@@ -49,8 +49,8 @@ public class MySpecificQoOAttributeComputation implements IComputeQoOAttributes 
 
     @Override
     public Double computeQoOFreshness(RawData observation) {
-        Timestamp informationSensingDate = observation.getDate();
-        Double age = (double) (System.currentTimeMillis() - informationSensingDate.getTime());
+        Timestamp obsSensingDate = observation.getDate();
+        Double age = (double) (System.currentTimeMillis() - obsSensingDate.getTime());
         return age;
     }
 }

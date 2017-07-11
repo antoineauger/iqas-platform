@@ -120,6 +120,12 @@ public class RESTServer extends AllDirectives {
                                 path(segment("newRequest"), () ->
                                         getFromResource("web/new_request.html")
                                 ),
+                                path(segment("license"), () ->
+                                        getFromResource("web/license.txt")
+                                ),
+                                path(segment("about"), () ->
+                                        getFromResource("web/about.html")
+                                ),
                                 path(segment("configuration").slash("iqas"), () ->
                                         getFromResource("iqas.properties")
                                 ),

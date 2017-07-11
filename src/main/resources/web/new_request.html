@@ -75,7 +75,7 @@
             <a class="mdl-navigation__link" href="/configuration">
                 <i class="material-icons">mode_edit</i> Configuration
             </a>
-            <a class="mdl-navigation__link" href="#">
+            <a class="mdl-navigation__link" href="/about">
                 <i class="material-icons">people</i> About
             </a>
             <div class="mdl-layout-spacer"></div>
@@ -89,7 +89,7 @@
                 <h2 class="mdl-card__title-text">Request details</h2>
             </div>
 
-            <div class="mdl-card__supporting-text">
+            <div class="mdl-card__supporting-text no_top_padding">
                 <div id="div_form">
                     <form id="submit_request_form" action="#">
                         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label full-width">
@@ -98,16 +98,21 @@
                             <span class="mdl-textfield__error">ApplicationID should be only composed of letters or numbers!</span>
                         </div>
 
-                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label full-width">
-                            <input class="mdl-textfield__input" type="text" pattern="[a-zA-Z]+" id="topic" name="topic">
-                            <label class="mdl-textfield__label" for="topic">Topic</label>
-                            <span class="mdl-textfield__error">Topic should be a word composed of letters only!</span>
+                        <div class="mdl-selectfield mdl-js-selectfield mdl-selectfield--floating-label full-width">
+                            <select class="mdl-selectfield__select" id="topic" name="topic">
+                                <option value="ALL">ALL</option>
+                                <option value="temperature">temperature</option>
+                                <option value="visibility">visibility</option>
+                            </select>
+                            <label class="mdl-selectfield__label" for="topic">Topic</label>
                         </div>
 
-                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label full-width">
-                            <input class="mdl-textfield__input" type="text" pattern="[a-zA-Z ]+" id="location" name="location">
-                            <label class="mdl-textfield__label" for="location">Location</label>
-                            <span class="mdl-textfield__error">Location cannot contain any number!</span>
+                        <div class="mdl-selectfield mdl-js-selectfield mdl-selectfield--floating-label full-width">
+                            <select class="mdl-selectfield__select" id="location" name="location">
+                                <option value="ALL">ALL</option>
+                                <option value="Toulouse">Toulouse</option>
+                            </select>
+                            <label class="mdl-selectfield__label" for="location">Location</label>
                         </div>
 
                         <div class="mdl-selectfield mdl-js-selectfield mdl-selectfield--floating-label full-width">
@@ -155,9 +160,6 @@
                 </div>
 
                 <div id="info_form">
-                    <span id="info_form_location" style="top: 155px; position: relative; display: none">
-                        You may want to use the API endpoints section to retrieve known locations.
-                    </span>
                     <span id="info_form_iqas_params" style="top: 550px; position: relative; display: none;">
                         JSON-formated parameters. For instance:<br/>
                         <span style="font-family: monospace;">{<br/>

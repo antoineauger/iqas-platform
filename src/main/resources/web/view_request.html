@@ -98,7 +98,7 @@
             <a class="mdl-navigation__link" href="/configuration">
                 <i class="material-icons">mode_edit</i> Configuration
             </a>
-            <a class="mdl-navigation__link" href="#">
+            <a class="mdl-navigation__link" href="/about">
                 <i class="material-icons">people</i> About
             </a>
             <div class="mdl-layout-spacer"></div>
@@ -124,13 +124,15 @@
                 </div>
             </div> <!-- mdl-cell -->
 
-            <div id="view_request_qoo" class="mdl-cell mdl-cell--12-col center-card">
+            <div id="view_request_qoo" class="mdl-cell mdl-cell--12-col center-card mdl-cell--hide-phone mdl-cell--hide-tablet mdl-cell--hide-desktop">
                 <div class="mdl-card mdl-shadow--2dp">
                     <div class="mdl-card__title">
                         <h2 class="mdl-card__title-text">QoO metrics</h2>
                     </div>
-                    <div class="mdl-card__supporting-text">
-
+                    <div class="mdl-card__supporting-text no_top_padding">
+                        <div id="chart-container">
+                            <canvas id="myChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div> <!-- mdl-cell -->
@@ -140,7 +142,13 @@
                     <div class="mdl-card__title">
                         <h2 class="mdl-card__title-text">Latest observations</h2>
                     </div>
-                    <div class="mdl-card__supporting-text">
+                    <div class="mdl-card__supporting-text no_top_padding">
+                        <div style="margin-bottom: 16px;">
+                            <img src="/figures/kafka_logo.png" style="height: 50px;">
+                            Please note that you can retrieve all observations in real-time by subscribing to the Kafka topic:
+                            <span id="id_kafka_topic" style="font-family: monospace; font-weight: bold; color: rgb(255, 82, 82) !important;">N/A</span>
+                        </div>
+
                         <table class="mdl-data-table mdl-js-data-table">
                             <thead>
                             <tr>
@@ -168,6 +176,8 @@
 
 <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="/js/moment.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 <script type="text/javascript" src="/js/script_common.js"></script>
 <script type="text/javascript" src="/js/script_view_request.js"></script>
 </body>

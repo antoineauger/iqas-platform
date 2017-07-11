@@ -23,7 +23,11 @@
 
 .mdl-card__supporting-text {
     width: auto !important;
-    overflow: auto;
+    overflow: auto !important;
+}
+
+.no_top_padding {
+    padding-top: 0 !important;
 }
 
 .active-link, .important-note {
@@ -56,6 +60,10 @@
     justify-content: flex-end;
     padding: 16px;
     height: 151px;
+}
+
+.logo-drawer-header img {
+    width: 207px !important;
 }
 
 .border {
