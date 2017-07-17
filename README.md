@@ -78,31 +78,47 @@ project
     4. [Install Jena Fuseki](https://jena.apache.org/documentation/serving_data/)
 2. Clone iQAS repository: <br/>`git clone https://github.com/antoineauger/iqas-platform.git`
 
-In this quickstart guide, we will use the variable `$IQAS_ROOT` to refer to the emplacement of the directory `iqas-platform` you have just downloaded.
+In this quickstart guide, we will use the variable `$IQAS_DIR` to refer to the emplacement of the directory `iqas-platform` you have just downloaded.
 
 ## Configuration
 
 1. Java
-    + Set `$JAVA_HOME` environment variable if not already set: <br/>`export JAVA_HOME="$(/usr/libexec/java_home)"`
+    + Export (or set in your `.bashrc`) the `$JAVA_HOME` environment variable if not already set: <br/>`export JAVA_HOME="$(/usr/libexec/java_home)"`
 2. Kafka
-    1. Set JVM options for Kafka server: <br/>`export KAFKA_HEAP_OPTS="-Xms3g -Xmx3g"`<br/>More informations on JVM options can be found [here](http://www.oracle.com/technetwork/articles/java/vmoptions-jsp-140102.html)
-    2. Start Zookeeper server
-    3. Start Kafka server
-3. Apache Jena Fuseki
+    1. Export (or set in your `.bashrc`) the JVM options for Kafka server: <br/>`export KAFKA_HEAP_OPTS="-Xms3g -Xmx3g"`<br/>Remember to adapt Kafka options to your hardware, more informations on JVM options can be found [here](http://www.oracle.com/technetwork/articles/java/vmoptions-jsp-140102.html)
+    2. Start Zookeeper server<br/>`$KAFKA_DIR/bin/zookeeper-server-start.sh $KAFKA_DIR/config/zookeeper.properties`             
+    3. Start Kafka server<br/>`$KAFKA_DIR/bin/kafka-server-start.sh $KAFKA_DIR/config/server.properties`
+3. MongoDB
+    + Start MongoDB service:<br/>`sudo $MONGODB_DIR/bin/mongod -f your_config_file.conf`
+4. Apache Jena Fuseki
     + Please follow the installation and configuration instructions of the Github project [iqas-ontology](https://github.com/antoineauger/iqas-ontology)
-
+5. iQAS
+    1. TODO
 
 
 ## iQAS interaction
 
 ### Graphical User Interface (GUI)
 
+TODO
+
 ### RESTful APIs
+
+TODO
 
 ### Binding to Kafka topic (for observation consumer)
 
+TODO
 
-## Usage
+## Performance evaluation and benchmarking
+
+TODO
+
+## QoO Pipeline development walk-through
+
+TODO
+
+## Other satellite projects for the iQAS platform
 
 TODO
 
