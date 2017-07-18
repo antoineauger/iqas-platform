@@ -108,22 +108,28 @@ You can perform POST, DELETE and GET queries on the RESTful endpoints provided b
 
 #### GET
 
+For sensors:
+
 + /sensors
 + /sensors/\[sensor_id\] 
 
+For requests:
 
 + /requests
 + /requests/\[request_id\] 
 
+For QoO Pipelines:
 
 + /pipelines
 + /pipelines/\[pipeline_id\]
 + /pipelines?print=ids
 
+For QoO attributes:
 
 + /qoo/attributes
 + /qoo/custom_params 
 
+For places:
 
 + /places
 + /places?nearTo=\[location\] 
@@ -132,14 +138,47 @@ You can perform POST, DELETE and GET queries on the RESTful endpoints provided b
 
 + /requests
 
-You can submit new requests to the endpoint `/requests`. You should set the header variable `Content-Type: application/json`.<br/>Following iQAS requests are valid:
+You can submit new requests to the endpoint `/requests`. You should set the header variable `Content-Type: application/json`.<br/>For instance, following iQAS requests are valid:
 
 ```javascript
+// Simple request without QoO constraints (Raw Data level)
 {
 	"application_id": "testApplication",
 	"topic": "ALL",
 	"location": "ALL",
 	"obs_level": "RAW_DATA"
+}
+
+```
+
+```javascript
+// More complex request with QoO interest (Information level)
+{
+	"application_id": "testApplication",
+	"topic": "ALL",
+	"location": "ALL",
+	"obs_level": "INFORMATION",
+	"qoo": {
+	    "interested_in": ["OBS_ACCURACY", "OBS_FRESHNESS"]
+	}
+}
+
+```
+
+```javascript
+// More complex request with QoO interest and QoO constraints (Knowledge level)
+{
+	"application_id": "testApplication",
+	"topic": "temperature",
+	"location": "Toulouse",
+	"obs_level": "KNOWLEDGE",
+	"qoo": {
+        "interested_in": ["OBS_ACCURACY", "OBS_FRESHNESS"],
+        "iqas_params": {
+            "obsRate_min": "5/s"
+        },
+        "sla_level": "GUARANTEED"
+    }
 }
 
 ```
