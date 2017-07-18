@@ -4,6 +4,15 @@
 
 iQAS is an integration platform for QoO Assessment as a Service.
 
+## The iQAS ecosystem
+
+In total, 5 Github projects form the iQAS ecosystem:
+1. [iqas-platform](https://github.com/antoineauger/iqas-platform) (this project)<br/>The QoO-aware platform that allows consumers to integrate many observation sources, submit requests with QoO constraints and visualize QoO in real-time.
+2. [virtual-sensor-container](https://github.com/antoineauger/virtual-sensor-container) <br/>A shippable Virtual Sensor Container (VSC) Docker image for the iQAS platform. VSCs allow to generate observations at random, from file, or to retrieve them from the Web.
+3. [virtual-app-consumer](https://github.com/antoineauger/virtual-app-consumer) <br/>A shippable Virtual Application Consumers (VAC) Docker image for the iQAS platform. VACs allow to emulate fake consumers that submit iQAS requests and consume observations while logging the perceived QoO in real-time.
+4. [iqas-ontology](https://github.com/antoineauger/iqas-ontology) <br/>Ontological model and examples for the QoOonto ontology, the core ontology used by iQAS.
+5. [iqas-pipelines](https://github.com/antoineauger/iqas-pipelines) <br/>An example of a custom-developed QoO Pipeline for the iQAS platform.
+
 ## System requirements
 
 In order to correctly work, iQAS assumes that the following software have been correctly installed and are currently running. We indicate between parenthesis the software versions used for development and test:
@@ -81,14 +90,14 @@ In this quickstart guide, we will use the variable `$IQAS_DIR` to refer to the e
     3. Compile project with maven:<br/>`mvn -T C2.0 clean install -DskipTests`
     4. Run iQAS platform:<br/>`java -server -d64 -Xms2048m -Xmx8192m -XX:+UseParallelOldGC -cp target/iqas-platform-1.0-SNAPSHOT-allinone.jar fr.isae.iqas.MainClass`
 
-## Submit a new iQAS Request
+## Submitting a new iQAS Request
 
 ### Through the Graphical User Interface (GUI)
 
 By default, the iQAS GUI can be accessed at [http://\[api_gateway_endpoint_address\]:\[api_gateway_endpoint_port\]](#)
 ![iqas_logo](/src/main/resources/web/figures/screenshot_iqas_homepage.png?raw=true "iQAS homepage")
 
-### With RESTful APIs
+### Using RESTful APIs
 
 You can also perform POST, DELETE and GET queries on the RESTful endpoints provided by the platform. Here is a list of allowed operations:
 
@@ -384,15 +393,6 @@ You can customize logs by editing the configuration file `logback.yml`.
 iQAS relies on both [Akka toolkit](http://akka.io/) and [Akka Streams Kafka](http://doc.akka.io/docs/akka-stream-kafka/current/home.html).
 Specific options for Akka are located in the configuration file `$IQAS_DIR/src/main/resources/applications.conf`
 For more information, visit the [Akka documentation](http://doc.akka.io/docs/akka/current/java/general/configuration.html) section about configuration.
-
-## Other satellite projects for the iQAS platform
-
-There are 5 Github projects that form the iQAS ecosystem:
-1. [iqas-platform](https://github.com/antoineauger/iqas-platform) (this project)<br/>The QoO-aware platform that allows consumers to integrate many observation sources, submit requests with QoO constraints and visualize QoO in real-time.
-2. [virtual-sensor-container](https://github.com/antoineauger/virtual-sensor-container) <br/>A shippable Virtual Sensor Container (VSC) Docker image for the iQAS platform. VSCs allow to generate observations at random, from file, or to retrieve them from the Web.
-3. [virtual-app-consumer](https://github.com/antoineauger/virtual-app-consumer) <br/>A shippable Virtual Application Consumers (VAC) Docker image for the iQAS platform. VACs allow to emulate fake consumers that submit iQAS requests and consume observations while logging the perceived QoO in real-time.
-4. [iqas-ontology](https://github.com/antoineauger/iqas-ontology) <br/>Ontological model and examples for the QoOonto ontology, the core ontology used by iQAS.
-5. [iqas-pipelines](https://github.com/antoineauger/iqas-pipelines) <br/>An example of a custom-developed QoO Pipeline for the iQAS platform.
 
 ## Acknowledgments
 
