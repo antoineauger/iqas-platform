@@ -334,7 +334,7 @@ All experiments have been done on a Mac Pro (2013) with 3.7 GHz Quad-Core Intel 
 1. The `initial_config` has been used to perform overhead evaluation (end-to-end delay and iQAS delay).
 2. The `high_throughput_config` has been used to benchmark maximum throughputs that the iQAS platform could achieve for both observation ingestion and observation delivery.
 
-All configuration files can be found in `$IQAS_DIR/src/test` if you want to re-run these benchmarks.
+All configuration files can be found in `$IQAS_DIR/src/test` for anyone interested in reproducing the results.
 
 #### iQAS overhead evaluation
 

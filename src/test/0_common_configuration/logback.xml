@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration scan="true" scanPeriod="10 seconds">
+
+    <!-- For loggers in the these namespaces, log only at ERROR level. -->
+    <logger name="akka.kafka.KafkaConsumerActor" level="WARN"/>
+    <logger name="org.mongodb.driver" level="WARN"/>
+    <logger name="org.apache.kafka" level="WARN"/>
+    <logger name="org.apache.zookeeper" level="WARN"/>
+    <logger name="org.I0Itec.zkclient" level="WARN"/>
+    <logger name="kafka.admin.AdminUtils" level="WARN"/>
+
+    <!-- Simple file output -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder>
+            <pattern>%date{ISO8601} %-5level %logger{36} %X{sourceThread} %X{akkaSource} - %msg%n</pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>logs/iqas-%d{yyyy-MM-dd_HH-mm}_%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- or whenever the file size reaches 64 MB -->
+                <maxFileSize>64 MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+
+        <!-- Safely log to the same file from multiple JVMs. Degrades performance! -->
+        <prudent>false</prudent>
+    </appender>
+
+
+    <!-- Console output -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!--<pattern>%-5level %logger{36} - %msg%n</pattern>-->
+            <pattern>%date{ISO8601} %-5level %logger{36} %X{sourceThread} %X{akkaSource} - %msg%n</pattern>
+        </encoder>
+        <!-- Only log level INFO and above -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+
+    <!-- Enable FILE and STDOUT appenders for all log messages.
+         By default, only log at level DEBUG and above. -->
+    <root level="INFO">
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>
