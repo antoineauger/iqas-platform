@@ -92,13 +92,14 @@ In this quickstart guide, we will use the variable `$IQAS_DIR` to refer to the e
 
 The following table list the available options in case you want to add new entities to the iQAS platform:
 
-|    entity    | GUI | QoOnto ontology update | RESTful endpoints |
-|:------------:|:---:|:----------------------:|:-----------------:|
-|    sensor    |  X  |            X           |                   |
-| QoO Pipeline |  X  |            X           |                   |
-|    request   |  X  |                        |         X         |
-|     place    |     |            X           |                   |
-|     topic    |     |            X           |                   |
+|     entity    | GUI |  QoOnto ontology update | RESTful endpoints |
+|:-------------:|:---:|:-----------------------:|:-----------------:|
+|     sensor    |  X  |            X            |                   |
+|  QoO Pipeline |  X  |            X            |                   |
+|    request    |  X  |                         |         X         |
+| QoO Attribute |     | X (+source code update) |                   |
+|     place     |     |            X            |                   |
+|     topic     |     |            X            |                   |
 
 ## Submitting a new iQAS Request
 
