@@ -101,10 +101,11 @@ In this quickstart guide, we will use the variable `$IQAS_DIR` to refer to the e
 ### Graphical User Interface (GUI)
 
 By default, the iQAS GUI can be accessed at [http://\[api_gateway_endpoint_address\]:\[api_gateway_endpoint_port\]](#)
+![iqas_logo](/src/main/resources/web/figures/screenshot_iqas_homepage.png?raw=true "iQAS homepage")
 
 ### RESTful APIs
 
-You can perform POST, DELETE and GET queries on the RESTful endpoints provided by the platform. Here is a list of allowed operations:
+You can also perform POST, DELETE and GET queries on the RESTful endpoints provided by the platform. Here is a list of allowed operations:
 
 #### GET
 
@@ -270,3 +271,5 @@ TODO
 The iQAS platform have been developed during the PhD thesis of [Antoine Auger](https://personnel.isae-supaero.fr/antoine-auger/?lang=en) at ISAE-SUPAERO (2014-2017).
 
 This research was supported in part by the French Ministry of Defence through financial support of the Direction Générale de l’Armement (DGA). 
+
+![iqas_logo](/src/main/resources/web/figures/banniere.png?raw=true "iQAS homepage")
