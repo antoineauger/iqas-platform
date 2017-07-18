@@ -90,15 +90,15 @@ In this quickstart guide, we will use the variable `$IQAS_DIR` to refer to the e
     3. Compile project with maven:<br/>`mvn -T C2.0 clean install -DskipTests`
     4. Run iQAS platform:<br/>`java -server -d64 -Xms2048m -Xmx8192m -XX:+UseParallelOldGC -cp target/iqas-platform-1.0-SNAPSHOT-allinone.jar fr.isae.iqas.MainClass`
 
-The following table list the options to add new entities to the iQAS platform:
+The following table list the available options in case you want to add new entities to the iQAS platform:
 
 |    entity    | GUI | QoOnto ontology update | RESTful endpoints |
 |:------------:|:---:|:----------------------:|:-----------------:|
 |    sensor    |  X  |            X           |                   |
 | QoO Pipeline |  X  |            X           |                   |
 |    request   |  X  |                        |         X         |
-|     place    |  X  |            X           |                   |
-|     topic    |  X  |            X           |                   |
+|     place    |     |            X           |                   |
+|     topic    |     |            X           |                   |
 
 ## Submitting a new iQAS Request
 
