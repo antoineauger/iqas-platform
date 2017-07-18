@@ -100,7 +100,7 @@ In this quickstart guide, we will use the variable `$IQAS_DIR` to refer to the e
 
 ### Graphical User Interface (GUI)
 
-TODO
+By default, the iQAS GUI can be accessed at [http://\[api_gateway_endpoint_address\]:\[api_gateway_endpoint_port\]](#)
 
 ### RESTful APIs
 
@@ -192,9 +192,9 @@ When present, the `qoo` parameter represents a "QoO Service Level Agreement" and
 
 + /requests/\[request_id\] 
 
-### Binding to Kafka topic (for observation consumer)
+### Observation consumption by applications
 
-TODO
+Once an iQAS request has been successfully enforced, observations are available to applications at the Kafka topic `[application_id]_[request_id]`.
 
 ## Performance evaluation and benchmarking
 
@@ -202,7 +202,64 @@ TODO
 
 ## QoO Pipeline development walk-through
 
-TODO
+```java
+import static fr.isae.iqas.model.request.Operator.NONE;
+
+public class CustomPipeline extends AbstractPipeline implements IPipeline {
+
+    public CustomPipeline() {
+        super("Custom Pipeline", "CustomPipeline", true);
+        addSupportedOperator(NONE);
+        setParameter("nb_copies", String.valueOf(1), true);
+    }
+
+    @Override
+    public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph() {
+
+        final ObservationLevel askedLevelFinal = getAskedLevel();
+        Graph runnableGraph = GraphDSL
+                .create(builder -> {
+
+                    // ################################# Example of QoO Pipeline logic #################################
+
+                    final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
+                            Flow.of(ConsumerRecord.class).map(r -> {
+                                JSONObject sensorDataObject = new JSONObject(r.value().toString());
+                                return new RawData(
+                                        sensorDataObject.getString("date"),
+                                        sensorDataObject.getString("value"),
+                                        sensorDataObject.getString("producer"),
+                                        sensorDataObject.getString("timestamps"));
+                            })
+                    );
+
+                    final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
+                            Flow.of(RawData.class).map(r -> {
+                                ObjectMapper mapper = new ObjectMapper();
+                                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                                return new ProducerRecord<byte[], String>(getTopicToPublish(), mapper.writeValueAsString(r));
+                            })
+                    );
+
+                    builder.from(consumRecordToRawData.out())
+                            .via(builder.add(new CloneSameValueGS<RawData>(Integer.valueOf(getParams().get("nb_copies")))))
+                            .toInlet(rawDataToProdRecord.in());
+
+                    // ################################# End of QoO Pipeline logic #################################
+
+                    return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
+
+                });
+
+        return runnableGraph;
+    }
+
+    @Override
+    public String getPipelineID() {
+        return getClass().getSimpleName();
+    }
+}
+```
 
 ## Other satellite projects for the iQAS platform
 
