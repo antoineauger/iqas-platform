@@ -17,10 +17,14 @@ public class KafkaAdminActor extends AbstractActor {
     private static final int sessionTimeoutMs = 10 * 1000;
     private static final int connectionTimeoutMs = 8 * 1000;
 
+    private int nb_partitions;
+    private int replication_factor;
     private String zookeeperConnect;
 
     public KafkaAdminActor(Properties prop) {
         this.zookeeperConnect = prop.getProperty("zookeeper_endpoint_address") + ":" + prop.getProperty("zookeeper_endpoint_port");
+        this.nb_partitions = Integer.parseInt(prop.getProperty("nb_partitions"));
+        this.replication_factor = Integer.parseInt(prop.getProperty("replication_factor"));
     }
 
     @Override
@@ -66,12 +70,10 @@ public class KafkaAdminActor extends AbstractActor {
 
         ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zookeeperConnect), false);
 
-        int partitions = 1;
-        int replication = 1;
         Properties topicConfig = new Properties(); // add per-topic configurations settings here
 
         if (!AdminUtils.topicExists(zkUtils, kafkaTopicToCreate)) {
-            AdminUtils.createTopic(zkUtils, kafkaTopicToCreate, partitions, replication, topicConfig, RackAwareMode.Enforced$.MODULE$);
+            AdminUtils.createTopic(zkUtils, kafkaTopicToCreate, nb_partitions, replication_factor, topicConfig, RackAwareMode.Enforced$.MODULE$);
         }
         zkClient.close();
 
