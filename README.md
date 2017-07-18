@@ -96,14 +96,14 @@ In this quickstart guide, we will use the variable `$IQAS_DIR` to refer to the e
     1. TODO
 
 
-## iQAS interaction
+## Submit a new iQAS Request
 
-### Graphical User Interface (GUI)
+### Through the Graphical User Interface (GUI)
 
 By default, the iQAS GUI can be accessed at [http://\[api_gateway_endpoint_address\]:\[api_gateway_endpoint_port\]](#)
 ![iqas_logo](/src/main/resources/web/figures/screenshot_iqas_homepage.png?raw=true "iQAS homepage")
 
-### RESTful APIs
+### With RESTful APIs
 
 You can also perform POST, DELETE and GET queries on the RESTful endpoints provided by the platform. Here is a list of allowed operations:
 
@@ -149,7 +149,6 @@ You can submit new requests to the endpoint `/requests`. You should set the head
 	"location": "ALL",
 	"obs_level": "RAW_DATA"
 }
-
 ```
 
 ```javascript
@@ -163,7 +162,6 @@ You can submit new requests to the endpoint `/requests`. You should set the head
 	    "interested_in": ["OBS_ACCURACY", "OBS_FRESHNESS"]
 	}
 }
-
 ```
 
 ```javascript
@@ -181,7 +179,6 @@ You can submit new requests to the endpoint `/requests`. You should set the head
         "sla_level": "GUARANTEED"
     }
 }
-
 ```
 
 When present, the `qoo` parameter represents a "QoO Service Level Agreement" and should be expressed as follow:
@@ -193,9 +190,136 @@ When present, the `qoo` parameter represents a "QoO Service Level Agreement" and
 
 + /requests/\[request_id\] 
 
-### Observation consumption by applications
+## Observation consumption by applications
 
-Once an iQAS request has been successfully enforced, observations are available to applications at the Kafka topic `[application_id]_[request_id]`.
+Once an iQAS request has successfully been enforced, observations are available to applications at the Kafka topic `[application_id]_[request_id]`. Here are some examples of observations that may be delivered according to the observation level asked:
+
++ `RAW_DATA`
+```javascript
+{
+  "date" : 1500364730089,
+  "value" : 4.276,
+  "producer" : "sensor01",
+  "timestamps" : "produced:1500364730089;iQAS_in:1500364730543;iQAS_out:1500364730664",
+  "qoOAttributeValues" : {
+    "OBS_ACCURACY" : "100.0",
+    "OBS_FRESHNESS" : "575.0"
+  }
+}
+```
+
++ `INFORMATION`
+```javascript
+{
+  "date" : 1500364775129,
+  "value" : -7.29,
+  "producer" : "sensor01",
+  "timestamps" : "produced:1500364775129;iQAS_in:1500364775531;iQAS_out:1500364776021",
+  "qoOAttributeValues" : {
+    "OBS_ACCURACY" : "100.0",
+    "OBS_FRESHNESS" : "892.0"
+  },
+  "sensorContext" : {
+    "latitude" : "43.53101809",
+    "longitude" : "1.40158296",
+    "altitude" : "152",
+    "relativeLocation" : "Chullanka - Portet-sur-Garonne",
+    "topic" : "temperature"
+  }
+}
+```
+
++ `KNOWLEDGE`
+```javascript
+{"obs": [
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#accuracyKind",
+    "@type": "http://purl.org/iot/vocab/m3-lite#Others"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#accuracyUnit",
+    "@type": "http://purl.org/iot/vocab/m3-lite#Percent"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#freshnessKind",
+    "@type": "http://purl.org/iot/vocab/m3-lite#Others"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#freshnessUnit",
+    "@type": "http://purl.org/iot/vocab/m3-lite#Millisecond"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#location",
+    "@type": "http://www.w3.org/2003/01/geo/wgs84_pos#Point",
+    "alt": "152",
+    "altRelative": "0",
+    "lat": "43.53101809",
+    "long": "1.40158296",
+    "relativeLocation": "Chullanka - Portet-sur-Garonne"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#obs",
+    "@type": "http://purl.oclc.org/NET/ssnx/ssn#Observation",
+    "featureOfInterest": "http://isae.fr/iqas/qoo-ontology#publicLocations",
+    "observationResult": "http://isae.fr/iqas/qoo-ontology#sensorOutput",
+    "observedBy": "http://isae.fr/iqas/qoo-ontology#sensor01",
+    "observedProperty": "http://isae.fr/iqas/qoo-ontology#temperature"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#obsValue",
+    "@type": "http://purl.oclc.org/NET/ssnx/ssn#ObservationValue",
+    "hasQoO": "http://isae.fr/iqas/qoo-ontology#qooAttributesList",
+    "hasQuantityKind": "http://purl.org/iot/vocab/m3-lite#Temperature",
+    "hasUnit": "http://purl.org/iot/vocab/m3-lite#DegreeCelsius",
+    "obsDateValue": "2017-07-18 10:00:00.147",
+    "obsLevelValue": "KNOWLEDGE",
+    "obsStrValue": "9.383",
+    "obsTimestampsValue": "produced:1500364800147;iQAS_in:1500364800313;iQAS_out:1500364800645"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#qooAttributesList",
+    "@type": "rdf:Seq",
+    "_1": "http://isae.fr/iqas/qoo-ontology#qooIntrinsic_OBS_ACCURACY",
+    "_2": "http://isae.fr/iqas/qoo-ontology#qooIntrinsic_OBS_FRESHNESS"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#qooIntrinsic_OBS_ACCURACY",
+    "@type": "http://isae.fr/iqas/qoo-ontology#QoOIntrisicQuality",
+    "hasQoOValue": "http://isae.fr/iqas/qoo-ontology#qooValue_OBS_ACCURACY",
+    "isAbout": "OBS_ACCURACY"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#qooIntrinsic_OBS_FRESHNESS",
+    "@type": "http://isae.fr/iqas/qoo-ontology#QoOIntrisicQuality",
+    "hasQoOValue": "http://isae.fr/iqas/qoo-ontology#qooValue_OBS_FRESHNESS",
+    "isAbout": "OBS_FRESHNESS"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#qooValue_OBS_ACCURACY",
+    "@type": "http://isae.fr/iqas/qoo-ontology#QoOValue",
+    "hasQuantityKind": "http://isae.fr/iqas/qoo-ontology#accuracyKind",
+    "hasUnit": "http://isae.fr/iqas/qoo-ontology#accuracyUnit",
+    "qooStrValue": "100.0"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#qooValue_OBS_FRESHNESS",
+    "@type": "http://isae.fr/iqas/qoo-ontology#QoOValue",
+    "hasQuantityKind": "http://isae.fr/iqas/qoo-ontology#freshnessKind",
+    "hasUnit": "http://isae.fr/iqas/qoo-ontology#freshnessUnit",
+    "qooStrValue": "497.0"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#sensor01",
+    "@type": "http://purl.oclc.org/NET/ssnx/ssn#Sensor",
+    "location": "http://isae.fr/iqas/qoo-ontology#location"
+  },
+  {
+    "@id": "http://isae.fr/iqas/qoo-ontology#sensorOutput",
+    "@type": "http://purl.oclc.org/NET/ssnx/ssn#SensorOutput",
+    "hasValue": "http://isae.fr/iqas/qoo-ontology#obsValue"
+  }
+]}
+```
 
 ## Performance evaluation and benchmarking
 
@@ -272,4 +396,4 @@ The iQAS platform have been developed during the PhD thesis of [Antoine Auger](h
 
 This research was supported in part by the French Ministry of Defence through financial support of the Direction Générale de l’Armement (DGA). 
 
-![iqas_logo](/src/main/resources/web/figures/banniere.png?raw=true "iQAS homepage")
+![iqas_logo](/src/main/resources/web/figures/banniere.png?raw=true "Banniere")
