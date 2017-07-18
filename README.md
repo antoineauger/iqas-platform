@@ -310,7 +310,10 @@ Once an iQAS request has successfully been enforced, observations are available 
 
 TODO
 
-## QoO Pipeline development walk-through
+## QoO Pipelines
+
+A custom QoO Pipeline must extends `AbstracPipeline` class and implements the `IPipeline` interface (see below). For more information about QoO Pipelines and see a development walk-through, please visit the Github project [iqas-pipelines](https://github.com/antoineauger/iqas-pipelines). 
+
 
 ```java
 import static fr.isae.iqas.model.request.Operator.NONE;
@@ -384,7 +387,12 @@ For more information, visit the [Akka documentation](http://doc.akka.io/docs/akk
 
 ## Other satellite projects for the iQAS platform
 
-TODO
+There are 5 Github projects that form the iQAS ecosystem:
+1. [iqas-platform](https://github.com/antoineauger/iqas-platform) (this project)<br/>The QoO-aware platform that allows consumers to integrate many observation sources, submit requests with QoO constraints and visualize QoO in real-time.
+2. [virtual-sensor-container](https://github.com/antoineauger/virtual-sensor-container) <br/>A shippable Virtual Sensor Container (VSC) Docker image for the iQAS platform. VSCs allow to generate observations at random, from file, or to retrieve them from the Web.
+3. [virtual-app-consumer](https://github.com/antoineauger/virtual-app-consumer) <br/>A shippable Virtual Application Consumers (VAC) Docker image for the iQAS platform. VACs allow to emulate fake consumers that submit iQAS requests and consume observations while logging the perceived QoO in real-time.
+4. [iqas-ontology](https://github.com/antoineauger/iqas-ontology) <br/>Ontological model and examples for the QoOonto ontology, the core ontology used by iQAS.
+5. [iqas-pipelines](https://github.com/antoineauger/iqas-pipelines) <br/>An example of a custom-developed QoO Pipeline for the iQAS platform.
 
 ## Acknowledgments
 
