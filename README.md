@@ -104,7 +104,54 @@ TODO
 
 ### RESTful APIs
 
-TODO
+You can perform POST, DELETE and GET queries on the RESTful endpoints provided by the platform. Here is a list of allowed operations:
+
+#### GET
+
++ /sensors
++ /sensors/\[sensor_id\] 
+
+
++ /requests
++ /requests/\[request_id\] 
+
+
++ /pipelines
++ /pipelines/\[pipeline_id\]
++ /pipelines?print=ids
+
+
++ /qoo/attributes
++ /qoo/custom_params 
+
+
++ /places
++ /places?nearTo=\[location\] 
+
+#### POST
+
++ /requests
+
+You can submit new requests to the endpoint `/requests`. You should set the header variable `Content-Type: application/json`.<br/>Following iQAS requests are valid:
+
+```javascript
+{
+	"application_id": "testApplication",
+	"topic": "ALL",
+	"location": "ALL",
+	"obs_level": "RAW_DATA"
+}
+
+```
+
+When present, the `qoo` parameter represents a "QoO Service Level Agreement" and should be expressed as follow:
++ `interested_in` contains an ordered list (first=very important, last=less important) of QoO attributes that matter for the given application.
++ `iqas_params` can be used to specify some additional QoO requirements that the iQAS platform natively supports.
++ `custom_params` can be used to specify additional QoO requirements that have been set as customizable for a custom QoO Pipeline.
+
+#### DELETE
+
++ /requests/\[request_id\] 
 
 ### Binding to Kafka topic (for observation consumer)
 
