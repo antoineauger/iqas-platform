@@ -30,19 +30,19 @@ ns:
 load_from_disk: true
 file_locations:
   - forPrefix: qoo
-    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/qoo-onto-full-jena.rdf
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/imports/qoo-onto-full-jena.rdf
 
   - forPrefix: ssn
-    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/ssn.rdf
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/imports/ssn.rdf
 
   - forPrefix: geo
-    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/wgs84_pos
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/imports/wgs84_pos
 
   - forPrefix: dul
-    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/DUL.rdf
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/imports/DUL.rdf
 
   - forPrefix: qu
-    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/qu.owl
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/imports/qu.owl
 
   - forPrefix: m3-lite
-    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/protege_files/external/m3-lite.owl
+    path: file:/Users/an.auger/Documents/GIT/iqas-ontology/imports/m3-lite.owl

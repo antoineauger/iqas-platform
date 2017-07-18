@@ -35,7 +35,7 @@ project
 └───src
     └───main
     │   └───java   
-    │   │   │   // config, database, kafka, mapek, 
+    │   │   │   // config, database, kafka, mapek,
     │   │   │   // model, pipelines, server and utils packages
     │   │   │
     │   │   │   MainClass.java
@@ -76,19 +76,29 @@ In this quickstart guide, we will use the variable `$IQAS_DIR` to refer to the e
     + Export (or set in your `.bashrc`) the `$JAVA_HOME` environment variable if not already set: <br/>`export JAVA_HOME="$(/usr/libexec/java_home)"`
 2. Maven
     + Add the `apache-maven-X.X.X/bin` directory to your `$PATH`such that you will be able to run the command `mvn` anywhere.
-2. Kafka
+3. Kafka
     1. Export (or set in your `.bashrc`) the JVM options for Kafka server: <br/>`export KAFKA_HEAP_OPTS="-Xms3g -Xmx3g"`<br/>Remember to adapt Kafka options to your hardware, more informations on JVM options can be found [here](http://www.oracle.com/technetwork/articles/java/vmoptions-jsp-140102.html)
     2. Start Zookeeper server<br/>`$KAFKA_DIR/bin/zookeeper-server-start.sh $KAFKA_DIR/config/zookeeper.properties`             
     3. Start Kafka server<br/>`$KAFKA_DIR/bin/kafka-server-start.sh $KAFKA_DIR/config/server.properties`
-3. MongoDB
+4. MongoDB
     + Start MongoDB service:<br/>`sudo $MONGODB_DIR/bin/mongod -f your_config_file.conf`
-4. Apache Jena Fuseki
+5. Apache Jena Fuseki
     + Please follow the installation and configuration instructions of the Github project [iqas-ontology](https://github.com/antoineauger/iqas-ontology)
-5. iQAS
-    1. Set the paths of the different ontology files that need to be imported in the configuration file `ontologies.yml` 
+6. iQAS
+    1. Set the paths of the different ontology files that need to be imported in the configuration file `ontologies.yml`
     2. Set deployment options for iQAS in the configuration file `iqas.properties`
     3. Compile project with maven:<br/>`mvn -T C2.0 clean install -DskipTests`
     4. Run iQAS platform:<br/>`java -server -d64 -Xms2048m -Xmx8192m -XX:+UseParallelOldGC -cp target/iqas-platform-1.0-SNAPSHOT-allinone.jar fr.isae.iqas.MainClass`
+
+The following table list the options to add new entities to the iQAS platform:
+
+|    entity    | GUI | QoOnto ontology update | RESTful endpoints |
+|:------------:|:---:|:----------------------:|:-----------------:|
+|    sensor    |  X  |            X           |                   |
+| QoO Pipeline |  X  |            X           |                   |
+|    request   |  X  |                        |         X         |
+|     place    |  X  |            X           |                   |
+|     topic    |  X  |            X           |                   |
 
 ## Submitting a new iQAS Request
 
@@ -106,12 +116,12 @@ You can also perform POST, DELETE and GET queries on the RESTful endpoints provi
 For sensors:
 
 + /sensors
-+ /sensors/\[sensor_id\] 
++ /sensors/\[sensor_id\]
 
 For requests:
 
 + /requests
-+ /requests/\[request_id\] 
++ /requests/\[request_id\]
 
 For QoO Pipelines:
 
@@ -122,12 +132,12 @@ For QoO Pipelines:
 For QoO attributes:
 
 + /qoo/attributes
-+ /qoo/custom_params 
++ /qoo/custom_params
 
 For places:
 
 + /places
-+ /places?nearTo=\[location\] 
++ /places?nearTo=\[location\]
 
 #### POST
 
@@ -182,7 +192,7 @@ When present, the `qoo` parameter represents a "QoO Service Level Agreement" and
 
 #### DELETE
 
-+ /requests/\[request_id\] 
++ /requests/\[request_id\]
 
 ## Observation consumption by applications
 
@@ -317,12 +327,25 @@ Once an iQAS request has successfully been enforced, observations are available 
 
 ## Performance evaluation and benchmarking
 
+All experiments have been done on a Mac Pro (2013) with 3.7 GHz Quad-Core Intel Xeon E5 processor and 32 Go RAM (DDR3).
+
+2 different configurations have been used:
+1. The `initial_config` has been used to perform overhead evaluation (end-to-end delay and iQAS delay).
+2. The `high_throughput_config` has been used to benchmark maximum throughputs that the iQAS platform could achieve for both observation ingestion and observation delivery.
+
+All configuration files can be found in `$IQAS_DIR/src/test` if you want to re-run these benchmarks.
+
+#### iQAS overhead evaluation
+
+TODO
+
+#### iQAS throughput evaluation
+
 TODO
 
 ## QoO Pipelines
 
-A custom QoO Pipeline must extends `AbstracPipeline` class and implements the `IPipeline` interface (see below). For more information about QoO Pipelines and see a development walk-through, please visit the Github project [iqas-pipelines](https://github.com/antoineauger/iqas-pipelines). 
-
+A custom QoO Pipeline must extends `AbstracPipeline` class and implements the `IPipeline` interface (see below). For more information about QoO Pipelines and see a development walk-through, please visit the Github project [iqas-pipelines](https://github.com/antoineauger/iqas-pipelines).
 
 ```java
 import static fr.isae.iqas.model.request.Operator.NONE;
@@ -398,6 +421,6 @@ For more information, visit the [Akka documentation](http://doc.akka.io/docs/akk
 
 The iQAS platform have been developed during the PhD thesis of [Antoine Auger](https://personnel.isae-supaero.fr/antoine-auger/?lang=en) at ISAE-SUPAERO (2014-2017).
 
-This research was supported in part by the French Ministry of Defence through financial support of the Direction Générale de l’Armement (DGA). 
+This research was supported in part by the French Ministry of Defence through financial support of the Direction Générale de l’Armement (DGA).
 
-![iqas_logo](/src/main/resources/web/figures/banniere.png?raw=true "Banniere")
+![banniere](/src/main/resources/web/figures/banniere.png?raw=true "Banniere")
