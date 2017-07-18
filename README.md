@@ -6,12 +6,13 @@ iQAS is an integration platform for QoO Assessment as a Service.
 
 ## System requirements
 
-In order to correctly work, iQAS assumes that the following software have been correctly installed and are currently running:
-* Java `1.8`
-* Apache Zookeeper `3.4.9`
-* Apache Kafka `0.10.2.0`
-* MongoDB `v3.2.9`
-* Apache Jena Fuseki `2.4.1`
+In order to correctly work, iQAS assumes that the following software have been correctly installed and are currently running. We indicate between parenthesis the software versions used for development and test:
+* Java (`1.8`)
+* Apache Maven (`3.3.9`)
+* Apache Zookeeper (`3.4.9`)
+* Apache Kafka (`0.10.2.0`)
+* MongoDB (`v3.2.9`)
+* Apache Jena Fuseki (`2.4.1`)
 
 This README describes installation and configuration of the iQAS platform for Unix-based operating systems (Mac and Linux).
 
@@ -21,41 +22,20 @@ This README describes installation and configuration of the iQAS platform for Un
 project
 │
 └───logs
-│   │   ...
 │
 └───src
     └───main
     │   └───java   
-    │       └───config
-    │       │   │ ...
-    │       │       
-    │       └───database
-    │       │   │ ...
-    │       │       
-    │       └───kafka
-    │       │   │ ...
-    │       │       
-    │       └───mapek
-    │       │   │ ...
-    │       │       
-    │       └───model
-    │       │   │ ...
-    │       │       
-    │       └───pipelines
-    │       │   │ ...
-    │       │       
-    │       └───server
-    │       │   │ ...
-    │       │       
-    │       └───utils
-    │       │   │ ...
-    │       │
-    │       │   MainClass.java
-    │
+    │   │   │   // config, database, kafka, mapek, 
+    │   │   │   // model, pipelines, server and utils packages
+    │   │   │
+    │   │   │   MainClass.java
+    │   │
     │   └───resources
     │       └───web
     │       │   │   // Files for GUI
     │       │   
+    │       │   // Configuration files
     │       │   application.conf
     │       │   iqas.properties
     │       │   logback.xml
@@ -73,9 +53,10 @@ project
 
 1. Install and run the required third-party software:
     1. [Install Java](https://www.java.com/en/download/)
-    2. [Install Kafka and Zookeeper](https://kafka.apache.org/quickstart)
-    3. [Install MongoDB](https://www.mongodb.com/download-center)
-    4. [Install Jena Fuseki](https://jena.apache.org/documentation/serving_data/)
+    2. [Install Maven](https://maven.apache.org/download.cgi)
+    3. [Install Kafka and Zookeeper](https://kafka.apache.org/quickstart)
+    4. [Install MongoDB](https://www.mongodb.com/download-center)
+    5. [Install Jena Fuseki](https://jena.apache.org/documentation/serving_data/)
 2. Clone iQAS repository: <br/>`git clone https://github.com/antoineauger/iqas-platform.git`
 
 In this quickstart guide, we will use the variable `$IQAS_DIR` to refer to the emplacement of the directory `iqas-platform` you have just downloaded.
@@ -84,6 +65,8 @@ In this quickstart guide, we will use the variable `$IQAS_DIR` to refer to the e
 
 1. Java
     + Export (or set in your `.bashrc`) the `$JAVA_HOME` environment variable if not already set: <br/>`export JAVA_HOME="$(/usr/libexec/java_home)"`
+2. Maven
+    + Add the `apache-maven-X.X.X/bin` directory to your `$PATH`such that you will be able to run the command `mvn` anywhere.
 2. Kafka
     1. Export (or set in your `.bashrc`) the JVM options for Kafka server: <br/>`export KAFKA_HEAP_OPTS="-Xms3g -Xmx3g"`<br/>Remember to adapt Kafka options to your hardware, more informations on JVM options can be found [here](http://www.oracle.com/technetwork/articles/java/vmoptions-jsp-140102.html)
     2. Start Zookeeper server<br/>`$KAFKA_DIR/bin/zookeeper-server-start.sh $KAFKA_DIR/config/zookeeper.properties`             
@@ -93,8 +76,10 @@ In this quickstart guide, we will use the variable `$IQAS_DIR` to refer to the e
 4. Apache Jena Fuseki
     + Please follow the installation and configuration instructions of the Github project [iqas-ontology](https://github.com/antoineauger/iqas-ontology)
 5. iQAS
-    1. TODO
-
+    1. Set the paths of the different ontology files that need to be imported in the configuration file `ontologies.yml` 
+    2. Set deployment options for iQAS in the configuration file `iqas.properties`
+    3. Compile project with maven:<br/>`mvn -T C2.0 clean install -DskipTests`
+    4. Run iQAS platform:<br/>`java -server -d64 -Xms2048m -Xmx8192m -XX:+UseParallelOldGC -cp target/iqas-platform-1.0-SNAPSHOT-allinone.jar fr.isae.iqas.MainClass`
 
 ## Submit a new iQAS Request
 
@@ -385,6 +370,17 @@ public class CustomPipeline extends AbstractPipeline implements IPipeline {
     }
 }
 ```
+
+## Logging
+
+iQAS use slf4j over logback to log its activity in `$IQAS_DIR/logs`. A new log file is created for each run of the platform.<br/>
+You can customize logs by editing the configuration file `logback.yml`.
+
+## Configuration of 3rd-party software
+
+iQAS relies on both [Akka toolkit](http://akka.io/) and [Akka Streams Kafka](http://doc.akka.io/docs/akka-stream-kafka/current/home.html).
+Specific options for Akka are located in the configuration file `$IQAS_DIR/src/main/resources/applications.conf`
+For more information, visit the [Akka documentation](http://doc.akka.io/docs/akka/current/java/general/configuration.html) section about configuration.
 
 ## Other satellite projects for the iQAS platform
 
