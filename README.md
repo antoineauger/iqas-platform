@@ -15,7 +15,7 @@ In total, 5 Github projects form the iQAS ecosystem:
 
 ## System requirements
 
-In order to correctly work, iQAS assumes that the following software have been correctly installed and are currently running. We indicate between parenthesis the software versions used for development and test:
+In order to correctly work, iQAS assumes that the following software has been correctly installed and are currently running. We indicate between parenthesis the software versions used for development and test:
 * Java (`1.8`)
 * Apache Maven (`3.3.9`)
 * Apache Zookeeper (`3.4.9`)
