@@ -328,21 +328,48 @@ Once an iQAS request has successfully been enforced, observations are available 
 
 ## Performance evaluation and benchmarking
 
-All experiments have been done on a Mac Pro (2013) with 3.7 GHz Quad-Core Intel Xeon E5 processor and 32 Go RAM (DDR3).
+All experiments were performed on a Mac Pro (2013) with 3.7 GHz Quad-Core Intel Xeon E5 processor and 32 Go RAM (DDR3).
 
-2 different configurations have been used:
+2 different configurations were envisioned:
 1. The `initial_config` has been used to perform overhead evaluation (end-to-end delay and iQAS delay).
-2. The `high_throughput_config` has been used to benchmark maximum throughputs that the iQAS platform could achieve for both observation ingestion and observation delivery.
+2. The `high_throughput_config` has been used to benchmark maximum throughput that the iQAS platform could achieve for both observation ingestion and observation delivery.
 
-All configuration files can be found in `$IQAS_DIR/src/test` for anyone interested in reproducing the results.
+All configuration files can be found in `$IQAS_DIR/src/test` for anyone interested in reproducing the results. 
+
+Kafka and Zookeeper were configured with `$IQAS_DIR/src/test/0_common_configuration/server.properties` and `$IQAS_DIR/src/test/0_common_configuration/zookeeper.properties` files, respectively. 
+We set the following JVM options for Kafka:
+```
+export KAFKA_HEAP_OPTS="-Xms3g -Xmx3g"
+```
+
+For each observation level, we submitted requests 1) without and 2) with QoO constraints.
+Detail of the submitted requests may be found [here](https://gist.github.com/antoineauger).
 
 #### iQAS overhead evaluation
 
-TODO
+We used one Virtual Sensor Container (VSC) that output random temperature measurements (rate=1 observation every 5 seconds) and one Virtual Application Consumer (VAC).
+
+Results are coming soon...
 
 #### iQAS throughput evaluation
 
-TODO
+We used a modified version of Kafka tools `ProducerPerformance.scala` and `ConsumerPerformance.scala` (see classes in `$IQAS_DIR/src/test`) to produce and consume 500000 messages.
+
+For each experiment, we performed the following steps:
+1. We start the iQAS platform and reset Kafka topics
+2. We submit one iQAS request and note down the `request_id`.
+3. We start the ProducerPerformance tool:
+    ```
+    ./bin/kafka-run-class.sh kafka.tools.ProducerPerformance --topics temperature --broker-list 10.161.3.181:9092 --message-size 192 --messages 500000 --new-producer
+    ```
+4. Immediately after, we start ConsumerPerformance tool:
+    ```
+    ./bin/kafka-run-class.sh kafka.tools.ConsumerPerformance --topic app2_[request_id] --broker-list 10.161.3.181:9092 --messages 500000 --new-consumer
+    ```
+
+All results are given for 5 independent simulation runs.
+
+Results are coming soon...
 
 ## QoO Pipelines
 

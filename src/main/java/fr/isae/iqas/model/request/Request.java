@@ -264,8 +264,7 @@ public class Request {
     }
 
     public void addLog(String s) {
-        Date date = new Date();
-        logs.add(0, date.toString() + ": " + s);
+        logs.add(0, String.valueOf(System.currentTimeMillis()) + ": " + s);
     }
 
     public ArrayList<String> getLogs() {
