@@ -70,7 +70,7 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
                     );
 
                     final FlowShape<RawData, RawData> filteredInformationBySensor = builder.add(
-                            Flow.of(RawData.class).filter(r -> r.getProducer().startsWith("oppSensor_") || allowedSensorList.contains(r.getProducer()))
+                            Flow.of(RawData.class).filter(r -> r.getProducer().startsWith("open_weather_map_") || r.getProducer().startsWith("oppSensor_") || allowedSensorList.contains(r.getProducer()))
                     );
 
                     final FlowShape<RawData, ProducerRecord> rawDataToProdRecord = builder.add(
