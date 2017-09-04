@@ -15,12 +15,12 @@ function askDeletionOfRequest(request_id) {
 function extractStartTime(logs) {
     var regex = /(.*):/g;
     var tempDate = logs[logs.length-1].match(regex).toString();
-    tempDate = tempDate.substring(0, tempDate.length - 1);
-    return tempDate;
+    var dateObject = new Date(parseInt(tempDate.substring(0, tempDate.length - 1)));
+    return dateObject.toString();
 }
 
 function updateApplicationAndSensorNumber() {
-    var bodyToSend = '{"size":0,"query":{"exists":{"field":"application_id.keyword"}},"aggs":{"ze_countAppli":{"cardinality":{"field":"application_id.keyword"}},"ze_countSensor":{"cardinality":{"field":"provenance.keyword"}}}}';
+    var bodyToSend = '{"size":0,"query":{"exists":{"field":"application_id.keyword"}},"aggs":{"ze_countAppli":{"cardinality":{"field":"application_id.keyword"}},"ze_countSensor":{"cardinality":{"field":"provenance.keyword"}},"ze_countRequest":{"cardinality":{"field":"request_id.keyword"}}}}';
     $.ajax({
         type: "POST",
         contentType: 'application/json; charset=utf-8',
@@ -42,10 +42,18 @@ function updateApplicationAndSensorNumber() {
             else {
                 $("#nb_sensors").text("0");
             }
+
+            if (data.hasOwnProperty('aggregations') && data.aggregations.hasOwnProperty('ze_countRequest')) {
+                $("#nb_requests").text(data.aggregations.ze_countRequest.value);
+            }
+            else {
+                $("#nb_requests").text("0");
+            }
         },
         error: function (jqXHR, textStatus, errorThrown) {
             $("#nb_applications").text("0");
             $("#nb_sensors").text("0");
+            $("#nb_requests").text("0");
         }
     });
 }
