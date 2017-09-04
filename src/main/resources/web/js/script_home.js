@@ -27,7 +27,7 @@ function updateApplicationAndSensorNumber() {
         crossDomain: true,
         data: bodyToSend,
         dataType: 'json',
-        url: 'http://10.161.3.181:9200/logstash-*/_search',
+        url: 'http://127.0.0.1:9200/logstash-*/_search',
         success: function (data) {
             if (data.hasOwnProperty('aggregations') && data.aggregations.hasOwnProperty('ze_countAppli')) {
                 $("#nb_applications").text(data.aggregations.ze_countAppli.value);
@@ -58,7 +58,7 @@ function updateContainerNumber() {
         crossDomain: true,
         data: bodyToSend,
         dataType: 'json',
-        url: 'http://10.161.3.181:9200/dockbeat-*/_search',
+        url: 'http://127.0.0.1:9200/dockbeat-*/_search',
         success: function (data) {
             if (data.hasOwnProperty('aggregations')) {
                 $("#nb_containers").text(data.aggregations.ze_count.value);

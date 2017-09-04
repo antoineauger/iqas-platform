@@ -39,7 +39,7 @@ function updateDataForRequest(request_id) {
         crossDomain: true,
         data: bodyToSend,
         dataType: 'json',
-        url: 'http://10.161.3.181:9200/logstash-*/_search',
+        url: 'http://127.0.0.1:9200/logstash-*/_search',
         success: function (data) {
             if (data && data.hasOwnProperty('hits') && data.hits.hasOwnProperty('hits') && data.hits.hits.length > 0) {
 

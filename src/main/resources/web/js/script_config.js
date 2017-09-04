@@ -22,7 +22,7 @@ function askDeletionOfSensor(sensor_id) {
     var performOperation = confirm("Are you sure to delete " + sensor_id + "?");
     if (performOperation) {
         $.ajax({
-            url: 'http://10.161.3.181:3030/qoo-onto/update',
+            url: 'http://127.0.0.1:3030/qoo-onto/update',
             contentType: "application/sparql-update",
             data: prefixes + query,
             type: 'POST',
@@ -235,7 +235,7 @@ function postNewSensor() {
         alert(alreadyRegisteredSensors);
 
         $.ajax({
-            url: 'http://10.161.3.181:3030/qoo-onto/update',
+            url: 'http://127.0.0.1:3030/qoo-onto/update',
             contentType: "application/sparql-update",
             data: prefixes + query,
             type: 'POST',
@@ -258,7 +258,7 @@ function postNewPipeline() {
     var payload = $("#pipelineTextarea").val();
     if (payload !== '') {
         $.ajax({
-            url: 'http://10.161.3.181:3030/qoo-onto/update',
+            url: 'http://127.0.0.1:3030/qoo-onto/update',
             contentType: "application/sparql-update",
             data: payload,
             type: 'POST',

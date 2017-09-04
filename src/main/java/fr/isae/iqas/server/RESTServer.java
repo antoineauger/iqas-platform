@@ -141,6 +141,9 @@ public class RESTServer extends AllDirectives {
                                 path(segment("figures").slash(segment()), wanted_figure ->
                                         getFromResource("web/figures/" + wanted_figure)
                                 ),
+                                path(segment("offline").slash(segment()), wanted_resource ->
+                                        getFromResource("web/offline/" + wanted_resource)
+                                ),
 
                                 // REST APIs
                                 path(segment("sensors"), () ->
