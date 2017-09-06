@@ -501,7 +501,7 @@ public class PlanActor extends AbstractActor {
             execActorsCount.putIfAbsent(actorRefToStart.path().name(), 0);
             execActorsCount.put(actorRefToStart.path().name(), execActorsCount.get(actorRefToStart.path().name()) + 1);
 
-            if (actionMsg.getPipelineToEnforce() instanceof IngestPipeline) {
+            if (actionMsg.getPipelineToEnforce() instanceof OutputPipeline) {
                 monitorActor.tell(new SymptomMsgPipelineCreation(
                         SymptomMAPEK.NEW,
                         EntityMAPEK.PIPELINE,

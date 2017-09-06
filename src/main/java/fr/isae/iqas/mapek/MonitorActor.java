@@ -125,9 +125,9 @@ public class MonitorActor extends AbstractActor {
             mappingPipelinesRequests.forEach((k, v) -> {
                 for (String s : v) {
                     if (minObsRateByRequest.containsKey(s)) { // If there is a obsRate_min requirement for this Request
-                        long step = new FiniteDuration(1, minObsRateByRequest.get(s).getUnit()).toMillis();
+                        long step = new FiniteDuration(10, TimeUnit.SECONDS).toMillis();
                         if (System.currentTimeMillis() - startDateCount.get(s) > step) {
-                            if (countByRequest.get(s) < minObsRateByRequest.get(s).getValue()) {
+                            if (countByRequest.get(s) < minObsRateByRequest.get(s).getValue() * 10) {
                                 numberObservedSymptomsObsRate.put(s, numberObservedSymptomsObsRate.get(s) + 1);
                                 if (numberObservedSymptomsObsRate.get(s) >= nbEventsBeforeSymptom) {
                                     requestsWithInsuficientObsRate.putIfAbsent(k, new ArrayList<>());
@@ -185,11 +185,12 @@ public class MonitorActor extends AbstractActor {
             totalObsFromSensors = msg.getObsRateByTopic().values().stream().mapToInt(Number::intValue).sum();
         }
         if (mappingPipelinesRequests.containsKey(msg.getUniquePipelineID())) { // if there is a constraint on OBS_RATE for a Request using this Pipeline
+            log.error("BEFORE ====> " + countByRequest.toString());
             for (String s : mappingPipelinesRequests.get(msg.getUniquePipelineID())) { // for all concerned Requests associated with this base Pipeline
-                if (countByRequest.containsKey(s)) {
-                    countByRequest.put(s, countByRequest.get(s) + totalObsFromSensors);
-                }
+                countByRequest.putIfAbsent(s, 0);
+                countByRequest.put(s, countByRequest.get(s) + totalObsFromSensors);
             }
+            log.error("AFTER ====> " + countByRequest.toString());
         }
     }
 
@@ -241,6 +242,7 @@ public class MonitorActor extends AbstractActor {
     public void postStop() {
     }
 
+    //TODO: better transform obsRate requirements into second units (conversion for /min and /hour rates)
     private void storeObsRateRequirements(Request incomingRequest) {
         if (incomingRequest.getQooConstraints().getIqas_params().containsKey("obsRate_min")
                 || incomingRequest.getQooConstraints().getIqas_params().containsKey("obsRate_max")) { // if it expresses interest in OBS_RATE

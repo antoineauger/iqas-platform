@@ -1,19 +1,13 @@
 package fr.isae.iqas.pipelines;
 
-import akka.actor.ActorRef;
 import akka.stream.FlowShape;
 import akka.stream.Graph;
 import akka.stream.Materializer;
-import akka.stream.UniformFanOutShape;
-import akka.stream.javadsl.Broadcast;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.GraphDSL;
-import akka.stream.javadsl.Sink;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import fr.isae.iqas.model.message.ObsRateReportMsg;
 import fr.isae.iqas.model.observation.RawData;
-import fr.isae.iqas.pipelines.mechanisms.ObsRateReporter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
@@ -32,7 +26,6 @@ import static fr.isae.iqas.model.request.Operator.NONE;
  * It should not be modified.
  */
 public class IngestPipeline extends AbstractPipeline implements IPipeline {
-    private Logger logger = LoggerFactory.getLogger(IngestPipeline.class);
 
     private Graph runnableGraph = null;
     private ObjectMapper mapper;
@@ -50,8 +43,6 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
     public Graph<FlowShape<ConsumerRecord<byte[], String>, ProducerRecord<byte[], String>>, Materializer> getPipelineGraph() {
         runnableGraph = GraphDSL
                 .create(builder -> {
-                    // Definition of the broadcast for the MAPE-K monitoring
-                    final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
 
                     final String[] allowedSensors = getParams().get("allowed_sensors").split(";");
                     final List<String> allowedSensorList = Arrays.asList(allowedSensors);
@@ -79,14 +70,7 @@ public class IngestPipeline extends AbstractPipeline implements IPipeline {
 
                     builder.from(consumRecordToRawData.out())
                             .via(filteredInformationBySensor)
-                            .viaFanOut(bcast)
                             .toInlet(rawDataToProdRecord.in());
-
-                    // Do not remove - useful for MAPE-K monitoring
-
-                    builder.from(bcast)
-                            .via(builder.add(new ObsRateReporter(getUniqueID(), getReportFrequency())))
-                            .to(builder.add(Sink.foreach(elem -> getMonitorActor().tell(new ObsRateReportMsg((ObsRateReportMsg) elem), ActorRef.noSender()))));
 
                     return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
                 });

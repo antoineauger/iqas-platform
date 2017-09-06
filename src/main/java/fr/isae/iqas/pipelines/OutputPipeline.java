@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import fr.isae.iqas.config.Config;
 import fr.isae.iqas.model.jsonld.VirtualSensor;
 import fr.isae.iqas.model.jsonld.VirtualSensorList;
+import fr.isae.iqas.model.message.ObsRateReportMsg;
 import fr.isae.iqas.model.message.QoOReportMsg;
 import fr.isae.iqas.model.observation.Information;
 import fr.isae.iqas.model.observation.Knowledge;
@@ -21,6 +22,7 @@ import fr.isae.iqas.model.observation.ObservationLevel;
 import fr.isae.iqas.model.observation.RawData;
 import fr.isae.iqas.model.quality.MySpecificQoOAttributeComputation;
 import fr.isae.iqas.model.quality.QoOAttribute;
+import fr.isae.iqas.pipelines.mechanisms.ObsRateReporter;
 import fr.isae.iqas.pipelines.mechanisms.QoOReporter;
 import fr.isae.iqas.utils.JenaUtils;
 import org.apache.jena.ontology.OntClass;
@@ -157,7 +159,7 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
         Graph runnableGraph = GraphDSL.create(builder -> {
 
             if (askedLevelFinal == RAW_DATA) {
-                final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
+                final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(3));
 
                 final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                         Flow.of(ConsumerRecord.class).map(r -> {
@@ -206,10 +208,14 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         .via(builder.add(new QoOReporter(getUniqueID(), getAssociatedRequest_id())))
                         .to(builder.add(Sink.foreach(elem -> getMonitorActor().tell(new QoOReportMsg((QoOReportMsg) elem), ActorRef.noSender()))));
 
+                builder.from(bcast)
+                        .via(builder.add(new ObsRateReporter(getUniqueID(), getReportFrequency())))
+                        .to(builder.add(Sink.foreach(elem -> getMonitorActor().tell(new ObsRateReportMsg((ObsRateReportMsg) elem), ActorRef.noSender()))));
+
                 return new FlowShape<>(consumRecordToRawData.in(), rawDataToProdRecord.out());
 
             } else if (askedLevelFinal == INFORMATION) {
-                final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(2));
+                final UniformFanOutShape<Information, Information> bcast = builder.add(Broadcast.create(3));
 
                 final FlowShape<ConsumerRecord, Information> consumRecordToInfo = builder.add(
                         Flow.of(ConsumerRecord.class).map(r -> {
@@ -263,11 +269,15 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         .via(builder.add(new QoOReporter(getUniqueID(), getAssociatedRequest_id())))
                         .to(builder.add(Sink.foreach(elem -> getMonitorActor().tell(new QoOReportMsg((QoOReportMsg) elem), ActorRef.noSender()))));
 
+                builder.from(bcast)
+                        .via(builder.add(new ObsRateReporter(getUniqueID(), getReportFrequency())))
+                        .to(builder.add(Sink.foreach(elem -> getMonitorActor().tell(new ObsRateReportMsg((ObsRateReportMsg) elem), ActorRef.noSender()))));
+
                 return new FlowShape<>(consumRecordToInfo.in(), infoToProdRecord.out());
 
             }
             else if (askedLevelFinal == KNOWLEDGE) {
-                final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(2));
+                final UniformFanOutShape<RawData, RawData> bcast = builder.add(Broadcast.create(3));
 
                 final FlowShape<ConsumerRecord, RawData> consumRecordToRawData = builder.add(
                         Flow.of(ConsumerRecord.class).map(r -> {
@@ -325,11 +335,14 @@ public class OutputPipeline extends AbstractPipeline implements IPipeline {
                         })
                 );
 
-
                 builder.from(consumRecordToRawData.out())
                         .via(removeOutdatedObs)
                         .viaFanOut(bcast)
                         .toInlet(rawDataToProdRecord.in());
+
+                builder.from(bcast)
+                        .via(builder.add(new ObsRateReporter(getUniqueID(), getReportFrequency())))
+                        .to(builder.add(Sink.foreach(elem -> getMonitorActor().tell(new ObsRateReportMsg((ObsRateReportMsg) elem), ActorRef.noSender()))));
 
                 builder.from(bcast)
                         .via(builder.add(new QoOReporter(getUniqueID(), getAssociatedRequest_id())))
