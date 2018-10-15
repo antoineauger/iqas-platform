@@ -447,7 +447,7 @@ For more information, visit the [Akka documentation](http://doc.akka.io/docs/akk
 
 ## Acknowledgments
 
-The iQAS platform have been developed during the PhD thesis of [Antoine Auger](https://personnel.isae-supaero.fr/antoine-auger/?lang=en) at ISAE-SUPAERO (2014-2017).
+The iQAS platform have been developed during the PhD thesis of [Antoine Auger](https://antoineauger.fr/) at ISAE-SUPAERO (2014-2017).
 
 This research was supported in part by the French Ministry of Defence through financial support of the Direction Générale de l’Armement (DGA).
 
